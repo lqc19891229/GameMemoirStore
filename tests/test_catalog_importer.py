@@ -40,9 +40,11 @@ class ImporterTests(unittest.TestCase):
 
     def test_only_thirteen_game_fields_are_emitted(self):
         data,_=mod.validate(self.raw,self.schema)
-        files=mod.render_files(data,'generated/game_catalog')
-        self.assertEqual(len(files),15)
-        text=files['games/distant_signal.tres'].decode()
+        files=mod.render_files(data,'data/games')
+        self.assertEqual(len(files),13)
+        self.assertTrue(all(path.endswith('.tres') for path in files))
+        self.assertIn('res://scripts/game.gd', files['distant_signal.tres'].decode())
+        text=files['distant_signal.tres'].decode()
         body=text.split('[resource]\n',1)[1]
         keys={line.split(' = ',1)[0] for line in body.splitlines() if ' = ' in line}
         self.assertEqual(keys,{'script','game_id','title','announce_ym','store_release_ym','delist_ym','base_price','developer','genres','cpu','gpu','series_id','description','capsule'})
@@ -50,22 +52,22 @@ class ImporterTests(unittest.TestCase):
     def test_manifest_preserves_spreadsheet_row_order(self):
         data,_=mod.validate(self.raw,self.schema)
         data['游戏资料'].reverse()
-        files=mod.render_files(data,'generated/game_catalog')
-        manifest=files['catalog.tres'].decode()
+        files=mod.render_files(data,'data/games')
+        manifest=files['_catalog.tres'].decode()
         first=data['游戏资料'][0]['game_id']
         last=data['游戏资料'][-1]['game_id']
-        self.assertLess(manifest.index('/games/'+first+'.tres'),manifest.index('/games/'+last+'.tres'))
+        self.assertLess(manifest.index('/'+first+'.tres'),manifest.index('/'+last+'.tres'))
 
     def test_check_detects_stale_generated_resource(self):
         data,_=mod.validate(self.raw,self.schema)
-        files=mod.render_files(data,'generated/game_catalog')
+        files=mod.render_files(data,'data/games')
         with tempfile.TemporaryDirectory() as temp:
             project=Path(temp)
-            target=mod.write_output(project,'generated/game_catalog',files)
-            mod.check_output(project,'generated/game_catalog',files)
-            (target/'games/distant_signal.tres').write_text('stale')
-            with self.assertRaisesRegex(mod.ImportFailure,'与表格或模板不一致'):
-                mod.check_output(project,'generated/game_catalog',files)
+            target=mod.write_output(project,'data/games',files)
+            mod.check_output(project,'data/games',files)
+            (target/'distant_signal.tres').write_text('stale')
+            with self.assertRaisesRegex(mod.ImportFailure,'与表格不一致'):
+                mod.check_output(project,'data/games',files)
 
     def test_duplicate_game_id(self):
         self.reject(self.changed(index=1,game_id='distant_signal'),'重复game_id')
@@ -103,7 +105,7 @@ class ImporterTests(unittest.TestCase):
         game=data['游戏资料'][0]
         self.assertEqual(game['base_price'],0)
         self.assertEqual(game['genres'],[])
-        text=mod.resource_game(game,'res://generated/game_catalog')
+        text=mod.resource_game(game)
         self.assertIn('capsule = null',text)
 
     def test_multiple_genres_split(self):
@@ -112,7 +114,7 @@ class ImporterTests(unittest.TestCase):
 
     def test_hardware_models_are_verbatim(self):
         data,_=mod.validate(self.changed(cpu='AMD Ryzen 5 5600X',gpu='GeForce RTX 3060 12GB'),self.schema)
-        text=mod.resource_game(data['游戏资料'][0],'res://generated/game_catalog')
+        text=mod.resource_game(data['游戏资料'][0])
         self.assertIn('cpu = "AMD Ryzen 5 5600X"',text)
         self.assertIn('gpu = "GeForce RTX 3060 12GB"',text)
 
@@ -125,40 +127,45 @@ class ImporterTests(unittest.TestCase):
 
     def test_escaped_resource_strings(self):
         data,_=mod.validate(self.changed(title='名字"引号\\路径',description='第一行\n第二行'),self.schema)
-        text=mod.resource_game(data['游戏资料'][0],'res://generated/game_catalog')
+        text=mod.resource_game(data['游戏资料'][0])
         self.assertIn('名字\\"引号\\\\路径',text)
         self.assertIn('第一行\\n第二行',text)
 
     def test_output_regeneration_and_removal(self):
         data,_=mod.validate(self.raw,self.schema)
-        files=mod.render_files(data,'generated/game_catalog')
+        files=mod.render_files(data,'data/games')
         with tempfile.TemporaryDirectory() as temp:
             project=Path(temp)
-            target=mod.write_output(project,'generated/game_catalog',files)
-            mod.write_output(project,'generated/game_catalog',files)
-            self.assertEqual((target/'catalog.tres').read_bytes(),files['catalog.tres'])
+            target=mod.write_output(project,'data/games',files)
+            mod.write_output(project,'data/games',files)
+            self.assertEqual((target/'_catalog.tres').read_bytes(),files['_catalog.tres'])
             data['游戏资料']=[g for g in data['游戏资料'] if g['game_id']!='distant_signal']
-            mod.write_output(project,'generated/game_catalog',mod.render_files(data,'generated/game_catalog'))
-            self.assertFalse((target/'games/distant_signal.tres').exists())
+            mod.write_output(project,'data/games',mod.render_files(data,'data/games'))
+            self.assertFalse((target/'distant_signal.tres').exists())
 
-    def test_regeneration_preserves_godot_script_uid(self):
+    def test_importer_leaves_authoritative_script_and_uid_untouched(self):
+        data,_=mod.validate(self.raw,self.schema)
+        files=mod.render_files(data,'data/games')
         with tempfile.TemporaryDirectory() as temp:
             project=Path(temp)
-            files={'types/game_definition.gd':b'extends Resource\n'}
-            target=mod.write_output(project,'generated/game_catalog',files)
-            uid=target/'types/game_definition.gd.uid'
+            script=project/'scripts/game.gd'
+            script.parent.mkdir()
+            script.write_text('extends Resource\n')
+            uid=project/'scripts/game.gd.uid'
             uid.write_text('uid://c123456789\n')
-            mod.write_output(project,'generated/game_catalog',files)
+            mod.write_output(project,'data/games',files)
+            mod.write_output(project,'data/games',files)
+            self.assertEqual(script.read_text(),'extends Resource\n')
             self.assertEqual(uid.read_text(),'uid://c123456789\n')
-            mod.check_output(project,'generated/game_catalog',files)
+            mod.check_output(project,'data/games',files)
 
     def test_manual_file_protected(self):
         with tempfile.TemporaryDirectory() as temp:
             project=Path(temp)
-            target=mod.write_output(project,'generated/game_catalog',{'a.txt':b'original'})
+            target=mod.write_output(project,'data/games',{'a.txt':b'original'})
             (target/'a.txt').write_text('edited')
             with self.assertRaisesRegex(mod.ImportFailure,'手工新增或修改'):
-                mod.write_output(project,'generated/game_catalog',{'a.txt':b'replace'})
+                mod.write_output(project,'data/games',{'a.txt':b'replace'})
             self.assertEqual((target/'a.txt').read_text(),'edited')
 
     def test_unknown_directory_protected(self):

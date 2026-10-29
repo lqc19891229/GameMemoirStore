@@ -9,7 +9,7 @@ python tools/catalog/import_games.py --project .
 # 只检查表格、字段关联和封面路径：
 python tools/catalog/import_games.py --project . --validate-only
 
-# 检查提交的生成资源是否与 Excel、模板一致：
+# 检查提交的资源是否与 Excel 一致：
 python tools/catalog/import_games.py --project . --check
 
 # 指定另一份表格：
@@ -23,10 +23,11 @@ Windows 可将 `python` 换成 `py -3`。停止正在运行的游戏，保存并
 - `game_catalog.xlsx`：精简游戏资料表，14 列，包含 12 款示例游戏。
 - `schema.json`：字段类型、默认值、必填规则、CPU/GPU 列名映射。
 - `import_games.py`：读取 Excel、校验并生成资源。
-- `resource_types/`：生成器使用的两个资源类模板。
-- `.gdignore`：使 Godot 忽略工具目录，避免模板与运行时类重复注册。
+- `.gdignore`：使 Godot 忽略开发工具与 Excel 文件。
 
-生成结果位于 `generated/game_catalog/`。每款游戏一份 `.tres`；`catalog.tres` 引用全部启用游戏，默认商店顺序跟随表格行序。模板更新后重新执行导入命令。
+单款游戏资源保存在 `data/games/<game_id>.tres`，`data/games/_catalog.tres` 引用全部启用游戏，默认商店顺序跟随表格行序。总清单以下划线开头，避免和游戏 ID 重名。
+
+资源类直接使用 `scripts/game.gd`（GameDefinition）和 `scripts/game_catalog.gd`（GameCatalog）。`game.gd` 定义字段，`.tres` 引用它并保存具体值。Python 只生成 `.tres` 数据，不生成或复制脚本，工具目录不再保留资源类模板。
 
 ## 字段
 
@@ -55,9 +56,9 @@ enabled=0 会清理对应游戏的生成资源。已有玩家存档关联的游�
 
 ## 写入与保护
 
-先完整校验，再暂存并替换整个生成目录。校验失败时保留已有结果；发现生成目录中手工新增或修改的文件时停止。Godot 自动创建的 `.gd.uid` 会保留，避免重新导入产生无关的 UID 变化。
+先完整校验，再暂存并替换 `data/games/`。校验失败时保留已有结果；发现该目录中手工新增或修改的文件时停止。源脚本与 `.gd.uid` 位于 scripts 中，不属于导入器的写入范围。
 
-表格与模板是编辑入口，生成目录是输出。Python 工具不直接修改 Excel。
+游戏资料在 Excel 编辑，字段结构在 `scripts/game.gd` 编辑。新增字段时，需要同步更新 Excel、`schema.json` 和导入器的字段映射。Python 工具不直接修改 Excel 或源脚本。
 
 主商店已读取资源。data/catalog.json 目前只补充英文名、标签、评价、安装大小、版本说明和原有演示折扣。首发原价以 Excel 为准，实际成交价仍会套用该演示折扣；新增游戏默认没有折扣。后续可独立加入促销排期数据。
 

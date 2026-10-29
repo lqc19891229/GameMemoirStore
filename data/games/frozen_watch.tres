@@ -1,18 +1,18 @@
 [gd_resource type="Resource" script_class="GameDefinition" load_steps=3 format=3]
 
-[ext_resource type="Script" path="res://generated/game_catalog/types/game_definition.gd" id="1_game"]
-[ext_resource type="Texture2D" path="res://assets/art/stars.png" id="2_capsule"]
+[ext_resource type="Script" path="res://scripts/game.gd" id="1_game"]
+[ext_resource type="Texture2D" path="res://assets/art/castle.png" id="2_capsule"]
 
 [resource]
 script = ExtResource("1_game")
-game_id = &"ancient_signal"
-title = "古老的信号"
+game_id = &"frozen_watch"
+title = "雪境守望"
 announce_ym = 0
-store_release_ym = 200312
+store_release_ym = 200310
 delist_ym = 0
-base_price = 110
-developer = "微光工作室"
-genres = PackedStringArray("探索冒险")
+base_price = 92
+developer = "北陆互动"
+genres = PackedStringArray("策略战术")
 cpu = "COREI5-10600K"
 gpu = "RTX3060"
 series_id = &""

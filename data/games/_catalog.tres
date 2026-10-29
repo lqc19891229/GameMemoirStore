@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="GameCatalog" load_steps=15 format=3]
+
+[ext_resource type="Script" path="res://scripts/game_catalog.gd" id="1_catalog"]
+[ext_resource type="Script" path="res://scripts/game.gd" id="2_game"]
+[ext_resource type="Resource" path="res://data/games/distant_signal.tres" id="game_0"]
+[ext_resource type="Resource" path="res://data/games/iron_frontier.tres" id="game_1"]
+[ext_resource type="Resource" path="res://data/games/mist_valley.tres" id="game_2"]
+[ext_resource type="Resource" path="res://data/games/last_lighthouse.tres" id="game_3"]
+[ext_resource type="Resource" path="res://data/games/midnight_castle.tres" id="game_4"]
+[ext_resource type="Resource" path="res://data/games/eastbound.tres" id="game_5"]
+[ext_resource type="Resource" path="res://data/games/forgotten_sands.tres" id="game_6"]
+[ext_resource type="Resource" path="res://data/games/forest_path.tres" id="game_7"]
+[ext_resource type="Resource" path="res://data/games/frozen_watch.tres" id="game_8"]
+[ext_resource type="Resource" path="res://data/games/blue_hour.tres" id="game_9"]
+[ext_resource type="Resource" path="res://data/games/orbital_rail.tres" id="game_10"]
+[ext_resource type="Resource" path="res://data/games/ancient_signal.tres" id="game_11"]
+
+[resource]
+script = ExtResource("1_catalog")
+games = Array[ExtResource("2_game")]([ExtResource("game_0"), ExtResource("game_1"), ExtResource("game_2"), ExtResource("game_3"), ExtResource("game_4"), ExtResource("game_5"), ExtResource("game_6"), ExtResource("game_7"), ExtResource("game_8"), ExtResource("game_9"), ExtResource("game_10"), ExtResource("game_11")])

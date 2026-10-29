@@ -3,7 +3,7 @@ extends RefCounted
 ## 独立的商店状态：不依赖场景节点，可在以后接入正式经营系统。
 
 const SAVE_PATH := "user://memoir_store_v01.json"
-const GAME_CATALOG: GameCatalog = preload("res://generated/game_catalog/catalog.tres")
+const GAME_CATALOG: GameCatalog = preload("res://data/games/_catalog.tres")
 const PRESENTATION_PATH := "res://data/catalog.json"
 const START_YM := 200309
 const MAX_MONTH := 5

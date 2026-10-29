@@ -10,7 +10,7 @@ func check(condition: bool, message: String) -> void:
 		push_error(message)
 
 func _initialize() -> void:
-	var catalog: GameCatalog = load("res://generated/game_catalog/catalog.tres")
+	var catalog: GameCatalog = load("res://data/games/_catalog.tres")
 	check(catalog != null, "catalog must load")
 	if catalog == null:
 		quit(1)

@@ -29,7 +29,7 @@ flowchart TD
   B --> C["client_pages.gd / 不同页面"]
   C --> D["client_ui.gd / 原生控件与布局"]
   B <--> E["store_state.gd / 购买与收藏状态"]
-  E --> F["catalog.tres / 游戏资料"]
+  E --> F["data/games/_catalog.tres / 游戏资料"]
   E --> H["catalog.json / 补充展示资料"]
   E <--> G["user 存档 / 玩家记录"]
 ```
@@ -60,7 +60,9 @@ cart 仍是 ID 列表，checkout() 验证全部商品和预算后一次性扣款
 
 ## Excel 与资源
 
-`tools/catalog/game_catalog.xlsx` 是基础游戏资料来源。Python 导入器生成 `generated/game_catalog/games/*.tres` 与总清单 `catalog.tres`。模板放在带 `.gdignore` 的工具目录，运行时只注册生成目录中的 GameDefinition 和 GameCatalog。
+`tools/catalog/game_catalog.xlsx` 是基础游戏资料来源。Python 导入器仅生成 `data/games/*.tres` 与该目录的总清单 `_catalog.tres`。总清单以下划线开头，避免与合法游戏 ID 对应的资源文件重名。
+
+`scripts/game.gd` 是单款游戏唯一的字段定义，继承 Resource，并通过 class_name 注册为 GameDefinition。每份游戏 `.tres` 的 script 都直接引用它，保存各自的导出属性值。`scripts/game_catalog.gd` 定义 GameCatalog，用于维护清单和查找游戏。两份脚本都是正常源代码，由开发者编辑，Python 不复制或生成脚本。
 
 `store_state.gd` preload 总清单，按资源顺序构建现有页面使用的 Dictionary。13 个表格字段覆盖对应旧值；原 JSON 只为相同 ID 补充评价、标签、英文名和现有折扣等资料，无法把资源清单中不存在的游戏重新加入商店。仅新增到 Excel 的游戏可直接显示，缺少的补充数据使用默认值。
 
@@ -68,7 +70,7 @@ cart 仍是 ID 列表，checkout() 验证全部商品和预算后一次性扣款
 
 存档继续记录从 2003 年 9 月开始的相对 month_index；`current_ym()` 在查询资源时转换为 YYYYMM，旧存档无需改变月份格式。上架和下架使用资源月份，已购下架游戏继续出现在库中。
 
-生成器保留 Godot 创建的脚本 `.gd.uid`，避免每次导入改变脚本身份。`--check` 只检查 Excel、模板与生成结果是否一致，不写文件。
+脚本及其 `.gd.uid` 保存在 scripts 中，导入器只管理 data/games，因此重新导入不会改动源脚本身份。`--check` 只检查 Excel 与资源结果是否一致，不写文件。
 
 ## 后续修改建议
 

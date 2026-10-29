@@ -24,7 +24,7 @@ python tools/catalog/import_games.py --project .
 
 | 资料 | 当前来源 |
 |---|---|
-| 游戏列表、ID、名称、开发商、类型、系列、介绍、封面、CPU/GPU、原价、预告/上架/下架月份 | `generated/game_catalog/catalog.tres` 及其引用的单款游戏资源 |
+| 游戏列表、ID、名称、开发商、类型、系列、介绍、封面、CPU/GPU、原价、预告/上架/下架月份 | `data/games/_catalog.tres` 及其引用的单款游戏资源 |
 | 英文名、标签、评价、版本文案、安装大小、现有演示折扣 | `data/catalog.json` 中按相同 ID 查找的补充资料 |
 | 所有权、愿望单、购买时实际成交价、安装状态、游玩记录 | 玩家存档 |
 
@@ -39,7 +39,7 @@ python tools/catalog/import_games.py --project . --validate-only
 python tools/catalog/import_games.py --project . --check
 ```
 
-不要直接修改生成目录中的 `.tres`。资料在 Excel 修改，资源类在 `tools/catalog/resource_types/` 修改，然后重新导入。该工具目录带 `.gdignore`，模板不会被 Godot 当成第二套全局资源类。更多填写规则见 [导入工具说明](tools/catalog/README.md)。
+资料在 Excel 修改，然后重新导入到 `data/games/`。`scripts/game.gd` 是单款游戏唯一的 Resource 字段定义，`.tres` 引用该脚本并保存具体值。Python 只写资源数据，不生成或覆盖 GDScript。调整字段结构时，同步修改 `game.gd`、Excel、`schema.json` 和导入器的字段映射。更多填写规则见 [导入工具说明](tools/catalog/README.md)。
 
 ## 本次主要变化
 
@@ -88,10 +88,11 @@ python tools/catalog/import_games.py --project . --check
 | `scripts/client_pages.gd` | 分别构建首页、搜索、商品、愿望单、购物车、库、下载、资料和社区页面 |
 | `scripts/client_ui.gd` | 原生 Control 与 Container 工厂、主题样式、封面和商品行 |
 | `scripts/store_state.gd` | 钱包、购买、愿望单、收藏夹、安装、游玩和存档 |
-| `generated/game_catalog/catalog.tres` | 当前游戏资源清单，主商店通过 preload 引用 |
-| `generated/game_catalog/games/` | 每款游戏各自的 `.tres` |
-| `generated/game_catalog/types/` | GameDefinition 和 GameCatalog 运行时资源类 |
-| `tools/catalog/` | 原始 Excel、Python 导入器、字段规范和资源模板 |
+| `data/games/_catalog.tres` | 当前游戏资源清单，主商店通过 preload 引用 |
+| `data/games/` | 每款游戏各自的 `.tres` 与总清单 |
+| `scripts/game.gd` | GameDefinition，单款游戏的字段定义和上架状态查询 |
+| `scripts/game_catalog.gd` | GameCatalog，管理游戏资源列表及查询 |
+| `tools/catalog/` | 原始 Excel、Python 导入器和字段规范 |
 | `data/catalog.json` | 评价、标签、折扣等尚未进入表格的补充展示资料 |
 | `assets/client_theme.tres` | 新版默认字体和主题 |
 | `scenes/legacy_store.tscn` | 保留 v0.2 原场景，便于对照 |
@@ -106,7 +107,7 @@ python tools/catalog/import_games.py --project . --check
 
 Godot 4.6 stable 官方版本运行检查：
 
-- Python 导入、生成一致性、文件保护和 UID 保留：25 项测试。
+- Python 导入、资源一致性、文件保护和源脚本保护：25 项测试。
 - 资源字段、封面加载与时间线：55 项检查。
 - 主商店资源接入、新增游戏默认资料、上架/下架、成交价与库保留：26 项检查。
 - 客户端与业务回归：56 项检查。

@@ -19,8 +19,10 @@ HERE = Path(__file__).resolve().parent
 NS = {'s': 'http://schemas.openxmlformats.org/spreadsheetml/2006/main'}
 REL = '{http://schemas.openxmlformats.org/officeDocument/2006/relationships}id'
 ID_RE = re.compile(r'[a-z][a-z0-9_]*\Z')
-MARKER = '.memoir_generated.json'
+MARKER = '.catalog_manifest.json'
 OWNER = 'GameMemoir.ExcelImporter.v1'
+GAME_SCRIPT = 'res://scripts/game.gd'
+CATALOG_SCRIPT = 'res://scripts/game_catalog.gd'
 
 
 class ImportFailure(Exception):
@@ -226,8 +228,8 @@ def packed(values):
     return 'PackedStringArray(' + ', '.join(quote(v) for v in values) + ')'
 
 
-def resource_game(game, base_uri):
-    ext = [('Script', base_uri + '/types/game_definition.gd', '1_game')]
+def resource_game(game):
+    ext = [('Script', GAME_SCRIPT, '1_game')]
     if game['capsule']:
         ext.append(('Texture2D', game['capsule'], '2_capsule'))
     lines = [f'[gd_resource type="Resource" script_class="GameDefinition" load_steps={len(ext)+1} format=3]', '']
@@ -252,18 +254,15 @@ def render_files(data, output_rel):
     uri = 'res://' + output_rel
     games = list(data['游戏资料'])  # Keep the spreadsheet's storefront order.
     files = {}
-    for path in sorted((HERE / 'resource_types').glob('*.gd')):
-        files['types/' + path.name] = path.read_bytes()
-    if set(files) != {'types/game_definition.gd', 'types/game_catalog.gd'}:
-        raise ImportFailure('resource_types目录应包含GameDefinition和GameCatalog两个脚本，请解压完整工具包')
     for game in games:
-        files[f'games/{game["game_id"]}.tres'] = resource_game(game, uri).encode('utf-8')
-    lines = [f'[gd_resource type="Resource" script_class="GameCatalog" load_steps={len(games)+3} format=3]', '', f'[ext_resource type="Script" path="{uri}/types/game_catalog.gd" id="1_catalog"]', f'[ext_resource type="Script" path="{uri}/types/game_definition.gd" id="2_game"]']
+        files[f'{game["game_id"]}.tres'] = resource_game(game).encode('utf-8')
+    lines = [f'[gd_resource type="Resource" script_class="GameCatalog" load_steps={len(games)+3} format=3]', '', f'[ext_resource type="Script" path="{CATALOG_SCRIPT}" id="1_catalog"]', f'[ext_resource type="Script" path="{GAME_SCRIPT}" id="2_game"]']
     for i, game in enumerate(games):
-        lines.append(f'[ext_resource type="Resource" path="{uri}/games/{game["game_id"]}.tres" id="game_{i}"]')
+        lines.append(f'[ext_resource type="Resource" path="{uri}/{game["game_id"]}.tres" id="game_{i}"]')
     refs = ', '.join(f'ExtResource("game_{i}")' for i in range(len(games)))
     lines += ['', '[resource]', 'script = ExtResource("1_catalog")', f'games = Array[ExtResource("2_game")]([{refs}])', '']
-    files['catalog.tres'] = '\n'.join(lines).encode('utf-8')
+    # IDs must start with a letter; the underscore avoids a catalog/game-ID collision.
+    files['_catalog.tres'] = '\n'.join(lines).encode('utf-8')
     return files
 
 
@@ -285,18 +284,15 @@ def check_output(project, output_rel, files):
             relative = path.relative_to(output).as_posix()
             if not path.is_file() or relative == MARKER or relative in files:
                 continue
-            if relative.endswith('.gd.uid') and relative[:-4] in files:
-                continue
             problems.append(relative + '（多余文件）')
     if problems:
-        raise ImportFailure('生成资源与表格或模板不一致，请重新导入：\n' + '\n'.join(problems))
+        raise ImportFailure('生成资源与表格不一致，请重新导入：\n' + '\n'.join(problems))
 
 
 def write_output(project, output_rel, files):
     # This directory is exclusively generated. Reject untracked or edited files.
     output = project / output_rel
     output_parent = output.parent
-    preserved_uids = {}
     if output.is_symlink() or not output.resolve().is_relative_to(project.resolve()):
         raise ImportFailure('输出目录不得通过链接指向项目外部')
     if output.exists():
@@ -314,12 +310,6 @@ def write_output(project, output_rel, files):
             if not path.is_file() or path == marker:
                 continue
             rel = path.relative_to(output).as_posix()
-            # Preserve Godot script identities across spreadsheet regeneration.
-            if rel.endswith('.gd.uid') and rel[:-4] in tracked:
-                if rel[:-4] in files:
-                    preserved_uids[rel] = path.read_bytes()
-                if rel not in tracked:
-                    continue
             if rel not in tracked or sha(path.read_bytes()) != tracked[rel]:
                 raise ImportFailure(f'生成目录含手工新增或修改文件，已停止：{path}。请先移走该文件')
     output_parent.mkdir(parents=True, exist_ok=True)
@@ -330,8 +320,6 @@ def write_output(project, output_rel, files):
             target = stage / rel
             target.parent.mkdir(parents=True, exist_ok=True)
             target.write_bytes(contents)
-        for rel, contents in preserved_uids.items():
-            (stage / rel).write_bytes(contents)
         marker = {'owner': OWNER, 'schema_version': 2, 'files': {p: sha(b) for p,b in sorted(files.items())}}
         (stage / MARKER).write_text(json.dumps(marker,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
         if output.exists():
@@ -357,7 +345,7 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('workbook', nargs='?', default=HERE / 'game_catalog.xlsx', type=Path, help='默认使用工具目录中的game_catalog.xlsx')
     parser.add_argument('--project', type=Path, help='Godot项目根目录，内含project.godot')
-    parser.add_argument('--output-rel', default='generated/game_catalog', help='项目内专用生成目录')
+    parser.add_argument('--output-rel', default='data/games', help='项目内游戏资源目录，默认data/games')
     parser.add_argument('--validate-only', action='store_true', help='仅校验，不写文件')
     parser.add_argument('--check', action='store_true', help='检查已生成资源与表格一致，不写文件')
     parser.add_argument('--skip-asset-check', action='store_true', help='显式跳过图片存在性检查')
@@ -374,6 +362,10 @@ def main(argv=None):
             raise ImportFailure('--check与--validate-only不能同时使用')
         if project and not (project / 'project.godot').is_file():
             raise ImportFailure('--project应指向包含project.godot的目录')
+        if project:
+            for script in (GAME_SCRIPT, CATALOG_SCRIPT):
+                if not (project / script[6:]).is_file():
+                    raise ImportFailure(f'缺少资源类脚本：{script}，请先获取完整项目')
         if not project and not args.validate_only:
             raise ImportFailure('导出时需要--project；也可使用--validate-only只检查表格')
         raw = read_xlsx(args.workbook, schema)
@@ -387,7 +379,7 @@ def main(argv=None):
             files = render_files(data, output_rel)
             if args.check:
                 check_output(project, output_rel, files)
-                print('已生成资源与表格、模板一致')
+                print('已生成资源与表格一致')
             else:
                 target = write_output(project, output_rel, files)
                 print(f'已生成：{target}（{len(files)}个文件）')

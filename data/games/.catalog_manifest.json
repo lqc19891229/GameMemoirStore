@@ -1,0 +1,19 @@
+{
+  "owner": "GameMemoir.ExcelImporter.v1",
+  "schema_version": 2,
+  "files": {
+    "_catalog.tres": "2e54400856aaf19f938939b9c8f0c2377f4158a9a096116a1156db6e9962a38a",
+    "ancient_signal.tres": "fd9da0e9ccdfe6ab024e60e7a3bd93e4be9a020b664cd29316e7f09afa27207f",
+    "blue_hour.tres": "42eff9c0a7a877bf7148d63137c4ddd4c2e9fe0512e07f64c96141db1c9feb00",
+    "distant_signal.tres": "da2ed09d9ef34f0207a8679757ce050e3f8a16cf651f03ea770b21ec449036a4",
+    "eastbound.tres": "24c0c3d6bd0b6b314e2e24094d9499307a5230cd6aa9ae58596b737b6b93bd31",
+    "forest_path.tres": "e0b146fff50735d7ffeb7f347ff0f40c15308d5ed143dc0c142bf2294decb815",
+    "forgotten_sands.tres": "89cbe79b141e5cf42905308ef021608aacb3954025dbf090a9b12e624ed151a7",
+    "frozen_watch.tres": "ef06c5ec6582ee51e39ed6f330ca4025eda0589cfc9955aef5c9b11c136de18d",
+    "iron_frontier.tres": "77013c0a16c5757f4df31a39c5004108bb639f89f50b14d072c2946c9ef84ecd",
+    "last_lighthouse.tres": "c7f06c758e3778ad01fec7a1dea84bc1db45a3bf2ee627446ec6c93d821a121d",
+    "midnight_castle.tres": "b9d672f56f7b92fa10e08d0a673be0b477725ff60851556e78ebd709e5a2a540",
+    "mist_valley.tres": "18a121233929dc6c062c91831994cea35f776f06ea4bdd79710e3c04d1f43d3d",
+    "orbital_rail.tres": "e79d7398262fed53c6113d90273ee8a6cda793691590427f9e61b015ee6bbf96"
+  }
+}

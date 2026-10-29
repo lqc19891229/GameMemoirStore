@@ -1,7 +1,7 @@
 class_name GameDefinition
 extends Resource
-## Matches the 13 game fields in the current Excel sheet.
-## enabled is an authoring flag and is intentionally not stored here.
+## 单款游戏资源的唯一字段定义；每份 .tres 保存一款游戏的具体值。
+## enabled 仅用于 Excel 导出控制，不属于运行时游戏资料。
 
 @export_group("基本资料")
 @export var game_id: StringName = &""

@@ -1,18 +1,18 @@
 [gd_resource type="Resource" script_class="GameDefinition" load_steps=3 format=3]
 
-[ext_resource type="Script" path="res://generated/game_catalog/types/game_definition.gd" id="1_game"]
-[ext_resource type="Texture2D" path="res://assets/art/desert.png" id="2_capsule"]
+[ext_resource type="Script" path="res://scripts/game.gd" id="1_game"]
+[ext_resource type="Texture2D" path="res://assets/art/train.png" id="2_capsule"]
 
 [resource]
 script = ExtResource("1_game")
-game_id = &"forgotten_sands"
-title = "遗忘之沙"
+game_id = &"orbital_rail"
+title = "轨道旅人"
 announce_ym = 0
-store_release_ym = 200309
+store_release_ym = 200311
 delist_ym = 0
-base_price = 68
-developer = "流沙工作室"
-genres = PackedStringArray("角色扮演")
+base_price = 84
+developer = "纸飞机工作室"
+genres = PackedStringArray("策略战术")
 cpu = "COREI5-10600K"
 gpu = "RTX3060"
 series_id = &""
