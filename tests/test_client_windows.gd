@@ -1,4 +1,6 @@
 extends SceneTree
+const State = preload("res://scripts/store_state.gd")
+const FIXTURE_CATALOG = preload("res://tests/fixtures/catalog/_catalog.tres")
 var count: int = 0
 var errors: int = 0
 
@@ -13,6 +15,7 @@ func _initialize() -> void:
 
 func _run() -> void:
 	var client = load("res://scenes/store.tscn").instantiate()
+	client.state = State.new(FIXTURE_CATALOG)
 	root.add_child(client)
 	await process_frame
 	client.download_timer.stop()

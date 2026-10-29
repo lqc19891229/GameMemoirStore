@@ -1,4 +1,5 @@
 extends SceneTree
+const FIXTURE_CATALOG = preload("res://tests/fixtures/catalog/_catalog.tres")
 ## Run: godot --headless --path . --script res://tests/test_store.gd -- --fresh
 const State = preload("res://scripts/store_state.gd")
 var failures: Array[String] = []
@@ -14,7 +15,7 @@ func _initialize() -> void:
 	_run.call_deferred()
 
 func _run() -> void:
-	var model = State.new()
+	var model = State.new(FIXTURE_CATALOG)
 	model.persistence_enabled = false
 	check(model.catalog.size() == 12, "catalog loads all twelve sample entries")
 	check(model.price("distant_signal") == 66, "discounted price rounds consistently")
@@ -48,7 +49,7 @@ func _run() -> void:
 	model.persistence_enabled = true
 	model.save_path = "user://memoir_store_automated_test.json"
 	check(model.save_state(), "state saves successfully")
-	var restored = State.new()
+	var restored = State.new(FIXTURE_CATALOG)
 	restored.save_path = model.save_path
 	restored.load_state()
 	check(restored.wallet == model.wallet and restored.owned == model.owned and restored.wishlist == model.wishlist and restored.history == model.history, "save/load preserves collection and budget")
@@ -56,6 +57,7 @@ func _run() -> void:
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(model.save_path))
 
 	var scene: Control = load("res://scenes/legacy_store.tscn").instantiate()
+	scene.state = State.new(FIXTURE_CATALOG)
 	root.add_child(scene)
 	await process_frame
 	check(scene.filtered.size() == 6, "scene initially lists only released games")
@@ -73,7 +75,7 @@ func _run() -> void:
 	scene.get_node("%CheckoutButton").pressed.emit()
 	check(scene.current_view == "library" and scene.filtered.size() == 1, "receipt action opens the updated library")
 	# An announced fixture exercises the coming-soon UI without changing shared resources.
-	var announced_catalog: GameCatalog = State.GAME_CATALOG.duplicate(true)
+	var announced_catalog: GameCatalog = FIXTURE_CATALOG.duplicate(true)
 	for definition: GameDefinition in announced_catalog.games:
 		if definition.store_release_ym > 200309:
 			definition.announce_ym = 200309

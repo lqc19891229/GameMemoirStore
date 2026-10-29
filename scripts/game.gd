@@ -11,6 +11,8 @@ extends Resource
 @export var series_id: StringName = &""
 @export_multiline var description: String = ""
 @export var capsule: Texture2D
+## 按 01～04 顺序保存独立展示图；由 Excel 素材文件夹自动解析。
+@export var screenshots: Array[Texture2D] = []
 
 @export_group("时间线")
 @export var announce_ym: int = 0

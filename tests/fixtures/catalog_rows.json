@@ -1,0 +1,232 @@
+{
+  "游戏资料": [
+    [
+      4,
+      {
+        "enabled": 1.0,
+        "game_id": "distant_signal",
+        "title": "远星来信",
+        "announce_ym": 0.0,
+        "store_release_ym": 200309.0,
+        "delist_ym": 0.0,
+        "base_price": 88.0,
+        "developer": "微光工作室",
+        "genres": "探索冒险",
+        "cpu": "COREI5-10600K",
+        "gpu": "RTX3060",
+        "series_id": "",
+        "description": "在失去联系的边境星球，寻找一封迟到的信。穿过静默的观测站与漫长的星夜，重新连接那些散落在宇宙里的故事。",
+        "capsule": "res://assets/art/stars.png"
+      }
+    ],
+    [
+      5,
+      {
+        "enabled": 1.0,
+        "game_id": "iron_frontier",
+        "title": "钢铁边境",
+        "announce_ym": 0.0,
+        "store_release_ym": 200309.0,
+        "delist_ym": 0.0,
+        "base_price": 72.0,
+        "developer": "北陆互动",
+        "genres": "策略战术",
+        "cpu": "COREI5-10600K",
+        "gpu": "RTX3060",
+        "series_id": "",
+        "description": "在边境建立第一座前哨站。调配有限的补给，规划防线，让每一支小队都能平安归来。",
+        "capsule": "res://assets/art/desert.png"
+      }
+    ],
+    [
+      6,
+      {
+        "enabled": 1.0,
+        "game_id": "mist_valley",
+        "title": "雾谷手记",
+        "announce_ym": 0.0,
+        "store_release_ym": 200309.0,
+        "delist_ym": 0.0,
+        "base_price": 48.0,
+        "developer": "雨后制作组",
+        "genres": "生活模拟",
+        "cpu": "COREI5-10600K",
+        "gpu": "RTX3060",
+        "series_id": "",
+        "description": "修好山谷里的老房子，种下第一批作物。在季节与日常之间，记录属于自己的小小生活。",
+        "capsule": "res://assets/art/valley.png"
+      }
+    ],
+    [
+      7,
+      {
+        "enabled": 1.0,
+        "game_id": "last_lighthouse",
+        "title": "最后一座灯塔",
+        "announce_ym": 0.0,
+        "store_release_ym": 200309.0,
+        "delist_ym": 0.0,
+        "base_price": 60.0,
+        "developer": "潮汐游戏",
+        "genres": "探索冒险",
+        "cpu": "COREI5-10600K",
+        "gpu": "RTX3060",
+        "series_id": "",
+        "description": "一座灯塔，一片不再平静的海。修复失灵的信号装置，在潮汐退去之前解开岛上的秘密。",
+        "capsule": "res://assets/art/ocean.png"
+      }
+    ],
+    [
+      8,
+      {
+        "enabled": 1.0,
+        "game_id": "midnight_castle",
+        "title": "午夜回廊",
+        "announce_ym": 0.0,
+        "store_release_ym": 200310.0,
+        "delist_ym": 0.0,
+        "base_price": 96.0,
+        "developer": "黑曜石猫制作组",
+        "genres": "角色扮演",
+        "cpu": "COREI5-10600K",
+        "gpu": "RTX3060",
+        "series_id": "",
+        "description": "当钟声响起，古堡的房间会重新排列。带着仅有的地图走进回廊，寻找通往黎明的出口。",
+        "capsule": "res://assets/art/castle.png"
+      }
+    ],
+    [
+      9,
+      {
+        "enabled": 1.0,
+        "game_id": "eastbound",
+        "title": "向东的列车",
+        "announce_ym": 0.0,
+        "store_release_ym": 200311.0,
+        "delist_ym": 0.0,
+        "base_price": 52.0,
+        "developer": "纸飞机工作室",
+        "genres": "探索冒险",
+        "cpu": "COREI5-10600K",
+        "gpu": "RTX3060",
+        "series_id": "",
+        "description": "登上清晨出发的慢车，在陌生的站台短暂停留。收集沿途的风景，也收集旅人的故事。",
+        "capsule": "res://assets/art/train.png"
+      }
+    ],
+    [
+      10,
+      {
+        "enabled": 1.0,
+        "game_id": "forgotten_sands",
+        "title": "遗忘之沙",
+        "announce_ym": 0.0,
+        "store_release_ym": 200309.0,
+        "delist_ym": 0.0,
+        "base_price": 68.0,
+        "developer": "流沙工作室",
+        "genres": "角色扮演",
+        "cpu": "COREI5-10600K",
+        "gpu": "RTX3060",
+        "series_id": "",
+        "description": "沿着地图上的最后一条线索，走进一段尚未被记录的旅程。探索未知，做出自己的选择，并将沿途的故事留在游戏回忆录中。",
+        "capsule": "res://assets/art/desert.png"
+      }
+    ],
+    [
+      11,
+      {
+        "enabled": 1.0,
+        "game_id": "forest_path",
+        "title": "林间小径",
+        "announce_ym": 0.0,
+        "store_release_ym": 200309.0,
+        "delist_ym": 0.0,
+        "base_price": 42.0,
+        "developer": "四季制作组",
+        "genres": "生活模拟",
+        "cpu": "COREI5-10600K",
+        "gpu": "RTX3060",
+        "series_id": "",
+        "description": "沿着地图上的最后一条线索，走进一段尚未被记录的旅程。探索未知，做出自己的选择，并将沿途的故事留在游戏回忆录中。",
+        "capsule": "res://assets/art/valley.png"
+      }
+    ],
+    [
+      12,
+      {
+        "enabled": 1.0,
+        "game_id": "frozen_watch",
+        "title": "雪境守望",
+        "announce_ym": 0.0,
+        "store_release_ym": 200310.0,
+        "delist_ym": 0.0,
+        "base_price": 92.0,
+        "developer": "北陆互动",
+        "genres": "策略战术",
+        "cpu": "COREI5-10600K",
+        "gpu": "RTX3060",
+        "series_id": "",
+        "description": "沿着地图上的最后一条线索，走进一段尚未被记录的旅程。探索未知，做出自己的选择，并将沿途的故事留在游戏回忆录中。",
+        "capsule": "res://assets/art/castle.png"
+      }
+    ],
+    [
+      13,
+      {
+        "enabled": 1.0,
+        "game_id": "blue_hour",
+        "title": "蓝色时刻",
+        "announce_ym": 0.0,
+        "store_release_ym": 200310.0,
+        "delist_ym": 0.0,
+        "base_price": 56.0,
+        "developer": "潮汐游戏",
+        "genres": "探索冒险",
+        "cpu": "COREI5-10600K",
+        "gpu": "RTX3060",
+        "series_id": "",
+        "description": "沿着地图上的最后一条线索，走进一段尚未被记录的旅程。探索未知，做出自己的选择，并将沿途的故事留在游戏回忆录中。",
+        "capsule": "res://assets/art/ocean.png"
+      }
+    ],
+    [
+      14,
+      {
+        "enabled": 1.0,
+        "game_id": "orbital_rail",
+        "title": "轨道旅人",
+        "announce_ym": 0.0,
+        "store_release_ym": 200311.0,
+        "delist_ym": 0.0,
+        "base_price": 84.0,
+        "developer": "纸飞机工作室",
+        "genres": "策略战术",
+        "cpu": "COREI5-10600K",
+        "gpu": "RTX3060",
+        "series_id": "",
+        "description": "沿着地图上的最后一条线索，走进一段尚未被记录的旅程。探索未知，做出自己的选择，并将沿途的故事留在游戏回忆录中。",
+        "capsule": "res://assets/art/train.png"
+      }
+    ],
+    [
+      15,
+      {
+        "enabled": 1.0,
+        "game_id": "ancient_signal",
+        "title": "古老的信号",
+        "announce_ym": 0.0,
+        "store_release_ym": 200312.0,
+        "delist_ym": 0.0,
+        "base_price": 110.0,
+        "developer": "微光工作室",
+        "genres": "探索冒险",
+        "cpu": "COREI5-10600K",
+        "gpu": "RTX3060",
+        "series_id": "",
+        "description": "沿着地图上的最后一条线索，走进一段尚未被记录的旅程。探索未知，做出自己的选择，并将沿途的故事留在游戏回忆录中。",
+        "capsule": "res://assets/art/stars.png"
+      }
+    ]
+  ]
+}

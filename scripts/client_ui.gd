@@ -126,6 +126,13 @@ static func image(parent: Node, entry: Dictionary, width: int, height: int, shot
 	parent.add_child(node)
 	return node
 
+static func screenshot(entry: Dictionary, shot: int = 0) -> Texture2D:
+	var shots: Array = entry.get("screenshots", [])
+	if not shots.is_empty():
+		return shots[clampi(shot, 0, shots.size() - 1)] as Texture2D
+	# Older single-cover resources retain their existing gallery crops.
+	return texture(entry, shot)
+
 static func texture(entry: Dictionary, shot: int = 0) -> Texture2D:
 	var source: Texture2D
 	if entry.has("capsule"):

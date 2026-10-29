@@ -22,7 +22,7 @@
         "type": "id",
         "required": true,
         "default": "",
-        "rule": "小写字母开头，仅 a-z、0-9、下划线，确定后勿改",
+        "rule": "英文字母开头，仅 A-Z、a-z、0-9、下划线；保留大小写，确定后勿改",
         "export": true
       },
       {
@@ -85,7 +85,7 @@
         "type": "list",
         "required": false,
         "default": "",
-        "rule": "多个值用英文分号 ; 分隔",
+        "rule": "多个类型用 / 分隔，例如 射击/动作/多人；兼容旧分号 ;",
         "export": true
       },
       {
@@ -130,9 +130,12 @@
         "type": "path",
         "required": false,
         "default": "",
-        "rule": "res://项目内图片路径；空白不引用图片",
+        "rule": "素材文件夹 res://assets/art/<game_id>；包含 <game_id>.png 及 <game_id>01～04.png；兼容旧图片文件路径，空白不引用图片",
         "export": true
       }
     ]
-  }
+  },
+  "ignored_headers": [
+    "游戏原型"
+  ]
 }

@@ -18,7 +18,7 @@ import zipfile
 HERE = Path(__file__).resolve().parent
 NS = {'s': 'http://schemas.openxmlformats.org/spreadsheetml/2006/main'}
 REL = '{http://schemas.openxmlformats.org/officeDocument/2006/relationships}id'
-ID_RE = re.compile(r'[a-z][a-z0-9_]*\Z')
+ID_RE = re.compile(r'[A-Za-z][A-Za-z0-9_]*\Z')
 MARKER = '.catalog_manifest.json'
 OWNER = 'GameMemoir.ExcelImporter.v1'
 GAME_SCRIPT = 'res://scripts/game.gd'
@@ -103,6 +103,7 @@ def read_xlsx(path: Path, schema: dict) -> dict:
                 raise ImportFailure(f'{name}：未找到包含game_id和enabled的表头（查找前100行）')
             if len(set(keys.values())) != len(keys):
                 raise ImportFailure(f'{name}：列名重复')
+            keys = {col: key for col, key in keys.items() if key not in schema.get('ignored_headers', [])}
             missing = set(expected) - set(keys.values())
             extra = set(keys.values()) - set(expected)
             if missing or extra:
@@ -163,9 +164,11 @@ def parse_field(value, field):
         raise ImportFailure(f'{key}含有不支持的控制字符')
     if typ in ('id', 'id0'):
         if not (typ == 'id0' and not value) and not ID_RE.fullmatch(value):
-            raise ImportFailure(f'{key}必须以小写字母开头，仅包含小写字母、数字和下划线')
+            raise ImportFailure(f'{key}必须以英文字母开头，仅包含英文字母、数字和下划线（区分大小写）')
     if typ in ('list', 'paths'):
-        values = [item.strip() for item in value.split(';') if item.strip()]
+        # A slash separates genres, but must never split res:// image paths.
+        separator = r'[/;]' if key == 'genres' else ';'
+        values = [item.strip() for item in re.split(separator, value) if item.strip()]
         if len(values) != len(set(values)):
             raise ImportFailure(f'{key}中出现重复项')
         if typ == 'paths':
@@ -173,6 +176,7 @@ def parse_field(value, field):
                 check_path(item)
         return values
     if typ == 'path' and value:
+        value = value.rstrip('/')
         check_path(value)
     return value
 
@@ -181,6 +185,29 @@ def check_path(value):
     parts = value.removeprefix('res://').split('/')
     if not value.startswith('res://') or any(p in ('', '.', '..') for p in parts) or '\\' in value or any(c in value for c in ('\n','\r','\t',';')):
         raise ImportFailure(f'资源路径无效：{value}，请使用res://且不要包含上级目录')
+
+
+def resolve_art(game, project=None, skip_assets=False):
+    """Expand a game's art folder into explicit, ordered texture references."""
+    source = game['capsule']
+    game['screenshots'] = []
+    if not source:
+        return
+    if not PurePosixPath(source).suffix:
+        game_id = game['game_id']
+        expected = f'res://assets/art/{game_id}'
+        if source != expected:
+            raise ImportFailure(f'素材文件夹必须与game_id大小写一致：{expected}')
+        game['capsule'] = f'{source}/{game_id}.png'
+        game['screenshots'] = [f'{source}/{game_id}{i:02d}.png' for i in range(1, 5)]
+    if project and not skip_assets:
+        missing = []
+        for path in [game['capsule'], *game['screenshots']]:
+            local = (project / path[6:]).resolve()
+            if not local.is_relative_to(project.resolve()) or not local.is_file():
+                missing.append(path)
+        if missing:
+            raise ImportFailure('封面文件不存在或展示图缺失（素材必须在项目内）：' + '、'.join(missing))
 
 
 def validate(raw, schema, project=None, skip_assets=False):
@@ -195,9 +222,9 @@ def validate(raw, schema, project=None, skip_assets=False):
             if enabled not in (0, 1):
                 raise ImportFailure('enabled仅接受0或1')
             game_id = parse_field(row.get('game_id', ''), {'key':'game_id','type':'id','required':True})
-            if game_id in known_ids:
-                raise ImportFailure(f'重复game_id：{game_id}')
-            known_ids.add(game_id)
+            if game_id.casefold() in known_ids:
+                raise ImportFailure(f'重复game_id（含仅大小写不同的ID）：{game_id}')
+            known_ids.add(game_id.casefold())
             if not enabled:
                 continue
             game = {field['key']: parse_field(row.get(field['key'], ''), field) for field in schema['sheets'][name]}
@@ -206,10 +233,7 @@ def validate(raw, schema, project=None, skip_assets=False):
                 raise ImportFailure('预告月份不能晚于上架月份')
             if game['delist_ym'] and game['delist_ym'] <= game['store_release_ym']:
                 raise ImportFailure('下架月份必须晚于上架月份')
-            if project and not skip_assets and game['capsule']:
-                local = (project / game['capsule'][6:]).resolve()
-                if not local.is_relative_to(project.resolve()) or not local.is_file():
-                    raise ImportFailure(f'封面文件不存在或不在项目内：{game["capsule"]}')
+            resolve_art(game, project, skip_assets)
             games.append(game)
         except ImportFailure as exc:
             errors.append(f'{location}：{exc}')
@@ -232,10 +256,13 @@ def resource_game(game):
     ext = [('Script', GAME_SCRIPT, '1_game')]
     if game['capsule']:
         ext.append(('Texture2D', game['capsule'], '2_capsule'))
+    shots = game.get('screenshots', [])
+    for i, path in enumerate(shots, 1):
+        ext.append(('Texture2D', path, f'shot_{i:02d}'))
     lines = [f'[gd_resource type="Resource" script_class="GameDefinition" load_steps={len(ext)+1} format=3]', '']
     lines += [f'[ext_resource type="{typ}" path={quote(path)} id="{ident}"]' for typ, path, ident in ext]
     lines += ['', '[resource]', 'script = ExtResource("1_game")']
-    for key in ('game_id','title','announce_ym','store_release_ym','delist_ym','base_price','developer','genres','cpu','gpu','series_id','description','capsule'):
+    for key in ('game_id','title','announce_ym','store_release_ym','delist_ym','base_price','developer','genres','cpu','gpu','series_id','description','capsule','screenshots'):
         if key in ('game_id', 'series_id'):
             value = '&' + quote(game[key])
         elif key in ('announce_ym','store_release_ym','delist_ym','base_price'):
@@ -244,6 +271,9 @@ def resource_game(game):
             value = packed(game[key])
         elif key == 'capsule':
             value = 'ExtResource("2_capsule")' if game[key] else 'null'
+        elif key == 'screenshots':
+            refs = ', '.join(f'ExtResource("shot_{i:02d}")' for i in range(1, len(shots) + 1))
+            value = f'Array[Texture2D]([{refs}])'
         else:
             value = quote(game[key])
         lines.append(f'{key} = {value}')
@@ -372,7 +402,7 @@ def main(argv=None):
         data, warnings = validate(raw, schema, project, args.skip_asset_check)
         for warning in warnings:
             print('提示：' + warning)
-        print(f'校验通过：{len(data["游戏资料"])}款游戏，13个游戏资源字段')
+        print(f'校验通过：{len(data["游戏资料"])}款游戏，14个游戏资源字段（含自动解析的screenshots）')
         if not project or args.skip_asset_check:
             print('提示：未检查图片文件是否存在')
         if not args.validate_only:

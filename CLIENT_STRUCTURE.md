@@ -64,13 +64,13 @@ cart 仍是 ID 列表，checkout() 验证全部商品和预算后一次性扣款
 
 `scripts/game.gd` 是单款游戏唯一的字段定义，继承 Resource，并通过 class_name 注册为 GameDefinition。每份游戏 `.tres` 的 script 都直接引用它，保存各自的导出属性值。`scripts/game_catalog.gd` 定义 GameCatalog，用于维护清单和查找游戏。两份脚本都是正常源代码，由开发者编辑，Python 不复制或生成脚本。
 
-`store_state.gd` preload 总清单，按资源顺序构建现有页面使用的 Dictionary。13 个表格字段覆盖对应旧值；原 JSON 只为相同 ID 补充评价、标签、英文名和现有折扣等资料，无法把资源清单中不存在的游戏重新加入商店。仅新增到 Excel 的游戏可直接显示，缺少的补充数据使用默认值。
+`store_state.gd` preload 总清单，按资源顺序构建现有页面使用的 Dictionary。表格字段和自动解析的素材引用覆盖对应旧值；原 JSON 只为相同 ID 补充评价、标签、英文名和现有折扣等资料，无法把资源清单中不存在的游戏重新加入商店。仅新增到 Excel 的游戏可直接显示，缺少的补充数据使用默认值。
 
-`definition(id)` 返回原始 GameDefinition，`release_state(id)` 查询 hidden/coming_soon/available/delisted。界面封面使用 `capsule`，商品页使用 `cpu`、`gpu`。类型筛选支持 genres 中的多个类型。
+`definition(id)` 返回原始 GameDefinition，`release_state(id)` 查询 hidden/coming_soon/available/delisted。界面封面使用 `capsule`，商品页和首页四张展示图使用 `screenshots`；旧资源没有展示图时回退为封面取景。商品页按 16:9 保持展示图完整，系统需求使用 `cpu`、`gpu`。类型筛选支持 genres 中的多个类型。
 
 存档继续记录从 2003 年 9 月开始的相对 month_index；`current_ym()` 在查询资源时转换为 YYYYMM，旧存档无需改变月份格式。上架和下架使用资源月份，已购下架游戏继续出现在库中。
 
-脚本及其 `.gd.uid` 保存在 scripts 中，导入器只管理 data/games，因此重新导入不会改动源脚本身份。`--check` 只检查 Excel 与资源结果是否一致，不写文件。
+脚本及其 `.gd.uid` 保存在 scripts 中，导入器只管理 data/games，因此重新导入不会改动源脚本身份。`--check` 只检查 Excel 与资源结果是否一致，不写文件。表格 capsule 可填 res://assets/art/<game_id>，导入器将 <game_id>.png 与 <game_id>01～04.png 解析成封面与有序展示图数组。genres 支持 / 分隔，“游戏原型”备注列不导出。
 
 ## 后续修改建议
 

@@ -15,28 +15,33 @@ func _initialize() -> void:
 	if catalog == null:
 		quit(1)
 		return
-	check(catalog.games.size() == 12, "twelve resources")
+	check(catalog.games.size() == 1, "one enabled test game")
 	check(catalog.available_at(200308).is_empty(), "hidden before release")
-	check(catalog.available_at(200309).size() == 6, "six initial games")
-	check(catalog.available_at(200310).size() == 9, "nine next-month games")
+	check(catalog.available_at(200309).size() == 1, "test game is initially released")
+	check(catalog.available_at(200310).size() == 1, "test game remains available")
 	check(catalog.find_game(&"missing") == null, "missing ID returns null")
-	var game: GameDefinition = catalog.find_game(&"distant_signal")
+	var game: GameDefinition = catalog.find_game(&"CounterSquad")
 	check(game != null, "find stable game ID")
 	if game != null:
 		check(game.capsule != null, "capsule is a texture reference")
-		check(game.title == "远星来信", "Chinese title survives")
+		check(game.capsule.resource_path == "res://assets/art/CounterSquad/CounterSquad.png", "cover resolves to game ID filename")
+		check(game.screenshots.size() == 4, "four typed screenshot references")
+		for i in range(game.screenshots.size()):
+			check(game.screenshots[i].resource_path == "res://assets/art/CounterSquad/CounterSquad%02d.png" % (i + 1), "screenshot path and order")
+			check(game.screenshots[i].get_size() == Vector2(640, 360), "screenshot dimensions survive import")
+		check(game.title == "反击小队", "Chinese title survives")
 		check(game.base_price == 88, "base price survives")
 		check(game.cpu == "COREI5-10600K", "CPU model preserved verbatim")
 		check(game.gpu == "RTX3060", "GPU model preserved verbatim")
 		check(game.genres == PackedStringArray(["探索冒险"]), "genres typed array")
-		var expected: Array[String] = ["game_id","title","announce_ym","store_release_ym","delist_ym","base_price","developer","genres","cpu","gpu","series_id","description","capsule"]
+		var expected: Array[String] = ["game_id","title","announce_ym","store_release_ym","delist_ym","base_price","developer","genres","cpu","gpu","series_id","description","capsule","screenshots"]
 		var actual: Array[String] = []
 		for property in game.get_property_list():
 			if (property.usage & PROPERTY_USAGE_SCRIPT_VARIABLE) != 0 and (property.usage & PROPERTY_USAGE_EDITOR) != 0:
 				actual.append(property.name)
 		expected.sort()
 		actual.sort()
-		check(actual == expected, "exactly 13 exported game fields; no enabled or old fields")
+		check(actual == expected, "exactly 14 exported game fields; no enabled or old fields")
 		var copy: GameDefinition = game.duplicate(true)
 		copy.announce_ym = 200307
 		copy.delist_ym = 200502

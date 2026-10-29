@@ -1,4 +1,5 @@
 extends SceneTree
+const FIXTURE_CATALOG = preload("res://tests/fixtures/catalog/_catalog.tres")
 const State = preload("res://scripts/store_state.gd")
 var checks: int = 0
 var failed: Array[String] = []
@@ -14,6 +15,7 @@ func _initialize() -> void:
 
 func _run() -> void:
 	var client = load("res://scenes/store.tscn").instantiate()
+	client.state = State.new(FIXTURE_CATALOG)
 	root.add_child(client)
 	await process_frame
 	client.download_timer.stop()
@@ -119,7 +121,7 @@ func _run() -> void:
 	for kind: String in ["downloads", "profile", "community", "search", "home"]:
 		client.navigate({"kind": kind})
 		check(client.get_node("%PageContent").get_child_count() == 1, "render page: " + kind)
-	var store = State.new()
+	var store = State.new(FIXTURE_CATALOG)
 	store.save_path = "user://memoir_client_compatibility_test.json"
 	var file := FileAccess.open(store.save_path, FileAccess.WRITE)
 	file.store_string(JSON.stringify({"version": 1, "wallet": 55, "month": 1, "owned": ["distant_signal"], "wishlist": ["midnight_castle"], "cart": ["mist_valley"], "history": [{"id": "distant_signal", "price": 66, "month": 0}]}))
@@ -132,7 +134,7 @@ func _run() -> void:
 	store.record_play("distant_signal")
 	store.toggle_list("distant_signal", "favorites")
 	check(store.save_state(), "version 2 save succeeds")
-	var copy = State.new()
+	var copy = State.new(FIXTURE_CATALOG)
 	copy.save_path = store.save_path
 	copy.load_state()
 	check(copy.installed == store.installed and copy.favorites == store.favorites and copy.play_minutes == store.play_minutes and copy.activity == store.activity, "version 2 preserves installation, favorite, play record and activity")

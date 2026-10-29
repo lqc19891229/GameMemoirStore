@@ -28,7 +28,7 @@ var activity: Array = []
 var _definitions: Dictionary = {}
 
 func _init(source: GameCatalog = GAME_CATALOG) -> void:
-	# The resource manifest owns membership and the 13 spreadsheet fields.
+	# The resource manifest owns membership, spreadsheet fields and resolved art.
 	# JSON only supplements UI fields not yet managed by the spreadsheet.
 	var presentation: Dictionary = {}
 	var file := FileAccess.open(PRESENTATION_PATH, FileAccess.READ)
@@ -57,6 +57,7 @@ func _init(source: GameCatalog = GAME_CATALOG) -> void:
 			"cpu": definition.cpu, "gpu": definition.gpu, "series_id": str(definition.series_id),
 			"description": definition.description, "feature": definition.description.get_slice("\n", 0),
 			"capsule": definition.capsule,
+			"screenshots": definition.screenshots,
 			"release_month": month_serial(definition.store_release_ym) - month_serial(START_YM),
 			"release_label": "%d 年 %02d 月" % [definition.store_release_ym / 100, definition.store_release_ym % 100],
 		}, true)

@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="GameDefinition" load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://scripts/game.gd" id="1_game"]
+[ext_resource type="Texture2D" path="res://assets/art/CounterSquad/CounterSquad.png" id="2_capsule"]
+[ext_resource type="Texture2D" path="res://assets/art/CounterSquad/CounterSquad01.png" id="shot_01"]
+[ext_resource type="Texture2D" path="res://assets/art/CounterSquad/CounterSquad02.png" id="shot_02"]
+[ext_resource type="Texture2D" path="res://assets/art/CounterSquad/CounterSquad03.png" id="shot_03"]
+[ext_resource type="Texture2D" path="res://assets/art/CounterSquad/CounterSquad04.png" id="shot_04"]
+
+[resource]
+script = ExtResource("1_game")
+game_id = &"CounterSquad"
+title = "反击小队"
+announce_ym = 0
+store_release_ym = 200309
+delist_ym = 0
+base_price = 88
+developer = "Valse"
+genres = PackedStringArray("探索冒险")
+cpu = "COREI5-10600K"
+gpu = "RTX3060"
+series_id = &""
+description = "在失去联系的边境星球，寻找一封迟到的信。穿过静默的观测站与漫长的星夜，重新连接那些散落在宇宙里的故事。"
+capsule = ExtResource("2_capsule")
+screenshots = Array[Texture2D]([ExtResource("shot_01"), ExtResource("shot_02"), ExtResource("shot_03"), ExtResource("shot_04")])

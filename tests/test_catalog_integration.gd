@@ -1,4 +1,5 @@
 extends SceneTree
+const FIXTURE_CATALOG = preload("res://tests/fixtures/catalog/_catalog.tres")
 const State = preload("res://scripts/store_state.gd")
 const UI = preload("res://scripts/client_ui.gd")
 var checks: int = 0
@@ -15,7 +16,7 @@ func _initialize() -> void:
 
 func _run() -> void:
 	var manifest := GameCatalog.new()
-	var definition: GameDefinition = State.GAME_CATALOG.find_game(&"distant_signal").duplicate(true)
+	var definition: GameDefinition = FIXTURE_CATALOG.find_game(&"distant_signal").duplicate(true)
 	definition.title = "资源覆盖的名称"
 	definition.developer = "资源开发商"
 	definition.description = "来自资源的新介绍"
@@ -55,6 +56,25 @@ func _run() -> void:
 	root.add_child(client)
 	await process_frame
 	client.download_timer.stop()
+	# Exercise the real workbook's cover + four independent screenshots end-to-end.
+	var actual: GameDefinition = State.GAME_CATALOG.find_game(&"CounterSquad")
+	var actual_entry: Dictionary = client.state.game("CounterSquad")
+	check(UI.texture(actual_entry) == actual.capsule, "store cards use cover, not screenshot 01")
+	for i in range(4):
+		check(UI.screenshot(actual_entry, i) == actual.screenshots[i], "gallery preserves numbered screenshot order")
+	client.open_product("CounterSquad")
+	await process_frame
+	await process_frame
+	await process_frame
+	await process_frame
+	var picture: TextureRect = client.find_child("ProductScreenshot", true, false)
+	check(picture.texture == actual.screenshots[0], "product opens with screenshot 01 instead of cover")
+	check(picture.stretch_mode == TextureRect.STRETCH_KEEP_ASPECT_CENTERED, "product displays full screenshot without cropping")
+	check(picture.size.y <= picture.get_parent().size.y + 1, "gallery reserves enough height without overlapping surrounding controls")
+	check(absf(picture.size.x / picture.size.y - 16.0 / 9.0) < 0.01, "main screenshot keeps 16:9 at current window width")
+	for i in range(4):
+		client.find_child("ProductThumbnail%d" % (i + 1), true, false).pressed.emit()
+		check(picture.texture == actual.screenshots[i], "thumbnail switches to its independent screenshot")
 	client.state = model
 	check(client.search_games({"filter": "coming"}).size() == 1, "coming-soon filter follows resource announcement")
 	client.open_product("new_sheet_game")
@@ -81,7 +101,7 @@ func _run() -> void:
 	check(client.find_child("ProductAdd", true, false) == null, "owned delisted product never offers another purchase")
 	model.month_index = 4
 	check(model.current_ym() == 200401, "relative save calendar rolls into next year")
-	check(State.GAME_CATALOG.find_game(&"distant_signal").base_price == 88, "test fixtures never mutate shared catalog")
+	check(FIXTURE_CATALOG.find_game(&"distant_signal").base_price == 88, "test fixtures never mutate shared catalog")
 	client.queue_free()
 	await process_frame
 	print("CATALOG_INTEGRATION_CHECKS: %d passed / %d checks" % [checks - failures, checks])

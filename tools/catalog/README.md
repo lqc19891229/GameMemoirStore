@@ -6,7 +6,7 @@
 # 编辑并保存 tools/catalog/game_catalog.xlsx 后生成资源：
 python tools/catalog/import_games.py --project .
 
-# 只检查表格、字段关联和封面路径：
+# 只检查表格、字段关联和五张素材路径：
 python tools/catalog/import_games.py --project . --validate-only
 
 # 检查提交的资源是否与 Excel 一致：
@@ -20,8 +20,8 @@ Windows 可将 `python` 换成 `py -3`。停止正在运行的游戏，保存并
 
 ## 文件
 
-- `game_catalog.xlsx`：精简游戏资料表，14 列，包含 12 款示例游戏。
-- `schema.json`：字段类型、默认值、必填规则、CPU/GPU 列名映射。
+- `game_catalog.xlsx`：当前测试表，含 CounterSquad 一款游戏；“游戏原型”列仅作编辑备注。
+- `schema.json`：字段类型、默认值、必填规则、CPU/GPU 列名映射和备注列白名单。
 - `import_games.py`：读取 Excel、校验并生成资源。
 - `.gdignore`：使 Godot 忽略开发工具与 Excel 文件。
 
@@ -46,13 +46,34 @@ Windows 可将 `python` 换成 `py -3`。停止正在运行的游戏，保存并
 | GPU | gpu: String |
 | series_id | series_id: StringName |
 | description | description: String |
-| capsule | capsule: Texture2D |
+| capsule | 素材文件夹 → capsule: Texture2D、screenshots: Array[Texture2D] |
+| 游戏原型 | 编辑备注，不写入游戏资源 |
 
-必填：enabled、game_id、title、store_release_ym、base_price、developer。其他字段可以为空。表头在前 100 行中自动识别，当前原表位于第 3 行；保留工作表“游戏资料”和表头最后一行的英文字段。CPU/GPU 大写列名或小写 cpu/gpu 都支持。
+必填：enabled、game_id、title、store_release_ym、base_price、developer。其他字段可以为空。表头在前 100 行中自动识别，当前原表位于第 3 行；保留工作表“游戏资料”和表头最后一行的英文字段。CPU/GPU 大写列名或小写 cpu/gpu 都支持。“游戏原型”列可有可无，不参与导出；其他未知列仍会报错，防止拼写错误被忽略。
 
-月份填 `200309` 这样的 YYYYMM 整数，不使用 Excel 日期。announce_ym 和 delist_ym 空白按 0 处理，表示不提前预告、不下架。genres 多个类型用英文分号分隔。CPU/GPU 是型号文本；capsule 填 `res://` 开头的项目图片路径，空白则导出空图片引用。
+月份填 `200309` 这样的 YYYYMM 整数，不使用 Excel 日期。announce_ym 和 delist_ym 空白按 0 处理，表示不提前预告、不下架。genres 多个类型用 `/` 分隔，例如 `射击 / 动作 / 多人`，会去掉每项两侧空格与空项；重复类型会报错，旧表的英文分号 `;` 继续兼容。CPU/GPU 是型号文本。
 
-enabled=0 会清理对应游戏的生成资源。已有玩家存档关联的游戏应保留 ID 并通过 delist_ym 下架，以保留库中的所有权关联。game_id 以小写字母开头，仅用小写字母、数字和下划线。
+enabled=0 会清理对应游戏的生成资源。已有玩家存档关联的游戏应保留 ID 并通过 delist_ym 下架，以保留库中的所有权关联。game_id 以英文字母开头，可含大小写英文字母、数字和下划线。ID 大小写原样保留，但同表不能同时出现仅大小写不同的 ID，以免 Windows 文件名冲突。
+
+## 素材文件夹约定
+
+表格 `capsule` 填 `res://assets/art/CounterSquad`，`game_id` 填 `CounterSquad`。文件夹名、图片名与 ID 的大小写必须一致。文件夹中按以下规则放置五张 PNG：
+
+| 相对素材文件夹的文件名 | 用途 | 建议尺寸 |
+|---|---|---|
+| `CounterSquad.png` | 商店封面 | 640×256，5:2 |
+| `CounterSquad01.png` | 展示图 1 | 640×360，16:9 |
+| `CounterSquad02.png` | 展示图 2 | 640×360，16:9 |
+| `CounterSquad03.png` | 展示图 3 | 640×360，16:9 |
+| `CounterSquad04.png` | 展示图 4 | 640×360，16:9 |
+
+其他游戏将文件名中的 `CounterSquad` 换成它的 game_id。无需在 Excel 新增四个图片路径列。导入器按 01→04 的固定顺序写入 `screenshots`，封面写入 `capsule`；这些是 Texture2D 资源引用，不是运行时扫描文件夹。
+
+默认检查五张文件是否全部存在，缺少任一张就停止，不更新已有生成结果。尺寸是建议值，不强制缩放或修改原图。当前 CounterSquad 封面实际为 1983×793，四张展示图为 640×360，均可直接加载。
+
+兼容旧表：capsule 仍可直接填 `res://assets/art/stars.png` 这样的图片路径，此时 screenshots 为空，界面沿用封面取景；capsule 留空时不引用任何图片。`--skip-asset-check` 仅跳过图片存在性检查，仍按约定生成引用，实际运行前必须补齐素材。
+
+商品页主展示区按 16:9 保持完整画面，四个缩略图可以切换独立展示图；商品卡片与右侧简介区继续使用封面。首页推荐区的四个缩略图也使用独立展示图。
 
 ## 写入与保护
 
@@ -71,4 +92,4 @@ godot --headless --path . --script res://tests/test_catalog_resources.gd
 godot --headless --path . --script res://tests/test_catalog_integration.gd -- --fresh
 ```
 
-资源字段检查针对原表 12 款示例游戏。改动数量、月份和硬件型号后，需要相应调整该示例测试的预期。通用 Python 校验与导入规则可继续用于新增数据。
+资源加载与独立展示图接入检查针对当前 CounterSquad 测试数据。其余购买、存档、筛选与旧路径回归使用 tests/fixtures 中固定的旧目录，不影响正式商店。更换测试游戏时需要相应调整当前数据的预期，通用导入规则可继续用于新增数据。

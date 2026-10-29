@@ -73,7 +73,8 @@ func home() -> void:
 	thumbs.add_theme_constant_override("v_separation", 4)
 	details.add_child(thumbs)
 	for shot: int in range(4):
-		U.image(thumbs, feature, 128, 52, shot)
+		var preview := U.image(thumbs, feature, 128, 72)
+		preview.texture = U.screenshot(feature, shot)
 	U.label(details, "现已推出", 12, U.TEXT)
 	U.label(details, "%s · %d%% 好评" % [feature["rating"], feature["review_percent"]], 12, U.BLUE)
 	var feature_actions := U.hbox(details)
@@ -198,18 +199,31 @@ func product(queue_mode: bool = false) -> void:
 	U.button(title_row, "社区中心", func() -> void: c.navigate({"kind": "community", "id": game_id}), "dark")
 	var top := U.hbox(root, 20)
 	var gallery := U.vbox(top, 8)
-	var picture := U.image(gallery, entry, 0, 236, int(c.route.get("shot", 0)))
+	var aspect := AspectRatioContainer.new()
+	aspect.ratio = 16.0 / 9.0
+	aspect.stretch_mode = AspectRatioContainer.STRETCH_FIT
+	aspect.custom_minimum_size.y = 236
+	aspect.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	# Reserve the image's full height in the VBox, including after window resizing.
+	aspect.resized.connect(func() -> void:
+		aspect.custom_minimum_size.y = aspect.size.x / aspect.ratio
+	)
+	gallery.add_child(aspect)
+	var picture := U.image(aspect, entry, 0, 0)
+	picture.texture = U.screenshot(entry, int(c.route.get("shot", 0)))
+	picture.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	picture.name = "ProductScreenshot"
 	var thumb_row := U.hbox(gallery, 8)
 	for shot: int in range(4):
 		var number: int = shot
 		var thumbnail := U.button(thumb_row, "", func() -> void:
-			picture.texture = U.texture(entry, number)
+			picture.texture = U.screenshot(entry, number)
 		, "dark")
+		thumbnail.name = "ProductThumbnail%d" % (shot + 1)
 		thumbnail.custom_minimum_size = Vector2(0, 56)
 		thumbnail.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		var art := TextureRect.new()
-		art.texture = U.texture(entry, shot)
+		art.texture = U.screenshot(entry, shot)
 		art.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		art.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
 		art.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST

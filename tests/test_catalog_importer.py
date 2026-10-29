@@ -16,7 +16,7 @@ class ImporterTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.schema = json.loads((ROOT/'schema.json').read_text(encoding='utf-8'))
-        cls.raw = mod.read_xlsx(ROOT/'game_catalog.xlsx', cls.schema)
+        cls.raw = json.loads((PROJECT/'tests/fixtures/catalog_rows.json').read_text(encoding='utf-8'))
 
     def changed(self, index=0, **values):
         raw = copy.deepcopy(self.raw)
@@ -28,17 +28,19 @@ class ImporterTests(unittest.TestCase):
             mod.validate(raw, self.schema)
 
     def test_actual_header_row_and_hardware_aliases(self):
-        self.assertEqual(list(self.raw),['游戏资料'])
-        self.assertEqual(self.raw['游戏资料'][0][0],4)
-        self.assertEqual(self.raw['游戏资料'][0][1]['cpu'],'COREI5-10600K')
-        self.assertEqual(self.raw['游戏资料'][0][1]['gpu'],'RTX3060')
+        raw = mod.read_xlsx(ROOT/'game_catalog.xlsx', self.schema)
+        self.assertEqual(list(raw),['游戏资料'])
+        self.assertEqual(raw['游戏资料'][0][0],4)
+        self.assertEqual(raw['游戏资料'][0][1]['cpu'],'COREI5-10600K')
+        self.assertEqual(raw['游戏资料'][0][1]['gpu'],'RTX3060')
+        self.assertNotIn('游戏原型', raw['游戏资料'][0][1])
 
     def test_all_twelve_games_and_capsule_assets(self):
         data,warnings=mod.validate(self.raw,self.schema,PROJECT)
         self.assertEqual(len(data['游戏资料']),12)
         self.assertFalse(warnings)
 
-    def test_only_thirteen_game_fields_are_emitted(self):
+    def test_only_fourteen_game_fields_are_emitted(self):
         data,_=mod.validate(self.raw,self.schema)
         files=mod.render_files(data,'data/games')
         self.assertEqual(len(files),13)
@@ -47,7 +49,7 @@ class ImporterTests(unittest.TestCase):
         text=files['distant_signal.tres'].decode()
         body=text.split('[resource]\n',1)[1]
         keys={line.split(' = ',1)[0] for line in body.splitlines() if ' = ' in line}
-        self.assertEqual(keys,{'script','game_id','title','announce_ym','store_release_ym','delist_ym','base_price','developer','genres','cpu','gpu','series_id','description','capsule'})
+        self.assertEqual(keys,{'script','game_id','title','announce_ym','store_release_ym','delist_ym','base_price','developer','genres','cpu','gpu','series_id','description','capsule','screenshots'})
 
     def test_manifest_preserves_spreadsheet_row_order(self):
         data,_=mod.validate(self.raw,self.schema)
@@ -111,6 +113,63 @@ class ImporterTests(unittest.TestCase):
     def test_multiple_genres_split(self):
         data,_=mod.validate(self.changed(genres='科幻;探索'),self.schema)
         self.assertEqual(data['游戏资料'][0]['genres'],['科幻','探索'])
+
+    def test_slash_genres_trim_whitespace_and_empty_segments(self):
+        data,_=mod.validate(self.changed(genres=' 射击 / 动作// 多人 / '),self.schema)
+        self.assertEqual(data['游戏资料'][0]['genres'],['射击','动作','多人'])
+        self.reject(self.changed(genres='射击/射击'),'重复项')
+
+    def test_current_counter_squad_workbook_and_five_assets(self):
+        raw=mod.read_xlsx(ROOT/'game_catalog.xlsx',self.schema)
+        data,_=mod.validate(raw,self.schema,PROJECT)
+        self.assertEqual(len(data['游戏资料']),1)
+        game=data['游戏资料'][0]
+        self.assertEqual(game['game_id'],'CounterSquad')
+        self.assertEqual(game['capsule'],'res://assets/art/CounterSquad/CounterSquad.png')
+        self.assertEqual(game['screenshots'],[f'res://assets/art/CounterSquad/CounterSquad{i:02d}.png' for i in range(1,5)])
+        files=mod.render_files(data,'data/games')
+        self.assertEqual(set(files),{'CounterSquad.tres','_catalog.tres'})
+        text=files['CounterSquad.tres'].decode()
+        self.assertIn('game_id = &"CounterSquad"',text)
+        self.assertIn('load_steps=7',text)
+        self.assertIn('screenshots = Array[Texture2D]([ExtResource("shot_01"), ExtResource("shot_02"), ExtResource("shot_03"), ExtResource("shot_04")])',text)
+
+    def test_case_only_duplicate_ids_rejected(self):
+        self.reject(self.changed(index=1,game_id='Distant_Signal'),'重复game_id')
+
+    def test_art_folder_must_match_game_id_exactly(self):
+        self.reject(self.changed(game_id='CounterSquad',capsule='res://assets/art/countersquad'),'大小写一致')
+        self.reject(self.changed(game_id='CounterSquad',capsule='res://other/CounterSquad'),'素材文件夹')
+
+    def test_folder_trailing_slash_normalized(self):
+        data,_=mod.validate(self.changed(game_id='CounterSquad',capsule='res://assets/art/CounterSquad/'),self.schema,PROJECT)
+        self.assertEqual(data['游戏资料'][0]['capsule'],'res://assets/art/CounterSquad/CounterSquad.png')
+
+    def test_missing_screenshot_stops_import_before_writing(self):
+        raw=self.changed(game_id='CounterSquad',capsule='res://assets/art/CounterSquad')
+        with tempfile.TemporaryDirectory() as temp:
+            project=Path(temp)
+            folder=project/'assets/art/CounterSquad'
+            folder.mkdir(parents=True)
+            for name in ['CounterSquad.png','CounterSquad01.png','CounterSquad02.png','CounterSquad04.png']:
+                (folder/name).touch()
+            with self.assertRaisesRegex(mod.ImportFailure,'CounterSquad03.png'):
+                mod.validate(raw,self.schema,project)
+            self.assertFalse((project/'data/games').exists())
+
+    def test_skip_asset_check_still_resolves_folder(self):
+        data,_=mod.validate(self.changed(game_id='CounterSquad',capsule='res://assets/art/CounterSquad'),self.schema,Path('/missing-project'),True)
+        self.assertEqual(len(data['游戏资料'][0]['screenshots']),4)
+
+    def test_legacy_single_cover_has_no_screenshots(self):
+        data,_=mod.validate(self.raw,self.schema,PROJECT)
+        self.assertEqual(data['游戏资料'][0]['screenshots'],[])
+
+    def test_unrecognized_header_is_still_rejected(self):
+        schema=copy.deepcopy(self.schema)
+        schema['ignored_headers']=[]
+        with self.assertRaisesRegex(mod.ImportFailure,'未知.*游戏原型'):
+            mod.read_xlsx(ROOT/'game_catalog.xlsx',schema)
 
     def test_hardware_models_are_verbatim(self):
         data,_=mod.validate(self.changed(cpu='AMD Ryzen 5 5600X',gpu='GeForce RTX 3060 12GB'),self.schema)
