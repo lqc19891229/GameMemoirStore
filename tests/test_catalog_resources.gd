@@ -30,10 +30,10 @@ func _initialize() -> void:
 			check(game.screenshots[i].resource_path == "res://assets/art/CounterSquad/CounterSquad%02d.png" % (i + 1), "screenshot path and order")
 			check(game.screenshots[i].get_size() == Vector2(640, 360), "screenshot dimensions survive import")
 		check(game.title == "反击小队", "Chinese title survives")
-		check(game.base_price == 88, "base price survives")
+		check(game.base_price == 105, "base price survives")
 		check(game.cpu == "COREI5-10600K", "CPU model preserved verbatim")
 		check(game.gpu == "RTX3060", "GPU model preserved verbatim")
-		check(game.genres == PackedStringArray(["探索冒险"]), "genres typed array")
+		check(game.genres == PackedStringArray(["射击", "动作", "多人"]), "genres typed array")
 		var expected: Array[String] = ["game_id","title","announce_ym","store_release_ym","delist_ym","base_price","developer","genres","cpu","gpu","series_id","description","capsule","screenshots"]
 		var actual: Array[String] = []
 		for property in game.get_property_list():

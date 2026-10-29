@@ -1,7 +1,6 @@
 开发辅助工具
 
-catalog/：Excel 游戏资料表、字段规范和导入器。
-build_scene.py：重建旧版 legacy_store.tscn 场景和 store_theme.tres 主题。
-create_art.py：重建旧演示游戏的程序绘制封面、图标和背景，需要 Pillow。
+catalog/：Excel 游戏资料表、字段规范和 Python 导入器。
 
-日常修改游戏资料使用项目根目录 import_games.bat，无需运行上述重建工具。
+Windows 双击项目根目录 import_games.bat，即可将已保存的表格导入 data/games。
+需要 Python 3.10 或以上版本；详细规则见 catalog/README.md。

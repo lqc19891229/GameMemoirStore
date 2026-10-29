@@ -5,7 +5,7 @@ test_catalog_resources.gd：检查当前游戏资源的字段、图片加载和�
 test_catalog_integration.gd：检查资源接入商品页、展示图切换和交易流程。
 test_client.gd：检查新版客户端导航、搜索、购买、库和存档。
 test_client_windows.gd：检查原生窗口、右键菜单和浏览位置，需要图形环境。
-test_store.gd：检查旧版商店、购买和存档流程。
+test_store.gd：检查交易规则、时间线和存档流程，不依赖场景。
 fixtures/：固定测试样本，与正式商店资料分开。
 *.gd.uid：Godot 脚本的稳定标识。
 

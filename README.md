@@ -97,11 +97,9 @@ python tools/catalog/import_games.py --project . --check
 | `tools/catalog/` | 原始 Excel、Python 导入器和字段规范 |
 | `data/catalog.json` | 评价、标签、折扣等尚未进入表格的补充展示资料 |
 | `assets/client_theme.tres` | 新版默认字体和主题 |
-| `scenes/legacy_store.tscn` | 保留 v0.2 原场景，便于对照 |
-| `previews/` | 本次实际运行截图 |
 | `CLIENT_STRUCTURE.md` | 新版节点与页面运行机制 |
 
-页面中的可变部分在运行时由原生 Godot Container 节点构建。运行后在 Scene 面板切换到 Remote，可查看完整页面节点。主场景不再沿用 v0.2 的 116 节点平铺布局。`tools/build_scene.py` 仅生成旧版 `legacy_store.tscn`，新版页面通过原生 Container 构建，不依赖生成器。
+页面中的可变部分在运行时由原生 Godot Container 节点构建。运行后在 Scene 面板切换到 Remote，可查看完整页面节点。项目只保留当前客户端，页面构建不依赖外部场景生成工具。
 
 存档路径仍为 `user://memoir_store_v01.json`。程序会读取版本 1 并用版本 2 格式保存，保留旧预算、购物车、收藏与愿望单。新增加的安装与游玩字段初始化为空。
 
@@ -111,7 +109,7 @@ Godot 4.6 stable 官方版本运行检查：
 
 - 导入器：类型分隔、素材目录解析、大小写 ID、备注列、缺图阻止写入、旧图片路径与文件保护。
 - 资源与页面：封面及四张展示图加载、缩略图切换、上架/下架、成交价与库保留。
-- 固定样例回归：客户端导航、购买、存档、原生窗口与旧版商店。
+- 固定样例回归：客户端导航、交易规则、时间线、存档与原生窗口。
 
 命令行验证：
 
