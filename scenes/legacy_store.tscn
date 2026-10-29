@@ -1,134 +1,83 @@
-[gd_scene load_steps=23 format=3]
+[gd_scene format=3 uid="uid://dm5ul00pgobfe"]
 
-[ext_resource type="Script" path="res://scripts/store.gd" id="script"]
-
+[ext_resource type="Texture2D" uid="uid://r2gac6bip6vb" path="res://assets/art/background.png" id="background"]
+[ext_resource type="Texture2D" uid="uid://cagjxuj48w286" path="res://assets/art/desert.png" id="desert"]
+[ext_resource type="Texture2D" uid="uid://balan76jhtird" path="res://assets/art/icon.png" id="icon"]
+[ext_resource type="Texture2D" uid="uid://du7x3eq06ui6l" path="res://assets/art/ocean.png" id="ocean"]
+[ext_resource type="Script" uid="uid://c2cfv6c6irpmf" path="res://scripts/store.gd" id="script"]
+[ext_resource type="Texture2D" uid="uid://d13ebljlauljp" path="res://assets/art/stars.png" id="stars"]
 [ext_resource type="Theme" path="res://assets/store_theme.tres" id="theme"]
-
-[ext_resource type="Texture2D" path="res://assets/art/icon.png" id="icon"]
-
-[ext_resource type="Texture2D" path="res://assets/art/background.png" id="background"]
-
-[ext_resource type="Texture2D" path="res://assets/art/stars.png" id="stars"]
-
-[ext_resource type="Texture2D" path="res://assets/art/desert.png" id="desert"]
-
-[ext_resource type="Texture2D" path="res://assets/art/valley.png" id="valley"]
-
-[ext_resource type="Texture2D" path="res://assets/art/ocean.png" id="ocean"]
-
-[sub_resource type="StyleBoxFlat" id="panel"]
-bg_color = Color(0.10196, 0.17255, 0.21176, 1.00000)
-border_color = Color(0.20784, 0.29412, 0.31765, 1.00000)
-border_width_left = 1
-border_width_top = 1
-border_width_right = 1
-border_width_bottom = 1
-
-[sub_resource type="StyleBoxFlat" id="deep"]
-bg_color = Color(0.07843, 0.13725, 0.18039, 1.00000)
-border_color = Color(0.18824, 0.26275, 0.29020, 1.00000)
-border_width_left = 1
-border_width_top = 1
-border_width_right = 1
-border_width_bottom = 1
-
-[sub_resource type="StyleBoxFlat" id="button"]
-bg_color = Color(0.13725, 0.22353, 0.25882, 1.00000)
-border_color = Color(0.25098, 0.34118, 0.35686, 1.00000)
-border_width_left = 1
-border_width_top = 1
-border_width_right = 1
-border_width_bottom = 1
-
-[sub_resource type="StyleBoxFlat" id="hover"]
-bg_color = Color(0.18824, 0.29020, 0.31373, 1.00000)
-border_color = Color(0.55686, 0.69804, 0.63137, 1.00000)
-border_width_left = 1
-border_width_top = 1
-border_width_right = 1
-border_width_bottom = 1
-
-[sub_resource type="StyleBoxFlat" id="pressed"]
-bg_color = Color(0.20784, 0.34902, 0.30980, 1.00000)
-border_color = Color(0.65490, 0.78431, 0.60000, 1.00000)
-border_width_left = 1
-border_width_top = 1
-border_width_right = 1
-border_width_bottom = 1
-
-[sub_resource type="StyleBoxFlat" id="disabled"]
-bg_color = Color(0.10588, 0.16471, 0.20000, 1.00000)
-border_color = Color(0.18824, 0.25490, 0.28627, 1.00000)
-border_width_left = 1
-border_width_top = 1
-border_width_right = 1
-border_width_bottom = 1
-
-[sub_resource type="StyleBoxFlat" id="active"]
-bg_color = Color(0.16863, 0.28627, 0.27843, 1.00000)
-border_color = Color(0.56863, 0.70980, 0.62745, 1.00000)
-border_width_left = 1
-border_width_top = 1
-border_width_right = 1
-border_width_bottom = 1
-
-[sub_resource type="StyleBoxFlat" id="green"]
-bg_color = Color(0.70196, 0.80784, 0.56078, 1.00000)
-border_color = Color(0.84314, 0.89804, 0.72157, 1.00000)
-border_width_left = 1
-border_width_top = 1
-border_width_right = 1
-border_width_bottom = 1
-
-[sub_resource type="StyleBoxFlat" id="green_hover"]
-bg_color = Color(0.78431, 0.86275, 0.64706, 1.00000)
-border_color = Color(0.92941, 0.94902, 0.84706, 1.00000)
-border_width_left = 1
-border_width_top = 1
-border_width_right = 1
-border_width_bottom = 1
-
-[sub_resource type="StyleBoxFlat" id="green_down"]
-bg_color = Color(0.58039, 0.70196, 0.47843, 1.00000)
-border_color = Color(0.73333, 0.82353, 0.60000, 1.00000)
-border_width_left = 1
-border_width_top = 1
-border_width_right = 1
-border_width_bottom = 1
-
-[sub_resource type="StyleBoxFlat" id="cart"]
-bg_color = Color(0.16078, 0.26667, 0.24706, 1.00000)
-border_color = Color(0.50196, 0.63922, 0.53725, 1.00000)
-border_width_left = 1
-border_width_top = 1
-border_width_right = 1
-border_width_bottom = 1
-
-[sub_resource type="StyleBoxFlat" id="toast"]
-bg_color = Color(0.18431, 0.30588, 0.27451, 1.00000)
-border_color = Color(0.66275, 0.78039, 0.57647, 1.00000)
-border_width_left = 1
-border_width_top = 1
-border_width_right = 1
-border_width_bottom = 1
-
-[sub_resource type="StyleBoxFlat" id="focus"]
-bg_color = Color(0.00000, 0.00000, 0.00000, 0.00000)
-border_color = Color(0.90980, 0.79216, 0.56471, 1.00000)
-border_width_left = 2
-border_width_top = 2
-border_width_right = 2
-border_width_bottom = 2
+[ext_resource type="Texture2D" uid="uid://c86hxdxb3jb7j" path="res://assets/art/valley.png" id="valley"]
 
 [sub_resource type="StyleBoxFlat" id="transparent"]
-bg_color = Color(0.00000, 0.00000, 0.00000, 0.00000)
-border_color = Color(0.00000, 0.00000, 0.00000, 0.00000)
-border_width_left = 0
-border_width_top = 0
-border_width_right = 0
-border_width_bottom = 0
+bg_color = Color(0, 0, 0, 0)
+border_color = Color(0, 0, 0, 0)
 
-[node name="MemoirStore" type="Control"]
+[sub_resource type="StyleBoxFlat" id="active"]
+bg_color = Color(0.16863, 0.28627, 0.27843, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.56863, 0.7098, 0.62745, 1)
+
+[sub_resource type="StyleBoxFlat" id="deep"]
+bg_color = Color(0.07843, 0.13725, 0.18039, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.18824, 0.26275, 0.2902, 1)
+
+[sub_resource type="StyleBoxFlat" id="panel"]
+bg_color = Color(0.10196, 0.17255, 0.21176, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.20784, 0.29412, 0.31765, 1)
+
+[sub_resource type="StyleBoxFlat" id="cart"]
+bg_color = Color(0.16078, 0.26667, 0.24706, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.50196, 0.63922, 0.53725, 1)
+
+[sub_resource type="StyleBoxFlat" id="green"]
+bg_color = Color(0.70196, 0.80784, 0.56078, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.84314, 0.89804, 0.72157, 1)
+
+[sub_resource type="StyleBoxFlat" id="green_down"]
+bg_color = Color(0.58039, 0.70196, 0.47843, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.73333, 0.82353, 0.6, 1)
+
+[sub_resource type="StyleBoxFlat" id="green_hover"]
+bg_color = Color(0.78431, 0.86275, 0.64706, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.92941, 0.94902, 0.84706, 1)
+
+[sub_resource type="StyleBoxFlat" id="toast"]
+bg_color = Color(0.18431, 0.30588, 0.27451, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.66275, 0.78039, 0.57647, 1)
+
+[node name="MemoirStore" type="Control" unique_id=1752412680]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -138,1241 +87,1281 @@ grow_vertical = 2
 theme = ExtResource("theme")
 script = ExtResource("script")
 
-[node name="Background" type="TextureRect" parent="."]
-offset_left = 0.0
-offset_top = 0.0
+[node name="Background" type="TextureRect" parent="." unique_id=625398422]
+texture_filter = 1
+layout_mode = 0
 offset_right = 1280.0
 offset_bottom = 800.0
+mouse_filter = 2
 texture = ExtResource("background")
 expand_mode = 1
-stretch_mode = 0
-texture_filter = 1
-mouse_filter = 2
 
-[node name="Chrome" type="ColorRect" parent="."]
-offset_left = 0.0
-offset_top = 0.0
+[node name="Chrome" type="ColorRect" parent="." unique_id=536296508]
+layout_mode = 0
 offset_right = 1280.0
 offset_bottom = 28.0
-color = Color(0.04706, 0.09020, 0.12549, 1.00000)
 mouse_filter = 2
+color = Color(0.04706, 0.0902, 0.12549, 1)
 
-[node name="WindowTitle" type="Label" parent="."]
+[node name="WindowTitle" type="Label" parent="." unique_id=1298266285]
+layout_mode = 0
 offset_left = 24.0
-offset_top = 0.0
 offset_right = 674.0
 offset_bottom = 28.0
-mouse_filter = 2
-text = "GAME MEMOIR  /  游戏回忆录"
+theme_override_colors/font_color = Color(0.51765, 0.6, 0.58431, 1)
 theme_override_font_sizes/font_size = 12
-theme_override_colors/font_color = Color(0.51765, 0.60000, 0.58431, 1.00000)
+text = "GAME MEMOIR  /  游戏回忆录"
 vertical_alignment = 1
 
-[node name="AboutButton" type="Button" parent="."]
+[node name="AboutButton" type="Button" parent="." unique_id=891902538]
 unique_name_in_owner = true
+layout_mode = 0
 offset_left = 1156.0
 offset_top = 4.0
 offset_right = 1212.0
 offset_bottom = 24.0
-text = "关于"
 mouse_default_cursor_shape = 2
 theme_override_styles/normal = SubResource("transparent")
+text = "关于"
 
-[node name="QuitButton" type="Button" parent="."]
+[node name="QuitButton" type="Button" parent="." unique_id=420298245]
 unique_name_in_owner = true
+layout_mode = 0
 offset_left = 1220.0
 offset_top = 4.0
 offset_right = 1256.0
 offset_bottom = 24.0
-text = "×"
+tooltip_text = "退出游戏，当前收藏会自动保存"
 mouse_default_cursor_shape = 2
 theme_override_styles/normal = SubResource("transparent")
-tooltip_text = "退出游戏，当前收藏会自动保存"
+text = "×"
 
-[node name="BrandIcon" type="TextureRect" parent="."]
+[node name="BrandIcon" type="TextureRect" parent="." unique_id=956711453]
+texture_filter = 1
+layout_mode = 0
 offset_left = 30.0
 offset_top = 52.0
 offset_right = 78.0
 offset_bottom = 100.0
+mouse_filter = 2
 texture = ExtResource("icon")
 expand_mode = 1
-stretch_mode = 0
-texture_filter = 1
-mouse_filter = 2
 
-[node name="BrandName" type="Label" parent="."]
+[node name="BrandName" type="Label" parent="." unique_id=1825199703]
+layout_mode = 0
 offset_left = 94.0
 offset_top = 45.0
 offset_right = 314.0
 offset_bottom = 81.0
-mouse_filter = 2
-text = "游戏回忆录"
+theme_override_colors/font_color = Color(0.86667, 0.89412, 0.85098, 1)
 theme_override_font_sizes/font_size = 24
-theme_override_colors/font_color = Color(0.86667, 0.89412, 0.85098, 1.00000)
+text = "游戏回忆录"
 vertical_alignment = 1
 
-[node name="BrandSub" type="Label" parent="."]
+[node name="BrandSub" type="Label" parent="." unique_id=1392729707]
+layout_mode = 0
 offset_left = 96.0
 offset_top = 83.0
 offset_right = 326.0
 offset_bottom = 103.0
-mouse_filter = 2
-text = "A LIBRARY OF YOUR OWN"
+theme_override_colors/font_color = Color(0.51765, 0.6, 0.58431, 1)
 theme_override_font_sizes/font_size = 12
-theme_override_colors/font_color = Color(0.51765, 0.60000, 0.58431, 1.00000)
+text = "A LIBRARY OF YOUR OWN"
 vertical_alignment = 1
 
-[node name="StoreTab" type="Button" parent="."]
+[node name="StoreTab" type="Button" parent="." unique_id=1181624120]
 unique_name_in_owner = true
+layout_mode = 0
 offset_left = 378.0
 offset_top = 60.0
 offset_right = 462.0
 offset_bottom = 96.0
-text = "商 店"
 mouse_default_cursor_shape = 2
 theme_override_styles/normal = SubResource("active")
+text = "商 店"
 
-[node name="LibraryTab" type="Button" parent="."]
+[node name="LibraryTab" type="Button" parent="." unique_id=728217787]
 unique_name_in_owner = true
+layout_mode = 0
 offset_left = 474.0
 offset_top = 60.0
 offset_right = 570.0
 offset_bottom = 96.0
-text = "游戏库"
 mouse_default_cursor_shape = 2
 theme_override_styles/normal = SubResource("transparent")
+text = "游戏库"
 
-[node name="WishTab" type="Button" parent="."]
+[node name="WishTab" type="Button" parent="." unique_id=1167564169]
 unique_name_in_owner = true
+layout_mode = 0
 offset_left = 582.0
 offset_top = 60.0
 offset_right = 690.0
 offset_bottom = 96.0
-text = "愿望单"
 mouse_default_cursor_shape = 2
 theme_override_styles/normal = SubResource("transparent")
+text = "愿望单"
 
-[node name="OnlineDot" type="Label" parent="."]
+[node name="OnlineDot" type="Label" parent="." unique_id=1109693851]
+layout_mode = 0
 offset_left = 904.0
 offset_top = 57.0
 offset_right = 928.0
 offset_bottom = 89.0
-mouse_filter = 2
-text = "●"
+theme_override_colors/font_color = Color(0.70196, 0.80784, 0.56078, 1)
 theme_override_font_sizes/font_size = 12
-theme_override_colors/font_color = Color(0.70196, 0.80784, 0.56078, 1.00000)
+text = "●"
 vertical_alignment = 1
 
-[node name="PlayerName" type="Label" parent="."]
+[node name="PlayerName" type="Label" parent="." unique_id=1494254585]
+layout_mode = 0
 offset_left = 930.0
 offset_top = 53.0
 offset_right = 1042.0
 offset_bottom = 77.0
-mouse_filter = 2
-text = "像素收藏家"
+theme_override_colors/font_color = Color(0.86667, 0.89412, 0.85098, 1)
 theme_override_font_sizes/font_size = 12
-theme_override_colors/font_color = Color(0.86667, 0.89412, 0.85098, 1.00000)
+text = "像素收藏家"
 vertical_alignment = 1
 
-[node name="PlayerSub" type="Label" parent="."]
+[node name="PlayerSub" type="Label" parent="." unique_id=499422375]
+layout_mode = 0
 offset_left = 930.0
 offset_top = 77.0
 offset_right = 1042.0
 offset_bottom = 97.0
-mouse_filter = 2
-text = "每一段回忆都算数"
+theme_override_colors/font_color = Color(0.51765, 0.6, 0.58431, 1)
 theme_override_font_sizes/font_size = 12
-theme_override_colors/font_color = Color(0.51765, 0.60000, 0.58431, 1.00000)
+text = "每一段回忆都算数"
 vertical_alignment = 1
 
-[node name="WalletPanel" type="Panel" parent="."]
+[node name="WalletPanel" type="Panel" parent="." unique_id=1590790981]
+layout_mode = 0
 offset_left = 1072.0
 offset_top = 50.0
 offset_right = 1248.0
 offset_bottom = 104.0
 theme_override_styles/panel = SubResource("deep")
 
-[node name="WalletTitle" type="Label" parent="WalletPanel"]
+[node name="WalletTitle" type="Label" parent="WalletPanel" unique_id=981264424]
+layout_mode = 0
 offset_left = 12.0
 offset_top = 5.0
 offset_right = 82.0
 offset_bottom = 23.0
-mouse_filter = 2
-text = "可用预算"
+theme_override_colors/font_color = Color(0.51765, 0.6, 0.58431, 1)
 theme_override_font_sizes/font_size = 12
-theme_override_colors/font_color = Color(0.51765, 0.60000, 0.58431, 1.00000)
+text = "可用预算"
 vertical_alignment = 1
 
-[node name="WalletValue" type="Label" parent="WalletPanel"]
+[node name="WalletValue" type="Label" parent="WalletPanel" unique_id=180478374]
 unique_name_in_owner = true
+layout_mode = 0
 offset_left = 12.0
 offset_top = 25.0
 offset_right = 164.0
 offset_bottom = 47.0
-mouse_filter = 2
-text = "160 点"
+theme_override_colors/font_color = Color(0.70196, 0.80784, 0.56078, 1)
 theme_override_font_sizes/font_size = 24
-theme_override_colors/font_color = Color(0.70196, 0.80784, 0.56078, 1.00000)
+text = "160 点"
 vertical_alignment = 1
 
-[node name="HeaderRule" type="ColorRect" parent="."]
+[node name="HeaderRule" type="ColorRect" parent="." unique_id=1307422143]
+layout_mode = 0
 offset_left = 32.0
 offset_top = 124.0
 offset_right = 1248.0
 offset_bottom = 125.0
-color = Color(0.18824, 0.26275, 0.29020, 1.00000)
 mouse_filter = 2
+color = Color(0.18824, 0.26275, 0.2902, 1)
 
-[node name="Sidebar" type="Panel" parent="."]
+[node name="Sidebar" type="Panel" parent="." unique_id=474338275]
+layout_mode = 0
 offset_left = 32.0
 offset_top = 154.0
 offset_right = 196.0
 offset_bottom = 739.0
 theme_override_styles/panel = SubResource("deep")
 
-[node name="SidebarTitle" type="Label" parent="Sidebar"]
+[node name="SidebarTitle" type="Label" parent="Sidebar" unique_id=1867471264]
+layout_mode = 0
 offset_left = 16.0
 offset_top = 15.0
 offset_right = 148.0
 offset_bottom = 35.0
-mouse_filter = 2
-text = "你的游戏年代"
+theme_override_colors/font_color = Color(0.51765, 0.6, 0.58431, 1)
 theme_override_font_sizes/font_size = 12
-theme_override_colors/font_color = Color(0.51765, 0.60000, 0.58431, 1.00000)
+text = "你的游戏年代"
 vertical_alignment = 1
 
-[node name="DateLabel" type="Label" parent="Sidebar"]
+[node name="DateLabel" type="Label" parent="Sidebar" unique_id=1991355103]
 unique_name_in_owner = true
+layout_mode = 0
 offset_left = 16.0
 offset_top = 43.0
 offset_right = 156.0
 offset_bottom = 71.0
-mouse_filter = 2
-text = "2003 年 09 月"
+theme_override_colors/font_color = Color(0.85098, 0.71765, 0.48627, 1)
 theme_override_font_sizes/font_size = 12
-theme_override_colors/font_color = Color(0.85098, 0.71765, 0.48627, 1.00000)
+text = "2003 年 09 月"
 vertical_alignment = 1
 
-[node name="SideRule1" type="ColorRect" parent="Sidebar"]
+[node name="SideRule1" type="ColorRect" parent="Sidebar" unique_id=1673001245]
+layout_mode = 0
 offset_left = 16.0
 offset_top = 85.0
 offset_right = 148.0
 offset_bottom = 86.0
-color = Color(0.18824, 0.26275, 0.29020, 1.00000)
 mouse_filter = 2
+color = Color(0.18824, 0.26275, 0.2902, 1)
 
-[node name="BrowseLabel" type="Label" parent="Sidebar"]
+[node name="BrowseLabel" type="Label" parent="Sidebar" unique_id=1937391472]
+layout_mode = 0
 offset_left = 16.0
 offset_top = 101.0
 offset_right = 148.0
 offset_bottom = 121.0
-mouse_filter = 2
-text = "浏览商店"
+theme_override_colors/font_color = Color(0.51765, 0.6, 0.58431, 1)
 theme_override_font_sizes/font_size = 12
-theme_override_colors/font_color = Color(0.51765, 0.60000, 0.58431, 1.00000)
+text = "浏览商店"
 vertical_alignment = 1
 
-[node name="FilterAll" type="Button" parent="Sidebar"]
+[node name="FilterAll" type="Button" parent="Sidebar" unique_id=965975639]
 unique_name_in_owner = true
+layout_mode = 0
 offset_left = 12.0
 offset_top = 133.0
 offset_right = 152.0
 offset_bottom = 164.0
-text = "全部游戏"
 mouse_default_cursor_shape = 2
 theme_override_styles/normal = SubResource("active")
+text = "全部游戏"
 alignment = 0
 
-[node name="FilterSale" type="Button" parent="Sidebar"]
+[node name="FilterSale" type="Button" parent="Sidebar" unique_id=179390165]
 unique_name_in_owner = true
+layout_mode = 0
 offset_left = 12.0
 offset_top = 170.0
 offset_right = 152.0
 offset_bottom = 201.0
-text = "正在优惠"
 mouse_default_cursor_shape = 2
 theme_override_styles/normal = SubResource("transparent")
+text = "正在优惠"
 alignment = 0
 
-[node name="FilterAdventure" type="Button" parent="Sidebar"]
+[node name="FilterAdventure" type="Button" parent="Sidebar" unique_id=164453962]
 unique_name_in_owner = true
+layout_mode = 0
 offset_left = 12.0
 offset_top = 207.0
 offset_right = 152.0
 offset_bottom = 238.0
-text = "探索冒险"
 mouse_default_cursor_shape = 2
 theme_override_styles/normal = SubResource("transparent")
+text = "探索冒险"
 alignment = 0
 
-[node name="FilterStrategy" type="Button" parent="Sidebar"]
+[node name="FilterStrategy" type="Button" parent="Sidebar" unique_id=1862116423]
 unique_name_in_owner = true
+layout_mode = 0
 offset_left = 12.0
 offset_top = 244.0
 offset_right = 152.0
 offset_bottom = 275.0
-text = "策略战术"
 mouse_default_cursor_shape = 2
 theme_override_styles/normal = SubResource("transparent")
+text = "策略战术"
 alignment = 0
 
-[node name="FilterLife" type="Button" parent="Sidebar"]
+[node name="FilterLife" type="Button" parent="Sidebar" unique_id=1927418382]
 unique_name_in_owner = true
+layout_mode = 0
 offset_left = 12.0
 offset_top = 281.0
 offset_right = 152.0
 offset_bottom = 312.0
-text = "生活模拟"
 mouse_default_cursor_shape = 2
 theme_override_styles/normal = SubResource("transparent")
+text = "生活模拟"
 alignment = 0
 
-[node name="FilterComing" type="Button" parent="Sidebar"]
+[node name="FilterComing" type="Button" parent="Sidebar" unique_id=317339591]
 unique_name_in_owner = true
+layout_mode = 0
 offset_left = 12.0
 offset_top = 318.0
 offset_right = 152.0
 offset_bottom = 349.0
-text = "即将推出"
 mouse_default_cursor_shape = 2
 theme_override_styles/normal = SubResource("transparent")
+text = "即将推出"
 alignment = 0
 
-[node name="SideRule2" type="ColorRect" parent="Sidebar"]
+[node name="SideRule2" type="ColorRect" parent="Sidebar" unique_id=74316787]
+layout_mode = 0
 offset_left = 16.0
 offset_top = 365.0
 offset_right = 148.0
 offset_bottom = 366.0
-color = Color(0.18824, 0.26275, 0.29020, 1.00000)
 mouse_filter = 2
+color = Color(0.18824, 0.26275, 0.2902, 1)
 
-[node name="MonthlyTitle" type="Label" parent="Sidebar"]
+[node name="MonthlyTitle" type="Label" parent="Sidebar" unique_id=2058760390]
+layout_mode = 0
 offset_left = 16.0
 offset_top = 385.0
 offset_right = 148.0
 offset_bottom = 407.0
-mouse_filter = 2
-text = "每月的小小期待"
+theme_override_colors/font_color = Color(0.85098, 0.71765, 0.48627, 1)
 theme_override_font_sizes/font_size = 12
-theme_override_colors/font_color = Color(0.85098, 0.71765, 0.48627, 1.00000)
+text = "每月的小小期待"
 vertical_alignment = 1
 
-[node name="MonthlyText" type="Label" parent="Sidebar"]
+[node name="MonthlyText" type="Label" parent="Sidebar" unique_id=1730658567]
+layout_mode = 0
 offset_left = 16.0
 offset_top = 415.0
 offset_right = 148.0
 offset_bottom = 479.0
-mouse_filter = 2
-text = "每月预算 +60 点\n新作陆续上架\n慢慢收藏，慢慢玩"
+theme_override_colors/font_color = Color(0.51765, 0.6, 0.58431, 1)
 theme_override_font_sizes/font_size = 12
-theme_override_colors/font_color = Color(0.51765, 0.60000, 0.58431, 1.00000)
+text = "每月预算 +60 点
+新作陆续上架
+慢慢收藏，慢慢玩"
 vertical_alignment = 1
 autowrap_mode = 2
 
-[node name="NextMonthButton" type="Button" parent="Sidebar"]
+[node name="NextMonthButton" type="Button" parent="Sidebar" unique_id=4651817]
 unique_name_in_owner = true
+layout_mode = 0
 offset_left = 12.0
 offset_top = 500.0
 offset_right = 152.0
 offset_bottom = 536.0
-text = "进入下个月  >"
 mouse_default_cursor_shape = 2
+text = "进入下个月  >"
 
-[node name="DemoMonth" type="Label" parent="Sidebar"]
+[node name="DemoMonth" type="Label" parent="Sidebar" unique_id=1711130084]
+layout_mode = 0
 offset_left = 16.0
 offset_top = 547.0
 offset_right = 148.0
 offset_bottom = 569.0
-mouse_filter = 2
-text = "商店场景 · 6个月演示"
+theme_override_colors/font_color = Color(0.32157, 0.42353, 0.44314, 1)
 theme_override_font_sizes/font_size = 12
-theme_override_colors/font_color = Color(0.32157, 0.42353, 0.44314, 1.00000)
+text = "商店场景 · 6个月演示"
 vertical_alignment = 1
 
-[node name="PageEyebrow" type="Label" parent="."]
+[node name="PageEyebrow" type="Label" parent="." unique_id=786886329]
 unique_name_in_owner = true
+layout_mode = 0
 offset_left = 224.0
 offset_top = 151.0
 offset_right = 904.0
 offset_bottom = 171.0
-mouse_filter = 2
-text = "THE STORE  /  商店"
+theme_override_colors/font_color = Color(0.51765, 0.71373, 0.67059, 1)
 theme_override_font_sizes/font_size = 12
-theme_override_colors/font_color = Color(0.51765, 0.71373, 0.67059, 1.00000)
+text = "THE STORE  /  商店"
 vertical_alignment = 1
 
-[node name="PageHeading" type="Label" parent="."]
+[node name="PageHeading" type="Label" parent="." unique_id=1898962947]
 unique_name_in_owner = true
+layout_mode = 0
 offset_left = 224.0
 offset_top = 177.0
 offset_right = 954.0
 offset_bottom = 209.0
-mouse_filter = 2
-text = "发现你的下一段回忆"
+theme_override_colors/font_color = Color(0.86667, 0.89412, 0.85098, 1)
 theme_override_font_sizes/font_size = 24
-theme_override_colors/font_color = Color(0.86667, 0.89412, 0.85098, 1.00000)
+text = "发现你的下一段回忆"
 vertical_alignment = 1
 
-[node name="SearchBox" type="LineEdit" parent="."]
+[node name="SearchBox" type="LineEdit" parent="." unique_id=1047168959]
 unique_name_in_owner = true
+layout_mode = 0
 offset_left = 960.0
 offset_top = 173.0
 offset_right = 1248.0
 offset_bottom = 207.0
-unique_name_in_owner = true
 placeholder_text = "搜索游戏 / 制作组"
-clear_button_enabled = true
 max_length = 50
+clear_button_enabled = true
 
-[node name="Hero" type="Panel" parent="."]
+[node name="Hero" type="Panel" parent="." unique_id=1355795075]
 unique_name_in_owner = true
+layout_mode = 0
 offset_left = 224.0
 offset_top = 229.0
 offset_right = 1248.0
 offset_bottom = 481.0
 theme_override_styles/panel = SubResource("panel")
 
-[node name="HeroInspect" type="Button" parent="Hero"]
+[node name="HeroInspect" type="Button" parent="Hero" unique_id=569667150]
 unique_name_in_owner = true
-offset_left = 0.0
-offset_top = 0.0
+layout_mode = 0
 offset_right = 646.0
 offset_bottom = 252.0
-text = ""
+tooltip_text = "查看《远星来信》详情"
 mouse_default_cursor_shape = 2
 theme_override_styles/normal = SubResource("transparent")
-tooltip_text = "查看《远星来信》详情"
 
-[node name="HeroArt" type="TextureRect" parent="Hero/HeroInspect"]
+[node name="HeroArt" type="TextureRect" parent="Hero/HeroInspect" unique_id=447468545]
+texture_filter = 1
+layout_mode = 0
 offset_left = 1.0
 offset_top = 1.0
 offset_right = 645.0
 offset_bottom = 251.0
+mouse_filter = 2
 texture = ExtResource("stars")
 expand_mode = 1
-stretch_mode = 0
-texture_filter = 1
-mouse_filter = 2
 
-[node name="ArtShade" type="ColorRect" parent="Hero/HeroInspect"]
+[node name="ArtShade" type="ColorRect" parent="Hero/HeroInspect" unique_id=1975097132]
+layout_mode = 0
 offset_left = 1.0
 offset_top = 1.0
 offset_right = 645.0
 offset_bottom = 251.0
-color = Color(0.02745, 0.07059, 0.10196, 0.18824)
 mouse_filter = 2
+color = Color(0.02745, 0.07059, 0.10196, 0.18824)
 
-[node name="HeroBadge" type="Panel" parent="Hero/HeroInspect"]
+[node name="HeroBadge" type="Panel" parent="Hero/HeroInspect" unique_id=277680059]
+layout_mode = 0
 offset_left = 24.0
 offset_top = 21.0
 offset_right = 132.0
 offset_bottom = 45.0
 theme_override_styles/panel = SubResource("deep")
 
-[node name="HeroBadgeText" type="Label" parent="Hero/HeroInspect/HeroBadge"]
+[node name="HeroBadgeText" type="Label" parent="Hero/HeroInspect/HeroBadge" unique_id=140101323]
+layout_mode = 0
 offset_left = 8.0
-offset_top = 0.0
 offset_right = 104.0
 offset_bottom = 24.0
-mouse_filter = 2
-text = "本月编辑精选"
+theme_override_colors/font_color = Color(0.85098, 0.71765, 0.48627, 1)
 theme_override_font_sizes/font_size = 12
-theme_override_colors/font_color = Color(0.85098, 0.71765, 0.48627, 1.00000)
+text = "本月编辑精选"
 vertical_alignment = 1
 
-[node name="HeroEnglish" type="Label" parent="Hero/HeroInspect"]
+[node name="HeroEnglish" type="Label" parent="Hero/HeroInspect" unique_id=1434629475]
+layout_mode = 0
 offset_left = 24.0
 offset_top = 71.0
 offset_right = 604.0
 offset_bottom = 95.0
-mouse_filter = 2
-text = "LETTERS FROM THE STARS"
+theme_override_colors/font_color = Color(0.76078, 0.82353, 0.74902, 1)
 theme_override_font_sizes/font_size = 12
-theme_override_colors/font_color = Color(0.76078, 0.82353, 0.74902, 1.00000)
+text = "LETTERS FROM THE STARS"
 vertical_alignment = 1
 
-[node name="HeroTitle" type="Label" parent="Hero/HeroInspect"]
+[node name="HeroTitle" type="Label" parent="Hero/HeroInspect" unique_id=1840253354]
+layout_mode = 0
 offset_left = 22.0
 offset_top = 100.0
 offset_right = 602.0
 offset_bottom = 155.0
-mouse_filter = 2
-text = "远星来信"
+theme_override_colors/font_color = Color(0.93333, 0.94118, 0.83137, 1)
 theme_override_font_sizes/font_size = 36
-theme_override_colors/font_color = Color(0.93333, 0.94118, 0.83137, 1.00000)
+text = "远星来信"
 vertical_alignment = 1
 
-[node name="HeroTagline" type="Label" parent="Hero/HeroInspect"]
+[node name="HeroTagline" type="Label" parent="Hero/HeroInspect" unique_id=1565817850]
+layout_mode = 0
 offset_left = 24.0
 offset_top = 197.0
 offset_right = 604.0
 offset_bottom = 229.0
-mouse_filter = 2
-text = "在漫长的星夜里，寻找一封迟到的信。"
+theme_override_colors/font_color = Color(0.79216, 0.85098, 0.81176, 1)
 theme_override_font_sizes/font_size = 12
-theme_override_colors/font_color = Color(0.79216, 0.85098, 0.81176, 1.00000)
+text = "在漫长的星夜里，寻找一封迟到的信。"
 vertical_alignment = 1
 
-[node name="HeroSeam" type="ColorRect" parent="Hero"]
+[node name="HeroSeam" type="ColorRect" parent="Hero" unique_id=736328992]
+layout_mode = 0
 offset_left = 646.0
-offset_top = 0.0
 offset_right = 647.0
 offset_bottom = 252.0
-color = Color(0.27059, 0.37647, 0.36078, 1.00000)
 mouse_filter = 2
+color = Color(0.27059, 0.37647, 0.36078, 1)
 
-[node name="HeroMini" type="Label" parent="Hero"]
+[node name="HeroMini" type="Label" parent="Hero" unique_id=1713070043]
+layout_mode = 0
 offset_left = 666.0
 offset_top = 16.0
 offset_right = 1001.0
 offset_bottom = 38.0
-mouse_filter = 2
-text = "一封来自宇宙边境的邀请"
+theme_override_colors/font_color = Color(0.85098, 0.71765, 0.48627, 1)
 theme_override_font_sizes/font_size = 12
-theme_override_colors/font_color = Color(0.85098, 0.71765, 0.48627, 1.00000)
+text = "一封来自宇宙边境的邀请"
 vertical_alignment = 1
 
-[node name="HeroDescription" type="Label" parent="Hero"]
+[node name="HeroDescription" type="Label" parent="Hero" unique_id=909944346]
+layout_mode = 0
 offset_left = 666.0
 offset_top = 48.0
 offset_right = 1001.0
 offset_bottom = 112.0
-mouse_filter = 2
-text = "穿过静默的观测站与漫长的星夜，\n重新连接散落在宇宙里的故事。"
+theme_override_colors/font_color = Color(0.86667, 0.89412, 0.85098, 1)
 theme_override_font_sizes/font_size = 12
-theme_override_colors/font_color = Color(0.86667, 0.89412, 0.85098, 1.00000)
+text = "穿过静默的观测站与漫长的星夜，
+重新连接散落在宇宙里的故事。"
 vertical_alignment = 1
 autowrap_mode = 2
 
-[node name="HeroGenres" type="Label" parent="Hero"]
+[node name="HeroGenres" type="Label" parent="Hero" unique_id=961126344]
+layout_mode = 0
 offset_left = 666.0
 offset_top = 113.0
 offset_right = 1001.0
 offset_bottom = 133.0
-mouse_filter = 2
-text = "探索冒险  /  科幻  /  剧情"
+theme_override_colors/font_color = Color(0.51765, 0.6, 0.58431, 1)
 theme_override_font_sizes/font_size = 12
-theme_override_colors/font_color = Color(0.51765, 0.60000, 0.58431, 1.00000)
+text = "探索冒险  /  科幻  /  剧情"
 vertical_alignment = 1
 
-[node name="HeroReview" type="Label" parent="Hero"]
+[node name="HeroReview" type="Label" parent="Hero" unique_id=1364031275]
+layout_mode = 0
 offset_left = 666.0
 offset_top = 140.0
 offset_right = 1001.0
 offset_bottom = 160.0
-mouse_filter = 2
-text = "好评如潮  ·  268 条玩家评价"
+theme_override_colors/font_color = Color(0.51765, 0.71373, 0.67059, 1)
 theme_override_font_sizes/font_size = 12
-theme_override_colors/font_color = Color(0.51765, 0.71373, 0.67059, 1.00000)
+text = "好评如潮  ·  268 条玩家评价"
 vertical_alignment = 1
 
-[node name="DiscountBlock" type="Panel" parent="Hero"]
+[node name="DiscountBlock" type="Panel" parent="Hero" unique_id=1256903465]
+layout_mode = 0
 offset_left = 666.0
 offset_top = 175.0
 offset_right = 722.0
 offset_bottom = 199.0
 theme_override_styles/panel = SubResource("cart")
 
-[node name="DiscountText" type="Label" parent="Hero/DiscountBlock"]
+[node name="DiscountText" type="Label" parent="Hero/DiscountBlock" unique_id=1522938856]
+layout_mode = 0
 offset_left = 5.0
-offset_top = 0.0
 offset_right = 51.0
 offset_bottom = 24.0
-mouse_filter = 2
-text = "-25%"
+theme_override_colors/font_color = Color(0.70196, 0.80784, 0.56078, 1)
 theme_override_font_sizes/font_size = 12
-theme_override_colors/font_color = Color(0.70196, 0.80784, 0.56078, 1.00000)
+text = "-25%"
 vertical_alignment = 1
 
-[node name="HeroOldPrice" type="Label" parent="Hero"]
+[node name="HeroOldPrice" type="Label" parent="Hero" unique_id=498298684]
+layout_mode = 0
 offset_left = 734.0
 offset_top = 174.0
 offset_right = 809.0
 offset_bottom = 198.0
-mouse_filter = 2
-text = "原价 88"
+theme_override_colors/font_color = Color(0.51765, 0.6, 0.58431, 1)
 theme_override_font_sizes/font_size = 12
-theme_override_colors/font_color = Color(0.51765, 0.60000, 0.58431, 1.00000)
+text = "原价 88"
 vertical_alignment = 1
 
-[node name="HeroPrice" type="Label" parent="Hero"]
+[node name="HeroPrice" type="Label" parent="Hero" unique_id=2117186093]
 unique_name_in_owner = true
+layout_mode = 0
 offset_left = 828.0
 offset_top = 172.0
 offset_right = 998.0
 offset_bottom = 200.0
-mouse_filter = 2
-text = "66 点"
+theme_override_colors/font_color = Color(0.70196, 0.80784, 0.56078, 1)
 theme_override_font_sizes/font_size = 24
-theme_override_colors/font_color = Color(0.70196, 0.80784, 0.56078, 1.00000)
-vertical_alignment = 1
+text = "66 点"
 horizontal_alignment = 2
+vertical_alignment = 1
 
-[node name="HeroAdd" type="Button" parent="Hero"]
+[node name="HeroAdd" type="Button" parent="Hero" unique_id=714821613]
 unique_name_in_owner = true
+layout_mode = 0
 offset_left = 666.0
 offset_top = 210.0
 offset_right = 890.0
 offset_bottom = 240.0
-text = "加入购物车"
 mouse_default_cursor_shape = 2
+theme_override_colors/font_color = Color(0.12549, 0.20784, 0.18431, 1)
+theme_override_colors/font_pressed_color = Color(0.12549, 0.20784, 0.18431, 1)
+theme_override_colors/font_hover_color = Color(0.09412, 0.18824, 0.16863, 1)
 theme_override_styles/normal = SubResource("green")
-theme_override_styles/hover = SubResource("green_hover")
 theme_override_styles/pressed = SubResource("green_down")
-theme_override_colors/font_color = Color(0.12549, 0.20784, 0.18431, 1.00000)
-theme_override_colors/font_hover_color = Color(0.09412, 0.18824, 0.16863, 1.00000)
-theme_override_colors/font_pressed_color = Color(0.12549, 0.20784, 0.18431, 1.00000)
+theme_override_styles/hover = SubResource("green_hover")
+text = "加入购物车"
 
-[node name="HeroWish" type="Button" parent="Hero"]
+[node name="HeroWish" type="Button" parent="Hero" unique_id=1482112013]
 unique_name_in_owner = true
+layout_mode = 0
 offset_left = 900.0
 offset_top = 210.0
 offset_right = 1004.0
 offset_bottom = 240.0
-text = "+ 愿望单"
 mouse_default_cursor_shape = 2
+text = "+ 愿望单"
 
-[node name="SectionTitle" type="Label" parent="."]
+[node name="SectionTitle" type="Label" parent="." unique_id=1147198770]
 unique_name_in_owner = true
+layout_mode = 0
 offset_left = 224.0
 offset_top = 504.0
 offset_right = 724.0
 offset_bottom = 529.0
-mouse_filter = 2
-text = "本月精选"
+theme_override_colors/font_color = Color(0.86667, 0.89412, 0.85098, 1)
 theme_override_font_sizes/font_size = 12
-theme_override_colors/font_color = Color(0.86667, 0.89412, 0.85098, 1.00000)
+text = "本月精选"
 vertical_alignment = 1
 
-[node name="ResultCount" type="Label" parent="."]
+[node name="ResultCount" type="Label" parent="." unique_id=1421269000]
 unique_name_in_owner = true
+layout_mode = 0
 offset_left = 720.0
 offset_top = 505.0
 offset_right = 1000.0
 offset_bottom = 529.0
-mouse_filter = 2
-text = "4 款游戏等待与你相遇"
+theme_override_colors/font_color = Color(0.51765, 0.6, 0.58431, 1)
 theme_override_font_sizes/font_size = 12
-theme_override_colors/font_color = Color(0.51765, 0.60000, 0.58431, 1.00000)
-vertical_alignment = 1
+text = "4 款游戏等待与你相遇"
 horizontal_alignment = 2
+vertical_alignment = 1
 
-[node name="PrevButton" type="Button" parent="."]
+[node name="PrevButton" type="Button" parent="." unique_id=1002894894]
 unique_name_in_owner = true
+layout_mode = 0
 offset_left = 1020.0
 offset_top = 503.0
 offset_right = 1056.0
 offset_bottom = 529.0
-text = "<"
 mouse_default_cursor_shape = 2
+text = "<"
 
-[node name="PageLabel" type="Label" parent="."]
+[node name="PageLabel" type="Label" parent="." unique_id=1407348565]
 unique_name_in_owner = true
+layout_mode = 0
 offset_left = 1064.0
 offset_top = 504.0
 offset_right = 1172.0
 offset_bottom = 528.0
-mouse_filter = 2
-text = "01 / 01"
+theme_override_colors/font_color = Color(0.51765, 0.6, 0.58431, 1)
 theme_override_font_sizes/font_size = 12
-theme_override_colors/font_color = Color(0.51765, 0.60000, 0.58431, 1.00000)
-vertical_alignment = 1
+text = "01 / 01"
 horizontal_alignment = 1
+vertical_alignment = 1
 
-[node name="NextButton" type="Button" parent="."]
+[node name="NextButton" type="Button" parent="." unique_id=1364650698]
 unique_name_in_owner = true
+layout_mode = 0
 offset_left = 1180.0
 offset_top = 503.0
 offset_right = 1216.0
 offset_bottom = 529.0
-text = ">"
 mouse_default_cursor_shape = 2
+text = ">"
 
-[node name="Card0" type="Button" parent="."]
+[node name="Card0" type="Button" parent="." unique_id=1650260566]
 unique_name_in_owner = true
+layout_mode = 0
 offset_left = 224.0
 offset_top = 542.0
 offset_right = 468.0
 offset_bottom = 720.0
-text = ""
 mouse_default_cursor_shape = 2
 
-[node name="CardArt0" type="TextureRect" parent="Card0"]
+[node name="CardArt0" type="TextureRect" parent="Card0" unique_id=1883191937]
 unique_name_in_owner = true
+texture_filter = 1
+layout_mode = 0
 offset_left = 1.0
 offset_top = 1.0
 offset_right = 243.0
 offset_bottom = 97.0
+mouse_filter = 2
 texture = ExtResource("stars")
 expand_mode = 1
-stretch_mode = 0
-texture_filter = 1
-mouse_filter = 2
 
-[node name="CardTitle0" type="Label" parent="Card0"]
+[node name="CardTitle0" type="Label" parent="Card0" unique_id=1262842070]
 unique_name_in_owner = true
+layout_mode = 0
 offset_left = 12.0
 offset_top = 105.0
 offset_right = 232.0
 offset_bottom = 127.0
-mouse_filter = 2
-text = "远星来信"
+theme_override_colors/font_color = Color(0.86667, 0.89412, 0.85098, 1)
 theme_override_font_sizes/font_size = 12
-theme_override_colors/font_color = Color(0.86667, 0.89412, 0.85098, 1.00000)
+text = "远星来信"
 vertical_alignment = 1
 
-[node name="CardGenre0" type="Label" parent="Card0"]
+[node name="CardGenre0" type="Label" parent="Card0" unique_id=1618588110]
 unique_name_in_owner = true
+layout_mode = 0
 offset_left = 12.0
 offset_top = 129.0
 offset_right = 232.0
 offset_bottom = 149.0
-mouse_filter = 2
-text = "探索冒险 · 科幻"
+theme_override_colors/font_color = Color(0.51765, 0.6, 0.58431, 1)
 theme_override_font_sizes/font_size = 12
-theme_override_colors/font_color = Color(0.51765, 0.60000, 0.58431, 1.00000)
+text = "探索冒险 · 科幻"
 vertical_alignment = 1
 
-[node name="CardPrice0" type="Label" parent="Card0"]
+[node name="CardPrice0" type="Label" parent="Card0" unique_id=1590886167]
 unique_name_in_owner = true
+layout_mode = 0
 offset_left = 12.0
 offset_top = 151.0
 offset_right = 232.0
 offset_bottom = 173.0
-mouse_filter = 2
-text = "66 点"
+theme_override_colors/font_color = Color(0.70196, 0.80784, 0.56078, 1)
 theme_override_font_sizes/font_size = 12
-theme_override_colors/font_color = Color(0.70196, 0.80784, 0.56078, 1.00000)
-vertical_alignment = 1
+text = "66 点"
 horizontal_alignment = 2
+vertical_alignment = 1
 
-[node name="Card1" type="Button" parent="."]
+[node name="Card1" type="Button" parent="." unique_id=1008714788]
 unique_name_in_owner = true
+layout_mode = 0
 offset_left = 484.0
 offset_top = 542.0
 offset_right = 728.0
 offset_bottom = 720.0
-text = ""
 mouse_default_cursor_shape = 2
 
-[node name="CardArt1" type="TextureRect" parent="Card1"]
+[node name="CardArt1" type="TextureRect" parent="Card1" unique_id=762915241]
 unique_name_in_owner = true
+texture_filter = 1
+layout_mode = 0
 offset_left = 1.0
 offset_top = 1.0
 offset_right = 243.0
 offset_bottom = 97.0
+mouse_filter = 2
 texture = ExtResource("desert")
 expand_mode = 1
-stretch_mode = 0
-texture_filter = 1
-mouse_filter = 2
 
-[node name="CardTitle1" type="Label" parent="Card1"]
+[node name="CardTitle1" type="Label" parent="Card1" unique_id=127201327]
 unique_name_in_owner = true
+layout_mode = 0
 offset_left = 12.0
 offset_top = 105.0
 offset_right = 232.0
 offset_bottom = 127.0
-mouse_filter = 2
-text = "钢铁边境"
+theme_override_colors/font_color = Color(0.86667, 0.89412, 0.85098, 1)
 theme_override_font_sizes/font_size = 12
-theme_override_colors/font_color = Color(0.86667, 0.89412, 0.85098, 1.00000)
+text = "钢铁边境"
 vertical_alignment = 1
 
-[node name="CardGenre1" type="Label" parent="Card1"]
+[node name="CardGenre1" type="Label" parent="Card1" unique_id=1742900033]
 unique_name_in_owner = true
+layout_mode = 0
 offset_left = 12.0
 offset_top = 129.0
 offset_right = 232.0
 offset_bottom = 149.0
-mouse_filter = 2
-text = "策略战术 · 单人"
+theme_override_colors/font_color = Color(0.51765, 0.6, 0.58431, 1)
 theme_override_font_sizes/font_size = 12
-theme_override_colors/font_color = Color(0.51765, 0.60000, 0.58431, 1.00000)
+text = "策略战术 · 单人"
 vertical_alignment = 1
 
-[node name="CardPrice1" type="Label" parent="Card1"]
+[node name="CardPrice1" type="Label" parent="Card1" unique_id=943337768]
 unique_name_in_owner = true
+layout_mode = 0
 offset_left = 12.0
 offset_top = 151.0
 offset_right = 232.0
 offset_bottom = 173.0
-mouse_filter = 2
-text = "72 点"
+theme_override_colors/font_color = Color(0.70196, 0.80784, 0.56078, 1)
 theme_override_font_sizes/font_size = 12
-theme_override_colors/font_color = Color(0.70196, 0.80784, 0.56078, 1.00000)
-vertical_alignment = 1
+text = "72 点"
 horizontal_alignment = 2
+vertical_alignment = 1
 
-[node name="Card2" type="Button" parent="."]
+[node name="Card2" type="Button" parent="." unique_id=58167978]
 unique_name_in_owner = true
+layout_mode = 0
 offset_left = 744.0
 offset_top = 542.0
 offset_right = 988.0
 offset_bottom = 720.0
-text = ""
 mouse_default_cursor_shape = 2
 
-[node name="CardArt2" type="TextureRect" parent="Card2"]
+[node name="CardArt2" type="TextureRect" parent="Card2" unique_id=661433204]
 unique_name_in_owner = true
+texture_filter = 1
+layout_mode = 0
 offset_left = 1.0
 offset_top = 1.0
 offset_right = 243.0
 offset_bottom = 97.0
+mouse_filter = 2
 texture = ExtResource("valley")
 expand_mode = 1
-stretch_mode = 0
-texture_filter = 1
-mouse_filter = 2
 
-[node name="CardTitle2" type="Label" parent="Card2"]
+[node name="CardTitle2" type="Label" parent="Card2" unique_id=1078462328]
 unique_name_in_owner = true
+layout_mode = 0
 offset_left = 12.0
 offset_top = 105.0
 offset_right = 232.0
 offset_bottom = 127.0
-mouse_filter = 2
-text = "雾谷手记"
+theme_override_colors/font_color = Color(0.86667, 0.89412, 0.85098, 1)
 theme_override_font_sizes/font_size = 12
-theme_override_colors/font_color = Color(0.86667, 0.89412, 0.85098, 1.00000)
+text = "雾谷手记"
 vertical_alignment = 1
 
-[node name="CardGenre2" type="Label" parent="Card2"]
+[node name="CardGenre2" type="Label" parent="Card2" unique_id=131449593]
 unique_name_in_owner = true
+layout_mode = 0
 offset_left = 12.0
 offset_top = 129.0
 offset_right = 232.0
 offset_bottom = 149.0
-mouse_filter = 2
-text = "生活模拟 · 田园"
+theme_override_colors/font_color = Color(0.51765, 0.6, 0.58431, 1)
 theme_override_font_sizes/font_size = 12
-theme_override_colors/font_color = Color(0.51765, 0.60000, 0.58431, 1.00000)
+text = "生活模拟 · 田园"
 vertical_alignment = 1
 
-[node name="CardPrice2" type="Label" parent="Card2"]
+[node name="CardPrice2" type="Label" parent="Card2" unique_id=713471177]
 unique_name_in_owner = true
+layout_mode = 0
 offset_left = 12.0
 offset_top = 151.0
 offset_right = 232.0
 offset_bottom = 173.0
-mouse_filter = 2
-text = "38 点"
+theme_override_colors/font_color = Color(0.70196, 0.80784, 0.56078, 1)
 theme_override_font_sizes/font_size = 12
-theme_override_colors/font_color = Color(0.70196, 0.80784, 0.56078, 1.00000)
-vertical_alignment = 1
+text = "38 点"
 horizontal_alignment = 2
+vertical_alignment = 1
 
-[node name="Card3" type="Button" parent="."]
+[node name="Card3" type="Button" parent="." unique_id=1031298561]
 unique_name_in_owner = true
+layout_mode = 0
 offset_left = 1004.0
 offset_top = 542.0
 offset_right = 1248.0
 offset_bottom = 720.0
-text = ""
 mouse_default_cursor_shape = 2
 
-[node name="CardArt3" type="TextureRect" parent="Card3"]
+[node name="CardArt3" type="TextureRect" parent="Card3" unique_id=246937664]
 unique_name_in_owner = true
+texture_filter = 1
+layout_mode = 0
 offset_left = 1.0
 offset_top = 1.0
 offset_right = 243.0
 offset_bottom = 97.0
+mouse_filter = 2
 texture = ExtResource("ocean")
 expand_mode = 1
-stretch_mode = 0
-texture_filter = 1
-mouse_filter = 2
 
-[node name="CardTitle3" type="Label" parent="Card3"]
+[node name="CardTitle3" type="Label" parent="Card3" unique_id=1834810138]
 unique_name_in_owner = true
+layout_mode = 0
 offset_left = 12.0
 offset_top = 105.0
 offset_right = 232.0
 offset_bottom = 127.0
-mouse_filter = 2
-text = "最后一座灯塔"
+theme_override_colors/font_color = Color(0.86667, 0.89412, 0.85098, 1)
 theme_override_font_sizes/font_size = 12
-theme_override_colors/font_color = Color(0.86667, 0.89412, 0.85098, 1.00000)
+text = "最后一座灯塔"
 vertical_alignment = 1
 
-[node name="CardGenre3" type="Label" parent="Card3"]
+[node name="CardGenre3" type="Label" parent="Card3" unique_id=173547093]
 unique_name_in_owner = true
+layout_mode = 0
 offset_left = 12.0
 offset_top = 129.0
 offset_right = 232.0
 offset_bottom = 149.0
-mouse_filter = 2
-text = "探索冒险 · 解谜"
+theme_override_colors/font_color = Color(0.51765, 0.6, 0.58431, 1)
 theme_override_font_sizes/font_size = 12
-theme_override_colors/font_color = Color(0.51765, 0.60000, 0.58431, 1.00000)
+text = "探索冒险 · 解谜"
 vertical_alignment = 1
 
-[node name="CardPrice3" type="Label" parent="Card3"]
+[node name="CardPrice3" type="Label" parent="Card3" unique_id=878777288]
 unique_name_in_owner = true
+layout_mode = 0
 offset_left = 12.0
 offset_top = 151.0
 offset_right = 232.0
 offset_bottom = 173.0
-mouse_filter = 2
-text = "60 点"
+theme_override_colors/font_color = Color(0.70196, 0.80784, 0.56078, 1)
 theme_override_font_sizes/font_size = 12
-theme_override_colors/font_color = Color(0.70196, 0.80784, 0.56078, 1.00000)
-vertical_alignment = 1
+text = "60 点"
 horizontal_alignment = 2
+vertical_alignment = 1
 
-[node name="EmptyResults" type="Label" parent="."]
+[node name="EmptyResults" type="Label" parent="." unique_id=1918856060]
 unique_name_in_owner = true
+visible = false
+layout_mode = 0
 offset_left = 246.0
 offset_top = 564.0
 offset_right = 1201.0
 offset_bottom = 668.0
-mouse_filter = 2
-text = "还没有游戏。"
+theme_override_colors/font_color = Color(0.51765, 0.6, 0.58431, 1)
 theme_override_font_sizes/font_size = 24
-theme_override_colors/font_color = Color(0.51765, 0.60000, 0.58431, 1.00000)
-vertical_alignment = 1
-visible = false
+text = "还没有游戏。"
 horizontal_alignment = 1
+vertical_alignment = 1
 
-[node name="CollectionStatus" type="Label" parent="."]
+[node name="CollectionStatus" type="Label" parent="." unique_id=1520181722]
 unique_name_in_owner = true
+layout_mode = 0
 offset_left = 224.0
 offset_top = 738.0
 offset_right = 864.0
 offset_bottom = 766.0
-mouse_filter = 2
-text = "游戏库 0 款   /   愿望单 0 款"
+theme_override_colors/font_color = Color(0.51765, 0.6, 0.58431, 1)
 theme_override_font_sizes/font_size = 12
-theme_override_colors/font_color = Color(0.51765, 0.60000, 0.58431, 1.00000)
+text = "游戏库 0 款   /   愿望单 0 款"
 vertical_alignment = 1
 
-[node name="CartButton" type="Button" parent="."]
+[node name="CartButton" type="Button" parent="." unique_id=139491626]
 unique_name_in_owner = true
+layout_mode = 0
 offset_left = 1020.0
 offset_top = 736.0
 offset_right = 1248.0
 offset_bottom = 770.0
-text = "购物车  0"
 mouse_default_cursor_shape = 2
 theme_override_styles/normal = SubResource("cart")
+text = "购物车  0"
 
-[node name="FooterBG" type="ColorRect" parent="."]
-offset_left = 0.0
+[node name="FooterBG" type="ColorRect" parent="." unique_id=1771501321]
+layout_mode = 0
 offset_top = 780.0
 offset_right = 1280.0
 offset_bottom = 800.0
-color = Color(0.04706, 0.09020, 0.12549, 1.00000)
 mouse_filter = 2
+color = Color(0.04706, 0.0902, 0.12549, 1)
 
-[node name="FooterLeft" type="Label" parent="."]
+[node name="FooterLeft" type="Label" parent="." unique_id=1966023189]
+layout_mode = 0
 offset_left = 32.0
 offset_top = 780.0
 offset_right = 912.0
 offset_bottom = 800.0
-mouse_filter = 2
-text = "游戏回忆录 · 商店场景   /   虚构目录，供场景体验使用"
+theme_override_colors/font_color = Color(0.32157, 0.42353, 0.44314, 1)
 theme_override_font_sizes/font_size = 12
-theme_override_colors/font_color = Color(0.32157, 0.42353, 0.44314, 1.00000)
+text = "游戏回忆录 · 商店场景   /   虚构目录，供场景体验使用"
 vertical_alignment = 1
 
-[node name="FooterRight" type="Label" parent="."]
+[node name="FooterRight" type="Label" parent="." unique_id=1937727784]
+layout_mode = 0
 offset_left = 906.0
 offset_top = 780.0
 offset_right = 1248.0
 offset_bottom = 800.0
-mouse_filter = 2
-text = "Esc 返回  ·  Ctrl+F 搜索  ·  F11 全屏"
+theme_override_colors/font_color = Color(0.51765, 0.6, 0.58431, 1)
 theme_override_font_sizes/font_size = 12
-theme_override_colors/font_color = Color(0.51765, 0.60000, 0.58431, 1.00000)
-vertical_alignment = 1
+text = "Esc 返回  ·  Ctrl+F 搜索  ·  F11 全屏"
 horizontal_alignment = 2
+vertical_alignment = 1
 
-[node name="ModalShade" type="ColorRect" parent="."]
+[node name="ModalShade" type="ColorRect" parent="." unique_id=391506884]
 unique_name_in_owner = true
-offset_left = 0.0
-offset_top = 0.0
+visible = false
+layout_mode = 0
 offset_right = 1280.0
 offset_bottom = 800.0
 color = Color(0.01961, 0.05098, 0.09412, 0.86667)
-visible = false
 
-[node name="DetailPanel" type="Panel" parent="ModalShade"]
+[node name="DetailPanel" type="Panel" parent="ModalShade" unique_id=1585307909]
 unique_name_in_owner = true
+layout_mode = 0
 offset_left = 300.0
 offset_top = 106.0
 offset_right = 980.0
 offset_bottom = 696.0
 theme_override_styles/panel = SubResource("panel")
 
-[node name="DetailCaption" type="Label" parent="ModalShade/DetailPanel"]
+[node name="DetailCaption" type="Label" parent="ModalShade/DetailPanel" unique_id=1106383834]
+layout_mode = 0
 offset_left = 24.0
 offset_top = 11.0
 offset_right = 574.0
 offset_bottom = 35.0
-mouse_filter = 2
-text = "游戏详情"
+theme_override_colors/font_color = Color(0.51765, 0.6, 0.58431, 1)
 theme_override_font_sizes/font_size = 12
-theme_override_colors/font_color = Color(0.51765, 0.60000, 0.58431, 1.00000)
+text = "游戏详情"
 vertical_alignment = 1
 
-[node name="DetailClose" type="Button" parent="ModalShade/DetailPanel"]
+[node name="DetailClose" type="Button" parent="ModalShade/DetailPanel" unique_id=419110853]
 unique_name_in_owner = true
+layout_mode = 0
 offset_left = 620.0
 offset_top = 10.0
 offset_right = 656.0
 offset_bottom = 36.0
-text = "×"
 mouse_default_cursor_shape = 2
 theme_override_styles/normal = SubResource("transparent")
+text = "×"
 
-[node name="DetailArt" type="TextureRect" parent="ModalShade/DetailPanel"]
+[node name="DetailArt" type="TextureRect" parent="ModalShade/DetailPanel" unique_id=866930309]
 unique_name_in_owner = true
+texture_filter = 1
+layout_mode = 0
 offset_left = 24.0
 offset_top = 52.0
 offset_right = 656.0
 offset_bottom = 240.0
+mouse_filter = 2
 texture = ExtResource("stars")
 expand_mode = 1
-stretch_mode = 0
-texture_filter = 1
-mouse_filter = 2
 
-[node name="DetailTitle" type="Label" parent="ModalShade/DetailPanel"]
+[node name="DetailTitle" type="Label" parent="ModalShade/DetailPanel" unique_id=2014246109]
 unique_name_in_owner = true
+layout_mode = 0
 offset_left = 24.0
 offset_top = 253.0
 offset_right = 656.0
 offset_bottom = 293.0
-mouse_filter = 2
-text = "远星来信"
+theme_override_colors/font_color = Color(0.86667, 0.89412, 0.85098, 1)
 theme_override_font_sizes/font_size = 24
-theme_override_colors/font_color = Color(0.86667, 0.89412, 0.85098, 1.00000)
+text = "远星来信"
 vertical_alignment = 1
 
-[node name="DetailMeta" type="Label" parent="ModalShade/DetailPanel"]
+[node name="DetailMeta" type="Label" parent="ModalShade/DetailPanel" unique_id=1279873114]
 unique_name_in_owner = true
+layout_mode = 0
 offset_left = 24.0
 offset_top = 302.0
 offset_right = 656.0
 offset_bottom = 326.0
-mouse_filter = 2
-text = "探索冒险 / 微光工作室"
+theme_override_colors/font_color = Color(0.51765, 0.71373, 0.67059, 1)
 theme_override_font_sizes/font_size = 12
-theme_override_colors/font_color = Color(0.51765, 0.71373, 0.67059, 1.00000)
+text = "探索冒险 / 微光工作室"
 vertical_alignment = 1
 
-[node name="DetailDescription" type="Label" parent="ModalShade/DetailPanel"]
+[node name="DetailDescription" type="Label" parent="ModalShade/DetailPanel" unique_id=785391877]
 unique_name_in_owner = true
+layout_mode = 0
 offset_left = 24.0
 offset_top = 340.0
 offset_right = 656.0
 offset_bottom = 418.0
-mouse_filter = 2
-text = ""
+theme_override_colors/font_color = Color(0.86667, 0.89412, 0.85098, 1)
 theme_override_font_sizes/font_size = 12
-theme_override_colors/font_color = Color(0.86667, 0.89412, 0.85098, 1.00000)
 vertical_alignment = 1
 autowrap_mode = 2
 
-[node name="DetailInfo" type="Label" parent="ModalShade/DetailPanel"]
+[node name="DetailInfo" type="Label" parent="ModalShade/DetailPanel" unique_id=673920620]
 unique_name_in_owner = true
+layout_mode = 0
 offset_left = 24.0
 offset_top = 427.0
 offset_right = 656.0
 offset_bottom = 481.0
-mouse_filter = 2
-text = ""
+theme_override_colors/font_color = Color(0.51765, 0.6, 0.58431, 1)
 theme_override_font_sizes/font_size = 12
-theme_override_colors/font_color = Color(0.51765, 0.60000, 0.58431, 1.00000)
 vertical_alignment = 1
 autowrap_mode = 2
 
-[node name="DetailPrice" type="Label" parent="ModalShade/DetailPanel"]
+[node name="DetailPrice" type="Label" parent="ModalShade/DetailPanel" unique_id=1841198145]
 unique_name_in_owner = true
+layout_mode = 0
 offset_left = 24.0
 offset_top = 493.0
 offset_right = 234.0
 offset_bottom = 523.0
-mouse_filter = 2
-text = "66 点"
+theme_override_colors/font_color = Color(0.70196, 0.80784, 0.56078, 1)
 theme_override_font_sizes/font_size = 24
-theme_override_colors/font_color = Color(0.70196, 0.80784, 0.56078, 1.00000)
+text = "66 点"
 vertical_alignment = 1
 
-[node name="DetailWish" type="Button" parent="ModalShade/DetailPanel"]
+[node name="DetailWish" type="Button" parent="ModalShade/DetailPanel" unique_id=727383362]
 unique_name_in_owner = true
+layout_mode = 0
 offset_left = 24.0
 offset_top = 538.0
 offset_right = 228.0
 offset_bottom = 570.0
-text = "+ 加入愿望单"
 mouse_default_cursor_shape = 2
+text = "+ 加入愿望单"
 
-[node name="DetailAdd" type="Button" parent="ModalShade/DetailPanel"]
+[node name="DetailAdd" type="Button" parent="ModalShade/DetailPanel" unique_id=530453224]
 unique_name_in_owner = true
+layout_mode = 0
 offset_left = 244.0
 offset_top = 538.0
 offset_right = 656.0
 offset_bottom = 570.0
-text = "加入购物车"
 mouse_default_cursor_shape = 2
+theme_override_colors/font_color = Color(0.12549, 0.20784, 0.18431, 1)
+theme_override_colors/font_pressed_color = Color(0.12549, 0.20784, 0.18431, 1)
+theme_override_colors/font_hover_color = Color(0.09412, 0.18824, 0.16863, 1)
 theme_override_styles/normal = SubResource("green")
-theme_override_styles/hover = SubResource("green_hover")
 theme_override_styles/pressed = SubResource("green_down")
-theme_override_colors/font_color = Color(0.12549, 0.20784, 0.18431, 1.00000)
-theme_override_colors/font_hover_color = Color(0.09412, 0.18824, 0.16863, 1.00000)
-theme_override_colors/font_pressed_color = Color(0.12549, 0.20784, 0.18431, 1.00000)
+theme_override_styles/hover = SubResource("green_hover")
+text = "加入购物车"
 
-[node name="CartPanel" type="Panel" parent="ModalShade"]
+[node name="CartPanel" type="Panel" parent="ModalShade" unique_id=2034908642]
 unique_name_in_owner = true
+layout_mode = 0
 offset_left = 330.0
 offset_top = 130.0
 offset_right = 950.0
 offset_bottom = 670.0
 theme_override_styles/panel = SubResource("panel")
 
-[node name="CartTitle" type="Label" parent="ModalShade/CartPanel"]
+[node name="CartTitle" type="Label" parent="ModalShade/CartPanel" unique_id=1333550552]
 unique_name_in_owner = true
+layout_mode = 0
 offset_left = 24.0
 offset_top = 15.0
 offset_right = 544.0
 offset_bottom = 45.0
-mouse_filter = 2
-text = "你的购物车"
+theme_override_colors/font_color = Color(0.86667, 0.89412, 0.85098, 1)
 theme_override_font_sizes/font_size = 24
-theme_override_colors/font_color = Color(0.86667, 0.89412, 0.85098, 1.00000)
+text = "你的购物车"
 vertical_alignment = 1
 
-[node name="CartClose" type="Button" parent="ModalShade/CartPanel"]
+[node name="CartClose" type="Button" parent="ModalShade/CartPanel" unique_id=401790890]
 unique_name_in_owner = true
+layout_mode = 0
 offset_left = 560.0
 offset_top = 16.0
 offset_right = 596.0
 offset_bottom = 42.0
-text = "×"
 mouse_default_cursor_shape = 2
 theme_override_styles/normal = SubResource("transparent")
+text = "×"
 
-[node name="CartScroll" type="ScrollContainer" parent="ModalShade/CartPanel"]
+[node name="CartScroll" type="ScrollContainer" parent="ModalShade/CartPanel" unique_id=1083380657]
 unique_name_in_owner = true
+layout_mode = 0
 offset_left = 24.0
 offset_top = 64.0
 offset_right = 596.0
 offset_bottom = 388.0
 horizontal_scroll_mode = 0
 
-[node name="CartRows" type="VBoxContainer" parent="ModalShade/CartPanel/CartScroll"]
+[node name="CartRows" type="VBoxContainer" parent="ModalShade/CartPanel/CartScroll" unique_id=1332583095]
 unique_name_in_owner = true
-unique_name_in_owner = true
+layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 12
 
-[node name="CartRule" type="ColorRect" parent="ModalShade/CartPanel"]
+[node name="CartRule" type="ColorRect" parent="ModalShade/CartPanel" unique_id=1423814133]
+layout_mode = 0
 offset_left = 24.0
 offset_top = 400.0
 offset_right = 596.0
 offset_bottom = 401.0
-color = Color(0.18824, 0.26275, 0.29020, 1.00000)
 mouse_filter = 2
+color = Color(0.18824, 0.26275, 0.2902, 1)
 
-[node name="CartSummary" type="Label" parent="ModalShade/CartPanel"]
+[node name="CartSummary" type="Label" parent="ModalShade/CartPanel" unique_id=1754743617]
 unique_name_in_owner = true
+layout_mode = 0
 offset_left = 24.0
 offset_top = 414.0
 offset_right = 596.0
 offset_bottom = 460.0
-mouse_filter = 2
-text = ""
+theme_override_colors/font_color = Color(0.86667, 0.89412, 0.85098, 1)
 theme_override_font_sizes/font_size = 12
-theme_override_colors/font_color = Color(0.86667, 0.89412, 0.85098, 1.00000)
 vertical_alignment = 1
 autowrap_mode = 2
 
-[node name="CheckoutButton" type="Button" parent="ModalShade/CartPanel"]
+[node name="CheckoutButton" type="Button" parent="ModalShade/CartPanel" unique_id=995039127]
 unique_name_in_owner = true
+layout_mode = 0
 offset_left = 24.0
 offset_top = 474.0
 offset_right = 596.0
 offset_bottom = 514.0
-text = "确认购买"
 mouse_default_cursor_shape = 2
+theme_override_colors/font_color = Color(0.12549, 0.20784, 0.18431, 1)
+theme_override_colors/font_pressed_color = Color(0.12549, 0.20784, 0.18431, 1)
+theme_override_colors/font_hover_color = Color(0.09412, 0.18824, 0.16863, 1)
 theme_override_styles/normal = SubResource("green")
-theme_override_styles/hover = SubResource("green_hover")
 theme_override_styles/pressed = SubResource("green_down")
-theme_override_colors/font_color = Color(0.12549, 0.20784, 0.18431, 1.00000)
-theme_override_colors/font_hover_color = Color(0.09412, 0.18824, 0.16863, 1.00000)
-theme_override_colors/font_pressed_color = Color(0.12549, 0.20784, 0.18431, 1.00000)
+theme_override_styles/hover = SubResource("green_hover")
+text = "确认购买"
 
-[node name="AboutPanel" type="Panel" parent="ModalShade"]
+[node name="AboutPanel" type="Panel" parent="ModalShade" unique_id=225493121]
 unique_name_in_owner = true
+layout_mode = 0
 offset_left = 370.0
 offset_top = 170.0
 offset_right = 910.0
 offset_bottom = 630.0
 theme_override_styles/panel = SubResource("panel")
 
-[node name="AboutTitle" type="Label" parent="ModalShade/AboutPanel"]
+[node name="AboutTitle" type="Label" parent="ModalShade/AboutPanel" unique_id=1484855550]
+layout_mode = 0
 offset_left = 24.0
 offset_top = 16.0
 offset_right = 484.0
 offset_bottom = 56.0
-mouse_filter = 2
-text = "游戏回忆录"
+theme_override_colors/font_color = Color(0.86667, 0.89412, 0.85098, 1)
 theme_override_font_sizes/font_size = 24
-theme_override_colors/font_color = Color(0.86667, 0.89412, 0.85098, 1.00000)
+text = "游戏回忆录"
 vertical_alignment = 1
 
-[node name="AboutClose" type="Button" parent="ModalShade/AboutPanel"]
+[node name="AboutClose" type="Button" parent="ModalShade/AboutPanel" unique_id=661245864]
 unique_name_in_owner = true
+layout_mode = 0
 offset_left = 480.0
 offset_top = 18.0
 offset_right = 516.0
 offset_bottom = 44.0
-text = "×"
 mouse_default_cursor_shape = 2
 theme_override_styles/normal = SubResource("transparent")
+text = "×"
 
-[node name="AboutBody" type="Label" parent="ModalShade/AboutPanel"]
+[node name="AboutBody" type="Label" parent="ModalShade/AboutPanel" unique_id=798433289]
+layout_mode = 0
 offset_left = 24.0
 offset_top = 80.0
 offset_right = 516.0
 offset_bottom = 356.0
-mouse_filter = 2
-text = "像素风格 · 游戏收藏经营模拟\n\n这是可独立运行的商店场景。\n浏览游戏、加入愿望单、购物车结算，\n然后在游戏库中欣赏你的第一批收藏。\n\n本场景采用虚构作品与演示发行日期，\n暂不代表正式的历史上架年表。\n\n购买与收藏会自动保存到本地。\n像素字体：Ark Pixel / SIL OFL 1.1"
+theme_override_colors/font_color = Color(0.51765, 0.6, 0.58431, 1)
 theme_override_font_sizes/font_size = 12
-theme_override_colors/font_color = Color(0.51765, 0.60000, 0.58431, 1.00000)
+text = "像素风格 · 游戏收藏经营模拟
+
+这是可独立运行的商店场景。
+浏览游戏、加入愿望单、购物车结算，
+然后在游戏库中欣赏你的第一批收藏。
+
+本场景采用虚构作品与演示发行日期，
+暂不代表正式的历史上架年表。
+
+购买与收藏会自动保存到本地。
+像素字体：Ark Pixel / SIL OFL 1.1"
 vertical_alignment = 1
 autowrap_mode = 2
 
-[node name="ResetButton" type="Button" parent="ModalShade/AboutPanel"]
+[node name="ResetButton" type="Button" parent="ModalShade/AboutPanel" unique_id=1883461621]
 unique_name_in_owner = true
+layout_mode = 0
 offset_left = 24.0
 offset_top = 378.0
 offset_right = 516.0
 offset_bottom = 416.0
-text = "重置演示存档"
 mouse_default_cursor_shape = 2
+text = "重置演示存档"
 
-[node name="Toast" type="Panel" parent="."]
+[node name="Toast" type="Panel" parent="." unique_id=74151512]
 unique_name_in_owner = true
+visible = false
+layout_mode = 0
 offset_left = 340.0
 offset_top = 724.0
 offset_right = 940.0
 offset_bottom = 768.0
-theme_override_styles/panel = SubResource("toast")
-visible = false
 mouse_filter = 2
+theme_override_styles/panel = SubResource("toast")
 
-[node name="ToastText" type="Label" parent="Toast"]
+[node name="ToastText" type="Label" parent="Toast" unique_id=1850855643]
 unique_name_in_owner = true
+layout_mode = 0
 offset_left = 12.0
 offset_top = 4.0
 offset_right = 588.0
 offset_bottom = 40.0
-mouse_filter = 2
-text = "已加入购物车"
+theme_override_colors/font_color = Color(0.86667, 0.89412, 0.85098, 1)
 theme_override_font_sizes/font_size = 12
-theme_override_colors/font_color = Color(0.86667, 0.89412, 0.85098, 1.00000)
+text = "已加入购物车"
+horizontal_alignment = 1
 vertical_alignment = 1
 autowrap_mode = 2
-horizontal_alignment = 1
