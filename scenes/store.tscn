@@ -1,0 +1,85 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scripts/client.gd" id="script"]
+[ext_resource type="Theme" path="res://assets/client_theme.tres" id="theme"]
+
+[sub_resource type="Shader" id="background_shader"]
+code = "shader_type canvas_item; void fragment(){ COLOR = mix(vec4(0.16,0.27,0.35,1.0),vec4(0.105,0.157,0.22,1.0),min(UV.y*2.0,1.0)); }"
+
+[sub_resource type="ShaderMaterial" id="background_material"]
+shader = SubResource("background_shader")
+
+[node name="MemoirClient" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("theme")
+script = ExtResource("script")
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+material = SubResource("background_material")
+
+[node name="Layout" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+theme_override_constants/separation = 0
+
+[node name="ClientHeader" type="PanelContainer" parent="Layout"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(0, 96)
+
+[node name="StoreNavigation" type="PanelContainer" parent="Layout"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(0, 44)
+
+[node name="ContentScroll" type="ScrollContainer" parent="Layout"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="PageContent" type="VBoxContainer" parent="Layout/ContentScroll"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 0
+
+[node name="StatusBar" type="PanelContainer" parent="Layout"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(0, 34)
+
+[node name="Notification" type="PanelContainer" parent="."]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -402.0
+offset_top = -110.0
+offset_right = -18.0
+offset_bottom = -48.0
+grow_horizontal = 0
+grow_vertical = 0
+visible = false
+mouse_filter = 2
+
+[node name="Message" type="Label" parent="Notification"]
+layout_mode = 2
+text = "游戏已添加到购物车"
+autowrap_mode = 2
+mouse_filter = 2

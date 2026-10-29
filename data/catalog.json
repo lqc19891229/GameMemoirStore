@@ -1,0 +1,446 @@
+[
+  {
+    "id": "distant_signal",
+    "title": "远星来信",
+    "english": "LETTERS FROM THE STARS",
+    "genre": "探索冒险",
+    "tags": [
+      "科幻",
+      "探索",
+      "剧情"
+    ],
+    "description": "在失去联系的边境星球，寻找一封迟到的信。穿过静默的观测站与漫长的星夜，重新连接那些散落在宇宙里的故事。",
+    "studio": "微光工作室",
+    "price": 88,
+    "discount": 25,
+    "rating": "好评如潮",
+    "rating_count": 268,
+    "release_month": 0,
+    "release_label": "2003 年 09 月",
+    "art": "stars",
+    "edition": "数字珍藏版",
+    "playtime": "预计通关 6 次行动",
+    "feature": "一段关于远行、等待与重逢的旅程。",
+    "review_percent": 97,
+    "storage_mb": 320,
+    "reviews": [
+      {
+        "name": "山间旅人",
+        "hours": "12.4",
+        "text": "一段关于远行、等待与重逢的旅程。 音乐和氛围都很舒服，值得留一点时间认真体验。"
+      },
+      {
+        "name": "旧日玩家",
+        "hours": "28.1",
+        "text": "本来只打算玩一会儿，回过神来已经很晚了。喜欢这种可以慢慢探索的作品。"
+      }
+    ]
+  },
+  {
+    "id": "iron_frontier",
+    "title": "钢铁边境",
+    "english": "IRON FRONTIER",
+    "genre": "策略战术",
+    "tags": [
+      "策略",
+      "战术",
+      "单人"
+    ],
+    "description": "在边境建立第一座前哨站。调配有限的补给，规划防线，让每一支小队都能平安归来。",
+    "studio": "北陆互动",
+    "price": 72,
+    "discount": 0,
+    "rating": "特别好评",
+    "rating_count": 184,
+    "release_month": 0,
+    "release_label": "2003 年 09 月",
+    "art": "desert",
+    "edition": "标准版",
+    "playtime": "预计通关 8 次行动",
+    "feature": "每一步计划，都有自己的分量。",
+    "review_percent": 87,
+    "storage_mb": 416,
+    "reviews": [
+      {
+        "name": "山间旅人",
+        "hours": "12.4",
+        "text": "每一步计划，都有自己的分量。 音乐和氛围都很舒服，值得留一点时间认真体验。"
+      },
+      {
+        "name": "旧日玩家",
+        "hours": "28.1",
+        "text": "本来只打算玩一会儿，回过神来已经很晚了。喜欢这种可以慢慢探索的作品。"
+      }
+    ]
+  },
+  {
+    "id": "mist_valley",
+    "title": "雾谷手记",
+    "english": "A VALLEY IN THE MIST",
+    "genre": "生活模拟",
+    "tags": [
+      "田园",
+      "经营",
+      "轻松"
+    ],
+    "description": "修好山谷里的老房子，种下第一批作物。在季节与日常之间，记录属于自己的小小生活。",
+    "studio": "雨后制作组",
+    "price": 48,
+    "discount": 20,
+    "rating": "特别好评",
+    "rating_count": 126,
+    "release_month": 0,
+    "release_label": "2003 年 09 月",
+    "art": "valley",
+    "edition": "标准版",
+    "playtime": "预计通关 6 次行动",
+    "feature": "把平凡的每一天，慢慢过成喜欢的样子。",
+    "review_percent": 88,
+    "storage_mb": 512,
+    "reviews": [
+      {
+        "name": "山间旅人",
+        "hours": "12.4",
+        "text": "把平凡的每一天，慢慢过成喜欢的样子。 音乐和氛围都很舒服，值得留一点时间认真体验。"
+      },
+      {
+        "name": "旧日玩家",
+        "hours": "28.1",
+        "text": "本来只打算玩一会儿，回过神来已经很晚了。喜欢这种可以慢慢探索的作品。"
+      }
+    ]
+  },
+  {
+    "id": "last_lighthouse",
+    "title": "最后一座灯塔",
+    "english": "THE LAST LIGHTHOUSE",
+    "genre": "探索冒险",
+    "tags": [
+      "解谜",
+      "海洋",
+      "剧情"
+    ],
+    "description": "一座灯塔，一片不再平静的海。修复失灵的信号装置，在潮汐退去之前解开岛上的秘密。",
+    "studio": "潮汐游戏",
+    "price": 60,
+    "discount": 0,
+    "rating": "特别好评",
+    "rating_count": 96,
+    "release_month": 0,
+    "release_label": "2003 年 09 月",
+    "art": "ocean",
+    "edition": "标准版",
+    "playtime": "预计通关 5 次行动",
+    "feature": "总有一束光，会为归来的人亮起。",
+    "review_percent": 89,
+    "storage_mb": 608,
+    "reviews": [
+      {
+        "name": "山间旅人",
+        "hours": "12.4",
+        "text": "总有一束光，会为归来的人亮起。 音乐和氛围都很舒服，值得留一点时间认真体验。"
+      },
+      {
+        "name": "旧日玩家",
+        "hours": "28.1",
+        "text": "本来只打算玩一会儿，回过神来已经很晚了。喜欢这种可以慢慢探索的作品。"
+      }
+    ]
+  },
+  {
+    "id": "midnight_castle",
+    "title": "午夜回廊",
+    "english": "MIDNIGHT CORRIDORS",
+    "genre": "角色扮演",
+    "tags": [
+      "奇幻",
+      "探索",
+      "角色扮演"
+    ],
+    "description": "当钟声响起，古堡的房间会重新排列。带着仅有的地图走进回廊，寻找通往黎明的出口。",
+    "studio": "黑曜石猫制作组",
+    "price": 96,
+    "discount": 0,
+    "rating": "特别好评",
+    "rating_count": 81,
+    "release_month": 1,
+    "release_label": "2003 年 10 月",
+    "art": "castle",
+    "edition": "标准版",
+    "playtime": "预计通关 9 次行动",
+    "feature": "每一道门后，都是一次未知的相遇。",
+    "review_percent": 90,
+    "storage_mb": 704,
+    "reviews": [
+      {
+        "name": "山间旅人",
+        "hours": "12.4",
+        "text": "每一道门后，都是一次未知的相遇。 音乐和氛围都很舒服，值得留一点时间认真体验。"
+      },
+      {
+        "name": "旧日玩家",
+        "hours": "28.1",
+        "text": "本来只打算玩一会儿，回过神来已经很晚了。喜欢这种可以慢慢探索的作品。"
+      }
+    ]
+  },
+  {
+    "id": "eastbound",
+    "title": "向东的列车",
+    "english": "EASTBOUND",
+    "genre": "探索冒险",
+    "tags": [
+      "旅行",
+      "叙事",
+      "轻松"
+    ],
+    "description": "登上清晨出发的慢车，在陌生的站台短暂停留。收集沿途的风景，也收集旅人的故事。",
+    "studio": "纸飞机工作室",
+    "price": 52,
+    "discount": 0,
+    "rating": "特别好评",
+    "rating_count": 113,
+    "release_month": 2,
+    "release_label": "2003 年 11 月",
+    "art": "train",
+    "edition": "标准版",
+    "playtime": "预计通关 5 次行动",
+    "feature": "目的地很远，沿途的风景刚刚好。",
+    "review_percent": 91,
+    "storage_mb": 800,
+    "reviews": [
+      {
+        "name": "山间旅人",
+        "hours": "12.4",
+        "text": "目的地很远，沿途的风景刚刚好。 音乐和氛围都很舒服，值得留一点时间认真体验。"
+      },
+      {
+        "name": "旧日玩家",
+        "hours": "28.1",
+        "text": "本来只打算玩一会儿，回过神来已经很晚了。喜欢这种可以慢慢探索的作品。"
+      }
+    ]
+  },
+  {
+    "id": "forgotten_sands",
+    "title": "遗忘之沙",
+    "english": "THE FORGOTTEN SANDS",
+    "genre": "角色扮演",
+    "tags": [
+      "角色扮演",
+      "单人",
+      "氛围"
+    ],
+    "description": "沿着地图上的最后一条线索，走进一段尚未被记录的旅程。探索未知，做出自己的选择，并将沿途的故事留在游戏回忆录中。",
+    "studio": "流沙工作室",
+    "price": 68,
+    "discount": 15,
+    "rating": "特别好评",
+    "rating_count": 156,
+    "release_month": 0,
+    "release_label": "2003 年 09 月",
+    "art": "desert",
+    "edition": "标准版",
+    "playtime": "预计通关 6 次行动",
+    "feature": "一段值得慢慢收藏的旅程。",
+    "review_percent": 92,
+    "storage_mb": 896,
+    "reviews": [
+      {
+        "name": "山间旅人",
+        "hours": "12.4",
+        "text": "一段值得慢慢收藏的旅程。 音乐和氛围都很舒服，值得留一点时间认真体验。"
+      },
+      {
+        "name": "旧日玩家",
+        "hours": "28.1",
+        "text": "本来只打算玩一会儿，回过神来已经很晚了。喜欢这种可以慢慢探索的作品。"
+      }
+    ]
+  },
+  {
+    "id": "forest_path",
+    "title": "林间小径",
+    "english": "THE FOREST PATH",
+    "genre": "生活模拟",
+    "tags": [
+      "生活模拟",
+      "单人",
+      "氛围"
+    ],
+    "description": "沿着地图上的最后一条线索，走进一段尚未被记录的旅程。探索未知，做出自己的选择，并将沿途的故事留在游戏回忆录中。",
+    "studio": "四季制作组",
+    "price": 42,
+    "discount": 0,
+    "rating": "特别好评",
+    "rating_count": 156,
+    "release_month": 0,
+    "release_label": "2003 年 09 月",
+    "art": "valley",
+    "edition": "标准版",
+    "playtime": "预计通关 6 次行动",
+    "feature": "一段值得慢慢收藏的旅程。",
+    "review_percent": 93,
+    "storage_mb": 992,
+    "reviews": [
+      {
+        "name": "山间旅人",
+        "hours": "12.4",
+        "text": "一段值得慢慢收藏的旅程。 音乐和氛围都很舒服，值得留一点时间认真体验。"
+      },
+      {
+        "name": "旧日玩家",
+        "hours": "28.1",
+        "text": "本来只打算玩一会儿，回过神来已经很晚了。喜欢这种可以慢慢探索的作品。"
+      }
+    ]
+  },
+  {
+    "id": "frozen_watch",
+    "title": "雪境守望",
+    "english": "FROZEN WATCH",
+    "genre": "策略战术",
+    "tags": [
+      "策略战术",
+      "单人",
+      "氛围"
+    ],
+    "description": "沿着地图上的最后一条线索，走进一段尚未被记录的旅程。探索未知，做出自己的选择，并将沿途的故事留在游戏回忆录中。",
+    "studio": "北陆互动",
+    "price": 92,
+    "discount": 0,
+    "rating": "特别好评",
+    "rating_count": 156,
+    "release_month": 1,
+    "release_label": "2003 年 10 月",
+    "art": "castle",
+    "edition": "标准版",
+    "playtime": "预计通关 6 次行动",
+    "feature": "一段值得慢慢收藏的旅程。",
+    "review_percent": 94,
+    "storage_mb": 1088,
+    "reviews": [
+      {
+        "name": "山间旅人",
+        "hours": "12.4",
+        "text": "一段值得慢慢收藏的旅程。 音乐和氛围都很舒服，值得留一点时间认真体验。"
+      },
+      {
+        "name": "旧日玩家",
+        "hours": "28.1",
+        "text": "本来只打算玩一会儿，回过神来已经很晚了。喜欢这种可以慢慢探索的作品。"
+      }
+    ]
+  },
+  {
+    "id": "blue_hour",
+    "title": "蓝色时刻",
+    "english": "BLUE HOUR",
+    "genre": "探索冒险",
+    "tags": [
+      "探索冒险",
+      "单人",
+      "氛围"
+    ],
+    "description": "沿着地图上的最后一条线索，走进一段尚未被记录的旅程。探索未知，做出自己的选择，并将沿途的故事留在游戏回忆录中。",
+    "studio": "潮汐游戏",
+    "price": 56,
+    "discount": 10,
+    "rating": "特别好评",
+    "rating_count": 156,
+    "release_month": 1,
+    "release_label": "2003 年 10 月",
+    "art": "ocean",
+    "edition": "标准版",
+    "playtime": "预计通关 6 次行动",
+    "feature": "一段值得慢慢收藏的旅程。",
+    "review_percent": 86,
+    "storage_mb": 1184,
+    "reviews": [
+      {
+        "name": "山间旅人",
+        "hours": "12.4",
+        "text": "一段值得慢慢收藏的旅程。 音乐和氛围都很舒服，值得留一点时间认真体验。"
+      },
+      {
+        "name": "旧日玩家",
+        "hours": "28.1",
+        "text": "本来只打算玩一会儿，回过神来已经很晚了。喜欢这种可以慢慢探索的作品。"
+      }
+    ]
+  },
+  {
+    "id": "orbital_rail",
+    "title": "轨道旅人",
+    "english": "ORBITAL TRAVELER",
+    "genre": "策略战术",
+    "tags": [
+      "策略战术",
+      "单人",
+      "氛围"
+    ],
+    "description": "沿着地图上的最后一条线索，走进一段尚未被记录的旅程。探索未知，做出自己的选择，并将沿途的故事留在游戏回忆录中。",
+    "studio": "纸飞机工作室",
+    "price": 84,
+    "discount": 0,
+    "rating": "特别好评",
+    "rating_count": 156,
+    "release_month": 2,
+    "release_label": "2003 年 11 月",
+    "art": "train",
+    "edition": "标准版",
+    "playtime": "预计通关 6 次行动",
+    "feature": "一段值得慢慢收藏的旅程。",
+    "review_percent": 87,
+    "storage_mb": 1280,
+    "reviews": [
+      {
+        "name": "山间旅人",
+        "hours": "12.4",
+        "text": "一段值得慢慢收藏的旅程。 音乐和氛围都很舒服，值得留一点时间认真体验。"
+      },
+      {
+        "name": "旧日玩家",
+        "hours": "28.1",
+        "text": "本来只打算玩一会儿，回过神来已经很晚了。喜欢这种可以慢慢探索的作品。"
+      }
+    ]
+  },
+  {
+    "id": "ancient_signal",
+    "title": "古老的信号",
+    "english": "ANCIENT SIGNAL",
+    "genre": "探索冒险",
+    "tags": [
+      "探索冒险",
+      "单人",
+      "氛围"
+    ],
+    "description": "沿着地图上的最后一条线索，走进一段尚未被记录的旅程。探索未知，做出自己的选择，并将沿途的故事留在游戏回忆录中。",
+    "studio": "微光工作室",
+    "price": 110,
+    "discount": 0,
+    "rating": "特别好评",
+    "rating_count": 156,
+    "release_month": 3,
+    "release_label": "2003 年 12 月",
+    "art": "stars",
+    "edition": "标准版",
+    "playtime": "预计通关 6 次行动",
+    "feature": "一段值得慢慢收藏的旅程。",
+    "review_percent": 88,
+    "storage_mb": 1376,
+    "reviews": [
+      {
+        "name": "山间旅人",
+        "hours": "12.4",
+        "text": "一段值得慢慢收藏的旅程。 音乐和氛围都很舒服，值得留一点时间认真体验。"
+      },
+      {
+        "name": "旧日玩家",
+        "hours": "28.1",
+        "text": "本来只打算玩一会儿，回过神来已经很晚了。喜欢这种可以慢慢探索的作品。"
+      }
+    ]
+  }
+]
