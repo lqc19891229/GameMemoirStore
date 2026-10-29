@@ -12,7 +12,9 @@
 
 ## 游戏资料管理
 
-编辑 `tools/catalog/game_catalog.xlsx`，保存并关闭 Excel。在仓库根目录运行以下命令，再重新启动游戏：
+编辑 `tools/catalog/game_catalog.xlsx`，保存并关闭 Excel。Windows 用户可直接双击项目根目录的 **`import_games.bat`**，自动导入并显示结果；发生错误时窗口会保留错误信息。无需手动输入命令，项目路径中含空格或中文也可以使用。
+
+也可以在仓库根目录运行以下命令，再重新启动游戏：
 
 ```bash
 python tools/catalog/import_games.py --project .

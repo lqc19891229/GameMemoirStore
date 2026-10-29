@@ -2,6 +2,8 @@
 
 在仓库根目录运行。使用 Python 3.10 或以上版本，无第三方依赖。
 
+Windows 可直接双击项目根目录的 `import_games.bat`。它自动寻找可用的 `py -3`、`python` 或 `python3`，检查版本并定位本项目与默认表格，成功或失败都会保留窗口供查看。未安装 Python 时会显示安装提示。请保留此文件在项目根目录。
+
 ```bash
 # 编辑并保存 tools/catalog/game_catalog.xlsx 后生成资源：
 python tools/catalog/import_games.py --project .
