@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="GameDefinition" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://generated/game_catalog/types/game_definition.gd" id="1_game"]
+[ext_resource type="Texture2D" path="res://assets/art/castle.png" id="2_capsule"]
+
+[resource]
+script = ExtResource("1_game")
+game_id = &"midnight_castle"
+title = "午夜回廊"
+announce_ym = 0
+store_release_ym = 200310
+delist_ym = 0
+base_price = 96
+developer = "黑曜石猫制作组"
+genres = PackedStringArray("角色扮演")
+cpu = "COREI5-10600K"
+gpu = "RTX3060"
+series_id = &""
+description = "当钟声响起，古堡的房间会重新排列。带着仅有的地图走进回廊，寻找通往黎明的出口。"
+capsule = ExtResource("2_capsule")

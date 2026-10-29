@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="GameDefinition" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://generated/game_catalog/types/game_definition.gd" id="1_game"]
+[ext_resource type="Texture2D" path="res://assets/art/valley.png" id="2_capsule"]
+
+[resource]
+script = ExtResource("1_game")
+game_id = &"mist_valley"
+title = "雾谷手记"
+announce_ym = 0
+store_release_ym = 200309
+delist_ym = 0
+base_price = 48
+developer = "雨后制作组"
+genres = PackedStringArray("生活模拟")
+cpu = "COREI5-10600K"
+gpu = "RTX3060"
+series_id = &""
+description = "修好山谷里的老房子，种下第一批作物。在季节与日常之间，记录属于自己的小小生活。"
+capsule = ExtResource("2_capsule")

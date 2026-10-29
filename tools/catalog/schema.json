@@ -1,0 +1,138 @@
+{
+  "version": 2,
+  "header_row": "auto",
+  "header_aliases": {
+    "CPU": "cpu",
+    "GPU": "gpu"
+  },
+  "sheets": {
+    "游戏资料": [
+      {
+        "key": "enabled",
+        "label": "参与导出",
+        "type": "int",
+        "required": true,
+        "default": 1,
+        "rule": "1=导出，0=保留在表内但不导出",
+        "export": false
+      },
+      {
+        "key": "game_id",
+        "label": "游戏ID",
+        "type": "id",
+        "required": true,
+        "default": "",
+        "rule": "小写字母开头，仅 a-z、0-9、下划线，确定后勿改",
+        "export": true
+      },
+      {
+        "key": "title",
+        "label": "游戏名称",
+        "type": "string",
+        "required": true,
+        "default": "",
+        "rule": "远星来信",
+        "export": true
+      },
+      {
+        "key": "announce_ym",
+        "label": "预告月份",
+        "type": "month0",
+        "required": false,
+        "default": 0,
+        "rule": "空白或0=不提前展示，须 <= 上架月份",
+        "export": true
+      },
+      {
+        "key": "store_release_ym",
+        "label": "上架月份",
+        "type": "month",
+        "required": true,
+        "default": "",
+        "rule": "整数 YYYYMM，例如 200309；不是 Excel 日期",
+        "export": true
+      },
+      {
+        "key": "delist_ym",
+        "label": "下架月份",
+        "type": "month0",
+        "required": false,
+        "default": 0,
+        "rule": "空白或0=不下架；该月起不可购买，已购保留",
+        "export": true
+      },
+      {
+        "key": "base_price",
+        "label": "首发原价",
+        "type": "int",
+        "required": true,
+        "default": "",
+        "rule": "虚拟点数，整数 >=0，0 表示免费",
+        "export": true
+      },
+      {
+        "key": "developer",
+        "label": "开发商",
+        "type": "string",
+        "required": true,
+        "default": "",
+        "rule": "微光工作室",
+        "export": true
+      },
+      {
+        "key": "genres",
+        "label": "游戏类型",
+        "type": "list",
+        "required": false,
+        "default": "",
+        "rule": "多个值用英文分号 ; 分隔",
+        "export": true
+      },
+      {
+        "key": "cpu",
+        "label": "CPU",
+        "type": "string",
+        "required": false,
+        "default": "",
+        "rule": "型号文本原样保存，例如COREI5-10600K",
+        "export": true
+      },
+      {
+        "key": "gpu",
+        "label": "GPU",
+        "type": "string",
+        "required": false,
+        "default": "",
+        "rule": "型号文本原样保存，例如RTX3060",
+        "export": true
+      },
+      {
+        "key": "series_id",
+        "label": "系列ID",
+        "type": "id0",
+        "required": false,
+        "default": "",
+        "rule": "可空；同系列使用相同稳定ID",
+        "export": true
+      },
+      {
+        "key": "description",
+        "label": "介绍",
+        "type": "string",
+        "required": false,
+        "default": "",
+        "rule": "可在 Excel 单元格内换行",
+        "export": true
+      },
+      {
+        "key": "capsule",
+        "label": "封面",
+        "type": "path",
+        "required": false,
+        "default": "",
+        "rule": "res://项目内图片路径；空白不引用图片",
+        "export": true
+      }
+    ]
+  }
+}

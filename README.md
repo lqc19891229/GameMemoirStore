@@ -1,14 +1,45 @@
 # 游戏回忆录 · 像素客户端 v0.3
 
-本次把原商店原型扩展为带独立页面的像素游戏平台客户端。保留原创名称、像素美术和游戏内预算，主要参考成熟 Steam 客户端的导航习惯与页面分工。
+带独立页面的像素游戏平台客户端。保留原创名称、像素美术和游戏内预算，主要参考成熟 Steam 客户端的导航习惯与页面分工。游戏基础资料由 Excel 生成每款游戏的 `.tres`，主商店已经读取这套资源。
 
 ## 打开与运行
 
-1. 完整解压压缩包。
-2. 使用 Godot 4.6 导入 `GameMemoirStore/project.godot`。
+1. 克隆或下载完整仓库。
+2. 使用 Godot 4.6 导入仓库根目录的 `project.godot`。
 3. 首次导入完成后按 **F5**。主场景仍然是 `scenes/store.tscn`，按 F6 也会进入新版客户端。
 
 使用 GDScript 和 Compatibility 渲染器，不需要插件、.NET、Steam SDK 或登录。此文件是源工程，不包含独立的 Windows 可执行文件。
+
+## 游戏资料管理
+
+编辑 `tools/catalog/game_catalog.xlsx`，保存并关闭 Excel。在仓库根目录运行以下命令，再重新启动游戏：
+
+```bash
+python tools/catalog/import_games.py --project .
+```
+
+需要 Python 3.10 或以上版本，无第三方依赖。Windows 也可以使用 `py -3` 代替 `python`。仓库已包含生成结果，首次运行游戏不需要安装 Python。
+
+表格共 14 列，其中 `enabled` 只控制导出，其余 13 个字段写入游戏资源。`CPU`、`GPU` 映射为字符串 `cpu`、`gpu`，商品页显示这些型号；`capsule` 是图片引用。默认游戏顺序跟随表格行序。
+
+| 资料 | 当前来源 |
+|---|---|
+| 游戏列表、ID、名称、开发商、类型、系列、介绍、封面、CPU/GPU、原价、预告/上架/下架月份 | `generated/game_catalog/catalog.tres` 及其引用的单款游戏资源 |
+| 英文名、标签、评价、版本文案、安装大小、现有演示折扣 | `data/catalog.json` 中按相同 ID 查找的补充资料 |
+| 所有权、愿望单、购买时实际成交价、安装状态、游玩记录 | 玩家存档 |
+
+资源字段优先于旧 JSON 的同名资料。新增游戏只需加入 Excel，未填写的补充资料使用默认值，不需要在 JSON 再添加一条游戏。现有演示折扣仍由 JSON 提供，例如原价 88、降价 25% 时售价为 66；本次精简表格尚未管理折扣排期。
+
+月份使用 `YYYYMM` 整数。`announce_ym=0` 的未来游戏在上架前不出现在“即将推出”中；填写预告月份后从该月展示。下架月份起停止销售，已购买游戏继续保留在库中并可安装。已发布游戏需要下架时使用 `delist_ym`，保持资源与 ID 存在以关联旧存档；`enabled=0` 会从生成目录移除整款游戏。
+
+只校验，或检查生成文件是否与表格一致：
+
+```bash
+python tools/catalog/import_games.py --project . --validate-only
+python tools/catalog/import_games.py --project . --check
+```
+
+不要直接修改生成目录中的 `.tres`。资料在 Excel 修改，资源类在 `tools/catalog/resource_types/` 修改，然后重新导入。该工具目录带 `.gdignore`，模板不会被 Godot 当成第二套全局资源类。更多填写规则见 [导入工具说明](tools/catalog/README.md)。
 
 ## 本次主要变化
 
@@ -57,7 +88,11 @@
 | `scripts/client_pages.gd` | 分别构建首页、搜索、商品、愿望单、购物车、库、下载、资料和社区页面 |
 | `scripts/client_ui.gd` | 原生 Control 与 Container 工厂、主题样式、封面和商品行 |
 | `scripts/store_state.gd` | 钱包、购买、愿望单、收藏夹、安装、游玩和存档 |
-| `data/catalog.json` | 游戏目录 |
+| `generated/game_catalog/catalog.tres` | 当前游戏资源清单，主商店通过 preload 引用 |
+| `generated/game_catalog/games/` | 每款游戏各自的 `.tres` |
+| `generated/game_catalog/types/` | GameDefinition 和 GameCatalog 运行时资源类 |
+| `tools/catalog/` | 原始 Excel、Python 导入器、字段规范和资源模板 |
+| `data/catalog.json` | 评价、标签、折扣等尚未进入表格的补充展示资料 |
 | `assets/client_theme.tres` | 新版默认字体和主题 |
 | `scenes/legacy_store.tscn` | 保留 v0.2 原场景，便于对照 |
 | `previews/` | 本次实际运行截图 |
@@ -71,14 +106,22 @@
 
 Godot 4.6 stable 官方版本运行检查：
 
-- 客户端与新业务：56 项检查。
+- Python 导入、生成一致性、文件保护和 UID 保留：25 项测试。
+- 资源字段、封面加载与时间线：55 项检查。
+- 主商店资源接入、新增游戏默认资料、上架/下架、成交价与库保留：26 项检查。
+- 客户端与业务回归：56 项检查。
 - 旧版购买与存档回归：29 项检查。
 - 原生窗口、右键菜单、游玩结束与浏览位置：9 项检查。
-- 总计 94 项检查；附带首页、商品页、库、愿望单、购物车与 960×600 窗口截图。
+- 合计 200 项测试与检查通过；原有预览图保留在 `previews/`。
 
 命令行验证：
 
 ```bash
+python -m unittest discover -s tests -p "test_catalog_importer.py" -v
+python tools/catalog/import_games.py --project . --check
+godot --headless --path . --editor --import
+godot --headless --path . --script res://tests/test_catalog_resources.gd
+godot --headless --path . --script res://tests/test_catalog_integration.gd -- --fresh
 godot --headless --path . --script res://tests/test_client.gd -- --fresh
 godot --headless --path . --script res://tests/test_store.gd -- --fresh
 # 原生窗口检查需要图形显示环境：

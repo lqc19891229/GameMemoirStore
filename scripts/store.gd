@@ -140,16 +140,16 @@ func _filter_catalog() -> Array:
 			continue
 		if current_view == "store":
 			if current_filter == "coming":
-				if state.is_available(game_id):
+				if state.release_state(game_id) != &"coming_soon":
 					continue
 			else:
 				if not state.is_available(game_id):
 					continue
 				if current_filter == "sale" and int(entry.get("discount", 0)) <= 0:
 					continue
-				if not current_filter in ["all", "sale"] and str(entry["genre"]) != current_filter:
+				if not current_filter in ["all", "sale"] and not entry["genres"].has(current_filter):
 					continue
-		var haystack := (str(entry["title"]) + " " + str(entry["english"]) + " " + str(entry["studio"]) + " " + str(entry["genre"]) + " " + " ".join(entry["tags"])).to_lower()
+		var haystack := (str(entry["title"]) + " " + str(entry["english"]) + " " + str(entry["studio"]) + " " + " ".join(entry["genres"]) + " " + " ".join(entry["tags"])).to_lower()
 		if not search.is_empty() and not haystack.contains(search):
 			continue
 		results.append(entry)
@@ -194,7 +194,7 @@ func _update_featured() -> void:
 	%HeroWish.text = "已关注" if state.wishlist.has("distant_signal") else "+ 愿望单"
 
 func _art(entry: Dictionary) -> Texture2D:
-	return load("res://assets/art/%s.png" % entry["art"]) as Texture2D
+	return entry.get("capsule") as Texture2D
 
 func add_to_cart(game_id: String) -> void:
 	var message: String = state.add_to_cart(game_id)

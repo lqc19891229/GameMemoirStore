@@ -72,6 +72,13 @@ func _run() -> void:
 	check(scene.modal_kind == "receipt" and scene.state.owned.has("iron_frontier"), "checkout displays receipt and owns correct game")
 	scene.get_node("%CheckoutButton").pressed.emit()
 	check(scene.current_view == "library" and scene.filtered.size() == 1, "receipt action opens the updated library")
+	# An announced fixture exercises the coming-soon UI without changing shared resources.
+	var announced_catalog: GameCatalog = State.GAME_CATALOG.duplicate(true)
+	for definition: GameDefinition in announced_catalog.games:
+		if definition.store_release_ym > 200309:
+			definition.announce_ym = 200309
+	scene.state = State.new(announced_catalog)
+	scene.state.persistence_enabled = false
 	scene.set_filter("coming")
 	check(scene.filtered.size() == 6, "coming-soon filter shows future titles")
 	scene.get_node("%SearchBox").text = "午夜"

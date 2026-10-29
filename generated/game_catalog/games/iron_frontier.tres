@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="GameDefinition" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://generated/game_catalog/types/game_definition.gd" id="1_game"]
+[ext_resource type="Texture2D" path="res://assets/art/desert.png" id="2_capsule"]
+
+[resource]
+script = ExtResource("1_game")
+game_id = &"iron_frontier"
+title = "钢铁边境"
+announce_ym = 0
+store_release_ym = 200309
+delist_ym = 0
+base_price = 72
+developer = "北陆互动"
+genres = PackedStringArray("策略战术")
+cpu = "COREI5-10600K"
+gpu = "RTX3060"
+series_id = &""
+description = "在边境建立第一座前哨站。调配有限的补给，规划防线，让每一支小队都能平安归来。"
+capsule = ExtResource("2_capsule")

@@ -34,7 +34,7 @@ func _run() -> void:
 	check(client.forward_button.disabled, "new navigation removes abandoned forward branch")
 	var results: Array = client.search_games({"kind": "search", "query": "微光"})
 	check(results.size() == 1 and results[0]["id"] == "distant_signal", "search matches Chinese studio and excludes unreleased title")
-	check(client.search_games({"filter": "coming"}).size() == 6, "coming soon lists future titles")
+	check(client.search_games({"filter": "coming"}).is_empty(), "future titles with no announcement stay hidden")
 	check(client.search_games({"genre": "生活模拟"}).size() == 2, "genre filter works")
 	results = client.search_games({"sort": 1})
 	var ascending: bool = true

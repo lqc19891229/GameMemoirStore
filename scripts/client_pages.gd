@@ -241,6 +241,9 @@ func product(queue_mode: bool = false) -> void:
 	if c.state.owned.has(game_id):
 		U.label(purchase, "此游戏已在您的库中", 24, U.GREEN)
 		U.button(purchase, "在游戏库中查看", func() -> void: c.navigate({"kind": "library", "id": game_id}), "green", 220)
+	elif c.state.release_state(game_id) == &"delisted":
+		U.label(purchase, "此游戏已下架", 24, U.MUTED)
+		U.label(purchase, "已购买的玩家仍可在游戏库中安装和游玩。", 12, U.MUTED, true)
 	elif not c.state.is_available(game_id):
 		U.label(purchase, "计划发行日期：%s" % entry["release_label"], 24, Color.WHITE)
 		U.label(purchase, "这款游戏尚未推出。加入愿望单，等待新一段游戏时光。", 12, U.MUTED, true)
@@ -260,7 +263,9 @@ func product(queue_mode: bool = false) -> void:
 	U.label(root, "• 以自己的节奏探索世界\n• 记录旅途中的发现与选择\n• 适合反复回味的单人体验", 12, U.MUTED, true)
 	heading(root, "系统需求")
 	U.rule(root)
-	U.label(root, "最低配置：\n操作系统：年代兼容系统\n处理器：双核处理器\n内存：512 MB\n存储空间：%d MB\n支持语言：简体中文、English" % entry["storage_mb"], 12, U.MUTED, true)
+	var cpu: String = str(entry["cpu"]) if not str(entry["cpu"]).is_empty() else "未提供"
+	var gpu: String = str(entry["gpu"]) if not str(entry["gpu"]).is_empty() else "未提供"
+	U.label(root, "最低配置：\n操作系统：年代兼容系统\n处理器：%s\n显卡：%s\n内存：512 MB\n存储空间：%d MB\n支持语言：简体中文、English" % [cpu, gpu, entry["storage_mb"]], 12, U.MUTED, true).name = "ProductRequirements"
 	heading(root, "玩家评测", "以下为游戏世界内的玩家记录。")
 	for review: Dictionary in entry["reviews"]:
 		var box := U.vbox(U.panel(root, "16202d", 16), 8)

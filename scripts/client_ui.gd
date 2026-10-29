@@ -127,13 +127,19 @@ static func image(parent: Node, entry: Dictionary, width: int, height: int, shot
 	return node
 
 static func texture(entry: Dictionary, shot: int = 0) -> Texture2D:
-	var source: Texture2D = load("res://assets/art/%s.png" % entry["art"])
-	if shot == 0:
+	var source: Texture2D
+	if entry.has("capsule"):
+		source = entry["capsule"] as Texture2D
+	else:
+		source = load("res://assets/art/%s.png" % entry.get("art", "icon")) as Texture2D
+	if shot == 0 or source == null:
 		return source
 	var atlas := AtlasTexture.new()
 	atlas.atlas = source
 	var regions := [Rect2(0, 0, 320, 128), Rect2(110, 8, 200, 110), Rect2(12, 25, 230, 100), Rect2(155, 40, 150, 85)]
-	atlas.region = regions[clampi(shot, 0, 3)]
+	var region: Rect2 = regions[clampi(shot, 0, 3)]
+	var scale := Vector2(float(source.get_width()) / 320.0, float(source.get_height()) / 128.0)
+	atlas.region = Rect2(region.position * scale, region.size * scale)
 	return atlas
 
 static func cover(parent: Node, entry: Dictionary, height: int = 260, show_title: bool = true) -> Control:

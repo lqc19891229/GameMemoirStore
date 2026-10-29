@@ -3,7 +3,9 @@ extends RefCounted
 ## 独立的商店状态：不依赖场景节点，可在以后接入正式经营系统。
 
 const SAVE_PATH := "user://memoir_store_v01.json"
-const CATALOG_PATH := "res://data/catalog.json"
+const GAME_CATALOG: GameCatalog = preload("res://generated/game_catalog/catalog.tres")
+const PRESENTATION_PATH := "res://data/catalog.json"
+const START_YM := 200309
 const MAX_MONTH := 5
 
 var catalog: Array = []
@@ -23,13 +25,57 @@ var play_minutes: Dictionary = {}
 var play_sessions: Dictionary = {}
 var downloads: Dictionary = {}
 var activity: Array = []
+var _definitions: Dictionary = {}
 
-func _init() -> void:
-	var file := FileAccess.open(CATALOG_PATH, FileAccess.READ)
+func _init(source: GameCatalog = GAME_CATALOG) -> void:
+	# The resource manifest owns membership and the 13 spreadsheet fields.
+	# JSON only supplements UI fields not yet managed by the spreadsheet.
+	var presentation: Dictionary = {}
+	var file := FileAccess.open(PRESENTATION_PATH, FileAccess.READ)
 	if file:
 		var parsed: Variant = JSON.parse_string(file.get_as_text())
 		if parsed is Array:
-			catalog = parsed
+			for entry: Variant in parsed:
+				if entry is Dictionary:
+					presentation[str(entry.get("id", ""))] = entry
+	for definition: GameDefinition in source.games:
+		var game_id := str(definition.game_id)
+		_definitions[game_id] = definition
+		var genre := str(definition.genres[0]) if not definition.genres.is_empty() else "未分类"
+		var entry: Dictionary = {
+			"english": definition.title, "tags": Array(definition.genres) if not definition.genres.is_empty() else [genre],
+			"discount": 0, "rating": "暂无评测", "rating_count": 0, "review_percent": 0,
+			"storage_mb": 0, "edition": "标准版", "playtime": "暂无游玩记录", "reviews": [],
+		}
+		entry.merge(presentation.get(game_id, {}), true)
+		entry.merge({
+			"id": game_id, "game_id": game_id, "title": definition.title,
+			"announce_ym": definition.announce_ym, "store_release_ym": definition.store_release_ym,
+			"delist_ym": definition.delist_ym, "base_price": definition.base_price, "price": definition.base_price,
+			"developer": definition.developer, "studio": definition.developer,
+			"genres": Array(definition.genres), "genre": genre,
+			"cpu": definition.cpu, "gpu": definition.gpu, "series_id": str(definition.series_id),
+			"description": definition.description, "feature": definition.description.get_slice("\n", 0),
+			"capsule": definition.capsule,
+			"release_month": month_serial(definition.store_release_ym) - month_serial(START_YM),
+			"release_label": "%d 年 %02d 月" % [definition.store_release_ym / 100, definition.store_release_ym % 100],
+		}, true)
+		catalog.append(entry)
+
+static func month_serial(ym: int) -> int:
+	return (ym / 100) * 12 + ym % 100 - 1
+
+func current_ym() -> int:
+	var serial := month_serial(START_YM) + month_index
+	var year: int = serial / 12
+	return year * 100 + serial % 12 + 1
+
+func definition(game_id: String) -> GameDefinition:
+	return _definitions.get(game_id) as GameDefinition
+
+func release_state(game_id: String) -> StringName:
+	var resource := definition(game_id)
+	return resource.state_at(current_ym()) if resource != null else &"hidden"
 
 func game(game_id: String) -> Dictionary:
 	for entry: Dictionary in catalog:
@@ -44,8 +90,7 @@ func price(game_id: String) -> int:
 	return roundi(float(entry["price"]) * (100.0 - float(entry.get("discount", 0))) / 100.0)
 
 func is_available(game_id: String) -> bool:
-	var entry := game(game_id)
-	return not entry.is_empty() and int(entry.get("release_month", 0)) <= month_index
+	return release_state(game_id) == &"available"
 
 func add_to_cart(game_id: String) -> String:
 	if game(game_id).is_empty():
@@ -53,7 +98,7 @@ func add_to_cart(game_id: String) -> String:
 	if owned.has(game_id):
 		return "这款游戏已经在你的游戏库中。"
 	if not is_available(game_id):
-		return "尚未上架，可以先加入愿望单。"
+		return "这款游戏已下架。" if release_state(game_id) == &"delisted" else "尚未上架，可以先加入愿望单。"
 	if cart.has(game_id):
 		return "这款游戏已经在购物车中。"
 	cart.append(game_id)

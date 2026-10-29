@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="GameDefinition" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://generated/game_catalog/types/game_definition.gd" id="1_game"]
+[ext_resource type="Texture2D" path="res://assets/art/valley.png" id="2_capsule"]
+
+[resource]
+script = ExtResource("1_game")
+game_id = &"forest_path"
+title = "林间小径"
+announce_ym = 0
+store_release_ym = 200309
+delist_ym = 0
+base_price = 42
+developer = "四季制作组"
+genres = PackedStringArray("生活模拟")
+cpu = "COREI5-10600K"
+gpu = "RTX3060"
+series_id = &""
+description = "沿着地图上的最后一条线索，走进一段尚未被记录的旅程。探索未知，做出自己的选择，并将沿途的故事留在游戏回忆录中。"
+capsule = ExtResource("2_capsule")

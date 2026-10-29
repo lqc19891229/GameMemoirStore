@@ -237,7 +237,7 @@ func available_games(for_feature: bool = false) -> Array:
 	return result
 
 func matches_query(entry: Dictionary, query: String) -> bool:
-	var text := (str(entry["title"]) + " " + str(entry["english"]) + " " + str(entry["studio"]) + " " + str(entry["genre"]) + " " + " ".join(entry["tags"])).to_lower()
+	var text := (str(entry["title"]) + " " + str(entry["english"]) + " " + str(entry["studio"]) + " " + " ".join(entry["genres"]) + " " + " ".join(entry["tags"])).to_lower()
 	return query.strip_edges().is_empty() or text.contains(query.strip_edges().to_lower())
 
 func search_games(options: Dictionary) -> Array:
@@ -246,13 +246,13 @@ func search_games(options: Dictionary) -> Array:
 	for entry: Dictionary in state.catalog:
 		var game_id: String = entry["id"]
 		if filter_name == "coming":
-			if state.is_available(game_id): continue
+			if state.release_state(game_id) != &"coming_soon": continue
 		elif not state.is_available(game_id):
 			continue
 		if filter_name == "sale" and int(entry["discount"]) <= 0: continue
 		if filter_name == "recent" and not recent_views.has(game_id): continue
 		if bool(options.get("hide_owned", false)) and state.owned.has(game_id): continue
-		if not str(options.get("genre", "")).is_empty() and entry["genre"] != options["genre"]: continue
+		if not str(options.get("genre", "")).is_empty() and not entry["genres"].has(options["genre"]): continue
 		if not matches_query(entry, str(options.get("query", ""))): continue
 		result.append(entry)
 	var sort_mode: int = int(options.get("sort", 0))
@@ -271,6 +271,7 @@ func search_games(options: Dictionary) -> Array:
 func price_text(entry: Dictionary) -> String:
 	var game_id: String = entry["id"]
 	if state.owned.has(game_id): return "已在库中"
+	if state.release_state(game_id) == &"delisted": return "已下架"
 	if not state.is_available(game_id): return "即将推出"
 	return "-%d%%  %d 点" % [entry["discount"], state.price(game_id)] if int(entry["discount"]) > 0 else "%d 点" % state.price(game_id)
 

@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="GameDefinition" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://generated/game_catalog/types/game_definition.gd" id="1_game"]
+[ext_resource type="Texture2D" path="res://assets/art/train.png" id="2_capsule"]
+
+[resource]
+script = ExtResource("1_game")
+game_id = &"eastbound"
+title = "向东的列车"
+announce_ym = 0
+store_release_ym = 200311
+delist_ym = 0
+base_price = 52
+developer = "纸飞机工作室"
+genres = PackedStringArray("探索冒险")
+cpu = "COREI5-10600K"
+gpu = "RTX3060"
+series_id = &""
+description = "登上清晨出发的慢车，在陌生的站台短暂停留。收集沿途的风景，也收集旅人的故事。"
+capsule = ExtResource("2_capsule")

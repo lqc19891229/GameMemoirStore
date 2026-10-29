@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="GameDefinition" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://generated/game_catalog/types/game_definition.gd" id="1_game"]
+[ext_resource type="Texture2D" path="res://assets/art/ocean.png" id="2_capsule"]
+
+[resource]
+script = ExtResource("1_game")
+game_id = &"last_lighthouse"
+title = "最后一座灯塔"
+announce_ym = 0
+store_release_ym = 200309
+delist_ym = 0
+base_price = 60
+developer = "潮汐游戏"
+genres = PackedStringArray("探索冒险")
+cpu = "COREI5-10600K"
+gpu = "RTX3060"
+series_id = &""
+description = "一座灯塔，一片不再平静的海。修复失灵的信号装置，在潮汐退去之前解开岛上的秘密。"
+capsule = ExtResource("2_capsule")
