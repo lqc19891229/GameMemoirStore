@@ -41,7 +41,7 @@ python tools/catalog/import_games.py --project . --validate-only
 python tools/catalog/import_games.py --project . --check
 ```
 
-资料在 Excel 修改，然后重新导入到 `data/games/`。`scripts/game.gd` 是单款游戏唯一的 Resource 字段定义，`.tres` 引用该脚本并保存具体值。Python 只写资源数据，不生成或覆盖 GDScript。调整字段结构时，同步修改 `game.gd`、Excel、`schema.json` 和导入器的字段映射。更多填写规则见 [导入工具说明](tools/catalog/README.md)。
+资料在 Excel 修改，然后重新导入到 `data/games/`。`scripts/game.gd` 是单款游戏唯一的 Resource 字段定义，`.tres` 引用该脚本并保存具体值。Python 写入资源数据及目录说明，不生成或覆盖 GDScript。调整字段结构时，同步修改 `game.gd`、Excel、`schema.json` 和导入器的字段映射。更多填写规则见 [导入工具说明](tools/catalog/README.md)。
 
 ## 本次主要变化
 

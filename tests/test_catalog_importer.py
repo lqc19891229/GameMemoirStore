@@ -43,8 +43,8 @@ class ImporterTests(unittest.TestCase):
     def test_only_fourteen_game_fields_are_emitted(self):
         data,_=mod.validate(self.raw,self.schema)
         files=mod.render_files(data,'data/games')
-        self.assertEqual(len(files),13)
-        self.assertTrue(all(path.endswith('.tres') for path in files))
+        self.assertEqual(len(files),14)
+        self.assertTrue(all(path.endswith('.tres') or path == 'README.txt' for path in files))
         self.assertIn('res://scripts/game.gd', files['distant_signal.tres'].decode())
         text=files['distant_signal.tres'].decode()
         body=text.split('[resource]\n',1)[1]
@@ -128,7 +128,7 @@ class ImporterTests(unittest.TestCase):
         self.assertEqual(game['capsule'],'res://assets/art/CounterSquad/CounterSquad.png')
         self.assertEqual(game['screenshots'],[f'res://assets/art/CounterSquad/CounterSquad{i:02d}.png' for i in range(1,5)])
         files=mod.render_files(data,'data/games')
-        self.assertEqual(set(files),{'CounterSquad.tres','_catalog.tres'})
+        self.assertEqual(set(files),{'CounterSquad.tres','_catalog.tres','README.txt'})
         text=files['CounterSquad.tres'].decode()
         self.assertIn('game_id = &"CounterSquad"',text)
         self.assertIn('load_steps=7',text)
@@ -198,6 +198,7 @@ class ImporterTests(unittest.TestCase):
             target=mod.write_output(project,'data/games',files)
             mod.write_output(project,'data/games',files)
             self.assertEqual((target/'_catalog.tres').read_bytes(),files['_catalog.tres'])
+            self.assertEqual((target/'README.txt').read_text(encoding='utf-8'),mod.GENERATED_README)
             data['游戏资料']=[g for g in data['游戏资料'] if g['game_id']!='distant_signal']
             mod.write_output(project,'data/games',mod.render_files(data,'data/games'))
             self.assertFalse((target/'distant_signal.tres').exists())

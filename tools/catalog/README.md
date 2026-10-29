@@ -29,7 +29,7 @@ Windows 可将 `python` 换成 `py -3`。停止正在运行的游戏，保存并
 
 单款游戏资源保存在 `data/games/<game_id>.tres`，`data/games/_catalog.tres` 引用全部启用游戏，默认商店顺序跟随表格行序。总清单以下划线开头，避免和游戏 ID 重名。
 
-资源类直接使用 `scripts/game.gd`（GameDefinition）和 `scripts/game_catalog.gd`（GameCatalog）。`game.gd` 定义字段，`.tres` 引用它并保存具体值。Python 只生成 `.tres` 数据，不生成或复制脚本，工具目录不再保留资源类模板。
+资源类直接使用 `scripts/game.gd`（GameDefinition）和 `scripts/game_catalog.gd`（GameCatalog）。`game.gd` 定义字段，`.tres` 引用它并保存具体值。Python 生成 `.tres` 数据、校验清单和 `README.txt` 目录说明，不生成或复制脚本，工具目录不再保留资源类模板。
 
 ## 字段
 

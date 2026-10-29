@@ -60,7 +60,7 @@ cart 仍是 ID 列表，checkout() 验证全部商品和预算后一次性扣款
 
 ## Excel 与资源
 
-`tools/catalog/game_catalog.xlsx` 是基础游戏资料来源。Python 导入器仅生成 `data/games/*.tres` 与该目录的总清单 `_catalog.tres`。总清单以下划线开头，避免与合法游戏 ID 对应的资源文件重名。
+`tools/catalog/game_catalog.xlsx` 是基础游戏资料来源。Python 导入器生成 `data/games/*.tres` 与总清单 `_catalog.tres`，同时维护文件校验清单和 `README.txt` 目录说明。总清单以下划线开头，避免与合法游戏 ID 对应的资源文件重名。
 
 `scripts/game.gd` 是单款游戏唯一的字段定义，继承 Resource，并通过 class_name 注册为 GameDefinition。每份游戏 `.tres` 的 script 都直接引用它，保存各自的导出属性值。`scripts/game_catalog.gd` 定义 GameCatalog，用于维护清单和查找游戏。两份脚本都是正常源代码，由开发者编辑，Python 不复制或生成脚本。
 

@@ -1,0 +1,10 @@
+运行脚本
+
+client.gd：新版客户端入口，管理导航、历史、菜单、下载计时、游玩窗口和通知。
+client_pages.gd：构建商店、商品、搜索、库、愿望单、购物车等页面。
+client_ui.gd：通用界面控件、样式、封面和展示图辅助方法。
+store_state.gd：游戏资源接入，以及预算、购买、收藏、安装、游玩和存档逻辑。
+game.gd：单款游戏的 Resource 字段定义，查询预告、上架和下架状态。
+game_catalog.gd：游戏资源清单，提供按 ID 和月份查询的方法。
+store.gd：旧版 legacy_store.tscn 的界面控制逻辑。
+*.gd.uid：Godot 为脚本保存的稳定资源标识，移动脚本时应一同保留。
