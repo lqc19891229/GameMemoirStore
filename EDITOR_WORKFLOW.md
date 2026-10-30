@@ -9,7 +9,8 @@
 | 整体入口和房间 / 桌面层级 | `scenes/game_root.tscn` |
 | 房间、窗户、地板、海报、家具位置 | `scenes/life/player_room.tscn` |
 | 桌子、电脑、外设、展示柜、台灯的外观 | `scenes/life/furniture/*.tscn` |
-| 电脑桌面、快捷方式、任务栏 | `scenes/life/computer_desktop.tscn` |
+| 显示器、主机、键盘、鼠标的电脑近景 | `scenes/life/computer_desktop.tscn` |
+| 显示器内部的桌面、快捷方式、任务栏 | `scenes/life/desktop_screen.tscn` |
 | 应用标题栏、最小化 / 最大化 / 关闭按钮 | `scenes/life/app_window.tscn` |
 | 商店顶栏、导航栏和状态栏 | `scenes/store.tscn` |
 | 首页、商品、搜索、愿望单、购物车、库、下载、个人资料、创作页 | `scenes/client/pages/*.tscn` |
@@ -23,9 +24,9 @@
 
 ## 布局与美术
 
-- `PlayerRoom/RoomCanvas` 下的墙面、地板、窗框等都是 `ColorRect` 节点。家具是独立 `Button` 场景实例，内部同样有可选择的美术节点，没有 `_draw()` 绘图。
+- `PlayerRoom/RoomCanvas/Art` 下的两面墙、地面、窗户和海报使用静态 `Polygon2D` / `Line2D`，构成斜视房间。家具是独立 `Button` 场景实例，内部的 `Art` 同样由已保存的多边形构成，没有 `_draw()` 绘图。`@tool` 脚本只按容器尺寸缩放已有节点，不生成几何或控件。
 - 家具位置、大小通过锚点和偏移编辑。默认布置使用编辑器保存的位置；“换个布置”只叠加一个相对位移，不再每次刷新用硬编码坐标覆盖它们。
-- 家具的 `Part*` 节点可修改颜色；带 `upgraded_color` 元数据的节点会在设备升级时切换到该颜色。麦克风与三个奖杯是已有的节点，脚本只切换可见性。正式贴图可加入相同家具场景内。
+- 家具的 `Art` 下的多边形节点可修改颜色；带 `upgraded_color` 元数据的节点会在设备升级时切换到该颜色。麦克风与三个奖杯是已有的节点，脚本只切换可见性。正式贴图可加入相同家具场景内。
 - UI 使用 `Container` 布局。容器内控件的位置由父容器计算，调整 `Custom Minimum Size`、`Size Flags`、容器间距或外边距；自由放置的房间家具可以直接移动和缩放。
 - 按钮样式位于 `assets/client_theme.tres`，有 `NormalButton`、`BlueButton`、`GreenButton`、`FlatButton`、`DarkButton`、`DangerButton` 变体。布局脚本不再创建控件或覆盖这些静态样式。
 - 不要随意删除或重命名带 `%` 唯一名称的节点；脚本通过这些名称绑定交互。可以编辑其外观、布局、文字样式并添加装饰节点。
@@ -43,3 +44,13 @@
 `godot --headless --path . --script res://tests/test_editor_scenes.gd -- --fresh`
 
 检查场景在 `_ready()` 之前就有节点，并验证家具位置、客户端布局和首页实例在运行 / 刷新后保持。原有客户端、资源接入、生活流程及原生窗口检查继续覆盖运行行为。
+
+## 斜视房间与电脑近景
+
+- 房间仍是 2D 场景，通过两面墙和等距斜视家具表现空间。`RoomCanvas/Art` 是背景；`RoomCanvas/Furniture_*` 是交互家具，仍保留设备升级、装饰、奖杯与两种布置。
+- `computer_desktop.tscn` 保存显示器外壳、主机、桌面、键盘和鼠标。选中 `MonitorScreen` 调整实际屏幕位置与尺寸。
+- `MonitorScreen/ScreenViewport/DesktopViewport/DesktopScreen` 是真正的电脑系统界面，源场景为 `desktop_screen.tscn`；应用、快捷方式、任务栏和通知均在里面。要编辑系统界面，直接打开这个源场景。
+- `SubViewportContainer` 自动传递屏幕内的鼠标与键盘输入。逻辑分辨率固定为 1280 × 800，由 `size_2d_override` 和 `size_2d_override_stretch` 适配实际屏幕；缩放时不要手动修改容器的 `scale`。
+- 设置、菜单等弹窗启用 `gui_embed_subwindows`，保留在显示器屏幕内。物理主机、键盘和鼠标是装饰，点击这些区域不会打开应用。
+- 点击房间电脑进入近景；在屏幕中点击图标、任务栏、窗口操作应用；屏幕左下角“房间”或 Esc 返回房间。退出近景不停止游玩或下载。
+- 新增检查：`godot --headless --path . --script res://tests/life/test_workstation_view.gd -- --fresh`，覆盖两种尺寸下的屏幕点击、外壳点击、应用与任务栏操作以及内嵌设置弹窗。

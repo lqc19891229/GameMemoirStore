@@ -26,7 +26,7 @@ func run() -> void:
 		node.free()
 	var game = load("res://scenes/game_root.tscn").instantiate()
 	check(game.has_node("PlayerRoom/RoomCanvas/Furniture_computer"), "main scene contains room and furniture instances")
-	check(game.has_node("ComputerDesktop/ApplicationArea"), "desktop shell exists before running")
+	check(game.has_node("ComputerDesktop/MonitorScreen/ScreenViewport/DesktopViewport/DesktopScreen/ApplicationArea"), "desktop shell exists before running")
 	var furniture: Control = game.get_node("PlayerRoom/RoomCanvas/Furniture_computer")
 	var anchor := furniture.anchor_left + 0.025
 	furniture.anchor_left = anchor

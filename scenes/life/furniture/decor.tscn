@@ -4,64 +4,76 @@
 
 [ext_resource type="Script" path="res://scripts/life/furniture_item.gd" id="2"]
 
-[sub_resource type="StyleBoxFlat" id="Style0"]
-bg_color = Color(0.0, 0.0, 0.0, 0.0)
-border_color = Color(0.9372549019607843, 0.8588235294117647, 0.6588235294117647, 1)
-content_margin_left = 0.0
-border_width_left = 1
-content_margin_right = 0.0
-border_width_right = 1
-content_margin_top = 0.0
-border_width_top = 1
-content_margin_bottom = 0.0
-border_width_bottom = 1
+[sub_resource type="StyleBoxFlat" id="Transparent"]
+bg_color = Color(0.000000, 0.000000, 0.000000, 0.000000)
+content_margin_left = 0
+content_margin_top = 0
+content_margin_right = 0
+content_margin_bottom = 0
 
-[sub_resource type="StyleBoxFlat" id="Style1"]
-bg_color = Color(0.0, 0.0, 0.0, 0.0)
-border_color = Color(0.9372549019607843, 0.8588235294117647, 0.6588235294117647, 1)
-content_margin_left = 0.0
-border_width_left = 1
-content_margin_right = 0.0
-border_width_right = 1
-content_margin_top = 0.0
-border_width_top = 1
-content_margin_bottom = 0.0
-border_width_bottom = 1
+[sub_resource type="StyleBoxFlat" id="Hover"]
+bg_color = Color(0.941176, 0.858824, 0.658824, 0.078431)
+content_margin_left = 0
+content_margin_top = 0
+content_margin_right = 0
+content_margin_bottom = 0
 
 [node name="Decor" type="Button"]
 theme = ExtResource("1")
 script = ExtResource("2")
 kind = "decor"
-flat = true
-custom_minimum_size = Vector2(100, 100)
+custom_minimum_size = Vector2(0, 0)
+offset_right = 91
+offset_bottom = 94.76
 mouse_default_cursor_shape = 2
-theme_override_styles/focus = SubResource("Style0")
-theme_override_styles/hover = SubResource("Style1")
+art_size = Vector2(91, 94.76)
+theme_override_styles/normal = SubResource("Transparent")
+theme_override_styles/pressed = SubResource("Transparent")
+theme_override_styles/hover = SubResource("Hover")
+theme_override_styles/focus = SubResource("Hover")
 
-[node name="Part0" type="ColorRect" parent="."]
-mouse_filter = 2
-color = Color(0.4196078431372549, 0.4, 0.34509803921568627, 1)
-layout_mode = 1
-anchor_left = 0.44
-anchor_top = 0.34
-anchor_right = 0.5
-anchor_bottom = 0.91
+[node name="Art" type="Node2D" parent="."]
 
-[node name="Part1" type="ColorRect" parent="."]
-mouse_filter = 2
-color = Color(0.28627450980392155, 0.30196078431372547, 0.26666666666666666, 1)
-layout_mode = 1
-anchor_left = 0.27
-anchor_top = 0.9
-anchor_right = 0.67
-anchor_bottom = 0.96
 
-[node name="Part2" type="ColorRect" parent="."]
-mouse_filter = 2
-color = Color(0.3215686274509804, 0.3843137254901961, 0.3568627450980392, 1)
-layout_mode = 1
-anchor_left = 0.17
-anchor_top = 0.18
-anchor_right = 0.77
-anchor_bottom = 0.46
-metadata/upgraded_color = Color(0.8823529411764706, 0.7176470588235294, 0.4745098039215686, 1)
+[node name="LampBaseSide" type="Polygon2D" parent="Art"]
+polygon = PackedVector2Array(69.3, 82.16, 43.8, 91.76, 43.8, 87.76, 69.3, 78.16)
+color = Color(0.215686, 0.298039, 0.278431, 1)
+
+[node name="LampBaseFront" type="Polygon2D" parent="Art"]
+polygon = PackedVector2Array(18.3, 82.16, 43.8, 91.76, 43.8, 87.76, 18.3, 78.16)
+color = Color(0.294118, 0.368627, 0.325490, 1)
+
+[node name="LampBaseTop" type="Polygon2D" parent="Art"]
+polygon = PackedVector2Array(43.8, 68.56, 69.3, 78.16, 43.8, 87.76, 18.3, 78.16)
+color = Color(0.407843, 0.474510, 0.415686, 1)
+
+[node name="LampStemSide" type="Polygon2D" parent="Art"]
+polygon = PackedVector2Array(48.9, 77.52, 45.5, 78.8, 45.5, 30.8, 48.9, 29.52)
+color = Color(0.356863, 0.411765, 0.345098, 1)
+
+[node name="LampStemFront" type="Polygon2D" parent="Art"]
+polygon = PackedVector2Array(42.1, 77.52, 45.5, 78.8, 45.5, 30.8, 42.1, 29.52)
+color = Color(0.513725, 0.494118, 0.376471, 1)
+
+[node name="LampStemTop" type="Polygon2D" parent="Art"]
+polygon = PackedVector2Array(45.5, 28.24, 48.9, 29.52, 45.5, 30.8, 42.1, 29.52)
+color = Color(0.678431, 0.623529, 0.474510, 1)
+
+[node name="LampShadeSide" type="Polygon2D" parent="Art"]
+polygon = PackedVector2Array(75.25, 37.2, 45.5, 48.4, 45.5, 25.4, 75.25, 14.2)
+color = Color(0.517647, 0.474510, 0.329412, 1)
+
+[node name="LampShadeFront" type="Polygon2D" parent="Art"]
+polygon = PackedVector2Array(15.75, 37.2, 45.5, 48.4, 45.5, 25.4, 15.75, 14.2)
+color = Color(0.631373, 0.549020, 0.392157, 1)
+metadata/upgraded_color = Color(0.882353, 0.717647, 0.474510, 1)
+
+[node name="LampShadeTop" type="Polygon2D" parent="Art"]
+polygon = PackedVector2Array(45.5, 3, 75.25, 14.2, 45.5, 25.4, 15.75, 14.2)
+color = Color(0.772549, 0.705882, 0.533333, 1)
+metadata/upgraded_color = Color(0.882353, 0.717647, 0.474510, 1)
+
+[node name="LampGlow" type="Polygon2D" parent="Art"]
+polygon = PackedVector2Array(45.5, 58.88, 88, 74.88, 45.5, 90.88, 3, 74.88)
+color = Color(0.929412, 0.811765, 0.415686, 0.141176)
+

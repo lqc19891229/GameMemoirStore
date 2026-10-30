@@ -9,17 +9,21 @@ var resume_button: Button
 var status: Label
 var windows: Dictionary = {}
 
+func screen_node(key: String) -> Node:
+	return %DesktopScreen.get_node("%" + key)
+
 func _ready() -> void:
-	area = %ApplicationArea
-	tasks = %Tasks
-	resume_button = %DesktopResume
-	status = %Status
-	%DesktopPlatform.pressed.connect(func() -> void: open_app("platform"))
-	%DesktopBrowser.pressed.connect(func() -> void: open_app("browser"))
+	area = screen_node("ApplicationArea")
+	tasks = screen_node("Tasks")
+	resume_button = screen_node("DesktopResume")
+	status = screen_node("Status")
+	screen_node("ScreenToastTimer").timeout.connect(screen_node("ScreenToast").hide)
+	screen_node("DesktopPlatform").pressed.connect(func() -> void: open_app("platform"))
+	screen_node("DesktopBrowser").pressed.connect(func() -> void: open_app("browser"))
 	resume_button.pressed.connect(func() -> void: open_app("game"))
-	%DesktopRoom.pressed.connect(func() -> void: room_requested.emit())
-	%TaskbarPlatform.pressed.connect(func() -> void: open_app("platform"))
-	%TaskbarBrowser.pressed.connect(func() -> void: open_app("browser"))
+	screen_node("DesktopRoom").pressed.connect(func() -> void: room_requested.emit())
+	screen_node("TaskbarPlatform").pressed.connect(func() -> void: open_app("platform"))
+	screen_node("TaskbarBrowser").pressed.connect(func() -> void: open_app("browser"))
 	if session == null: return
 	session.changed.connect(refresh)
 	session.tick_updated.connect(_update_status)
@@ -29,7 +33,7 @@ func _ready() -> void:
 	refresh()
 
 func open_app(id: String, tab: String = "") -> Control:
-	if not APPS.has(id): return null
+	if session == null or not APPS.has(id): return null
 	if id == "game" and session.active().get("kind") != "play":
 		session.notice.emit("从游戏库启动一款游戏后，这里会显示游玩窗口。")
 		return null
@@ -75,11 +79,12 @@ func close_app(id: String) -> void:
 	refresh()
 
 func _update_status() -> void:
+	if session == null: return
 	if is_instance_valid(resume_button): resume_button.disabled = session.active().get("kind") != "play"
 	if is_instance_valid(status): status.text = "%d 点 · %s" % [session.state.wallet, "直播中" if session.active().get("streaming", false) else ("游玩中" if session.active().get("kind") == "play" else "在线")]
 
 func refresh() -> void:
-	if not is_instance_valid(tasks): return
+	if session == null or not is_instance_valid(tasks): return
 	if windows.has("game") and session.active().get("kind") != "play":
 		close_app("game")
 		return
@@ -94,3 +99,10 @@ func refresh() -> void:
 		task.pressed.connect(func() -> void: open_app(key))
 		tasks.add_child(task)
 	_update_status()
+
+func show_notice(message: String) -> void:
+	var toast: Label = screen_node("ScreenToast")
+	toast.text = message
+	toast.show()
+	toast.move_to_front()
+	screen_node("ScreenToastTimer").start()

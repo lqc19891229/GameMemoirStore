@@ -1,7 +1,8 @@
 房间与电脑场景
 
 player_room.tscn：固定视角的像素房间与电脑、库存、展示柜入口。
-computer_desktop.tscn：电脑桌面、任务栏与应用窗口管理。
+computer_desktop.tscn：显示器、主机、键盘、鼠标的电脑近景，屏幕内嵌独立桌面视口。
+desktop_screen.tscn：显示器内部的桌面、快捷方式、任务栏和通知。
 app_window.tscn：可复用窗口壳，提供拖动、最小化、铺满和关闭。
 browser.tscn：购物网页和物品库存。
 game_player.tscn：游戏展示图轮播、游玩进度与直播操作。
