@@ -1,9 +1,10 @@
-[gd_resource type="Resource" script_class="GameCatalog" load_steps=4 format=3]
+[gd_resource type="Resource" script_class="GameCatalog" load_steps=5 format=3]
 
 [ext_resource type="Script" path="res://scripts/game_catalog.gd" id="1_catalog"]
 [ext_resource type="Script" path="res://scripts/game.gd" id="2_game"]
 [ext_resource type="Resource" path="res://data/games/CounterSquad.tres" id="game_0"]
+[ext_resource type="Resource" path="res://data/games/CTA3.tres" id="game_1"]
 
 [resource]
 script = ExtResource("1_catalog")
-games = Array[ExtResource("2_game")]([ExtResource("game_0")])
+games = Array[ExtResource("2_game")]([ExtResource("game_0"), ExtResource("game_1")])

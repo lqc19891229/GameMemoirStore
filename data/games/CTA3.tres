@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="GameDefinition" load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://scripts/game.gd" id="1_game"]
+[ext_resource type="Texture2D" path="res://assets/art/CTA3/CTA3.png" id="2_capsule"]
+[ext_resource type="Texture2D" path="res://assets/art/CTA3/CTA301.png" id="shot_01"]
+[ext_resource type="Texture2D" path="res://assets/art/CTA3/CTA302.png" id="shot_02"]
+[ext_resource type="Texture2D" path="res://assets/art/CTA3/CTA303.png" id="shot_03"]
+[ext_resource type="Texture2D" path="res://assets/art/CTA3/CTA304.png" id="shot_04"]
+
+[resource]
+script = ExtResource("1_game")
+game_id = &"CTA3"
+title = "道德与法制3"
+announce_ym = 0
+store_release_ym = 200309
+delist_ym = 0
+base_price = 350
+developer = "R星"
+genres = PackedStringArray("动作")
+cpu = ""
+gpu = ""
+series_id = &"CTA"
+description = ""
+capsule = ExtResource("2_capsule")
+screenshots = Array[Texture2D]([ExtResource("shot_01"), ExtResource("shot_02"), ExtResource("shot_03"), ExtResource("shot_04")])
