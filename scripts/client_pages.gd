@@ -1,6 +1,7 @@
 extends RefCounted
 ## 页面分开构建：商店、完整商品页、愿望单、游戏库、购物车。
 const U = preload("res://scripts/client_ui.gd")
+const LifeData = preload("res://scripts/life/life_data.gd")
 var c
 
 func _init(client) -> void:
@@ -40,7 +41,7 @@ func home() -> void:
 		U.button(side, item[0], func() -> void: c.navigate({"kind": "search", "filter": value}), "flat")
 	U.spacer(side)
 	U.label(side, "按类型浏览", 12, U.MUTED)
-	for genre: String in ["探索冒险", "策略战术", "生活模拟", "角色扮演"]:
+	for genre: String in c.genre_options():
 		U.button(side, genre, func() -> void: c.navigate({"kind": "search", "genre": genre}), "flat")
 	U.spacer(side, 36)
 	U.label(side, "一段自己的游戏时光\n从一份收藏开始。", 12, U.MUTED, true)
@@ -196,7 +197,7 @@ func product(queue_mode: bool = false) -> void:
 	U.label(breadcrumb, " >  %s  >  %s" % [entry["genre"], entry["title"]], 12, U.MUTED)
 	var title_row := U.hbox(root)
 	U.label(title_row, entry["title"], 24, Color.WHITE)
-	U.button(title_row, "社区中心", func() -> void: c.navigate({"kind": "community", "id": game_id}), "dark")
+	U.button(title_row, "直播与攻略", func() -> void: c.navigate({"kind": "community", "id": game_id}), "dark")
 	var top := U.hbox(root, 20)
 	var gallery := U.vbox(top, 8)
 	var aspect := AspectRatioContainer.new()
@@ -484,7 +485,7 @@ func library() -> void:
 		c.download_widgets.append({"id": selected, "bar": bar})
 	var links := U.hbox(main)
 	U.button(links, "商店页面", func() -> void: c.open_product(selected), "flat")
-	U.button(links, "社区中心", func() -> void: c.navigate({"kind": "community", "id": selected}), "flat")
+	U.button(links, "直播与攻略", func() -> void: c.navigate({"kind": "community", "id": selected}), "flat")
 	U.button(links, "游戏记录", func() -> void: c.navigate({"kind": "profile"}), "flat")
 	U.rule(main)
 	U.label(main, "最近动态", 24, Color.WHITE)
@@ -500,7 +501,12 @@ func library() -> void:
 			if records >= 3:
 				break
 	U.label(main, "成就", 24, Color.WHITE)
-	U.label(main, "成就功能将随游戏平台的年代更新逐步开放。", 12, U.MUTED, true)
+	var unlocked: Array = c.state.life["achievements"].get(selected, [])
+	var challenge: float = float(c.state.life["progress"].get(selected, 0))
+	for milestone: Dictionary in LifeData.MILESTONES:
+		var done: bool = unlocked.has(milestone["id"])
+		U.label(main, "%s %s  ·  %d%%" % ["★" if done else "☆", milestone["name"], mini(100, int(challenge / float(milestone["target"]) * 100))], 12, U.GREEN if done else U.MUTED)
+	U.label(main, "游玩积累挑战进度，玩家能力与已安装设备影响效率。解锁后可以在房间展示奖杯。", 12, U.MUTED, true)
 
 func downloads_page() -> void:
 	var root := root_box()
@@ -548,15 +554,38 @@ func profile() -> void:
 
 func community() -> void:
 	var root := root_box()
-	var game_id: String = str(c.route.get("id", ""))
-	var entry: Dictionary = c.state.game(game_id)
-	heading(root, "%s · 社区中心" % entry["title"] if not entry.is_empty() else "社区动态", "游戏世界中的新闻与玩家记忆。")
-	var entries: Array = [entry] if not entry.is_empty() else c.available_games().slice(0, 4)
-	for game: Dictionary in entries:
-		var id: String = game["id"]
-		var row := U.hbox(U.panel(root, "202f40", 18), 20)
-		U.image(row, game, 210, 100)
-		var text := U.vbox(row, 6)
-		U.label(text, "%s · 开发者来信" % game["title"], 24, Color.WHITE)
-		U.label(text, game["feature"] + " 感谢每一位愿意驻足的玩家。", 12, U.TEXT, true)
-		U.button(text, "查看游戏", func() -> void: c.open_product(id), "flat")
+	heading(root, "创作中心", "直播游戏时光，分享你发现的每一段故事。")
+	if c.session == null:
+		U.label(root, "从项目主场景进入房间，再打开电脑，即可使用直播与攻略。", 24, U.TEXT, true)
+		return
+	var session: MemoirGameSession = c.session
+	var summary := U.hbox(U.panel(root, "263e4c", 18), 24)
+	U.label(summary, "关注者  %d" % c.state.life["followers"], 24, U.BLUE).name = "CreationFollowers"
+	U.label(summary, "直播收入  %d 点" % c.state.life["stream_income"], 12, U.GREEN).name = "CreationStreamIncome"
+	U.label(summary, "攻略收入  %d 点" % c.state.life["guide_income"], 12, U.GREEN).name = "CreationGuideIncome"
+	var current := U.vbox(U.panel(root, "1c2c38", 18), 12)
+	U.label(current, session.activity_text(), 12, U.TEXT, true).name = "CreationProgress"
+	var actions := U.hbox(current)
+	var stream := U.button(actions, "结束直播" if session.active().get("streaming", false) else "开始直播", func() -> void: c.notify(session.toggle_stream()), "green", 160)
+	stream.name = "CreationStream"
+	stream.disabled = session.active().get("kind") != "play"
+	if session.active().get("kind") == "guide":
+		U.button(actions, "取消本次攻略制作", session.cancel_guide, "danger", 180)
+	U.label(current, "游玩时可以同时直播；制作攻略需要专心整理，期间暂停游玩。直播每 5 分钟结算，攻略制作需要 20 分钟。", 12, U.MUTED, true)
+	heading(root, "我的攻略", "每款游戏首版可发布一篇攻略；质量由已解锁成就决定，发布后还有最多 60 次阅读收益。")
+	if c.state.owned.is_empty():
+		U.label(root, "先拥有一款游戏，游玩 10 分钟后就能整理攻略。", 12, U.MUTED, true)
+	for id: String in c.state.owned:
+		var game_id := id
+		var row := U.hbox(U.panel(root, "202f40", 18), 18)
+		U.image(row, c.state.game(id), 170, 70)
+		var text := U.vbox(row, 5)
+		U.label(text, c.state.game(id)["title"], 24, Color.WHITE)
+		if c.state.life["guides"].has(id):
+			var guide: Dictionary = c.state.life["guides"][id]
+			U.label(text, "已发布 · 质量 %d 星 · 阅读收益 %d / 60 次" % [guide["quality"], guide["royalties"]], 12, U.GREEN)
+		else:
+			U.label(text, "累计游玩 %d / 10 分钟" % c.state.play_minutes.get(id, 0), 12, U.MUTED)
+			var button := U.button(row, "制作攻略", func() -> void: c.notify(session.start_guide(game_id)), "blue", 130)
+			button.name = "WriteGuide_" + id
+			button.disabled = not session.active().is_empty() or int(c.state.play_minutes.get(id, 0)) < 10

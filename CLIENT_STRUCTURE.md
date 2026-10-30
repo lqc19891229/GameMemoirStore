@@ -1,77 +1,79 @@
-# 游戏回忆录 v0.3 · 客户端结构
+# 游戏回忆录 v0.4 · 场景与运行机制
 
-## 场景与页面
+## 主场景与共享数据
 
-主入口为 `scenes/store.tscn`，根节点 MemoirClient 挂载 `client.gd`。
-
-| 固定节点 | 类型 | 作用 |
-|---|---|---|
-| MemoirClient | Control | 整个客户端根节点 |
-| Background | ColorRect | 纵向蓝灰渐变背景 |
-| Layout | VBoxContainer | 按头部、商店导航、正文、底栏排列 |
-| ClientHeader | PanelContainer | 菜单、前后退、一级导航和钱包 |
-| StoreNavigation | PanelContainer | 商店下拉导航、搜索、愿望单和购物车 |
-| ContentScroll | ScrollContainer | 商店等页面的主滚动区域；库使用独立的内部滚动区 |
-| PageContent | VBoxContainer | 当前页面根容器，切换页面时替换内容 |
-| StatusBar | PanelContainer | 添加游戏、下载状态、年月、好友 |
-| Notification | PanelContainer | 不打断浏览的右下角提示 |
-| Notification/Message | Label | 提示文字 |
-
-所有页面都是原生 Godot 节点。运行时切换到 Remote 可查看页面内部的 Container、按钮、封面和文本。
-
-## 四个脚本的分工
-
-`client.gd` 负责当前页面、浏览历史、外壳菜单和用户操作。`client_pages.gd` 读取状态，为每类页面构建独立布局。`client_ui.gd` 提供按钮、图片、容器、卡片等通用外观。`store_state.gd` 处理资源读取、界面兼容数据、交易规则与玩家状态。
+`scenes/game_root.tscn` 是唯一主入口。GameRoot 持有 GameSession、房间和桌面；房间与桌面通过显示 / 隐藏切换，活动由持续存在的 GameSession 推进。
 
 ```mermaid
 flowchart TD
-  A["store.tscn / 客户端外壳"] --> B["client.gd / 路由与操作"]
-  B --> C["client_pages.gd / 不同页面"]
-  C --> D["client_ui.gd / 原生控件与布局"]
-  B <--> E["store_state.gd / 购买与收藏状态"]
-  E --> F["data/games/_catalog.tres / 游戏资料"]
-  E --> H["catalog.json / 补充展示资料"]
-  E <--> G["user 存档 / 玩家记录"]
+  Root["GameRoot / 主入口"] --> Room["PlayerRoom / 玩家房间"]
+  Root --> Desktop["ComputerDesktop / 电脑桌面"]
+  Root --> Session["GameSession / 状态与时钟"]
+  Desktop --> Windows["AppWindow / 窗口管理"]
+  Windows --> Client["store.tscn / 游戏平台"]
+  Windows --> Browser["Browser / 购物与物品"]
+  Windows --> Player["GamePlayer / 游戏画面"]
 ```
 
-## 页面切换
+GameSession 持有唯一 `MemoirStoreState` 实例。平台通过 `session` 与 `state` 注入接入，网页、房间和游戏画面直接读同一实例。钱包、收藏和生活数据各只有一份。嵌入平台不重复加载存档，也不启动自己的下载 Timer。
 
-`navigate({"kind":"product","id":"distant_signal"})` 会记录当前浏览位置、维护前进后退历史，并构建商品页。`go_history()` 恢复过去的路由。页内按钮更新后会按需保留滚动位置。
+## 场景与脚本
 
-容器布局需要经过帧更新，`_restore_scroll()` 会等待布局完成，并使用 render_serial 防止旧页面延迟回调覆盖新页面位置。
+| 场景 | 脚本职责 |
+|---|---|
+| `game_root.tscn` | `game_root.gd`：组合场景，切换房间和桌面，打开展示柜，显示通知 |
+| `life/player_room.tscn` | `player_room.gd`：绘制房间、显示玩家状态，发送电脑 / 库存 / 展示柜交互信号 |
+| `life/furniture_item.tscn` | `furniture_item.gd`：可复用像素物件，按种类绘制电脑、桌子、外设、台灯、奖杯架 |
+| `life/computer_desktop.tscn` | `computer_desktop.gd`：桌面入口、任务栏、窗口创建与复用、最小化和关闭 |
+| `life/app_window.tscn` | `app_window.gd`：窗口标题栏、拖动、铺满、关闭和最小化信号，挂载应用内容 |
+| `store.tscn` | `client.gd`：平台路由与操作；`client_pages.gd` 构建页面；`client_ui.gd` 提供控件与样式 |
+| `life/browser.tscn` | `browser.gd`：购物、库存与安装界面，交易交给会话执行 |
+| `life/game_player.tscn` | `game_player.gd`：四图轮播、活动状态、成就进度和直播操作 |
+| `life/achievement_cabinet.tscn` | `achievement_cabinet.gd`：选择展示 / 收起奖杯，由房间物件同步显示 |
 
-`route.kind` 支持 home、search、product、queue、wishlist、cart、checkout、receipt、library、downloads、profile、community。
+生活脚本位于 `scripts/life/`。`life_data.gd` 定义商品、初始生活数据、能力权重、通用成就模板和存档数据清理规则。替换正式美术时，可先修改家具绘制 / 图片显示，不必修改交易或存档逻辑。
 
-## 游戏库
+## 操作如何传递
 
-游戏库使用左侧列表与右侧独立滚动内容。LibraryContentScroll 是右侧区域。左侧可筛选全部、已安装和收藏夹；点击游戏切换其封面、安装/开始按钮和动态。右键条目打开原生 PopupMenu。
+- 房间 `computer_requested` → GameRoot 显示桌面。
+- 平台购买 → 共享 State 扣款和增加所有权 → `changed` 通知其他界面。
+- 平台启动游戏 → GameSession 校验购买、安装和活动占用 → `play_requested` → 桌面打开游戏窗口。
+- 网页购买 / 安装 → GameSession 校验预算、库存和物品位置 → 修改共享状态 → 房间更新外观。
+- 游玩解锁成就 → State 保存记录 → 提示通知与展示柜更新。
+- 展示柜选择奖杯 → 更新 `life.displayed` → 房间奖杯架重绘。
 
-## 下载与游玩
+`changed` 用于交易、装备、成就和活动变化；`tick_updated` 用于每个模拟分钟的文字与进度更新。跨场景操作使用信号或会话方法，网页不直接寻找房间节点。
 
-下载 Timer 每 0.35 秒推进队首任务 8 点进度。达到 100 后将 ID 加入 installed，移出 downloads 并更新显示。这个计时仅模拟游戏世界中的安装，不传输网络文件。
+## 活动与窗口寿命
 
-开始游戏打开原生 AcceptDialog 内的游玩展示。确认结束后 `record_play()` 增加 45 分钟与一次记录。running_game_id 在结算前清空，防止重复计入。
+GameSession 的 1 秒 Timer 统一推进 1 分钟模拟活动，并处理下载。`life.active` 同时只允许一项主要活动：play 或 guide。直播是 play 的附加状态；制作攻略与游玩互斥。
 
-## 购买与存档
+最小化、返回房间、关闭平台不会停止活动。关闭游戏窗口或点击结束游玩才调用 `stop_play()`，结束直播并只记录一次会话。重复关闭不重复增加游玩时间。进度在每分钟累计，结束时不会额外增加旧版的 45 分钟。
 
-cart 仍是 ID 列表，checkout() 验证全部商品和预算后一次性扣款，更新 owned/history，移除对应愿望单项，再保存。安装、收藏夹、关注和忽略不会改变商品所有权。
+活动随版本 3 存档保存。重新进入后，时钟继续推进；“继续游玩”打开运行窗口，显示已有进度。离线时间不结算。发行年月仍沿用商店的手动月份进度和每月 60 点预算补充。
 
-版本 2 存档扩展 installed、favorites、ignored、followed、play_minutes、play_sessions、downloads、activity，仍能读取版本 1 存档。
+## 玩家属性、成就与收入
 
-## Excel 与资源
+初始六项能力均为 10。能力权重由游戏 genres 选择，多人 / 合作使协作占 20%，其余能力权重按比例缩小。挑战倍率为 `(1 + 加权能力 / 100) × 主机倍率 × 外设倍率`。游玩增加对应能力，每项最多 100。
 
-`tools/catalog/game_catalog.xlsx` 是基础游戏资料来源。Python 导入器生成 `data/games/*.tres` 与总清单 `_catalog.tres`，同时维护文件校验清单和 `README.txt` 目录说明。总清单以下划线开头，避免与合法游戏 ID 对应的资源文件重名。
+每款游戏初版共用 10、60、180 点三个里程碑。直播每 5 分钟结算一次，基础 2 点，主机 / 麦克风可增加收入。攻略需至少游玩 10 分钟，制作耗时 20 分钟；每款只可发布一次，成就数量影响稿费，后续每 10 分钟 1 点阅读收益，最多 60 次。
 
-`scripts/game.gd` 是单款游戏唯一的字段定义，继承 Resource，并通过 class_name 注册为 GameDefinition。每份游戏 `.tres` 的 script 都直接引用它，保存各自的导出属性值。`scripts/game_catalog.gd` 定义 GameCatalog，用于维护清单和查找游戏。两份脚本都是正常源代码，由开发者编辑，Python 不复制或生成脚本。
+房间为固定物品位置、两种整体布置；同一位置同时安装一件拥有的物品。初始展示架容量 1，升级柜容量 3，换回小架时收起多余奖杯。家具属性、价格和收益均为首版演示平衡值。CPU/GPU 型号暂作展示文本，不据此阻止启动游戏。
 
-`store_state.gd` preload 总清单，按资源顺序构建现有页面使用的 Dictionary。表格字段和自动解析的素材引用覆盖对应旧值；原 JSON 只为相同 ID 补充评价、标签、英文名和现有折扣等资料，无法把资源清单中不存在的游戏重新加入商店。仅新增到 Excel 的游戏可直接显示，缺少的补充数据使用默认值。
+## 平台页面与游戏数据
 
-`definition(id)` 返回原始 GameDefinition，`release_state(id)` 查询 hidden/coming_soon/available/delisted。界面封面使用 `capsule`，商品页和首页四张展示图使用 `screenshots`；旧资源没有展示图时回退为封面取景。商品页按 16:9 保持展示图完整，系统需求使用 `cpu`、`gpu`。类型筛选支持 genres 中的多个类型。
+平台 `route.kind` 支持 home、search、product、queue、wishlist、cart、checkout、receipt、library、downloads、profile、community。community 作为兼容路由保留，显示“创作”页的直播和攻略内容。类型菜单直接来自当前资源目录。
 
-存档继续记录从 2003 年 9 月开始的相对 month_index；`current_ym()` 在查询资源时转换为 YYYYMM，旧存档无需改变月份格式。上架和下架使用资源月份，已购下架游戏继续出现在库中。
+平台保存浏览历史与滚动位置。窗口最小化时保留页面；关闭后重新打开回到首页，但所有权、钱包与活动仍来自共享状态。单独运行 `store.tscn` 是开发预览模式，保留原客户端模拟窗口与独立下载计时，用于兼容检查。
 
-脚本及其 `.gd.uid` 保存在 scripts 中，导入器只管理 data/games，因此重新导入不会改动源脚本身份。`--check` 只检查 Excel 与资源结果是否一致，不写文件。表格 capsule 可填 res://assets/art/<game_id>，导入器将 <game_id>.png 与 <game_id>01～04.png 解析成封面与有序展示图数组。genres 支持 / 分隔，“游戏原型”备注列不导出。
+游戏基础资料继续由 Excel 生成 `data/games/*.tres` 和 `_catalog.tres`。`game.gd` 是单款游戏唯一 Resource 定义，`game_catalog.gd` 提供目录查询。封面字段 capsule 与有序 screenshots 分别驱动商店和游戏轮播。导入器不生成脚本。
 
-## 后续修改建议
+`data/catalog.json` 仍按 ID 补充旧示例的评价、英文名、演示折扣等；无法把资源目录不存在的游戏加入正式商店。CounterSquad 等没有补充条目的游戏使用默认展示资料。
 
-新增页面改 client_pages.gd 并在 render_page() 加入路由；新增经营规则放到 store_state.gd；改变全局外观优先修改 client_ui.gd 与 client_theme.tres。新增游戏先编辑 Excel 并运行导入器，保持稳定 ID，避免旧存档丢失关联。后续折扣排期和评价变化可在独立数据中扩展。
+## 存档与验证
+
+路径仍为 `user://memoir_store_v01.json`，版本 3 在原有钱包、月份、收藏、安装与游玩记录之外新增 life：物品、装备、六项属性、进度、成就、展示内容、攻略、活动和收入。
+
+读取兼容版本 1、2、3，旧存档获得默认生活资料。生活存档会校验物品 ID、装备位置和所有权，限制属性范围，移除无效活动与未获得的展示奖杯。保存仍先写临时文件再替换。
+
+`tests/life/test_life_flow.gd` 覆盖房间→电脑→购买→安装→游玩→直播→购物→安装设备→攻略→展示柜→保存恢复的完整流程，并检查重复扣款、活动互斥、阅读收益上限和旧版迁移。

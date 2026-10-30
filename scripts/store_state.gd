@@ -1,7 +1,10 @@
 class_name MemoirStoreState
 extends RefCounted
-## 独立的商店状态：不依赖场景节点，可在以后接入正式经营系统。
+## 唯一玩家状态：游戏目录、收藏交易与生活数据；由 GameSession 共享给各个场景。
 
+signal changed
+
+const LifeData = preload("res://scripts/life/life_data.gd")
 const SAVE_PATH := "user://memoir_store_v01.json"
 const GAME_CATALOG: GameCatalog = preload("res://data/games/_catalog.tres")
 const PRESENTATION_PATH := "res://data/catalog.json"
@@ -26,6 +29,7 @@ var play_sessions: Dictionary = {}
 var downloads: Dictionary = {}
 var activity: Array = []
 var _definitions: Dictionary = {}
+var life: Dictionary = LifeData.defaults()
 
 func _init(source: GameCatalog = GAME_CATALOG) -> void:
 	# The resource manifest owns membership, spreadsheet fields and resolved art.
@@ -158,10 +162,11 @@ func date_text() -> String:
 	var month_number := 8 + month_index
 	return "%d 年 %02d 月" % [2003 + month_number / 12, month_number % 12 + 1]
 
-func save_state() -> bool:
+func save_state(notify_change: bool = true) -> bool:
+	if notify_change: changed.emit()
 	if not persistence_enabled:
 		return true
-	var payload := {"version": 2, "wallet": wallet, "month": month_index, "owned": owned, "wishlist": wishlist, "cart": cart, "history": history, "installed": installed, "favorites": favorites, "ignored": ignored, "followed": followed, "play_minutes": play_minutes, "play_sessions": play_sessions, "downloads": downloads, "activity": activity}
+	var payload := {"version": 3, "wallet": wallet, "month": month_index, "owned": owned, "wishlist": wishlist, "cart": cart, "history": history, "installed": installed, "favorites": favorites, "ignored": ignored, "followed": followed, "play_minutes": play_minutes, "play_sessions": play_sessions, "downloads": downloads, "activity": activity, "life": life}
 	var temp_path := save_path + ".tmp"
 	var file := FileAccess.open(temp_path, FileAccess.WRITE)
 	if not file:
@@ -181,7 +186,7 @@ func load_state() -> void:
 	if not file:
 		return
 	var data: Variant = JSON.parse_string(file.get_as_text())
-	if not data is Dictionary or not int(data.get("version", 0)) in [1, 2]:
+	if not data is Dictionary or not int(data.get("version", 0)) in [1, 2, 3]:
 		return
 	wallet = maxi(0, int(data.get("wallet", 160)))
 	month_index = clampi(int(data.get("month", 0)), 0, MAX_MONTH)
@@ -215,6 +220,8 @@ func load_state() -> void:
 		for entry: Variant in saved_activity:
 			if entry is Dictionary and owned.has(str(entry.get("id", ""))):
 				activity.append({"id": str(entry["id"]), "month": clampi(int(entry.get("month", 0)), 0, month_index), "minutes": maxi(0, int(entry.get("minutes", 0)))})
+
+	life = LifeData.clean(data.get("life", {}), owned, installed)
 
 func _validated_ids(value: Variant, cart_only: bool) -> Array[String]:
 	var result: Array[String] = []

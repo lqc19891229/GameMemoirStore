@@ -3,6 +3,9 @@ extends Control
 const State = preload("res://scripts/store_state.gd")
 const U = preload("res://scripts/client_ui.gd")
 const Pages = preload("res://scripts/client_pages.gd")
+signal host_requested(action: String)
+var session: MemoirGameSession
+var shared_refresh_pending := false
 
 var state = State.new()
 var pages
@@ -35,8 +38,13 @@ var running_window: AcceptDialog
 var render_serial: int = 0
 
 func _ready() -> void:
-	state.persistence_enabled = not OS.get_cmdline_user_args().has("--fresh")
-	state.load_state()
+	if session == null:
+		state.persistence_enabled = not OS.get_cmdline_user_args().has("--fresh")
+		state.load_state()
+	else:
+		state = session.state
+		session.changed.connect(_shared_refresh)
+		session.tick_updated.connect(_shared_tick)
 	pages = Pages.new(self)
 	_build_header()
 	_build_store_navigation()
@@ -51,9 +59,9 @@ func _ready() -> void:
 	download_timer.wait_time = 0.35
 	download_timer.timeout.connect(_download_tick)
 	add_child(download_timer)
-	download_timer.start()
+	if session == null: download_timer.start()
 	refresh_client()
-	_capture.call_deferred()
+	if session == null: _capture.call_deferred()
 
 func _exit_tree() -> void:
 	# 关闭原生窗口、退出客户端或切换场景时，也保存当前下载与收藏。
@@ -72,7 +80,7 @@ func _build_header() -> void:
 			1: settings()
 			2:
 				state.save_state()
-				get_tree().quit()
+				close_client()
 	)
 	U.menu(menu_row, "查看", ["商店", "游戏库", "愿望单", "下载"], func(index: int) -> void: navigate({"kind": ["home", "library", "wishlist", "downloads"][index]}))
 	U.menu(menu_row, "好友", ["好友列表", "我的个人资料"], func(index: int) -> void:
@@ -90,18 +98,19 @@ func _build_header() -> void:
 	)
 	U.spring(menu_row)
 	wallet_button = U.button(menu_row, "钱包", account_details, "flat")
-	U.button(menu_row, "—", func() -> void: DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_MINIMIZED), "flat", 28)
-	U.button(menu_row, "□", toggle_fullscreen, "flat", 28)
-	U.button(menu_row, "×", func() -> void:
-		state.save_state()
-		get_tree().quit()
-	, "flat", 28)
+	if session == null:
+		U.button(menu_row, "—", minimize_client, "flat", 28)
+		U.button(menu_row, "□", toggle_fullscreen, "flat", 28)
+		U.button(menu_row, "×", func() -> void:
+			state.save_state()
+			close_client()
+		, "flat", 28)
 	var nav := U.hbox(box, 16)
 	back_button = U.button(nav, "<", func() -> void: go_history(-1), "flat", 30)
 	forward_button = U.button(nav, ">", func() -> void: go_history(1), "flat", 30)
 	store_button = U.button(nav, "商店", func() -> void: navigate({"kind": "home"}), "flat")
 	library_button = U.button(nav, "库", func() -> void: navigate({"kind": "library"}), "flat")
-	community_button = U.button(nav, "社区", func() -> void: navigate({"kind": "community"}), "flat")
+	community_button = U.button(nav, "创作", func() -> void: navigate({"kind": "community"}), "flat")
 	profile_button = U.button(nav, "像素收藏家", func() -> void: navigate({"kind": "profile"}), "flat")
 	for button: Button in [store_button, library_button, community_button, profile_button]:
 		button.add_theme_font_size_override("font_size", 24)
@@ -122,9 +131,10 @@ func _build_store_navigation() -> void:
 			3: navigate({"kind": "wishlist"})
 	)
 	U.menu(row, "新品与热门商品  v", ["新品", "热销商品", "即将推出", "特别优惠"], func(index: int) -> void: navigate({"kind": "search", "filter": ["new", "popular", "coming", "sale"][index]}))
-	U.menu(row, "类别  v", ["探索冒险", "策略战术", "生活模拟", "角色扮演", "所有游戏"], func(index: int) -> void:
-		if index == 4: navigate({"kind": "search"})
-		else: navigate({"kind": "search", "genre": ["探索冒险", "策略战术", "生活模拟", "角色扮演"][index]})
+	var genres: Array[String] = genre_options()
+	U.menu(row, "类别  v", genres + ["所有游戏"], func(index: int) -> void:
+		if index == genres.size(): navigate({"kind": "search"})
+		else: navigate({"kind": "search", "genre": genres[index]})
 	)
 	U.spring(row)
 	wish_button = U.button(row, "愿望单", func() -> void: navigate({"kind": "wishlist"}), "dark")
@@ -353,6 +363,9 @@ func _update_status() -> void:
 		downloads_button.text = "下载 · %s  %d%%" % [state.game(game_id)["title"], state.downloads[game_id]]
 
 func launch_game(game_id: String) -> void:
+	if session != null:
+		notify(session.start_play(game_id))
+		return
 	if not state.installed.has(game_id) or not state.owned.has(game_id): return
 	running_game_id = game_id
 	running_window = AcceptDialog.new()
@@ -423,6 +436,9 @@ func settings() -> void:
 		confirm.cancel_button_text = "取消"
 		add_child(confirm)
 		confirm.confirmed.connect(func() -> void:
+			if session != null:
+				session.reset_run()
+				return
 			var persistent: bool = state.persistence_enabled
 			state = State.new()
 			state.persistence_enabled = persistent
@@ -470,6 +486,7 @@ func toggle_fullscreen() -> void:
 	DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_WINDOWED if fullscreen else DisplayServer.WINDOW_MODE_FULLSCREEN)
 
 func _unhandled_input(event: InputEvent) -> void:
+	if not is_visible_in_tree(): return
 	if event is InputEventMouseButton and event.pressed:
 		if event.button_index == MOUSE_BUTTON_XBUTTON1: go_history(-1)
 		elif event.button_index == MOUSE_BUTTON_XBUTTON2: go_history(1)
@@ -480,7 +497,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		if not %StoreNavigation.visible: navigate({"kind": "search"})
 		search_box.grab_focus()
 	elif event.keycode == KEY_F11: toggle_fullscreen()
-	elif event.keycode == KEY_ESCAPE: go_history(-1)
+	elif event.keycode == KEY_ESCAPE and session == null: go_history(-1)
 
 func _capture() -> void:
 	var output: String = ""
@@ -512,3 +529,39 @@ func _capture() -> void:
 	var error := get_viewport().get_texture().get_image().save_png(output)
 	print("CLIENT_CAPTURE: ", output, " error=", error)
 	get_tree().quit(0 if error == OK else 1)
+
+func close_client() -> void:
+	state.save_state()
+	if session != null: host_requested.emit("close")
+	else: get_tree().quit()
+
+func minimize_client() -> void:
+	if session != null: host_requested.emit("minimize")
+	else: DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_MINIMIZED)
+
+func _shared_refresh() -> void:
+	if not shared_refresh_pending and is_node_ready():
+		shared_refresh_pending = true
+		_flush_shared_refresh.call_deferred()
+
+func _flush_shared_refresh() -> void:
+	shared_refresh_pending = false
+	if is_inside_tree() and is_node_ready(): refresh_client(true)
+
+func _shared_tick() -> void:
+	wallet_button.text = "钱包 %d 点  v" % state.wallet
+	_update_status()
+	for widget: Dictionary in download_widgets:
+		if is_instance_valid(widget["bar"]): widget["bar"].value = float(state.downloads.get(widget["id"], 100))
+	var activity_label := find_child("CreationProgress", true, false) as Label
+	if is_instance_valid(activity_label): activity_label.text = session.activity_text()
+	for entry: Array in [["CreationFollowers", "关注者  %d", "followers"], ["CreationStreamIncome", "直播收入  %d 点", "stream_income"], ["CreationGuideIncome", "攻略收入  %d 点", "guide_income"]]:
+		var label := find_child(entry[0], true, false) as Label
+		if is_instance_valid(label): label.text = entry[1] % state.life[entry[2]]
+
+func genre_options() -> Array[String]:
+	var result: Array[String] = []
+	for entry: Dictionary in state.catalog:
+		for genre: String in entry["genres"]:
+			if not result.has(genre): result.append(genre)
+	return result

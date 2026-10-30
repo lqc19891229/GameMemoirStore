@@ -7,6 +7,7 @@ test_client.gd：检查新版客户端导航、搜索、购买、库和存档。
 test_client_windows.gd：检查原生窗口、右键菜单和浏览位置，需要图形环境。
 test_store.gd：检查交易规则、时间线和存档流程，不依赖场景。
 fixtures/：固定测试样本，与正式商店资料分开。
+life/：房间、电脑、购物、直播、攻略、展示柜与新存档的完整流程检查。
 *.gd.uid：Godot 脚本的稳定标识。
 
 Python 检查：python -m unittest discover -s tests -p "test_catalog_importer.py"
