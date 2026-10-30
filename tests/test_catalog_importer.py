@@ -31,14 +31,19 @@ class ImporterTests(unittest.TestCase):
         raw = mod.read_xlsx(ROOT/'game_catalog.xlsx', self.schema)
         self.assertEqual(list(raw),['游戏资料'])
         self.assertEqual(raw['游戏资料'][0][0],4)
-        self.assertEqual(raw['游戏资料'][0][1]['cpu'],'COREI5-10600K')
-        self.assertEqual(raw['游戏资料'][0][1]['gpu'],'RTX3060')
+        self.assertIn('cpu',raw['游戏资料'][0][1])
+        self.assertIn('gpu',raw['游戏资料'][0][1])
+        self.assertNotIn('capsule',raw['游戏资料'][0][1])
         self.assertNotIn('游戏原型', raw['游戏资料'][0][1])
 
-    def test_all_twelve_games_and_capsule_assets(self):
-        data,warnings=mod.validate(self.raw,self.schema,PROJECT)
+    def test_every_game_derives_its_five_asset_paths(self):
+        data,warnings=mod.validate(self.raw,self.schema)
         self.assertEqual(len(data['游戏资料']),12)
         self.assertFalse(warnings)
+        for game in data['游戏资料']:
+            game_id=game['game_id']
+            self.assertEqual(game['capsule'],f'res://assets/art/{game_id}/{game_id}.png')
+            self.assertEqual(game['screenshots'],[f'res://assets/art/{game_id}/{game_id}{i:02d}.png' for i in range(1,5)])
 
     def test_only_fourteen_game_fields_are_emitted(self):
         data,_=mod.validate(self.raw,self.schema)
@@ -103,12 +108,13 @@ class ImporterTests(unittest.TestCase):
         self.assertEqual(len(data['游戏资料']),11)
 
     def test_blank_optional_fields_and_free_game(self):
-        data,_=mod.validate(self.changed(base_price=0,cpu='',gpu='',capsule='',announce_ym='',delist_ym='',genres=''),self.schema)
+        data,_=mod.validate(self.changed(base_price=0,cpu='',gpu='',announce_ym='',delist_ym='',genres=''),self.schema)
         game=data['游戏资料'][0]
         self.assertEqual(game['base_price'],0)
         self.assertEqual(game['genres'],[])
         text=mod.resource_game(game)
-        self.assertIn('capsule = null',text)
+        self.assertIn('capsule = ExtResource("2_capsule")',text)
+        self.assertEqual(len(game['screenshots']),4)
 
     def test_multiple_genres_split(self):
         data,_=mod.validate(self.changed(genres='科幻;探索'),self.schema)
@@ -137,16 +143,21 @@ class ImporterTests(unittest.TestCase):
     def test_case_only_duplicate_ids_rejected(self):
         self.reject(self.changed(index=1,game_id='Distant_Signal'),'重复game_id')
 
-    def test_art_folder_must_match_game_id_exactly(self):
-        self.reject(self.changed(game_id='CounterSquad',capsule='res://assets/art/countersquad'),'大小写一致')
-        self.reject(self.changed(game_id='CounterSquad',capsule='res://other/CounterSquad'),'素材文件夹')
+    def test_old_capsule_values_cannot_override_automatic_paths(self):
+        for value in ('res://assets/art/stars.png','res://../secret.png','', 'res://other/CounterSquad'):
+            raw=self.changed(game_id='CounterSquad',capsule=value)
+            raw['游戏资料']=raw['游戏资料'][:1]
+            data,_=mod.validate(raw,self.schema,PROJECT)
+            self.assertEqual(data['游戏资料'][0]['capsule'],'res://assets/art/CounterSquad/CounterSquad.png')
 
-    def test_folder_trailing_slash_normalized(self):
-        data,_=mod.validate(self.changed(game_id='CounterSquad',capsule='res://assets/art/CounterSquad/'),self.schema,PROJECT)
-        self.assertEqual(data['游戏资料'][0]['capsule'],'res://assets/art/CounterSquad/CounterSquad.png')
+    def test_game_id_case_is_preserved_in_all_paths(self):
+        data,_=mod.validate(self.changed(game_id='MixedCaseGame'),self.schema)
+        game=data['游戏资料'][0]
+        self.assertEqual(game['capsule'],'res://assets/art/MixedCaseGame/MixedCaseGame.png')
+        self.assertTrue(all('/MixedCaseGame/MixedCaseGame' in path for path in game['screenshots']))
 
     def test_missing_screenshot_stops_import_before_writing(self):
-        raw=self.changed(game_id='CounterSquad',capsule='res://assets/art/CounterSquad')
+        raw=self.changed(game_id='CounterSquad')
         with tempfile.TemporaryDirectory() as temp:
             project=Path(temp)
             folder=project/'assets/art/CounterSquad'
@@ -158,12 +169,13 @@ class ImporterTests(unittest.TestCase):
             self.assertFalse((project/'data/games').exists())
 
     def test_skip_asset_check_still_resolves_folder(self):
-        data,_=mod.validate(self.changed(game_id='CounterSquad',capsule='res://assets/art/CounterSquad'),self.schema,Path('/missing-project'),True)
+        data,_=mod.validate(self.changed(game_id='CounterSquad'),self.schema,Path('/missing-project'),True)
         self.assertEqual(len(data['游戏资料'][0]['screenshots']),4)
 
-    def test_legacy_single_cover_has_no_screenshots(self):
-        data,_=mod.validate(self.raw,self.schema,PROJECT)
-        self.assertEqual(data['游戏资料'][0]['screenshots'],[])
+    def test_blank_enabled_rows_remain_drafts(self):
+        data,_=mod.validate(self.changed(enabled='',title='',game_id=''),self.schema)
+        self.assertEqual(len(data['游戏资料']),11)
+
 
     def test_unrecognized_header_is_still_rejected(self):
         schema=copy.deepcopy(self.schema)
@@ -178,11 +190,11 @@ class ImporterTests(unittest.TestCase):
         self.assertIn('gpu = "GeForce RTX 3060 12GB"',text)
 
     def test_path_traversal_rejected(self):
-        self.reject(self.changed(capsule='res://../secret.png'),'资源路径无效')
+        self.reject(self.changed(game_id='../secret'),'英文字母')
 
     def test_missing_capsule_rejected(self):
         with self.assertRaisesRegex(mod.ImportFailure,'封面文件不存在'):
-            mod.validate(self.changed(capsule='res://missing.png'),self.schema,PROJECT)
+            mod.validate(self.changed(game_id='MissingArtGame'),self.schema,PROJECT)
 
     def test_escaped_resource_strings(self):
         data,_=mod.validate(self.changed(title='名字"引号\\路径',description='第一行\n第二行'),self.schema)

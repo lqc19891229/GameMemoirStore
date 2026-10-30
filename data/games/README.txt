@@ -6,4 +6,5 @@ _catalog.tres：全部启用游戏的资源清单，商店通过它加载游戏�
 README.txt：本目录说明，由导入器一同生成。
 
 请在 tools/catalog/game_catalog.xlsx 修改资料，然后双击项目根目录 import_games.bat。
+封面与四张展示图自动从 assets/art/<game_id>/ 读取，无需在表格填写路径。
 本目录由导入器统一维护；说明文字在 tools/catalog/import_games.py 的 GENERATED_README 中修改。

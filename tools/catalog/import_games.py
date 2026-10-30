@@ -31,6 +31,7 @@ _catalog.tres：全部启用游戏的资源清单，商店通过它加载游戏�
 README.txt：本目录说明，由导入器一同生成。
 
 请在 tools/catalog/game_catalog.xlsx 修改资料，然后双击项目根目录 import_games.bat。
+封面与四张展示图自动从 assets/art/<game_id>/ 读取，无需在表格填写路径。
 本目录由导入器统一维护；说明文字在 tools/catalog/import_games.py 的 GENERATED_README 中修改。
 """
 
@@ -199,17 +200,10 @@ def check_path(value):
 
 def resolve_art(game, project=None, skip_assets=False):
     """Expand a game's art folder into explicit, ordered texture references."""
-    source = game['capsule']
-    game['screenshots'] = []
-    if not source:
-        return
-    if not PurePosixPath(source).suffix:
-        game_id = game['game_id']
-        expected = f'res://assets/art/{game_id}'
-        if source != expected:
-            raise ImportFailure(f'素材文件夹必须与game_id大小写一致：{expected}')
-        game['capsule'] = f'{source}/{game_id}.png'
-        game['screenshots'] = [f'{source}/{game_id}{i:02d}.png' for i in range(1, 5)]
+    game_id = game['game_id']
+    source = f'res://assets/art/{game_id}'
+    game['capsule'] = f'{source}/{game_id}.png'
+    game['screenshots'] = [f'{source}/{game_id}{i:02d}.png' for i in range(1, 5)]
     if project and not skip_assets:
         missing = []
         for path in [game['capsule'], *game['screenshots']]:
@@ -228,6 +222,9 @@ def validate(raw, schema, project=None, skip_assets=False):
     for rownum, row in raw[name]:
         location = f'{name} 第{rownum}行'
         try:
+            # Blank enabled cells are unfinished drafts, not broken export rows.
+            if row.get('enabled', '') in ('', None):
+                continue
             enabled = as_int(row.get('enabled', ''), 'enabled')
             if enabled not in (0, 1):
                 raise ImportFailure('enabled仅接受0或1')
@@ -361,7 +358,7 @@ def write_output(project, output_rel, files):
             target = stage / rel
             target.parent.mkdir(parents=True, exist_ok=True)
             target.write_bytes(contents)
-        marker = {'owner': OWNER, 'schema_version': 2, 'files': {p: sha(b) for p,b in sorted(files.items())}}
+        marker = {'owner': OWNER, 'schema_version': 3, 'files': {p: sha(b) for p,b in sorted(files.items())}}
         (stage / MARKER).write_text(json.dumps(marker,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
         if output.exists():
             backup = Path(tempfile.mkdtemp(prefix='.memoir_backup_', dir=output_parent))
@@ -393,7 +390,7 @@ def main(argv=None):
     args = parser.parse_args(argv)
     try:
         schema = json.loads((HERE / 'schema.json').read_text(encoding='utf-8'))
-        if schema['version'] != 2:
+        if schema['version'] != 3:
             raise ImportFailure('不支持此schema版本')
         output_rel = args.output_rel
         if not output_rel or '\\' in output_rel or any(c in output_rel for c in ('"','\n','\r','\t')) or any(p in ('','..','.') for p in output_rel.split('/')) or PurePosixPath(output_rel).is_absolute():
@@ -413,7 +410,7 @@ def main(argv=None):
         data, warnings = validate(raw, schema, project, args.skip_asset_check)
         for warning in warnings:
             print('提示：' + warning)
-        print(f'校验通过：{len(data["游戏资料"])}款游戏，14个游戏资源字段（含自动解析的screenshots）')
+        print(f'校验通过：{len(data["游戏资料"])}款游戏，14个游戏资源字段（含自动生成的capsule与screenshots）')
         if not project or args.skip_asset_check:
             print('提示：未检查图片文件是否存在')
         if not args.validate_only:

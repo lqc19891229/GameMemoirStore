@@ -66,7 +66,7 @@ GameSession 的 1 秒 Timer 统一推进 1 分钟模拟活动，并处理下载�
 
 平台保存浏览历史与滚动位置。窗口最小化时保留页面；关闭后重新打开回到首页，但所有权、钱包与活动仍来自共享状态。单独运行 `store.tscn` 是开发预览模式，保留原客户端模拟窗口与独立下载计时，用于兼容检查。
 
-游戏基础资料继续由 Excel 生成 `data/games/*.tres` 和 `_catalog.tres`。`game.gd` 是单款游戏唯一 Resource 定义，`game_catalog.gd` 提供目录查询。封面字段 capsule 与有序 screenshots 分别驱动商店和游戏轮播。导入器不生成脚本。
+游戏基础资料继续由 Excel 生成 `data/games/*.tres` 和 `_catalog.tres`。`game.gd` 是单款游戏唯一 Resource 定义，`game_catalog.gd` 提供目录查询。封面字段 capsule 与有序 screenshots 由导入器根据 game_id 自动生成，分别驱动商店和游戏轮播；Excel 不再填写素材路径。enabled 空白的草稿不会导出。导入器不生成脚本。
 
 `data/catalog.json` 仍按 ID 补充旧示例的评价、英文名、演示折扣等；无法把资源目录不存在的游戏加入正式商店。CounterSquad 等没有补充条目的游戏使用默认展示资料。
 

@@ -58,14 +58,13 @@ python tools/catalog/import_games.py --project .
 |---|---|
 | game_id | 稳定 ID，保留大小写，例如 `CounterSquad` |
 | genres | 用 `/` 分隔，例如 `射击/动作/多人` |
-| capsule | 素材目录，例如 `res://assets/art/CounterSquad` |
 | announce_ym / store_release_ym / delist_ym | YYYYMM 整数，分别控制预告、上架、下架 |
 | CPU / GPU | 型号文本，显示在商品页 |
-| enabled | 是否参与导出；“游戏原型”列只作备注 |
+| enabled | 1=导出，0/空白=草稿；“游戏原型”列只作备注 |
 
-素材目录包含 `<game_id>.png` 封面和 `<game_id>01.png`～`04.png` 展示图。Python 生成 `data/games/<game_id>.tres`、`_catalog.tres`、目录说明和校验清单，不覆盖源脚本。详细规则见 [导入说明](tools/catalog/README.md)。
+素材目录自动由 game_id 推导为 `assets/art/<game_id>/`，表格不再填写 capsule。目录包含 `<game_id>.png` 封面和 `<game_id>01.png`～`04.png` 展示图。Python 生成 `data/games/<game_id>.tres`、`_catalog.tres`、目录说明和校验清单，不覆盖源脚本。详细规则见 [导入说明](tools/catalog/README.md)。
 
-`data/catalog.json` 仍用于按相同 ID 补充英文名、标签、评价、安装大小和演示折扣。新增游戏没有补充资料时使用默认值。已发布游戏应保留 ID，以 `delist_ym` 下架；`enabled=0` 会移出生成目录。
+`data/catalog.json` 仍用于按相同 ID 补充英文名、标签、评价、安装大小和演示折扣。新增游戏没有补充资料时使用默认值。已发布游戏应保留 ID，以 `delist_ym` 下架；`enabled=0` 或空白会移出生成目录。
 
 ```bash
 python tools/catalog/import_games.py --project . --check

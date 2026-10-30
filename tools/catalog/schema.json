@@ -1,5 +1,5 @@
 {
-  "version": 2,
+  "version": 3,
   "header_row": "auto",
   "header_aliases": {
     "CPU": "cpu",
@@ -12,8 +12,8 @@
         "label": "参与导出",
         "type": "int",
         "required": true,
-        "default": 1,
-        "rule": "1=导出，0=保留在表内但不导出",
+        "default": 0,
+        "rule": "1=导出，0或空白=草稿，保留在表内但不导出",
         "export": false
       },
       {
@@ -123,19 +123,11 @@
         "default": "",
         "rule": "可在 Excel 单元格内换行",
         "export": true
-      },
-      {
-        "key": "capsule",
-        "label": "封面",
-        "type": "path",
-        "required": false,
-        "default": "",
-        "rule": "素材文件夹 res://assets/art/<game_id>；包含 <game_id>.png 及 <game_id>01～04.png；兼容旧图片文件路径，空白不引用图片",
-        "export": true
       }
     ]
   },
   "ignored_headers": [
-    "游戏原型"
+    "游戏原型",
+    "capsule"
   ]
 }

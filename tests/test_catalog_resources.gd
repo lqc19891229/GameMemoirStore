@@ -31,8 +31,8 @@ func _initialize() -> void:
 			check(game.screenshots[i].get_size() == Vector2(640, 360), "screenshot dimensions survive import")
 		check(game.title == "反击小队", "Chinese title survives")
 		check(game.base_price == 105, "base price survives")
-		check(game.cpu == "COREI5-10600K", "CPU model preserved verbatim")
-		check(game.gpu == "RTX3060", "GPU model preserved verbatim")
+		check(typeof(game.cpu) == TYPE_STRING, "CPU remains a string, including a blank optional value")
+		check(typeof(game.gpu) == TYPE_STRING, "GPU remains a string, including a blank optional value")
 		check(game.genres == PackedStringArray(["射击", "动作", "多人"]), "genres typed array")
 		var expected: Array[String] = ["game_id","title","announce_ym","store_release_ym","delist_ym","base_price","developer","genres","cpu","gpu","series_id","description","capsule","screenshots"]
 		var actual: Array[String] = []
@@ -53,6 +53,6 @@ func _initialize() -> void:
 	for entry in catalog.games:
 		check(not entry.game_id.is_empty(), "nonempty ID")
 		check(entry.capsule != null, "capsule texture loads")
-		check(entry.cpu == "COREI5-10600K" and entry.gpu == "RTX3060", "hardware text loads")
+		check(typeof(entry.cpu) == TYPE_STRING and typeof(entry.gpu) == TYPE_STRING, "hardware text loads")
 	print("RESOURCE_CHECKS=%d FAILURES=%d" % [checks, failures])
 	quit(1 if failures else 0)

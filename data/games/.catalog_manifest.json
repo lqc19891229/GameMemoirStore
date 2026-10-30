@@ -1,9 +1,9 @@
 {
   "owner": "GameMemoir.ExcelImporter.v1",
-  "schema_version": 2,
+  "schema_version": 3,
   "files": {
-    "CounterSquad.tres": "ba50359c0cb869895921c941e19fc915820497a0ef66cf07daad7682fa5353e7",
-    "README.txt": "6df123e7d1120f0fc7b51bf5e6814da2790b667032c262d84d8f917cef0ad4ab",
+    "CounterSquad.tres": "73fb68777efa72e497681fe4ffcf168a1647d9e7b23ee4d5d796aff5cdf24b0b",
+    "README.txt": "0d050f219067dfc4e676dc4fd591a2816897b39ff27055173ee669cdf4988f6b",
     "_catalog.tres": "636a7ab018ac8ad5e1b804fd2895a09671c695d0b64f74dea6a142f9c4ade3ba"
   }
 }
