@@ -49,16 +49,10 @@ func _ready() -> void:
 	_build_header()
 	_build_store_navigation()
 	_build_status()
-	%Notification.add_theme_stylebox_override("panel", U.style("233d50", "66c0f4", 1, 16))
-	notice_timer = Timer.new()
-	notice_timer.one_shot = true
-	notice_timer.wait_time = 3.0
+	notice_timer = %NoticeTimer
 	notice_timer.timeout.connect(func() -> void: %Notification.hide())
-	add_child(notice_timer)
-	download_timer = Timer.new()
-	download_timer.wait_time = 0.35
+	download_timer = %DownloadTimer
 	download_timer.timeout.connect(_download_tick)
-	add_child(download_timer)
 	if session == null: download_timer.start()
 	refresh_client()
 	if session == null: _capture.call_deferred()
@@ -68,94 +62,73 @@ func _exit_tree() -> void:
 	state.save_state()
 
 func _build_header() -> void:
-	%ClientHeader.add_theme_stylebox_override("panel", U.style("171a21", "00000000", 0, 0))
-	var margin := U.margin(%ClientHeader, 14)
-	margin.add_theme_constant_override("margin_top", 2)
-	margin.add_theme_constant_override("margin_bottom", 8)
-	var box := U.vbox(margin, 3)
-	var menu_row := U.hbox(box, 12)
-	U.menu(menu_row, "游戏回忆录", ["账户明细", "设置", "退出"], func(index: int) -> void:
+	wallet_button = %WalletButton
+	back_button = %Back
+	forward_button = %Forward
+	store_button = %Store
+	library_button = %Library
+	community_button = %Community
+	profile_button = %Profile
+	pages.menu(%AccountMenu, ["账户明细", "设置", "退出"], func(index: int) -> void:
 		match index:
 			0: account_details()
 			1: settings()
-			2:
-				state.save_state()
-				close_client()
+			2: close_client()
 	)
-	U.menu(menu_row, "查看", ["商店", "游戏库", "愿望单", "下载"], func(index: int) -> void: navigate({"kind": ["home", "library", "wishlist", "downloads"][index]}))
-	U.menu(menu_row, "好友", ["好友列表", "我的个人资料"], func(index: int) -> void:
+	pages.menu(%ViewMenu, ["商店", "游戏库", "愿望单", "下载"], func(index: int) -> void: navigate({"kind": ["home", "library", "wishlist", "downloads"][index]}))
+	pages.menu(%FriendsMenu, ["好友列表", "我的个人资料"], func(index: int) -> void:
 		if index == 0: friends()
 		else: navigate({"kind": "profile"})
 	)
-	U.menu(menu_row, "游戏", ["浏览所有游戏", "查看已安装游戏"], func(index: int) -> void:
-		navigate({"kind": "search"} if index == 0 else {"kind": "library", "collection": 1})
+	pages.menu(%GamesMenu, ["浏览所有游戏", "查看已安装游戏"], func(index: int) -> void: navigate({"kind": "search"} if index == 0 else {"kind": "library", "collection": 1}))
+	pages.menu(%HelpMenu, ["如何开始收藏", "关于游戏回忆录"], func(index: int) -> void:
+		if index == 0: dialog("开始您的游戏时光", "在商店发现游戏并加入购物车。\n使用游戏内预算结算后，作品会保留在您的库中。\n在库中安装游戏，即可开始一次游玩。\n\nAlt+左/右：前进后退\nCtrl+F：搜索\nF11：全屏\nEsc：返回上一页")
+		else: dialog("游戏回忆录", "像素风格 · 游戏收藏经营模拟\n\n每一款游戏，都是一段回忆。\n当前目录与玩家资料属于游戏世界。\n字体：Ark Pixel / SIL OFL 1.1")
 	)
-	U.menu(menu_row, "帮助", ["如何开始收藏", "关于游戏回忆录"], func(index: int) -> void:
-		if index == 0:
-			dialog("开始您的游戏时光", "在商店发现游戏并加入购物车。\n使用游戏内预算结算后，作品会保留在您的库中。\n在库中安装游戏，即可开始一次游玩。\n\nAlt+左/右：前进后退\nCtrl+F：搜索\nF11：全屏\nEsc：返回上一页")
-		else:
-			dialog("游戏回忆录", "像素风格 · 游戏收藏经营模拟\n\n每一款游戏，都是一段回忆。\n当前目录与玩家资料属于游戏世界。\n字体：Ark Pixel / SIL OFL 1.1")
-	)
-	U.spring(menu_row)
-	wallet_button = U.button(menu_row, "钱包", account_details, "flat")
-	if session == null:
-		U.button(menu_row, "—", minimize_client, "flat", 28)
-		U.button(menu_row, "□", toggle_fullscreen, "flat", 28)
-		U.button(menu_row, "×", func() -> void:
-			state.save_state()
-			close_client()
-		, "flat", 28)
-	var nav := U.hbox(box, 16)
-	back_button = U.button(nav, "<", func() -> void: go_history(-1), "flat", 30)
-	forward_button = U.button(nav, ">", func() -> void: go_history(1), "flat", 30)
-	store_button = U.button(nav, "商店", func() -> void: navigate({"kind": "home"}), "flat")
-	library_button = U.button(nav, "库", func() -> void: navigate({"kind": "library"}), "flat")
-	community_button = U.button(nav, "创作", func() -> void: navigate({"kind": "community"}), "flat")
-	profile_button = U.button(nav, "像素收藏家", func() -> void: navigate({"kind": "profile"}), "flat")
-	for button: Button in [store_button, library_button, community_button, profile_button]:
-		button.add_theme_font_size_override("font_size", 24)
-	U.spring(nav)
-	U.label(nav, "● 在线", 12, U.BLUE).size_flags_horizontal = Control.SIZE_SHRINK_END
+	pages.bind(wallet_button, account_details)
+	%MinimizeClient.visible = session == null
+	%MaximizeClient.visible = session == null
+	%CloseClient.visible = session == null
+	pages.bind(%MinimizeClient, minimize_client)
+	pages.bind(%MaximizeClient, toggle_fullscreen)
+	pages.bind(%CloseClient, close_client)
+	pages.bind(back_button, func() -> void: go_history(-1))
+	pages.bind(forward_button, func() -> void: go_history(1))
+	pages.bind(store_button, func() -> void: navigate({"kind": "home"}))
+	pages.bind(library_button, func() -> void: navigate({"kind": "library"}))
+	pages.bind(community_button, func() -> void: navigate({"kind": "community"}))
+	pages.bind(profile_button, func() -> void: navigate({"kind": "profile"}))
 
 func _build_store_navigation() -> void:
-	%StoreNavigation.add_theme_stylebox_override("panel", U.style("233f53", "00000000", 0, 0))
-	var margin := U.margin(%StoreNavigation, 6)
-	margin.add_theme_constant_override("margin_left", 28)
-	margin.add_theme_constant_override("margin_right", 28)
-	var row := U.hbox(margin, 10)
-	U.menu(row, "您的商店  v", ["商店主页", "发现队列", "最近浏览", "愿望单"], func(index: int) -> void:
+	pages.menu(%StoreMenu, ["商店主页", "发现队列", "最近浏览", "愿望单"], func(index: int) -> void:
 		match index:
 			0: navigate({"kind": "home"})
 			1: start_discovery()
 			2: navigate({"kind": "search", "filter": "recent"})
 			3: navigate({"kind": "wishlist"})
 	)
-	U.menu(row, "新品与热门商品  v", ["新品", "热销商品", "即将推出", "特别优惠"], func(index: int) -> void: navigate({"kind": "search", "filter": ["new", "popular", "coming", "sale"][index]}))
+	pages.menu(%NewMenu, ["新品", "热销商品", "即将推出", "特别优惠"], func(index: int) -> void: navigate({"kind": "search", "filter": ["new", "popular", "coming", "sale"][index]}))
 	var genres: Array[String] = genre_options()
-	U.menu(row, "类别  v", genres + ["所有游戏"], func(index: int) -> void:
+	pages.menu(%GenreMenu, genres + ["所有游戏"], func(index: int) -> void:
 		if index == genres.size(): navigate({"kind": "search"})
 		else: navigate({"kind": "search", "genre": genres[index]})
 	)
-	U.spring(row)
-	wish_button = U.button(row, "愿望单", func() -> void: navigate({"kind": "wishlist"}), "dark")
-	cart_button = U.button(row, "购物车", func() -> void: navigate({"kind": "cart"}), "green")
-	search_box = LineEdit.new()
-	search_box.custom_minimum_size = Vector2(228, 32)
-	search_box.placeholder_text = "搜索商店 · 回车"
-	search_box.clear_button_enabled = true
-	row.add_child(search_box)
+	wish_button = %Wish
+	cart_button = %Cart
+	search_box = %Search
+	pages.bind(wish_button, func() -> void: navigate({"kind": "wishlist"}))
+	pages.bind(cart_button, func() -> void: navigate({"kind": "cart"}))
 	search_box.text_submitted.connect(func(value: String) -> void:
 		navigate({"kind": "wishlist", "query": value} if route["kind"] == "wishlist" else {"kind": "search", "query": value})
 	)
 
 func _build_status() -> void:
-	%StatusBar.add_theme_stylebox_override("panel", U.style("171a21", "00000000", 0, 2))
-	var row := U.hbox(%StatusBar, 10)
-	U.button(row, "+ 添加游戏", func() -> void: navigate({"kind": "search"}), "flat", 130)
-	downloads_button = U.button(row, "下载", func() -> void: navigate({"kind": "downloads"}), "flat", 220)
-	U.spring(row)
-	month_button = U.button(row, "年月", advance_month, "flat", 224)
-	U.button(row, "好友与聊天  ▣", friends, "flat", 146)
+	downloads_button = %Downloads
+	month_button = %Month
+	pages.bind(%AddGame, func() -> void: navigate({"kind": "search"}))
+	pages.bind(downloads_button, func() -> void: navigate({"kind": "downloads"}))
+	pages.bind(month_button, advance_month)
+	pages.bind(%Friends, friends)
 
 func navigate(destination: Dictionary, push: bool = true) -> void:
 	navigation_scrolls[navigation_index] = %ContentScroll.scroll_vertical
@@ -204,9 +177,6 @@ func render_page(keep_scroll: bool = false) -> void:
 	var old_scroll: int = %ContentScroll.scroll_vertical
 	var old_library: ScrollContainer = find_child("LibraryContentScroll", true, false) as ScrollContainer
 	var library_scroll: int = old_library.scroll_vertical if is_instance_valid(old_library) and keep_scroll else -1
-	for child: Node in %PageContent.get_children():
-		%PageContent.remove_child(child)
-		child.queue_free()
 	download_widgets.clear()
 	match str(route["kind"]):
 		"home": pages.home()
@@ -368,16 +338,11 @@ func launch_game(game_id: String) -> void:
 		return
 	if not state.installed.has(game_id) or not state.owned.has(game_id): return
 	running_game_id = game_id
-	running_window = AcceptDialog.new()
+	running_window = preload("res://scenes/client/running_dialog.tscn").instantiate()
 	running_window.title = state.game(game_id)["title"]
-	running_window.ok_button_text = "结束游玩并返回客户端"
-	running_window.min_size = Vector2i(580, 360)
 	add_child(running_window)
-	var box := U.vbox(U.margin(running_window, 24), 14)
-	box.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	box.offset_bottom = -54
-	U.cover(box, state.game(game_id), 190)
-	U.label(box, "正在游玩 · 结束后记录一次 45 分钟的模拟体验", 12, U.TEXT, true)
+	running_window.get_node("%Cover").texture = U.texture(state.game(game_id))
+	running_window.get_node("%Title").text = state.game(game_id)["title"]
 	running_window.confirmed.connect(finish_session)
 	running_window.canceled.connect(func() -> void:
 		finish_session()
@@ -401,11 +366,9 @@ func advance_month() -> void:
 
 func dialog(title: String, text: String) -> void:
 	if is_instance_valid(popup): popup.queue_free()
-	popup = AcceptDialog.new()
+	popup = preload("res://scenes/client/message_dialog.tscn").instantiate()
 	popup.title = title
 	popup.dialog_text = text
-	popup.ok_button_text = "关闭"
-	popup.min_size = Vector2i(480, 200)
 	add_child(popup)
 	popup.popup_centered()
 
@@ -419,48 +382,37 @@ func friends() -> void:
 
 func settings() -> void:
 	if is_instance_valid(popup): popup.queue_free()
-	popup = AcceptDialog.new()
-	popup.title = "客户端设置"
-	popup.min_size = Vector2i(500, 260)
+	popup = preload("res://scenes/client/settings_dialog.tscn").instantiate()
 	add_child(popup)
-	var box := U.vbox(U.margin(popup, 22), 12)
-	box.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	box.offset_bottom = -55
-	U.label(box, "界面", 24, Color.WHITE)
-	U.button(box, "切换全屏 / 窗口", toggle_fullscreen, "blue")
-	U.button(box, "重置本次回忆录", func() -> void:
-		var confirm := ConfirmationDialog.new()
-		confirm.title = "重新开始"
-		confirm.dialog_text = "将恢复初始预算和游戏库，是否继续？"
-		confirm.ok_button_text = "重新开始"
-		confirm.cancel_button_text = "取消"
+	pages.bind(popup.get_node("%ToggleFullscreen"), toggle_fullscreen)
+	pages.bind(popup.get_node("%Reset"), func() -> void:
+		var confirm = preload("res://scenes/client/reset_dialog.tscn").instantiate()
 		add_child(confirm)
 		confirm.confirmed.connect(func() -> void:
 			if session != null:
 				session.reset_run()
-				return
-			var persistent: bool = state.persistence_enabled
-			state = State.new()
-			state.persistence_enabled = persistent
-			state.save_state()
-			popup.hide()
-			navigation = [{"kind": "home"}]
-			navigation_scrolls = [0]
-			navigation_index = 0
-			navigate({"kind": "home"}, false)
+			else:
+				var persistent: bool = state.persistence_enabled
+				state = State.new()
+				state.persistence_enabled = persistent
+				state.save_state()
+				popup.hide()
+				navigation = [{"kind": "home"}]
+				navigation_scrolls = [0]
+				navigation_index = 0
+				navigate({"kind": "home"}, false)
 			confirm.queue_free()
 		)
+		confirm.canceled.connect(confirm.queue_free)
 		confirm.popup_centered()
-	, "danger")
+	)
 	popup.popup_centered(Vector2i(520, 290))
 
 func library_context(game_id: String) -> void:
-	var menu := PopupMenu.new()
+	var menu: PopupMenu = preload("res://scenes/client/library_context.tscn").instantiate()
 	add_child(menu)
-	menu.add_item("开始游戏" if state.installed.has(game_id) else "安装", 0)
-	menu.add_item("移出收藏夹" if state.favorites.has(game_id) else "添加至收藏夹", 1)
-	menu.add_item("查看商店页面", 2)
-	menu.add_item("卸载游戏", 3)
+	menu.set_item_text(0, "开始游戏" if state.installed.has(game_id) else "安装")
+	menu.set_item_text(1, "移出收藏夹" if state.favorites.has(game_id) else "添加至收藏夹")
 	menu.id_pressed.connect(func(index: int) -> void:
 		match index:
 			0:

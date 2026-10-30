@@ -1,12 +1,227 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=5 format=3]
 
-[ext_resource type="Script" path="res://scripts/life/game_player.gd" id="1"]
+[ext_resource type="Theme" path="res://assets/client_theme.tres" id="1"]
+
+[ext_resource type="Script" path="res://scripts/life/game_player.gd" id="2"]
+
+[ext_resource type="Texture2D" path="res://assets/art/CTA3/CTA301.png" id="3"]
+
+[sub_resource type="StyleBoxFlat" id="Style0"]
+bg_color = Color(0.09019607843137255, 0.15294117647058825, 0.20784313725490197, 1)
+border_color = Color(0.0, 0.0, 0.0, 0.0)
+content_margin_left = 18.0
+border_width_left = 0
+content_margin_right = 18.0
+border_width_right = 0
+content_margin_top = 18.0
+border_width_top = 0
+content_margin_bottom = 18.0
+border_width_bottom = 0
 
 [node name="GamePlayer" type="Control"]
+theme = ExtResource("1")
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-script = ExtResource("1")
+script = ExtResource("2")
+
+[node name="Background" type="ColorRect" parent="."]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.047058823529411764, 0.0784313725490196, 0.10588235294117647, 1)
+mouse_filter = 2
+
+[node name="OuterMargin" type="MarginContainer" parent="."]
+unique_name_in_owner = true
+layout_mode = 1
+size_flags_horizontal = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_bottom = 20
+
+[node name="Layout" type="VBoxContainer" parent="OuterMargin"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 12
+
+[node name="Header" type="HBoxContainer" parent="OuterMargin/Layout"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="GameTitle" type="Label" parent="OuterMargin/Layout/Header"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+custom_minimum_size = Vector2(0, 34)
+text = "正在游玩"
+theme_override_font_sizes/font_size = 24
+theme_override_colors/font_color = Color(1.0, 1.0, 1.0, 1)
+vertical_alignment = 1
+mouse_filter = 2
+
+[node name="PlayStream" type="Button" parent="OuterMargin/Layout/Header"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "开始直播"
+custom_minimum_size = Vector2(140, 32)
+mouse_default_cursor_shape = 2
+theme_type_variation = "GreenButton"
+
+[node name="StopPlay" type="Button" parent="OuterMargin/Layout/Header"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "结束游玩"
+custom_minimum_size = Vector2(140, 32)
+mouse_default_cursor_shape = 2
+theme_type_variation = "DangerButton"
+
+[node name="GameBody" type="HBoxContainer" parent="OuterMargin/Layout"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 20
+size_flags_vertical = 3
+
+[node name="ScreenshotAspect" type="AspectRatioContainer" parent="OuterMargin/Layout/GameBody"]
+unique_name_in_owner = true
+layout_mode = 2
+ratio = 1.7777777777777777
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="RunningScreenshot" type="TextureRect" parent="OuterMargin/Layout/GameBody/ScreenshotAspect"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(0, 0)
+texture = ExtResource("3")
+expand_mode = 1
+stretch_mode = 5
+texture_filter = 1
+mouse_filter = 2
+size_flags_horizontal = 3
+
+[node name="SidePanel" type="PanelContainer" parent="OuterMargin/Layout/GameBody"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 8
+theme_override_styles/panel = SubResource("Style0")
+custom_minimum_size = Vector2(260, 0)
+
+[node name="Sidebar" type="VBoxContainer" parent="OuterMargin/Layout/GameBody/SidePanel"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="SidebarTitle" type="Label" parent="OuterMargin/Layout/GameBody/SidePanel/Sidebar"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+custom_minimum_size = Vector2(0, 34)
+text = "正在创造回忆"
+theme_override_font_sizes/font_size = 24
+theme_override_colors/font_color = Color(0.4, 0.7529411764705882, 0.9568627450980393, 1)
+vertical_alignment = 1
+mouse_filter = 2
+
+[node name="Info" type="Label" parent="OuterMargin/Layout/GameBody/SidePanel/Sidebar"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+custom_minimum_size = Vector2(0, 22)
+text = "本次游玩 0 分钟\n累计游玩 0 分钟"
+theme_override_font_sizes/font_size = 12
+theme_override_colors/font_color = Color(0.7803921568627451, 0.8352941176470589, 0.8784313725490196, 1)
+vertical_alignment = 1
+mouse_filter = 2
+autowrap_mode = 2
+
+[node name="Progress" type="VBoxContainer" parent="OuterMargin/Layout/GameBody/SidePanel/Sidebar"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 8
+
+[node name="Milestone0" type="Label" parent="OuterMargin/Layout/GameBody/SidePanel/Sidebar/Progress"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+custom_minimum_size = Vector2(0, 22)
+text = "☆ 第一段回忆"
+theme_override_font_sizes/font_size = 12
+theme_override_colors/font_color = Color(0.7803921568627451, 0.8352941176470589, 0.8784313725490196, 1)
+vertical_alignment = 1
+mouse_filter = 2
+
+[node name="MilestoneBar0" type="ProgressBar" parent="OuterMargin/Layout/GameBody/SidePanel/Sidebar/Progress"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(0, 14)
+show_percentage = false
+
+[node name="Milestone1" type="Label" parent="OuterMargin/Layout/GameBody/SidePanel/Sidebar/Progress"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+custom_minimum_size = Vector2(0, 22)
+text = "☆ 沉浸时光"
+theme_override_font_sizes/font_size = 12
+theme_override_colors/font_color = Color(0.7803921568627451, 0.8352941176470589, 0.8784313725490196, 1)
+vertical_alignment = 1
+mouse_filter = 2
+
+[node name="MilestoneBar1" type="ProgressBar" parent="OuterMargin/Layout/GameBody/SidePanel/Sidebar/Progress"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(0, 14)
+show_percentage = false
+
+[node name="Milestone2" type="Label" parent="OuterMargin/Layout/GameBody/SidePanel/Sidebar/Progress"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+custom_minimum_size = Vector2(0, 22)
+text = "☆ 珍贵收藏"
+theme_override_font_sizes/font_size = 12
+theme_override_colors/font_color = Color(0.7803921568627451, 0.8352941176470589, 0.8784313725490196, 1)
+vertical_alignment = 1
+mouse_filter = 2
+
+[node name="MilestoneBar2" type="ProgressBar" parent="OuterMargin/Layout/GameBody/SidePanel/Sidebar/Progress"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(0, 14)
+show_percentage = false
+
+[node name="Hint" type="Label" parent="OuterMargin/Layout"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+custom_minimum_size = Vector2(0, 22)
+text = "模拟游玩 · 展示图每 4 秒轮播 · 最小化或返回房间后，活动继续进行"
+theme_override_font_sizes/font_size = 12
+theme_override_colors/font_color = Color(0.5607843137254902, 0.596078431372549, 0.6274509803921569, 1)
+vertical_alignment = 1
+mouse_filter = 2
+autowrap_mode = 2
+
+[node name="Slideshow" type="Timer" parent="."]
+unique_name_in_owner = true
+wait_time = 4.0

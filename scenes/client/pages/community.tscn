@@ -1,0 +1,233 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/client/components/guide_row.tscn" id="preview"]
+
+[ext_resource type="Theme" path="res://assets/client_theme.tres" id="1"]
+
+[sub_resource type="StyleBoxFlat" id="Style0"]
+bg_color = Color(0.14901960784313725, 0.24313725490196078, 0.2980392156862745, 1)
+border_color = Color(0.0, 0.0, 0.0, 0.0)
+content_margin_left = 18.0
+border_width_left = 0
+content_margin_right = 18.0
+border_width_right = 0
+content_margin_top = 18.0
+border_width_top = 0
+content_margin_bottom = 18.0
+border_width_bottom = 0
+
+[sub_resource type="StyleBoxFlat" id="Style1"]
+bg_color = Color(0.10980392156862745, 0.17254901960784313, 0.2196078431372549, 1)
+border_color = Color(0.0, 0.0, 0.0, 0.0)
+content_margin_left = 18.0
+border_width_left = 0
+content_margin_right = 18.0
+border_width_right = 0
+content_margin_top = 18.0
+border_width_top = 0
+content_margin_bottom = 18.0
+border_width_bottom = 0
+
+[node name="CommunityPage" type="MarginContainer"]
+theme = ExtResource("1")
+theme_override_constants/margin_left = 28
+theme_override_constants/margin_right = 28
+theme_override_constants/margin_top = 28
+theme_override_constants/margin_bottom = 28
+size_flags_horizontal = 3
+
+[node name="PageLayout" type="VBoxContainer" parent="."]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 18
+
+[node name="Heading" type="Label" parent="PageLayout"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+custom_minimum_size = Vector2(0, 34)
+text = "创作中心"
+theme_override_font_sizes/font_size = 24
+theme_override_colors/font_color = Color(1.0, 1.0, 1.0, 1)
+vertical_alignment = 1
+mouse_filter = 2
+
+[node name="Subtitle" type="Label" parent="PageLayout"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+custom_minimum_size = Vector2(0, 22)
+text = "直播游戏时光，分享你发现的每一段故事。"
+theme_override_font_sizes/font_size = 12
+theme_override_colors/font_color = Color(0.5607843137254902, 0.596078431372549, 0.6274509803921569, 1)
+vertical_alignment = 1
+mouse_filter = 2
+autowrap_mode = 2
+
+[node name="StandaloneHint" type="Label" parent="PageLayout"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+custom_minimum_size = Vector2(0, 34)
+text = "从项目主场景进入房间，再打开电脑，即可使用直播与攻略。"
+theme_override_font_sizes/font_size = 24
+theme_override_colors/font_color = Color(0.7803921568627451, 0.8352941176470589, 0.8784313725490196, 1)
+vertical_alignment = 1
+mouse_filter = 2
+autowrap_mode = 2
+
+visible = false
+[node name="Content" type="VBoxContainer" parent="PageLayout"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 18
+
+[node name="SummaryPanel" type="PanelContainer" parent="PageLayout/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("Style0")
+
+[node name="Summary" type="HBoxContainer" parent="PageLayout/Content/SummaryPanel"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 24
+
+[node name="CreationFollowers" type="Label" parent="PageLayout/Content/SummaryPanel/Summary"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+custom_minimum_size = Vector2(0, 34)
+text = "关注者 0"
+theme_override_font_sizes/font_size = 24
+theme_override_colors/font_color = Color(0.4, 0.7529411764705882, 0.9568627450980393, 1)
+vertical_alignment = 1
+mouse_filter = 2
+
+[node name="CreationStreamIncome" type="Label" parent="PageLayout/Content/SummaryPanel/Summary"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+custom_minimum_size = Vector2(0, 22)
+text = "直播收入 0 点"
+theme_override_font_sizes/font_size = 12
+theme_override_colors/font_color = Color(0.7019607843137254, 0.8470588235294118, 0.4823529411764706, 1)
+vertical_alignment = 1
+mouse_filter = 2
+
+[node name="CreationGuideIncome" type="Label" parent="PageLayout/Content/SummaryPanel/Summary"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+custom_minimum_size = Vector2(0, 22)
+text = "攻略收入 0 点"
+theme_override_font_sizes/font_size = 12
+theme_override_colors/font_color = Color(0.7019607843137254, 0.8470588235294118, 0.4823529411764706, 1)
+vertical_alignment = 1
+mouse_filter = 2
+
+[node name="CurrentPanel" type="PanelContainer" parent="PageLayout/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("Style1")
+
+[node name="Current" type="VBoxContainer" parent="PageLayout/Content/CurrentPanel"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 12
+
+[node name="CreationProgress" type="Label" parent="PageLayout/Content/CurrentPanel/Current"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+custom_minimum_size = Vector2(0, 22)
+text = "闲暇时光"
+theme_override_font_sizes/font_size = 12
+theme_override_colors/font_color = Color(0.7803921568627451, 0.8352941176470589, 0.8784313725490196, 1)
+vertical_alignment = 1
+mouse_filter = 2
+autowrap_mode = 2
+
+[node name="Actions" type="HBoxContainer" parent="PageLayout/Content/CurrentPanel/Current"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="CreationStream" type="Button" parent="PageLayout/Content/CurrentPanel/Current/Actions"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "开始直播"
+custom_minimum_size = Vector2(160, 32)
+mouse_default_cursor_shape = 2
+theme_type_variation = "GreenButton"
+
+[node name="CancelGuide" type="Button" parent="PageLayout/Content/CurrentPanel/Current/Actions"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "取消本次攻略制作"
+custom_minimum_size = Vector2(180, 32)
+mouse_default_cursor_shape = 2
+theme_type_variation = "DangerButton"
+
+visible = false
+[node name="CurrentHint" type="Label" parent="PageLayout/Content/CurrentPanel/Current"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+custom_minimum_size = Vector2(0, 22)
+text = "游玩时可以同时直播；制作攻略需要专心整理，期间暂停游玩。直播每 5 分钟结算，攻略制作需要 20 分钟。"
+theme_override_font_sizes/font_size = 12
+theme_override_colors/font_color = Color(0.5607843137254902, 0.596078431372549, 0.6274509803921569, 1)
+vertical_alignment = 1
+mouse_filter = 2
+autowrap_mode = 2
+
+[node name="GuidesHeading" type="Label" parent="PageLayout/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+custom_minimum_size = Vector2(0, 34)
+text = "我的攻略"
+theme_override_font_sizes/font_size = 24
+theme_override_colors/font_color = Color(1.0, 1.0, 1.0, 1)
+vertical_alignment = 1
+mouse_filter = 2
+
+[node name="GuidesHint" type="Label" parent="PageLayout/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+custom_minimum_size = Vector2(0, 22)
+text = "每款游戏首版可发布一篇攻略；质量由已解锁成就决定，发布后还有最多 60 次阅读收益。"
+theme_override_font_sizes/font_size = 12
+theme_override_colors/font_color = Color(0.5607843137254902, 0.596078431372549, 0.6274509803921569, 1)
+vertical_alignment = 1
+mouse_filter = 2
+autowrap_mode = 2
+
+[node name="NoGames" type="Label" parent="PageLayout/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+custom_minimum_size = Vector2(0, 22)
+text = "先拥有一款游戏，游玩 10 分钟后就能整理攻略。"
+theme_override_font_sizes/font_size = 12
+theme_override_colors/font_color = Color(0.5607843137254902, 0.596078431372549, 0.6274509803921569, 1)
+vertical_alignment = 1
+mouse_filter = 2
+autowrap_mode = 2
+
+visible = false
+[node name="Rows" type="VBoxContainer" parent="PageLayout/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 12
+
+[node name="Preview" parent="PageLayout/Content/Rows" instance=ExtResource("preview")]

@@ -51,7 +51,7 @@ func _run() -> void:
 	client.navigate({"kind": "wishlist"})
 	check(client.get_node("%PageContent").get_child_count() == 1, "wishlist renders its own page")
 	client.open_product("midnight_castle")
-	check(client.find_child("ProductAdd", true, false) == null, "unreleased product has no enabled purchase action")
+	check(client.find_child("ProductAdd", true, false).disabled, "unreleased product has no enabled purchase action")
 	client.state.add_to_cart("midnight_castle")
 	check(client.state.cart.is_empty(), "business layer rejects unreleased purchase")
 	client.open_product("distant_signal")

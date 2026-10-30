@@ -98,7 +98,7 @@ func _run() -> void:
 	model.tick_downloads(100)
 	check(model.installed.has("distant_signal"), "owned delisted game remains installable")
 	client.open_product("distant_signal")
-	check(client.find_child("ProductAdd", true, false) == null, "owned delisted product never offers another purchase")
+	check(client.find_child("ProductAdd", true, false).disabled, "owned delisted product never offers another purchase")
 	model.month_index = 4
 	check(model.current_ym() == 200401, "relative save calendar rolls into next year")
 	check(FIXTURE_CATALOG.find_game(&"distant_signal").base_price == 88, "test fixtures never mutate shared catalog")

@@ -1,6 +1,5 @@
 extends Control
 signal dismissed
-const U = preload("res://scripts/client_ui.gd")
 const Data = preload("res://scripts/life/life_data.gd")
 var session: MemoirGameSession
 var rows: VBoxContainer
@@ -8,22 +7,10 @@ var status: Label
 var pending := false
 
 func _ready() -> void:
-	var shade := ColorRect.new()
-	shade.color = Color(0.02, 0.03, 0.04, 0.85)
-	add_child(shade)
-	shade.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	var margin := U.margin(self, 60)
-	margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	var layout := U.vbox(U.panel(margin, "25342f", 24), 14)
-	var header := U.hbox(layout)
-	U.label(header, "成就陈列室", 24, Color("ecd5a5"))
-	U.button(header, "返回房间", func() -> void: dismissed.emit(), "flat", 120)
-	status = U.label(layout, "", 12, U.TEXT, true)
-	var scroll := ScrollContainer.new()
-	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	layout.add_child(scroll)
-	rows = U.vbox(scroll, 10)
+	rows = %Rows
+	status = %Status
+	%ReturnRoom.pressed.connect(func() -> void: dismissed.emit())
+	if session == null: return
 	session.changed.connect(_queue_refresh)
 	refresh()
 
@@ -45,10 +32,17 @@ func refresh() -> void:
 		for milestone: Dictionary in Data.MILESTONES:
 			if not session.state.life["achievements"].get(id, []).has(milestone["id"]): continue
 			count += 1
-			var row := U.hbox(U.panel(rows, "31423b", 14))
-			U.label(row, "★  %s  /  %s" % [session.state.game(id)["title"], milestone["name"]], 12, Color("eddaae"), true)
+			var row = preload("res://scenes/client/components/achievement_row.tscn").instantiate()
+			rows.add_child(row)
+			row.get_node("%Title").text = "★  %s  /  %s" % [session.state.game(id)["title"], milestone["name"]]
 			var game_id := id
 			var key: String = milestone["id"]
 			var selected: bool = session.state.life["displayed"].has({"game_id": id, "achievement": key})
-			U.button(row, "收起" if selected else "展示", func() -> void: session.notice.emit(session.toggle_display(game_id, key)), "blue", 100).name = "Display_" + id + "_" + key
-	if count == 0: U.label(rows, "展架还空着。启动一款游戏，获得第一枚纪念奖杯吧。", 24, U.MUTED, true)
+			var action: Button = row.get_node("%Action")
+			action.text = "收起" if selected else "展示"
+			action.pressed.connect(func() -> void: session.notice.emit(session.toggle_display(game_id, key)))
+			action.name = "Display_" + id + "_" + key
+	if count == 0:
+		var label = preload("res://scenes/client/components/text_label.tscn").instantiate()
+		label.text = "展架还空着。启动一款游戏，获得第一枚纪念奖杯吧。"
+		rows.add_child(label)

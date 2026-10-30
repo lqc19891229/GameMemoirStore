@@ -2,7 +2,6 @@ class_name MemoirAppWindow
 extends PanelContainer
 signal close_requested
 signal minimize_requested
-const U = preload("res://scripts/client_ui.gd")
 var content: Control
 var body: MarginContainer
 var window_title := "应用"
@@ -10,19 +9,12 @@ var dragging := false
 var drag_origin := Vector2.ZERO
 
 func _ready() -> void:
-	add_theme_stylebox_override("panel", U.style("182735", "668494", 2, 0))
-	var box := U.vbox(self, 0)
-	box.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	var header := U.hbox(U.panel(box, "253d4d", 4), 6)
-	header.get_parent().custom_minimum_size.y = 32
-	var title := U.label(header, "  " + window_title, 12, Color("d9e9eb"))
-	title.mouse_filter = Control.MOUSE_FILTER_STOP
-	title.gui_input.connect(_drag)
-	U.button(header, "—", func() -> void: minimize_requested.emit(), "flat", 36)
-	U.button(header, "□", fit, "flat", 36)
-	U.button(header, "×", func() -> void: close_requested.emit(), "danger", 36)
-	body = U.margin(box, 0)
-	body.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	%WindowTitle.text = "  " + window_title
+	%WindowTitle.gui_input.connect(_drag)
+	%Minimize.pressed.connect(func() -> void: minimize_requested.emit())
+	%Maximize.pressed.connect(fit)
+	%Close.pressed.connect(func() -> void: close_requested.emit())
+	body = %Body
 	gui_input.connect(func(event: InputEvent) -> void:
 		if event is InputEventMouseButton and event.pressed: move_to_front()
 	)

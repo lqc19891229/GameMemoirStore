@@ -1,12 +1,829 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=10 format=3]
 
-[ext_resource type="Script" path="res://scripts/life/player_room.gd" id="1"]
+[ext_resource type="Theme" path="res://assets/client_theme.tres" id="1"]
+
+[ext_resource type="Script" path="res://scripts/life/player_room.gd" id="2"]
+
+[ext_resource type="PackedScene" path="res://scenes/life/furniture/desk.tscn" id="3"]
+
+[ext_resource type="PackedScene" path="res://scenes/life/furniture/computer.tscn" id="4"]
+
+[ext_resource type="PackedScene" path="res://scenes/life/furniture/peripheral.tscn" id="5"]
+
+[ext_resource type="PackedScene" path="res://scenes/life/furniture/cabinet.tscn" id="6"]
+
+[ext_resource type="PackedScene" path="res://scenes/life/furniture/decor.tscn" id="7"]
+
+[sub_resource type="StyleBoxFlat" id="Style0"]
+bg_color = Color(0.14901960784313725, 0.24313725490196078, 0.23137254901960785, 1)
+border_color = Color(0.0, 0.0, 0.0, 0.0)
+content_margin_left = 18.0
+border_width_left = 0
+content_margin_right = 18.0
+border_width_right = 0
+content_margin_top = 18.0
+border_width_top = 0
+content_margin_bottom = 18.0
+border_width_bottom = 0
+
+[sub_resource type="StyleBoxFlat" id="Style1"]
+bg_color = Color(0.14901960784313725, 0.24313725490196078, 0.23137254901960785, 1)
+border_color = Color(0.0, 0.0, 0.0, 0.0)
+content_margin_left = 14.0
+border_width_left = 0
+content_margin_right = 14.0
+border_width_right = 0
+content_margin_top = 14.0
+border_width_top = 0
+content_margin_bottom = 14.0
+border_width_bottom = 0
 
 [node name="PlayerRoom" type="Control"]
+theme = ExtResource("1")
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-script = ExtResource("1")
+script = ExtResource("2")
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+color = Color(0.705882, 0.635294, 0.541176, 1)
+
+
+[node name="RoomCanvas" type="Control" parent="."]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+offset_top = 74.0
+offset_bottom = -116.0
+mouse_filter = 2
+
+[node name="Wall" type="ColorRect" parent="RoomCanvas"]
+mouse_filter = 2
+color = Color(0.7372549019607844, 0.6823529411764706, 0.5882352941176471, 1)
+layout_mode = 1
+anchor_left = 0.0
+anchor_top = 0.0
+anchor_right = 1.0
+anchor_bottom = 0.6666666666666666
+
+[node name="Floor" type="ColorRect" parent="RoomCanvas"]
+mouse_filter = 2
+color = Color(0.5607843137254902, 0.4745098039215686, 0.39215686274509803, 1)
+layout_mode = 1
+anchor_left = 0.0
+anchor_top = 0.6666666666666666
+anchor_right = 1.0
+anchor_bottom = 1.0
+
+[node name="Skirting" type="ColorRect" parent="RoomCanvas"]
+mouse_filter = 2
+color = Color(0.4196078431372549, 0.4117647058823529, 0.34509803921568627, 1)
+layout_mode = 1
+anchor_left = 0.0
+anchor_top = 0.65
+anchor_right = 1.0
+anchor_bottom = 0.675
+
+[node name="WindowFrame" type="ColorRect" parent="RoomCanvas"]
+mouse_filter = 2
+color = Color(0.42745098039215684, 0.4549019607843137, 0.403921568627451, 1)
+layout_mode = 1
+anchor_left = 0.0703125
+anchor_top = 0.06666666666666667
+anchor_right = 0.3
+anchor_bottom = 0.46111111111111114
+
+[node name="WindowSky" type="ColorRect" parent="RoomCanvas"]
+mouse_filter = 2
+color = Color(0.44313725490196076, 0.5843137254901961, 0.6078431372549019, 1)
+layout_mode = 1
+anchor_left = 0.0796875
+anchor_top = 0.08333333333333333
+anchor_right = 0.290625
+anchor_bottom = 0.44166666666666665
+
+[node name="FloorLine240" type="ColorRect" parent="RoomCanvas"]
+mouse_filter = 2
+color = Color(0.47058823529411764, 0.4196078431372549, 0.35294117647058826, 1)
+layout_mode = 1
+anchor_left = 0.0
+anchor_top = 0.6666666666666666
+anchor_right = 1.0
+anchor_bottom = 0.6694444444444444
+
+[node name="FloorJoint0_240" type="ColorRect" parent="RoomCanvas"]
+mouse_filter = 2
+color = Color(0.47058823529411764, 0.4196078431372549, 0.35294117647058826, 1)
+layout_mode = 1
+anchor_left = 0.0
+anchor_top = 0.6666666666666666
+anchor_right = 0.00078125
+anchor_bottom = 0.7333333333333333
+
+[node name="FloorJoint100_240" type="ColorRect" parent="RoomCanvas"]
+mouse_filter = 2
+color = Color(0.47058823529411764, 0.4196078431372549, 0.35294117647058826, 1)
+layout_mode = 1
+anchor_left = 0.15625
+anchor_top = 0.6666666666666666
+anchor_right = 0.15703125
+anchor_bottom = 0.7333333333333333
+
+[node name="FloorJoint200_240" type="ColorRect" parent="RoomCanvas"]
+mouse_filter = 2
+color = Color(0.47058823529411764, 0.4196078431372549, 0.35294117647058826, 1)
+layout_mode = 1
+anchor_left = 0.3125
+anchor_top = 0.6666666666666666
+anchor_right = 0.31328125
+anchor_bottom = 0.7333333333333333
+
+[node name="FloorJoint300_240" type="ColorRect" parent="RoomCanvas"]
+mouse_filter = 2
+color = Color(0.47058823529411764, 0.4196078431372549, 0.35294117647058826, 1)
+layout_mode = 1
+anchor_left = 0.46875
+anchor_top = 0.6666666666666666
+anchor_right = 0.46953125
+anchor_bottom = 0.7333333333333333
+
+[node name="FloorJoint400_240" type="ColorRect" parent="RoomCanvas"]
+mouse_filter = 2
+color = Color(0.47058823529411764, 0.4196078431372549, 0.35294117647058826, 1)
+layout_mode = 1
+anchor_left = 0.625
+anchor_top = 0.6666666666666666
+anchor_right = 0.62578125
+anchor_bottom = 0.7333333333333333
+
+[node name="FloorJoint500_240" type="ColorRect" parent="RoomCanvas"]
+mouse_filter = 2
+color = Color(0.47058823529411764, 0.4196078431372549, 0.35294117647058826, 1)
+layout_mode = 1
+anchor_left = 0.78125
+anchor_top = 0.6666666666666666
+anchor_right = 0.78203125
+anchor_bottom = 0.7333333333333333
+
+[node name="FloorJoint600_240" type="ColorRect" parent="RoomCanvas"]
+mouse_filter = 2
+color = Color(0.47058823529411764, 0.4196078431372549, 0.35294117647058826, 1)
+layout_mode = 1
+anchor_left = 0.9375
+anchor_top = 0.6666666666666666
+anchor_right = 0.93828125
+anchor_bottom = 0.7333333333333333
+
+[node name="FloorLine264" type="ColorRect" parent="RoomCanvas"]
+mouse_filter = 2
+color = Color(0.47058823529411764, 0.4196078431372549, 0.35294117647058826, 1)
+layout_mode = 1
+anchor_left = 0.0
+anchor_top = 0.7333333333333333
+anchor_right = 1.0
+anchor_bottom = 0.7361111111111112
+
+[node name="FloorJoint72_264" type="ColorRect" parent="RoomCanvas"]
+mouse_filter = 2
+color = Color(0.47058823529411764, 0.4196078431372549, 0.35294117647058826, 1)
+layout_mode = 1
+anchor_left = 0.1125
+anchor_top = 0.7333333333333333
+anchor_right = 0.11328125
+anchor_bottom = 0.8
+
+[node name="FloorJoint172_264" type="ColorRect" parent="RoomCanvas"]
+mouse_filter = 2
+color = Color(0.47058823529411764, 0.4196078431372549, 0.35294117647058826, 1)
+layout_mode = 1
+anchor_left = 0.26875
+anchor_top = 0.7333333333333333
+anchor_right = 0.26953125
+anchor_bottom = 0.8
+
+[node name="FloorJoint272_264" type="ColorRect" parent="RoomCanvas"]
+mouse_filter = 2
+color = Color(0.47058823529411764, 0.4196078431372549, 0.35294117647058826, 1)
+layout_mode = 1
+anchor_left = 0.425
+anchor_top = 0.7333333333333333
+anchor_right = 0.42578125
+anchor_bottom = 0.8
+
+[node name="FloorJoint372_264" type="ColorRect" parent="RoomCanvas"]
+mouse_filter = 2
+color = Color(0.47058823529411764, 0.4196078431372549, 0.35294117647058826, 1)
+layout_mode = 1
+anchor_left = 0.58125
+anchor_top = 0.7333333333333333
+anchor_right = 0.58203125
+anchor_bottom = 0.8
+
+[node name="FloorJoint472_264" type="ColorRect" parent="RoomCanvas"]
+mouse_filter = 2
+color = Color(0.47058823529411764, 0.4196078431372549, 0.35294117647058826, 1)
+layout_mode = 1
+anchor_left = 0.7375
+anchor_top = 0.7333333333333333
+anchor_right = 0.73828125
+anchor_bottom = 0.8
+
+[node name="FloorJoint572_264" type="ColorRect" parent="RoomCanvas"]
+mouse_filter = 2
+color = Color(0.47058823529411764, 0.4196078431372549, 0.35294117647058826, 1)
+layout_mode = 1
+anchor_left = 0.89375
+anchor_top = 0.7333333333333333
+anchor_right = 0.89453125
+anchor_bottom = 0.8
+
+[node name="FloorLine288" type="ColorRect" parent="RoomCanvas"]
+mouse_filter = 2
+color = Color(0.47058823529411764, 0.4196078431372549, 0.35294117647058826, 1)
+layout_mode = 1
+anchor_left = 0.0
+anchor_top = 0.8
+anchor_right = 1.0
+anchor_bottom = 0.8027777777777778
+
+[node name="FloorJoint0_288" type="ColorRect" parent="RoomCanvas"]
+mouse_filter = 2
+color = Color(0.47058823529411764, 0.4196078431372549, 0.35294117647058826, 1)
+layout_mode = 1
+anchor_left = 0.0
+anchor_top = 0.8
+anchor_right = 0.00078125
+anchor_bottom = 0.8666666666666667
+
+[node name="FloorJoint100_288" type="ColorRect" parent="RoomCanvas"]
+mouse_filter = 2
+color = Color(0.47058823529411764, 0.4196078431372549, 0.35294117647058826, 1)
+layout_mode = 1
+anchor_left = 0.15625
+anchor_top = 0.8
+anchor_right = 0.15703125
+anchor_bottom = 0.8666666666666667
+
+[node name="FloorJoint200_288" type="ColorRect" parent="RoomCanvas"]
+mouse_filter = 2
+color = Color(0.47058823529411764, 0.4196078431372549, 0.35294117647058826, 1)
+layout_mode = 1
+anchor_left = 0.3125
+anchor_top = 0.8
+anchor_right = 0.31328125
+anchor_bottom = 0.8666666666666667
+
+[node name="FloorJoint300_288" type="ColorRect" parent="RoomCanvas"]
+mouse_filter = 2
+color = Color(0.47058823529411764, 0.4196078431372549, 0.35294117647058826, 1)
+layout_mode = 1
+anchor_left = 0.46875
+anchor_top = 0.8
+anchor_right = 0.46953125
+anchor_bottom = 0.8666666666666667
+
+[node name="FloorJoint400_288" type="ColorRect" parent="RoomCanvas"]
+mouse_filter = 2
+color = Color(0.47058823529411764, 0.4196078431372549, 0.35294117647058826, 1)
+layout_mode = 1
+anchor_left = 0.625
+anchor_top = 0.8
+anchor_right = 0.62578125
+anchor_bottom = 0.8666666666666667
+
+[node name="FloorJoint500_288" type="ColorRect" parent="RoomCanvas"]
+mouse_filter = 2
+color = Color(0.47058823529411764, 0.4196078431372549, 0.35294117647058826, 1)
+layout_mode = 1
+anchor_left = 0.78125
+anchor_top = 0.8
+anchor_right = 0.78203125
+anchor_bottom = 0.8666666666666667
+
+[node name="FloorJoint600_288" type="ColorRect" parent="RoomCanvas"]
+mouse_filter = 2
+color = Color(0.47058823529411764, 0.4196078431372549, 0.35294117647058826, 1)
+layout_mode = 1
+anchor_left = 0.9375
+anchor_top = 0.8
+anchor_right = 0.93828125
+anchor_bottom = 0.8666666666666667
+
+[node name="FloorLine312" type="ColorRect" parent="RoomCanvas"]
+mouse_filter = 2
+color = Color(0.47058823529411764, 0.4196078431372549, 0.35294117647058826, 1)
+layout_mode = 1
+anchor_left = 0.0
+anchor_top = 0.8666666666666667
+anchor_right = 1.0
+anchor_bottom = 0.8694444444444445
+
+[node name="FloorJoint72_312" type="ColorRect" parent="RoomCanvas"]
+mouse_filter = 2
+color = Color(0.47058823529411764, 0.4196078431372549, 0.35294117647058826, 1)
+layout_mode = 1
+anchor_left = 0.1125
+anchor_top = 0.8666666666666667
+anchor_right = 0.11328125
+anchor_bottom = 0.9333333333333333
+
+[node name="FloorJoint172_312" type="ColorRect" parent="RoomCanvas"]
+mouse_filter = 2
+color = Color(0.47058823529411764, 0.4196078431372549, 0.35294117647058826, 1)
+layout_mode = 1
+anchor_left = 0.26875
+anchor_top = 0.8666666666666667
+anchor_right = 0.26953125
+anchor_bottom = 0.9333333333333333
+
+[node name="FloorJoint272_312" type="ColorRect" parent="RoomCanvas"]
+mouse_filter = 2
+color = Color(0.47058823529411764, 0.4196078431372549, 0.35294117647058826, 1)
+layout_mode = 1
+anchor_left = 0.425
+anchor_top = 0.8666666666666667
+anchor_right = 0.42578125
+anchor_bottom = 0.9333333333333333
+
+[node name="FloorJoint372_312" type="ColorRect" parent="RoomCanvas"]
+mouse_filter = 2
+color = Color(0.47058823529411764, 0.4196078431372549, 0.35294117647058826, 1)
+layout_mode = 1
+anchor_left = 0.58125
+anchor_top = 0.8666666666666667
+anchor_right = 0.58203125
+anchor_bottom = 0.9333333333333333
+
+[node name="FloorJoint472_312" type="ColorRect" parent="RoomCanvas"]
+mouse_filter = 2
+color = Color(0.47058823529411764, 0.4196078431372549, 0.35294117647058826, 1)
+layout_mode = 1
+anchor_left = 0.7375
+anchor_top = 0.8666666666666667
+anchor_right = 0.73828125
+anchor_bottom = 0.9333333333333333
+
+[node name="FloorJoint572_312" type="ColorRect" parent="RoomCanvas"]
+mouse_filter = 2
+color = Color(0.47058823529411764, 0.4196078431372549, 0.35294117647058826, 1)
+layout_mode = 1
+anchor_left = 0.89375
+anchor_top = 0.8666666666666667
+anchor_right = 0.89453125
+anchor_bottom = 0.9333333333333333
+
+[node name="FloorLine336" type="ColorRect" parent="RoomCanvas"]
+mouse_filter = 2
+color = Color(0.47058823529411764, 0.4196078431372549, 0.35294117647058826, 1)
+layout_mode = 1
+anchor_left = 0.0
+anchor_top = 0.9333333333333333
+anchor_right = 1.0
+anchor_bottom = 0.9361111111111111
+
+[node name="FloorJoint0_336" type="ColorRect" parent="RoomCanvas"]
+mouse_filter = 2
+color = Color(0.47058823529411764, 0.4196078431372549, 0.35294117647058826, 1)
+layout_mode = 1
+anchor_left = 0.0
+anchor_top = 0.9333333333333333
+anchor_right = 0.00078125
+anchor_bottom = 1.0
+
+[node name="FloorJoint100_336" type="ColorRect" parent="RoomCanvas"]
+mouse_filter = 2
+color = Color(0.47058823529411764, 0.4196078431372549, 0.35294117647058826, 1)
+layout_mode = 1
+anchor_left = 0.15625
+anchor_top = 0.9333333333333333
+anchor_right = 0.15703125
+anchor_bottom = 1.0
+
+[node name="FloorJoint200_336" type="ColorRect" parent="RoomCanvas"]
+mouse_filter = 2
+color = Color(0.47058823529411764, 0.4196078431372549, 0.35294117647058826, 1)
+layout_mode = 1
+anchor_left = 0.3125
+anchor_top = 0.9333333333333333
+anchor_right = 0.31328125
+anchor_bottom = 1.0
+
+[node name="FloorJoint300_336" type="ColorRect" parent="RoomCanvas"]
+mouse_filter = 2
+color = Color(0.47058823529411764, 0.4196078431372549, 0.35294117647058826, 1)
+layout_mode = 1
+anchor_left = 0.46875
+anchor_top = 0.9333333333333333
+anchor_right = 0.46953125
+anchor_bottom = 1.0
+
+[node name="FloorJoint400_336" type="ColorRect" parent="RoomCanvas"]
+mouse_filter = 2
+color = Color(0.47058823529411764, 0.4196078431372549, 0.35294117647058826, 1)
+layout_mode = 1
+anchor_left = 0.625
+anchor_top = 0.9333333333333333
+anchor_right = 0.62578125
+anchor_bottom = 1.0
+
+[node name="FloorJoint500_336" type="ColorRect" parent="RoomCanvas"]
+mouse_filter = 2
+color = Color(0.47058823529411764, 0.4196078431372549, 0.35294117647058826, 1)
+layout_mode = 1
+anchor_left = 0.78125
+anchor_top = 0.9333333333333333
+anchor_right = 0.78203125
+anchor_bottom = 1.0
+
+[node name="FloorJoint600_336" type="ColorRect" parent="RoomCanvas"]
+mouse_filter = 2
+color = Color(0.47058823529411764, 0.4196078431372549, 0.35294117647058826, 1)
+layout_mode = 1
+anchor_left = 0.9375
+anchor_top = 0.9333333333333333
+anchor_right = 0.93828125
+anchor_bottom = 1.0
+
+[node name="Building0" type="ColorRect" parent="RoomCanvas"]
+mouse_filter = 2
+color = Color(0.3137254901960784, 0.4235294117647059, 0.4627450980392157, 1)
+layout_mode = 1
+anchor_left = 0.084375
+anchor_top = 0.35
+anchor_right = 0.109375
+anchor_bottom = 0.41944444444444445
+
+[node name="Building1" type="ColorRect" parent="RoomCanvas"]
+mouse_filter = 2
+color = Color(0.3137254901960784, 0.4235294117647059, 0.4627450980392157, 1)
+layout_mode = 1
+anchor_left = 0.1125
+anchor_top = 0.2972222222222222
+anchor_right = 0.1375
+anchor_bottom = 0.41944444444444445
+
+[node name="Building2" type="ColorRect" parent="RoomCanvas"]
+mouse_filter = 2
+color = Color(0.3137254901960784, 0.4235294117647059, 0.4627450980392157, 1)
+layout_mode = 1
+anchor_left = 0.140625
+anchor_top = 0.24444444444444444
+anchor_right = 0.165625
+anchor_bottom = 0.41944444444444445
+
+[node name="Building3" type="ColorRect" parent="RoomCanvas"]
+mouse_filter = 2
+color = Color(0.3137254901960784, 0.4235294117647059, 0.4627450980392157, 1)
+layout_mode = 1
+anchor_left = 0.16875
+anchor_top = 0.19166666666666668
+anchor_right = 0.19375
+anchor_bottom = 0.41944444444444445
+
+[node name="Building4" type="ColorRect" parent="RoomCanvas"]
+mouse_filter = 2
+color = Color(0.3137254901960784, 0.4235294117647059, 0.4627450980392157, 1)
+layout_mode = 1
+anchor_left = 0.196875
+anchor_top = 0.3055555555555556
+anchor_right = 0.221875
+anchor_bottom = 0.41944444444444445
+
+[node name="Building5" type="ColorRect" parent="RoomCanvas"]
+mouse_filter = 2
+color = Color(0.3137254901960784, 0.4235294117647059, 0.4627450980392157, 1)
+layout_mode = 1
+anchor_left = 0.225
+anchor_top = 0.25277777777777777
+anchor_right = 0.25
+anchor_bottom = 0.41944444444444445
+
+[node name="Building6" type="ColorRect" parent="RoomCanvas"]
+mouse_filter = 2
+color = Color(0.3137254901960784, 0.4235294117647059, 0.4627450980392157, 1)
+layout_mode = 1
+anchor_left = 0.253125
+anchor_top = 0.2
+anchor_right = 0.278125
+anchor_bottom = 0.41944444444444445
+
+[node name="WindowVertical" type="ColorRect" parent="RoomCanvas"]
+mouse_filter = 2
+color = Color(0.8352941176470589, 0.7764705882352941, 0.6431372549019608, 1)
+layout_mode = 1
+anchor_left = 0.178125
+anchor_top = 0.08333333333333333
+anchor_right = 0.1875
+anchor_bottom = 0.44166666666666665
+
+[node name="WindowHorizontal" type="ColorRect" parent="RoomCanvas"]
+mouse_filter = 2
+color = Color(0.8352941176470589, 0.7764705882352941, 0.6431372549019608, 1)
+layout_mode = 1
+anchor_left = 0.0796875
+anchor_top = 0.25555555555555554
+anchor_right = 0.290625
+anchor_bottom = 0.26944444444444443
+
+[node name="WindowSill" type="ColorRect" parent="RoomCanvas"]
+mouse_filter = 2
+color = Color(0.44313725490196076, 0.4588235294117647, 0.38823529411764707, 1)
+layout_mode = 1
+anchor_left = 0.05625
+anchor_top = 0.44722222222222224
+anchor_right = 0.3140625
+anchor_bottom = 0.4722222222222222
+
+[node name="RugBorder" type="ColorRect" parent="RoomCanvas"]
+mouse_filter = 2
+color = Color(0.36470588235294116, 0.4666666666666667, 0.4470588235294118, 1)
+layout_mode = 1
+anchor_left = 0.2734375
+anchor_top = 0.8
+anchor_right = 0.709375
+anchor_bottom = 0.9388888888888889
+
+[node name="Rug" type="ColorRect" parent="RoomCanvas"]
+mouse_filter = 2
+color = Color(0.49019607843137253, 0.5686274509803921, 0.5019607843137255, 1)
+layout_mode = 1
+anchor_left = 0.2890625
+anchor_top = 0.8194444444444444
+anchor_right = 0.69375
+anchor_bottom = 0.9166666666666666
+
+[node name="PosterFrame" type="ColorRect" parent="RoomCanvas"]
+mouse_filter = 2
+color = Color(0.3607843137254902, 0.3843137254901961, 0.33725490196078434, 1)
+layout_mode = 1
+anchor_left = 0.4203125
+anchor_top = 0.05
+anchor_right = 0.5453125
+anchor_bottom = 0.2833333333333333
+
+[node name="Poster" type="ColorRect" parent="RoomCanvas"]
+mouse_filter = 2
+color = Color(0.1450980392156863, 0.27450980392156865, 0.3215686274509804, 1)
+layout_mode = 1
+anchor_left = 0.428125
+anchor_top = 0.06388888888888888
+anchor_right = 0.5375
+anchor_bottom = 0.26944444444444443
+
+[node name="PosterTitle" type="ColorRect" parent="RoomCanvas"]
+mouse_filter = 2
+color = Color(0.7098039215686275, 0.7058823529411765, 0.5333333333333333, 1)
+layout_mode = 1
+anchor_left = 0.44375
+anchor_top = 0.10555555555555556
+anchor_right = 0.5203125
+anchor_bottom = 0.11944444444444445
+
+[node name="PosterArt" type="ColorRect" parent="RoomCanvas"]
+mouse_filter = 2
+color = Color(0.39215686274509803, 0.5529411764705883, 0.5058823529411764, 1)
+layout_mode = 1
+anchor_left = 0.4609375
+anchor_top = 0.14166666666666666
+anchor_right = 0.503125
+anchor_bottom = 0.21666666666666667
+
+[node name="Shelf" type="ColorRect" parent="RoomCanvas"]
+mouse_filter = 2
+color = Color(0.45098039215686275, 0.44313725490196076, 0.37254901960784315, 1)
+layout_mode = 1
+anchor_left = 0.60625
+anchor_top = 0.16666666666666666
+anchor_right = 0.7109375
+anchor_bottom = 0.18333333333333332
+
+[node name="GameBox0" type="ColorRect" parent="RoomCanvas"]
+mouse_filter = 2
+color = Color(0.6666666666666666, 0.5843137254901961, 0.42745098039215684, 1)
+layout_mode = 1
+anchor_left = 0.6140625
+anchor_top = 0.09722222222222222
+anchor_right = 0.6265625
+anchor_bottom = 0.16666666666666666
+
+[node name="GameBox1" type="ColorRect" parent="RoomCanvas"]
+mouse_filter = 2
+color = Color(0.4, 0.4823529411764706, 0.4392156862745098, 1)
+layout_mode = 1
+anchor_left = 0.63125
+anchor_top = 0.1111111111111111
+anchor_right = 0.64375
+anchor_bottom = 0.16666666666666666
+
+[node name="GameBox2" type="ColorRect" parent="RoomCanvas"]
+mouse_filter = 2
+color = Color(0.6666666666666666, 0.5843137254901961, 0.42745098039215684, 1)
+layout_mode = 1
+anchor_left = 0.6484375
+anchor_top = 0.09722222222222222
+anchor_right = 0.6609375
+anchor_bottom = 0.16666666666666666
+
+[node name="GameBox3" type="ColorRect" parent="RoomCanvas"]
+mouse_filter = 2
+color = Color(0.4, 0.4823529411764706, 0.4392156862745098, 1)
+layout_mode = 1
+anchor_left = 0.665625
+anchor_top = 0.1111111111111111
+anchor_right = 0.678125
+anchor_bottom = 0.16666666666666666
+
+[node name="GameBox4" type="ColorRect" parent="RoomCanvas"]
+mouse_filter = 2
+color = Color(0.6666666666666666, 0.5843137254901961, 0.42745098039215684, 1)
+layout_mode = 1
+anchor_left = 0.6828125
+anchor_top = 0.09722222222222222
+anchor_right = 0.6953125
+anchor_bottom = 0.16666666666666666
+
+[node name="Furniture_desk" parent="RoomCanvas" instance=ExtResource("3")]
+unique_name_in_owner = true
+layout_mode = 1
+anchor_left = 0.1484375
+anchor_top = 0.6388888888888888
+anchor_right = 0.65625
+anchor_bottom = 0.9583333333333334
+custom_minimum_size = Vector2(0, 0)
+tooltip_text = "更换家具"
+
+[node name="Furniture_computer" parent="RoomCanvas" instance=ExtResource("4")]
+unique_name_in_owner = true
+layout_mode = 1
+anchor_left = 0.34375
+anchor_top = 0.35555555555555557
+anchor_right = 0.5734375
+anchor_bottom = 0.6666666666666666
+custom_minimum_size = Vector2(0, 0)
+tooltip_text = "使用电脑"
+
+[node name="Furniture_peripheral" parent="RoomCanvas" instance=ExtResource("5")]
+unique_name_in_owner = true
+layout_mode = 1
+anchor_left = 0.3328125
+anchor_top = 0.6083333333333333
+anchor_right = 0.5640625
+anchor_bottom = 0.6805555555555556
+custom_minimum_size = Vector2(0, 0)
+tooltip_text = "更换外设"
+
+[node name="Furniture_cabinet" parent="RoomCanvas" instance=ExtResource("6")]
+unique_name_in_owner = true
+layout_mode = 1
+anchor_left = 0.7609375
+anchor_top = 0.2777777777777778
+anchor_right = 0.9171875
+anchor_bottom = 0.8888888888888888
+custom_minimum_size = Vector2(0, 0)
+tooltip_text = "打开成就展示柜"
+
+[node name="Furniture_decor" parent="RoomCanvas" instance=ExtResource("7")]
+unique_name_in_owner = true
+layout_mode = 1
+anchor_left = 0.190625
+anchor_top = 0.4388888888888889
+anchor_right = 0.26875
+anchor_bottom = 0.6666666666666666
+custom_minimum_size = Vector2(0, 0)
+tooltip_text = "更换装饰"
+
+[node name="Header" type="PanelContainer" parent="."]
+unique_name_in_owner = true
+layout_mode = 1
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("Style0")
+anchor_right = 1.0
+
+[node name="HeaderRow" type="HBoxContainer" parent="Header"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 16
+
+[node name="RoomTitle" type="Label" parent="Header/HeaderRow"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+custom_minimum_size = Vector2(0, 34)
+text = "游戏回忆录"
+theme_override_font_sizes/font_size = 24
+theme_override_colors/font_color = Color(0.9372549019607843, 0.8745098039215686, 0.7294117647058823, 1)
+vertical_alignment = 1
+mouse_filter = 2
+
+[node name="Wallet" type="Label" parent="Header/HeaderRow"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+custom_minimum_size = Vector2(0, 22)
+text = "2003 年 9 月 · 钱包 160 点"
+theme_override_font_sizes/font_size = 12
+theme_override_colors/font_color = Color(0.7764705882352941, 0.8196078431372549, 0.6980392156862745, 1)
+vertical_alignment = 1
+mouse_filter = 2
+
+[node name="RoomComputer" type="Button" parent="Header/HeaderRow"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "使用电脑  >"
+custom_minimum_size = Vector2(150, 32)
+mouse_default_cursor_shape = 2
+theme_type_variation = "BlueButton"
+
+[node name="Footer" type="PanelContainer" parent="."]
+unique_name_in_owner = true
+layout_mode = 1
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("Style1")
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -116.0
+
+[node name="FooterLayout" type="VBoxContainer" parent="Footer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 4
+
+[node name="Tools" type="HBoxContainer" parent="Footer/FooterLayout"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="Activity" type="Label" parent="Footer/FooterLayout/Tools"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+custom_minimum_size = Vector2(0, 22)
+text = "闲暇时光 · 选一款游戏，开始今天的回忆"
+theme_override_font_sizes/font_size = 12
+theme_override_colors/font_color = Color(0.9019607843137255, 0.8392156862745098, 0.7176470588235294, 1)
+vertical_alignment = 1
+mouse_filter = 2
+autowrap_mode = 2
+
+[node name="RoomInventory" type="Button" parent="Footer/FooterLayout/Tools"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "物品与设备"
+custom_minimum_size = Vector2(140, 32)
+mouse_default_cursor_shape = 2
+theme_type_variation = "FlatButton"
+
+[node name="RoomCabinet" type="Button" parent="Footer/FooterLayout/Tools"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "成就展示柜"
+custom_minimum_size = Vector2(140, 32)
+mouse_default_cursor_shape = 2
+theme_type_variation = "FlatButton"
+
+[node name="RoomLayout" type="Button" parent="Footer/FooterLayout/Tools"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "换个布置"
+custom_minimum_size = Vector2(110, 32)
+mouse_default_cursor_shape = 2
+theme_type_variation = "FlatButton"
+
+[node name="Attributes" type="Label" parent="Footer/FooterLayout"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+custom_minimum_size = Vector2(0, 22)
+text = "玩家能力   反应 10 / 操作 10 / 思考 10 / 探索 10 / 规划 10 / 协作 10"
+theme_override_font_sizes/font_size = 12
+theme_override_colors/font_color = Color(0.6549019607843137, 0.7254901960784313, 0.6705882352941176, 1)
+vertical_alignment = 1
+mouse_filter = 2
+autowrap_mode = 2
+
+[node name="Hint" type="Label" parent="Footer/FooterLayout"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+custom_minimum_size = Vector2(0, 22)
+text = "点击电脑进入桌面 · 选购与安装的物品会出现在房间 · 1 秒推进 1 分钟模拟时间"
+theme_override_font_sizes/font_size = 12
+theme_override_colors/font_color = Color(0.5647058823529412, 0.6549019607843137, 0.6039215686274509, 1)
+vertical_alignment = 1
+mouse_filter = 2
+autowrap_mode = 2

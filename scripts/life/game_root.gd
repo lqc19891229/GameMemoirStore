@@ -1,5 +1,4 @@
 extends Control
-const U = preload("res://scripts/client_ui.gd")
 var session: MemoirGameSession
 var room: Control
 var desktop: Control
@@ -7,15 +6,15 @@ var cabinet: Control
 var toast: Label
 var toast_timer: Timer
 
-func _ready() -> void:
+func _enter_tree() -> void:
+	# Inject before child _ready; the GameSession sibling is initialized first.
 	session = $GameSession
-	room = preload("res://scenes/life/player_room.tscn").instantiate()
-	room.session = session
-	add_child(room)
-	desktop = preload("res://scenes/life/computer_desktop.tscn").instantiate()
-	desktop.session = session
-	add_child(desktop)
-	desktop.hide()
+	room = $PlayerRoom
+	desktop = $ComputerDesktop
+	cabinet = $AchievementCabinet
+	for view in [room, desktop, cabinet]: view.session = session
+
+func _ready() -> void:
 	room.computer_requested.connect(show_desktop)
 	room.inventory_requested.connect(func() -> void:
 		show_desktop()
@@ -23,23 +22,14 @@ func _ready() -> void:
 	)
 	room.cabinet_requested.connect(show_cabinet)
 	desktop.room_requested.connect(show_room)
+	cabinet.dismissed.connect(cabinet.hide)
 	session.play_requested.connect(func(_id: String) -> void:
 		show_desktop()
 		desktop.open_app("game")
 	)
-	toast = U.label(self, "", 12, Color("f4dfb2"), true)
-	toast.add_theme_stylebox_override("normal", U.style("2b403b", "a6b998", 1, 12))
-	toast.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_WIDE)
-	toast.offset_left = 28
-	toast.offset_right = -28
-	toast.offset_top = -165
-	toast.offset_bottom = -123
-	toast.hide()
-	toast_timer = Timer.new()
-	toast_timer.one_shot = true
-	toast_timer.wait_time = 4
+	toast = %Toast
+	toast_timer = %ToastTimer
 	toast_timer.timeout.connect(toast.hide)
-	add_child(toast_timer)
 	session.notice.connect(show_notice)
 	_capture.call_deferred()
 
@@ -54,11 +44,6 @@ func show_desktop() -> void:
 	desktop.show()
 
 func show_cabinet() -> void:
-	if not is_instance_valid(cabinet):
-		cabinet = preload("res://scenes/life/achievement_cabinet.tscn").instantiate()
-		cabinet.session = session
-		add_child(cabinet)
-		cabinet.dismissed.connect(cabinet.hide)
 	cabinet.show()
 	cabinet.move_to_front()
 	cabinet.refresh()

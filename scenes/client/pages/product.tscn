@@ -1,0 +1,611 @@
+[gd_scene load_steps=9 format=3]
+
+[ext_resource type="Theme" path="res://assets/client_theme.tres" id="1"]
+
+[ext_resource type="Texture2D" path="res://assets/art/CTA3/CTA301.png" id="2"]
+
+[ext_resource type="Texture2D" path="res://assets/art/CTA3/CTA302.png" id="3"]
+
+[ext_resource type="Texture2D" path="res://assets/art/CTA3/CTA303.png" id="4"]
+
+[ext_resource type="Texture2D" path="res://assets/art/CTA3/CTA304.png" id="5"]
+
+[ext_resource type="Texture2D" path="res://assets/art/CTA3/CTA3.png" id="6"]
+
+[sub_resource type="StyleBoxFlat" id="Style0"]
+bg_color = Color(0.1607843137254902, 0.30980392156862746, 0.40784313725490196, 1)
+border_color = Color(0.0, 0.0, 0.0, 0.0)
+content_margin_left = 14.0
+border_width_left = 0
+content_margin_right = 14.0
+border_width_right = 0
+content_margin_top = 14.0
+border_width_top = 0
+content_margin_bottom = 14.0
+border_width_bottom = 0
+
+[sub_resource type="StyleBoxFlat" id="Style1"]
+bg_color = Color(0.16862745098039217, 0.23921568627450981, 0.3137254901960784, 1)
+border_color = Color(0.0, 0.0, 0.0, 0.0)
+content_margin_left = 20.0
+border_width_left = 0
+content_margin_right = 20.0
+border_width_right = 0
+content_margin_top = 20.0
+border_width_top = 0
+content_margin_bottom = 20.0
+border_width_bottom = 0
+
+[node name="ProductPage" type="MarginContainer"]
+theme = ExtResource("1")
+theme_override_constants/margin_left = 28
+theme_override_constants/margin_right = 28
+theme_override_constants/margin_top = 28
+theme_override_constants/margin_bottom = 28
+size_flags_horizontal = 3
+
+[node name="PageLayout" type="VBoxContainer" parent="."]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 18
+
+[node name="QueuePanel" type="PanelContainer" parent="PageLayout"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("Style0")
+
+visible = false
+[node name="QueueBar" type="HBoxContainer" parent="PageLayout/QueuePanel"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="QueueProgress" type="Label" parent="PageLayout/QueuePanel/QueueBar"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+custom_minimum_size = Vector2(0, 22)
+text = "您的发现队列 1 / 5"
+theme_override_font_sizes/font_size = 12
+theme_override_colors/font_color = Color(1.0, 1.0, 1.0, 1)
+vertical_alignment = 1
+mouse_filter = 2
+
+[node name="QueueNext" type="Button" parent="PageLayout/QueuePanel/QueueBar"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "下一个游戏  >"
+custom_minimum_size = Vector2(160, 32)
+mouse_default_cursor_shape = 2
+theme_type_variation = "BlueButton"
+
+[node name="Breadcrumb" type="HBoxContainer" parent="PageLayout"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="AllGames" type="Button" parent="PageLayout/Breadcrumb"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "所有游戏"
+custom_minimum_size = Vector2(0, 32)
+mouse_default_cursor_shape = 2
+theme_type_variation = "FlatButton"
+
+[node name="BreadcrumbText" type="Label" parent="PageLayout/Breadcrumb"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+custom_minimum_size = Vector2(0, 22)
+text = " > 动作 > 游戏名称"
+theme_override_font_sizes/font_size = 12
+theme_override_colors/font_color = Color(0.5607843137254902, 0.596078431372549, 0.6274509803921569, 1)
+vertical_alignment = 1
+mouse_filter = 2
+
+[node name="TitleRow" type="HBoxContainer" parent="PageLayout"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="Title" type="Label" parent="PageLayout/TitleRow"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+custom_minimum_size = Vector2(0, 34)
+text = "游戏名称"
+theme_override_font_sizes/font_size = 24
+theme_override_colors/font_color = Color(1.0, 1.0, 1.0, 1)
+vertical_alignment = 1
+mouse_filter = 2
+
+[node name="Creation" type="Button" parent="PageLayout/TitleRow"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "直播与攻略"
+custom_minimum_size = Vector2(0, 32)
+mouse_default_cursor_shape = 2
+theme_type_variation = "DarkButton"
+
+[node name="ProductTop" type="HBoxContainer" parent="PageLayout"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 20
+
+[node name="Gallery" type="VBoxContainer" parent="PageLayout/ProductTop"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 8
+
+[node name="ScreenshotAspect" type="AspectRatioContainer" parent="PageLayout/ProductTop/Gallery"]
+unique_name_in_owner = true
+layout_mode = 2
+ratio = 1.7777777777777777
+stretch_mode = 2
+custom_minimum_size = Vector2(0, 236)
+size_flags_horizontal = 3
+
+[node name="ProductScreenshot" type="TextureRect" parent="PageLayout/ProductTop/Gallery/ScreenshotAspect"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(0, 0)
+texture = ExtResource("2")
+expand_mode = 1
+stretch_mode = 5
+texture_filter = 1
+mouse_filter = 2
+size_flags_horizontal = 3
+
+[node name="ThumbRow" type="HBoxContainer" parent="PageLayout/ProductTop/Gallery"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 8
+
+[node name="ProductThumbnail1" type="Button" parent="PageLayout/ProductTop/Gallery/ThumbRow"]
+unique_name_in_owner = true
+layout_mode = 2
+text = ""
+custom_minimum_size = Vector2(0, 56)
+mouse_default_cursor_shape = 2
+theme_type_variation = "DarkButton"
+size_flags_horizontal = 3
+
+[node name="Shot0" type="TextureRect" parent="PageLayout/ProductTop/Gallery/ThumbRow/ProductThumbnail1"]
+unique_name_in_owner = true
+layout_mode = 1
+custom_minimum_size = Vector2(0, 0)
+texture = ExtResource("2")
+expand_mode = 1
+stretch_mode = 6
+texture_filter = 1
+mouse_filter = 2
+size_flags_horizontal = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+offset_left = 3.0
+offset_right = -3.0
+offset_top = 3.0
+offset_bottom = -3.0
+
+[node name="ProductThumbnail2" type="Button" parent="PageLayout/ProductTop/Gallery/ThumbRow"]
+unique_name_in_owner = true
+layout_mode = 2
+text = ""
+custom_minimum_size = Vector2(0, 56)
+mouse_default_cursor_shape = 2
+theme_type_variation = "DarkButton"
+size_flags_horizontal = 3
+
+[node name="Shot1" type="TextureRect" parent="PageLayout/ProductTop/Gallery/ThumbRow/ProductThumbnail2"]
+unique_name_in_owner = true
+layout_mode = 1
+custom_minimum_size = Vector2(0, 0)
+texture = ExtResource("3")
+expand_mode = 1
+stretch_mode = 6
+texture_filter = 1
+mouse_filter = 2
+size_flags_horizontal = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+offset_left = 3.0
+offset_right = -3.0
+offset_top = 3.0
+offset_bottom = -3.0
+
+[node name="ProductThumbnail3" type="Button" parent="PageLayout/ProductTop/Gallery/ThumbRow"]
+unique_name_in_owner = true
+layout_mode = 2
+text = ""
+custom_minimum_size = Vector2(0, 56)
+mouse_default_cursor_shape = 2
+theme_type_variation = "DarkButton"
+size_flags_horizontal = 3
+
+[node name="Shot2" type="TextureRect" parent="PageLayout/ProductTop/Gallery/ThumbRow/ProductThumbnail3"]
+unique_name_in_owner = true
+layout_mode = 1
+custom_minimum_size = Vector2(0, 0)
+texture = ExtResource("4")
+expand_mode = 1
+stretch_mode = 6
+texture_filter = 1
+mouse_filter = 2
+size_flags_horizontal = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+offset_left = 3.0
+offset_right = -3.0
+offset_top = 3.0
+offset_bottom = -3.0
+
+[node name="ProductThumbnail4" type="Button" parent="PageLayout/ProductTop/Gallery/ThumbRow"]
+unique_name_in_owner = true
+layout_mode = 2
+text = ""
+custom_minimum_size = Vector2(0, 56)
+mouse_default_cursor_shape = 2
+theme_type_variation = "DarkButton"
+size_flags_horizontal = 3
+
+[node name="Shot3" type="TextureRect" parent="PageLayout/ProductTop/Gallery/ThumbRow/ProductThumbnail4"]
+unique_name_in_owner = true
+layout_mode = 1
+custom_minimum_size = Vector2(0, 0)
+texture = ExtResource("5")
+expand_mode = 1
+stretch_mode = 6
+texture_filter = 1
+mouse_filter = 2
+size_flags_horizontal = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+offset_left = 3.0
+offset_right = -3.0
+offset_top = 3.0
+offset_bottom = -3.0
+
+[node name="Info" type="VBoxContainer" parent="PageLayout/ProductTop"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 8
+theme_override_constants/separation = 8
+custom_minimum_size = Vector2(320, 0)
+
+[node name="Cover" type="TextureRect" parent="PageLayout/ProductTop/Info"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(320, 126)
+texture = ExtResource("6")
+expand_mode = 1
+stretch_mode = 6
+texture_filter = 1
+mouse_filter = 2
+size_flags_horizontal = 0
+
+[node name="Feature" type="Label" parent="PageLayout/ProductTop/Info"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+custom_minimum_size = Vector2(0, 22)
+text = "游戏介绍"
+theme_override_font_sizes/font_size = 12
+theme_override_colors/font_color = Color(0.7803921568627451, 0.8352941176470589, 0.8784313725490196, 1)
+vertical_alignment = 1
+mouse_filter = 2
+autowrap_mode = 2
+
+[node name="Rating" type="Label" parent="PageLayout/ProductTop/Info"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+custom_minimum_size = Vector2(0, 22)
+text = "全部评测：特别好评"
+theme_override_font_sizes/font_size = 12
+theme_override_colors/font_color = Color(0.4, 0.7529411764705882, 0.9568627450980393, 1)
+vertical_alignment = 1
+mouse_filter = 2
+
+[node name="Release" type="Label" parent="PageLayout/ProductTop/Info"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+custom_minimum_size = Vector2(0, 22)
+text = "发行日期：2003 年 9 月"
+theme_override_font_sizes/font_size = 12
+theme_override_colors/font_color = Color(0.5607843137254902, 0.596078431372549, 0.6274509803921569, 1)
+vertical_alignment = 1
+mouse_filter = 2
+
+[node name="Studio" type="Label" parent="PageLayout/ProductTop/Info"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+custom_minimum_size = Vector2(0, 22)
+text = "开发商：\n发行商："
+theme_override_font_sizes/font_size = 12
+theme_override_colors/font_color = Color(0.4, 0.7529411764705882, 0.9568627450980393, 1)
+vertical_alignment = 1
+mouse_filter = 2
+autowrap_mode = 2
+
+[node name="Tags" type="HBoxContainer" parent="PageLayout/ProductTop/Info"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 4
+
+[node name="Tag0" type="Button" parent="PageLayout/ProductTop/Info/Tags"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "动作"
+custom_minimum_size = Vector2(0, 32)
+mouse_default_cursor_shape = 2
+theme_type_variation = "DarkButton"
+
+[node name="Tag1" type="Button" parent="PageLayout/ProductTop/Info/Tags"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "动作"
+custom_minimum_size = Vector2(0, 32)
+mouse_default_cursor_shape = 2
+theme_type_variation = "DarkButton"
+
+[node name="Tag2" type="Button" parent="PageLayout/ProductTop/Info/Tags"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "动作"
+custom_minimum_size = Vector2(0, 32)
+mouse_default_cursor_shape = 2
+theme_type_variation = "DarkButton"
+
+[node name="Actions" type="HBoxContainer" parent="PageLayout"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="ProductWish" type="Button" parent="PageLayout/Actions"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "+ 添加至愿望单"
+custom_minimum_size = Vector2(0, 32)
+mouse_default_cursor_shape = 2
+theme_type_variation = "DarkButton"
+
+[node name="Follow" type="Button" parent="PageLayout/Actions"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "关注"
+custom_minimum_size = Vector2(0, 32)
+mouse_default_cursor_shape = 2
+theme_type_variation = "DarkButton"
+
+[node name="Ignore" type="Button" parent="PageLayout/Actions"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "忽略"
+custom_minimum_size = Vector2(0, 32)
+mouse_default_cursor_shape = 2
+theme_type_variation = "DarkButton"
+
+[node name="Languages" type="Label" parent="PageLayout/Actions"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+custom_minimum_size = Vector2(0, 22)
+text = "单人游戏 · 中文界面"
+theme_override_font_sizes/font_size = 12
+theme_override_colors/font_color = Color(0.5607843137254902, 0.596078431372549, 0.6274509803921569, 1)
+vertical_alignment = 1
+mouse_filter = 2
+horizontal_alignment = 2
+
+[node name="PurchasePanel" type="PanelContainer" parent="PageLayout"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("Style1")
+
+[node name="Purchase" type="VBoxContainer" parent="PageLayout/PurchasePanel"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="PurchaseTitle" type="Label" parent="PageLayout/PurchasePanel/Purchase"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+custom_minimum_size = Vector2(0, 34)
+text = "购买 游戏名称"
+theme_override_font_sizes/font_size = 24
+theme_override_colors/font_color = Color(1.0, 1.0, 1.0, 1)
+vertical_alignment = 1
+mouse_filter = 2
+
+[node name="PurchaseHint" type="Label" parent="PageLayout/PurchasePanel/Purchase"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+custom_minimum_size = Vector2(0, 22)
+text = "已购买的玩家仍可在游戏库中安装和游玩。"
+theme_override_font_sizes/font_size = 12
+theme_override_colors/font_color = Color(0.5607843137254902, 0.596078431372549, 0.6274509803921569, 1)
+vertical_alignment = 1
+mouse_filter = 2
+autowrap_mode = 2
+
+visible = false
+[node name="ViewLibrary" type="Button" parent="PageLayout/PurchasePanel/Purchase"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "在游戏库中查看"
+custom_minimum_size = Vector2(220, 32)
+mouse_default_cursor_shape = 2
+theme_type_variation = "GreenButton"
+
+visible = false
+[node name="BuyRow" type="HBoxContainer" parent="PageLayout/PurchasePanel/Purchase"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="Edition" type="Label" parent="PageLayout/PurchasePanel/Purchase/BuyRow"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+custom_minimum_size = Vector2(0, 22)
+text = "标准版"
+theme_override_font_sizes/font_size = 12
+theme_override_colors/font_color = Color(0.5607843137254902, 0.596078431372549, 0.6274509803921569, 1)
+vertical_alignment = 1
+mouse_filter = 2
+
+[node name="Discount" type="Label" parent="PageLayout/PurchasePanel/Purchase/BuyRow"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+custom_minimum_size = Vector2(0, 34)
+text = "-25%"
+theme_override_font_sizes/font_size = 24
+theme_override_colors/font_color = Color(0.7019607843137254, 0.8470588235294118, 0.4823529411764706, 1)
+vertical_alignment = 1
+mouse_filter = 2
+
+[node name="OriginalPrice" type="Label" parent="PageLayout/PurchasePanel/Purchase/BuyRow"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+custom_minimum_size = Vector2(0, 22)
+text = "原价 100 点"
+theme_override_font_sizes/font_size = 12
+theme_override_colors/font_color = Color(0.5607843137254902, 0.596078431372549, 0.6274509803921569, 1)
+vertical_alignment = 1
+mouse_filter = 2
+
+[node name="Price" type="Label" parent="PageLayout/PurchasePanel/Purchase/BuyRow"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+custom_minimum_size = Vector2(0, 34)
+text = "75 点"
+theme_override_font_sizes/font_size = 24
+theme_override_colors/font_color = Color(1.0, 1.0, 1.0, 1)
+vertical_alignment = 1
+mouse_filter = 2
+
+[node name="ProductAdd" type="Button" parent="PageLayout/PurchasePanel/Purchase/BuyRow"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "添加至购物车"
+custom_minimum_size = Vector2(180, 32)
+mouse_default_cursor_shape = 2
+theme_type_variation = "GreenButton"
+
+[node name="AboutHeading" type="Label" parent="PageLayout"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+custom_minimum_size = Vector2(0, 34)
+text = "关于这款游戏"
+theme_override_font_sizes/font_size = 24
+theme_override_colors/font_color = Color(1.0, 1.0, 1.0, 1)
+vertical_alignment = 1
+mouse_filter = 2
+
+[node name="Description" type="Label" parent="PageLayout"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+custom_minimum_size = Vector2(0, 22)
+text = "游戏详细介绍。"
+theme_override_font_sizes/font_size = 12
+theme_override_colors/font_color = Color(0.7803921568627451, 0.8352941176470589, 0.8784313725490196, 1)
+vertical_alignment = 1
+mouse_filter = 2
+autowrap_mode = 2
+
+[node name="Features" type="Label" parent="PageLayout"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+custom_minimum_size = Vector2(0, 22)
+text = "• 以自己的节奏探索世界\n• 记录旅途中的发现与选择\n• 适合反复回味的单人体验"
+theme_override_font_sizes/font_size = 12
+theme_override_colors/font_color = Color(0.5607843137254902, 0.596078431372549, 0.6274509803921569, 1)
+vertical_alignment = 1
+mouse_filter = 2
+autowrap_mode = 2
+
+[node name="RequirementsHeading" type="Label" parent="PageLayout"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+custom_minimum_size = Vector2(0, 34)
+text = "系统需求"
+theme_override_font_sizes/font_size = 24
+theme_override_colors/font_color = Color(1.0, 1.0, 1.0, 1)
+vertical_alignment = 1
+mouse_filter = 2
+
+[node name="ProductRequirements" type="Label" parent="PageLayout"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+custom_minimum_size = Vector2(0, 22)
+text = "最低配置：\n操作系统：年代兼容系统\n处理器：\n显卡：\n内存：512 MB"
+theme_override_font_sizes/font_size = 12
+theme_override_colors/font_color = Color(0.5607843137254902, 0.596078431372549, 0.6274509803921569, 1)
+vertical_alignment = 1
+mouse_filter = 2
+autowrap_mode = 2
+
+[node name="ReviewsHeading" type="Label" parent="PageLayout"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+custom_minimum_size = Vector2(0, 34)
+text = "玩家评测"
+theme_override_font_sizes/font_size = 24
+theme_override_colors/font_color = Color(1.0, 1.0, 1.0, 1)
+vertical_alignment = 1
+mouse_filter = 2
+
+[node name="ReviewsHint" type="Label" parent="PageLayout"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+custom_minimum_size = Vector2(0, 22)
+text = "以下为游戏世界内的玩家记录。"
+theme_override_font_sizes/font_size = 12
+theme_override_colors/font_color = Color(0.5607843137254902, 0.596078431372549, 0.6274509803921569, 1)
+vertical_alignment = 1
+mouse_filter = 2
+
+[node name="Reviews" type="VBoxContainer" parent="PageLayout"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 12

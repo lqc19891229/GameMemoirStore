@@ -1,0 +1,88 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Theme" path="res://assets/client_theme.tres" id="1"]
+
+[ext_resource type="Texture2D" path="res://assets/art/CTA3/CTA3.png" id="2"]
+
+[node name="GameTile" type="Button"]
+theme = ExtResource("1")
+size_flags_horizontal = 3
+custom_minimum_size = Vector2(0, 178)
+theme_type_variation = "DarkButton"
+
+[node name="TileLayout" type="VBoxContainer" parent="."]
+unique_name_in_owner = true
+layout_mode = 1
+size_flags_horizontal = 3
+theme_override_constants/separation = 0
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Cover" type="TextureRect" parent="TileLayout"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(0, 112)
+texture = ExtResource("2")
+expand_mode = 1
+stretch_mode = 6
+texture_filter = 1
+mouse_filter = 2
+size_flags_horizontal = 3
+
+[node name="Margin" type="MarginContainer" parent="TileLayout"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 10
+
+[node name="Text" type="VBoxContainer" parent="TileLayout/Margin"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 4
+
+[node name="Title" type="Label" parent="TileLayout/Margin/Text"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+custom_minimum_size = Vector2(0, 22)
+text = "游戏名称"
+theme_override_font_sizes/font_size = 12
+theme_override_colors/font_color = Color(0.7803921568627451, 0.8352941176470589, 0.8784313725490196, 1)
+vertical_alignment = 1
+mouse_filter = 2
+
+[node name="Info" type="HBoxContainer" parent="TileLayout/Margin/Text"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="Genre" type="Label" parent="TileLayout/Margin/Text/Info"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+custom_minimum_size = Vector2(0, 22)
+text = "动作"
+theme_override_font_sizes/font_size = 12
+theme_override_colors/font_color = Color(0.5607843137254902, 0.596078431372549, 0.6274509803921569, 1)
+vertical_alignment = 1
+mouse_filter = 2
+
+[node name="Price" type="Label" parent="TileLayout/Margin/Text/Info"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+custom_minimum_size = Vector2(0, 22)
+text = "80 点"
+theme_override_font_sizes/font_size = 12
+theme_override_colors/font_color = Color(0.7019607843137254, 0.8470588235294118, 0.4823529411764706, 1)
+vertical_alignment = 1
+mouse_filter = 2
+horizontal_alignment = 2

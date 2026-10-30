@@ -1,6 +1,5 @@
 extends Control
 signal room_requested
-const U = preload("res://scripts/client_ui.gd")
 const WindowScene = preload("res://scenes/life/app_window.tscn")
 const APPS := {"platform": ["游戏平台", "res://scenes/store.tscn"], "browser": ["回忆生活 · 购物网页", "res://scenes/life/browser.tscn"], "game": ["正在游玩", "res://scenes/life/game_player.tscn"]}
 var session: MemoirGameSession
@@ -11,33 +10,17 @@ var status: Label
 var windows: Dictionary = {}
 
 func _ready() -> void:
-	var background := ColorRect.new()
-	background.color = Color("40636b")
-	add_child(background)
-	background.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	var shortcuts := U.vbox(U.margin(self, 28), 16)
-	U.label(shortcuts, "MEMOIR OS", 36, Color("c9d9cc"))
-	U.label(shortcuts, "欢迎回来，像素收藏家。", 12, Color("b1c5bc"))
-	U.button(shortcuts, "▣  游戏平台", func() -> void: open_app("platform"), "dark", 180).name = "DesktopPlatform"
-	U.button(shortcuts, "▤  购物与物品", func() -> void: open_app("browser"), "dark", 180).name = "DesktopBrowser"
-	resume_button = U.button(shortcuts, "▷  继续游玩", func() -> void: open_app("game"), "dark", 180)
-	resume_button.name = "DesktopResume"
-	area = Control.new()
-	area.name = "ApplicationArea"
-	area.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(area)
-	area.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	area.offset_bottom = -52
-	var bar := U.panel(self, "192d33", 8)
-	bar.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_WIDE)
-	bar.offset_top = -52
-	var row := U.hbox(bar, 8)
-	U.button(row, "< 房间", func() -> void: room_requested.emit(), "flat", 100).name = "DesktopRoom"
-	U.button(row, "平台", func() -> void: open_app("platform"), "flat", 80)
-	U.button(row, "网页", func() -> void: open_app("browser"), "flat", 80)
-	tasks = U.hbox(row, 4)
-	status = U.label(row, "", 12, Color("b6cac1"))
-	status.size_flags_horizontal = Control.SIZE_SHRINK_END
+	area = %ApplicationArea
+	tasks = %Tasks
+	resume_button = %DesktopResume
+	status = %Status
+	%DesktopPlatform.pressed.connect(func() -> void: open_app("platform"))
+	%DesktopBrowser.pressed.connect(func() -> void: open_app("browser"))
+	resume_button.pressed.connect(func() -> void: open_app("game"))
+	%DesktopRoom.pressed.connect(func() -> void: room_requested.emit())
+	%TaskbarPlatform.pressed.connect(func() -> void: open_app("platform"))
+	%TaskbarBrowser.pressed.connect(func() -> void: open_app("browser"))
+	if session == null: return
 	session.changed.connect(refresh)
 	session.tick_updated.connect(_update_status)
 	area.resized.connect(func() -> void:
@@ -105,5 +88,9 @@ func refresh() -> void:
 		child.queue_free()
 	for id: String in windows:
 		var key := id
-		U.button(tasks, ("● " if windows[id].visible else "○ ") + APPS[id][0], func() -> void: open_app(key), "flat").name = "Task_" + id
+		var task = preload("res://scenes/client/components/text_button.tscn").instantiate()
+		task.text = ("● " if windows[id].visible else "○ ") + APPS[id][0]
+		task.name = "Task_" + id
+		task.pressed.connect(func() -> void: open_app(key))
+		tasks.add_child(task)
 	_update_status()
