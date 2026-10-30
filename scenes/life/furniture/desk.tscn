@@ -4,92 +4,118 @@
 
 [ext_resource type="Script" path="res://scripts/life/furniture_item.gd" id="2"]
 
-[sub_resource type="StyleBoxFlat" id="Style0"]
-bg_color = Color(0.0, 0.0, 0.0, 0.0)
-border_color = Color(0.9372549019607843, 0.8588235294117647, 0.6588235294117647, 1)
-content_margin_left = 0.0
-border_width_left = 1
-content_margin_right = 0.0
-border_width_right = 1
-content_margin_top = 0.0
-border_width_top = 1
-content_margin_bottom = 0.0
-border_width_bottom = 1
+[sub_resource type="StyleBoxFlat" id="Transparent"]
+bg_color = Color(0.000000, 0.000000, 0.000000, 0.000000)
+content_margin_left = 0
+content_margin_top = 0
+content_margin_right = 0
+content_margin_bottom = 0
 
-[sub_resource type="StyleBoxFlat" id="Style1"]
-bg_color = Color(0.0, 0.0, 0.0, 0.0)
-border_color = Color(0.9372549019607843, 0.8588235294117647, 0.6588235294117647, 1)
-content_margin_left = 0.0
-border_width_left = 1
-content_margin_right = 0.0
-border_width_right = 1
-content_margin_top = 0.0
-border_width_top = 1
-content_margin_bottom = 0.0
-border_width_bottom = 1
+[sub_resource type="StyleBoxFlat" id="Hover"]
+bg_color = Color(0.941176, 0.858824, 0.658824, 0.078431)
+content_margin_left = 0
+content_margin_top = 0
+content_margin_right = 0
+content_margin_bottom = 0
 
 [node name="Desk" type="Button"]
 theme = ExtResource("1")
 script = ExtResource("2")
 kind = "desk"
-flat = true
-custom_minimum_size = Vector2(100, 100)
+custom_minimum_size = Vector2(0, 0)
+offset_right = 405.5
+offset_bottom = 253.6
 mouse_default_cursor_shape = 2
-theme_override_styles/focus = SubResource("Style0")
-theme_override_styles/hover = SubResource("Style1")
+art_size = Vector2(405.5, 253.6)
+theme_override_styles/normal = SubResource("Transparent")
+theme_override_styles/pressed = SubResource("Transparent")
+theme_override_styles/hover = SubResource("Hover")
+theme_override_styles/focus = SubResource("Hover")
 
-[node name="Part0" type="ColorRect" parent="."]
-mouse_filter = 2
-color = Color(0.27450980392156865, 0.23137254901960785, 0.20784313725490197, 1)
-layout_mode = 1
-anchor_left = 0.0
-anchor_top = 0.12
-anchor_right = 1.0
-anchor_bottom = 0.27
+[node name="Art" type="Node2D" parent="."]
 
-[node name="Part1" type="ColorRect" parent="."]
-mouse_filter = 2
-color = Color(0.4666666666666667, 0.3607843137254902, 0.28627450980392155, 1)
-layout_mode = 1
-anchor_left = 0.0
-anchor_top = 0.06
-anchor_right = 1.0
-anchor_bottom = 0.18
-metadata/upgraded_color = Color(0.7098039215686275, 0.5058823529411764, 0.34901960784313724, 1)
 
-[node name="Part2" type="ColorRect" parent="."]
-mouse_filter = 2
-color = Color(0.2901960784313726, 0.25882352941176473, 0.23921568627450981, 1)
-layout_mode = 1
-anchor_left = 0.05
-anchor_top = 0.27
-anchor_right = 0.12
-anchor_bottom = 0.97
+[node name="Shadow" type="Polygon2D" parent="Art"]
+polygon = PackedVector2Array(249.5, 100.2, 402.5, 157.8, 156, 250.6, 3, 193)
+color = Color(0.078431, 0.109804, 0.094118, 0.250980)
 
-[node name="Part3" type="ColorRect" parent="."]
-mouse_filter = 2
-color = Color(0.2901960784313726, 0.25882352941176473, 0.23921568627450981, 1)
-layout_mode = 1
-anchor_left = 0.86
-anchor_top = 0.27
-anchor_right = 0.94
-anchor_bottom = 0.97
+[node name="Leg40_230Side" type="Polygon2D" parent="Art"]
+polygon = PackedVector2Array(249.5, 116.2, 241, 119.4, 241, 29.4, 249.5, 26.2)
+color = Color(0.250980, 0.239216, 0.215686, 1)
 
-[node name="Part4" type="ColorRect" parent="."]
-mouse_filter = 2
-color = Color(0.4666666666666667, 0.3607843137254902, 0.28627450980392155, 1)
-layout_mode = 1
-anchor_left = 0.64
-anchor_top = 0.3
-anchor_right = 0.88
-anchor_bottom = 0.66
-metadata/upgraded_color = Color(0.7098039215686275, 0.5058823529411764, 0.34901960784313724, 1)
+[node name="Leg40_230Front" type="Polygon2D" parent="Art"]
+polygon = PackedVector2Array(232.5, 116.2, 241, 119.4, 241, 29.4, 232.5, 26.2)
+color = Color(0.317647, 0.278431, 0.235294, 1)
 
-[node name="Part5" type="ColorRect" parent="."]
-mouse_filter = 2
-color = Color(0.8313725490196079, 0.7137254901960784, 0.5294117647058824, 1)
-layout_mode = 1
-anchor_left = 0.72
-anchor_top = 0.4
-anchor_right = 0.81
-anchor_bottom = 0.44
+[node name="Leg40_230Top" type="Polygon2D" parent="Art"]
+polygon = PackedVector2Array(241, 23, 249.5, 26.2, 241, 29.4, 232.5, 26.2)
+color = Color(0.501961, 0.388235, 0.282353, 1)
+
+[node name="Leg165_230Side" type="Polygon2D" parent="Art"]
+polygon = PackedVector2Array(355.75, 156.2, 347.25, 159.4, 347.25, 69.4, 355.75, 66.2)
+color = Color(0.250980, 0.239216, 0.215686, 1)
+
+[node name="Leg165_230Front" type="Polygon2D" parent="Art"]
+polygon = PackedVector2Array(338.75, 156.2, 347.25, 159.4, 347.25, 69.4, 338.75, 66.2)
+color = Color(0.317647, 0.278431, 0.235294, 1)
+
+[node name="Leg165_230Top" type="Polygon2D" parent="Art"]
+polygon = PackedVector2Array(347.25, 63, 355.75, 66.2, 347.25, 69.4, 338.75, 66.2)
+color = Color(0.501961, 0.388235, 0.282353, 1)
+
+[node name="Leg40_475Side" type="Polygon2D" parent="Art"]
+polygon = PackedVector2Array(41.25, 194.6, 32.75, 197.8, 32.75, 107.8, 41.25, 104.6)
+color = Color(0.250980, 0.239216, 0.215686, 1)
+
+[node name="Leg40_475Front" type="Polygon2D" parent="Art"]
+polygon = PackedVector2Array(24.25, 194.6, 32.75, 197.8, 32.75, 107.8, 24.25, 104.6)
+color = Color(0.317647, 0.278431, 0.235294, 1)
+
+[node name="Leg40_475Top" type="Polygon2D" parent="Art"]
+polygon = PackedVector2Array(32.75, 101.4, 41.25, 104.6, 32.75, 107.8, 24.25, 104.6)
+color = Color(0.501961, 0.388235, 0.282353, 1)
+
+[node name="Leg165_475Side" type="Polygon2D" parent="Art"]
+polygon = PackedVector2Array(147.5, 234.6, 139, 237.8, 139, 147.8, 147.5, 144.6)
+color = Color(0.250980, 0.239216, 0.215686, 1)
+
+[node name="Leg165_475Front" type="Polygon2D" parent="Art"]
+polygon = PackedVector2Array(130.5, 234.6, 139, 237.8, 139, 147.8, 130.5, 144.6)
+color = Color(0.317647, 0.278431, 0.235294, 1)
+
+[node name="Leg165_475Top" type="Polygon2D" parent="Art"]
+polygon = PackedVector2Array(139, 141.4, 147.5, 144.6, 139, 147.8, 130.5, 144.6)
+color = Color(0.501961, 0.388235, 0.282353, 1)
+
+[node name="DrawersSide" type="Polygon2D" parent="Art"]
+polygon = PackedVector2Array(336.2, 126.64, 261.4, 154.8, 261.4, 100.8, 336.2, 72.64)
+color = Color(0.384314, 0.301961, 0.227451, 1)
+
+[node name="DrawersFront" type="Polygon2D" parent="Art"]
+polygon = PackedVector2Array(229.95, 142.96, 261.4, 154.8, 261.4, 100.8, 229.95, 88.96)
+color = Color(0.525490, 0.392157, 0.278431, 1)
+metadata/upgraded_color = Color(0.709804, 0.505882, 0.349020, 1)
+
+[node name="DrawersTop" type="Polygon2D" parent="Art"]
+polygon = PackedVector2Array(304.75, 60.8, 336.2, 72.64, 261.4, 100.8, 229.95, 88.96)
+color = Color(0.596078, 0.447059, 0.298039, 1)
+metadata/upgraded_color = Color(0.709804, 0.505882, 0.349020, 1)
+
+[node name="DesktopSide" type="Polygon2D" parent="Art"]
+polygon = PackedVector2Array(381.25, 66.2, 139, 157.4, 139, 145.4, 381.25, 54.2)
+color = Color(0.466667, 0.345098, 0.247059, 1)
+
+[node name="DesktopFront" type="Polygon2D" parent="Art"]
+polygon = PackedVector2Array(3, 106.2, 139, 157.4, 139, 145.4, 3, 94.2)
+color = Color(0.549020, 0.411765, 0.290196, 1)
+metadata/upgraded_color = Color(0.803922, 0.627451, 0.427451, 1)
+
+[node name="DesktopTop" type="Polygon2D" parent="Art"]
+polygon = PackedVector2Array(245.25, 3, 381.25, 54.2, 139, 145.4, 3, 94.2)
+color = Color(0.698039, 0.552941, 0.384314, 1)
+metadata/upgraded_color = Color(0.803922, 0.627451, 0.427451, 1)
+
+[node name="DrawerHandle" type="Polygon2D" parent="Art"]
+polygon = PackedVector2Array(238.45, 113.8, 253.75, 119.56, 253.75, 115.56, 238.45, 109.8)
+color = Color(0.831373, 0.713725, 0.529412, 1)
+

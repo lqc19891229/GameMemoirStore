@@ -39,6 +39,7 @@ func show_room() -> void:
 	room.refresh()
 
 func show_desktop() -> void:
+	toast.hide()
 	room.hide()
 	if is_instance_valid(cabinet): cabinet.hide()
 	desktop.show()
@@ -49,6 +50,9 @@ func show_cabinet() -> void:
 	cabinet.refresh()
 
 func show_notice(message: String) -> void:
+	if desktop.visible:
+		desktop.show_notice(message)
+		return
 	toast.text = message
 	toast.show()
 	toast.move_to_front()

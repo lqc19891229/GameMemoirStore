@@ -4,183 +4,128 @@
 
 [ext_resource type="Script" path="res://scripts/life/furniture_item.gd" id="2"]
 
-[sub_resource type="StyleBoxFlat" id="Style0"]
-bg_color = Color(0.0, 0.0, 0.0, 0.0)
-border_color = Color(0.9372549019607843, 0.8588235294117647, 0.6588235294117647, 1)
-content_margin_left = 0.0
-border_width_left = 1
-content_margin_right = 0.0
-border_width_right = 1
-content_margin_top = 0.0
-border_width_top = 1
-content_margin_bottom = 0.0
-border_width_bottom = 1
+[sub_resource type="StyleBoxFlat" id="Transparent"]
+bg_color = Color(0.000000, 0.000000, 0.000000, 0.000000)
+content_margin_left = 0
+content_margin_top = 0
+content_margin_right = 0
+content_margin_bottom = 0
 
-[sub_resource type="StyleBoxFlat" id="Style1"]
-bg_color = Color(0.0, 0.0, 0.0, 0.0)
-border_color = Color(0.9372549019607843, 0.8588235294117647, 0.6588235294117647, 1)
-content_margin_left = 0.0
-border_width_left = 1
-content_margin_right = 0.0
-border_width_right = 1
-content_margin_top = 0.0
-border_width_top = 1
-content_margin_bottom = 0.0
-border_width_bottom = 1
+[sub_resource type="StyleBoxFlat" id="Hover"]
+bg_color = Color(0.941176, 0.858824, 0.658824, 0.078431)
+content_margin_left = 0
+content_margin_top = 0
+content_margin_right = 0
+content_margin_bottom = 0
 
 [node name="Computer" type="Button"]
 theme = ExtResource("1")
 script = ExtResource("2")
 kind = "computer"
-flat = true
-custom_minimum_size = Vector2(100, 100)
+custom_minimum_size = Vector2(0, 0)
+offset_right = 210.85
+offset_bottom = 158.72
 mouse_default_cursor_shape = 2
-theme_override_styles/focus = SubResource("Style0")
-theme_override_styles/hover = SubResource("Style1")
+art_size = Vector2(210.85, 158.72)
+theme_override_styles/normal = SubResource("Transparent")
+theme_override_styles/pressed = SubResource("Transparent")
+theme_override_styles/hover = SubResource("Hover")
+theme_override_styles/focus = SubResource("Hover")
 
-[node name="Part0" type="ColorRect" parent="."]
-mouse_filter = 2
-color = Color(0.14901960784313725, 0.23137254901960785, 0.25098039215686274, 1)
-layout_mode = 1
-anchor_left = 0.03
-anchor_top = 0.03
-anchor_right = 0.7
-anchor_bottom = 0.67
+[node name="Art" type="Node2D" parent="."]
 
-[node name="Part1" type="ColorRect" parent="."]
-mouse_filter = 2
-color = Color(0.3843137254901961, 0.5450980392156862, 0.5019607843137255, 1)
-layout_mode = 1
-anchor_left = 0.08
-anchor_top = 0.08
-anchor_right = 0.65
-anchor_bottom = 0.59
-metadata/upgraded_color = Color(0.4392156862745098, 0.6431372549019608, 0.6431372549019608, 1)
 
-[node name="Part2" type="ColorRect" parent="."]
-mouse_filter = 2
-color = Color(0.13333333333333333, 0.24705882352941178, 0.2980392156862745, 1)
-layout_mode = 1
-anchor_left = 0.12
-anchor_top = 0.12
-anchor_right = 0.61
-anchor_bottom = 0.55
+[node name="StandBaseSide" type="Polygon2D" parent="Art"]
+polygon = PackedVector2Array(138.15, 135.56, 84.6, 155.72, 84.6, 150.72, 138.15, 130.56)
+color = Color(0.160784, 0.239216, 0.235294, 1)
 
-[node name="Part3" type="ColorRect" parent="."]
-mouse_filter = 2
-color = Color(0.5333333333333333, 0.7294117647058823, 0.7568627450980392, 1)
-layout_mode = 1
-anchor_left = 0.2
-anchor_top = 0.22
-anchor_right = 0.48
-anchor_bottom = 0.27
+[node name="StandBaseFront" type="Polygon2D" parent="Art"]
+polygon = PackedVector2Array(43.8, 140.36, 84.6, 155.72, 84.6, 150.72, 43.8, 135.36)
+color = Color(0.203922, 0.274510, 0.262745, 1)
 
-[node name="Part4" type="ColorRect" parent="."]
-mouse_filter = 2
-color = Color(0.803921568627451, 0.807843137254902, 0.5490196078431373, 1)
-layout_mode = 1
-anchor_left = 0.2
-anchor_top = 0.34
-anchor_right = 0.4
-anchor_bottom = 0.38
+[node name="StandBaseTop" type="Polygon2D" parent="Art"]
+polygon = PackedVector2Array(97.35, 115.2, 138.15, 130.56, 84.6, 150.72, 43.8, 135.36)
+color = Color(0.274510, 0.349020, 0.341176, 1)
 
-[node name="Part5" type="ColorRect" parent="."]
-mouse_filter = 2
-color = Color(0.17647058823529413, 0.23529411764705882, 0.23529411764705882, 1)
-layout_mode = 1
-anchor_left = 0.3
-anchor_top = 0.67
-anchor_right = 0.42
-anchor_bottom = 0.85
+[node name="StandSide" type="Polygon2D" parent="Art"]
+polygon = PackedVector2Array(101.6, 129.6, 86.3, 135.36, 86.3, 112.36, 101.6, 106.6)
+color = Color(0.203922, 0.274510, 0.262745, 1)
 
-[node name="Part6" type="ColorRect" parent="."]
-mouse_filter = 2
-color = Color(0.14901960784313725, 0.23137254901960785, 0.25098039215686274, 1)
-layout_mode = 1
-anchor_left = 0.19
-anchor_top = 0.85
-anchor_right = 0.54
-anchor_bottom = 0.92
+[node name="StandFront" type="Polygon2D" parent="Art"]
+polygon = PackedVector2Array(74.4, 130.88, 86.3, 135.36, 86.3, 112.36, 74.4, 107.88)
+color = Color(0.274510, 0.349020, 0.341176, 1)
 
-[node name="Part7" type="ColorRect" parent="."]
-mouse_filter = 2
-color = Color(0.1843137254901961, 0.22745098039215686, 0.23921568627450981, 1)
-layout_mode = 1
-anchor_left = 0.77
-anchor_top = 0.25
-anchor_right = 0.99
-anchor_bottom = 0.95
+[node name="StandTop" type="Polygon2D" parent="Art"]
+polygon = PackedVector2Array(89.7, 102.12, 101.6, 106.6, 86.3, 112.36, 74.4, 107.88)
+color = Color(0.392157, 0.482353, 0.443137, 1)
 
-[node name="Part8" type="ColorRect" parent="."]
-mouse_filter = 2
-color = Color(0.3568627450980392, 0.4470588235294118, 0.4549019607843137, 1)
-layout_mode = 1
-anchor_left = 0.81
-anchor_top = 0.37
-anchor_right = 0.94
-anchor_bottom = 0.4
+[node name="MonitorSide" type="Polygon2D" parent="Art"]
+polygon = PackedVector2Array(125.4, 86.76, 18.3, 127.08, 18.3, 49.08, 125.4, 8.76)
+color = Color(0.376471, 0.466667, 0.427451, 1)
 
-[node name="Part9" type="ColorRect" parent="."]
-mouse_filter = 2
-color = Color(0.3568627450980392, 0.4470588235294118, 0.4549019607843137, 1)
-layout_mode = 1
-anchor_left = 0.81
-anchor_top = 0.45
-anchor_right = 0.94
-anchor_bottom = 0.48
+[node name="MonitorFront" type="Polygon2D" parent="Art"]
+polygon = PackedVector2Array(3, 121.32, 18.3, 127.08, 18.3, 49.08, 3, 43.32)
+color = Color(0.627451, 0.690196, 0.627451, 1)
+metadata/upgraded_color = Color(0.772549, 0.784314, 0.647059, 1)
 
-[node name="Part10" type="ColorRect" parent="."]
-mouse_filter = 2
-color = Color(0.3568627450980392, 0.4470588235294118, 0.4549019607843137, 1)
-layout_mode = 1
-anchor_left = 0.81
-anchor_top = 0.53
-anchor_right = 0.94
-anchor_bottom = 0.56
+[node name="MonitorTop" type="Polygon2D" parent="Art"]
+polygon = PackedVector2Array(110.1, 3, 125.4, 8.76, 18.3, 49.08, 3, 43.32)
+color = Color(0.501961, 0.572549, 0.529412, 1)
+metadata/upgraded_color = Color(0.772549, 0.784314, 0.647059, 1)
 
-[node name="Part11" type="ColorRect" parent="."]
-mouse_filter = 2
-color = Color(0.6470588235294118, 0.807843137254902, 0.5411764705882353, 1)
-layout_mode = 1
-anchor_left = 0.86
-anchor_top = 0.77
-anchor_right = 0.91
-anchor_bottom = 0.82
+[node name="ScreenBezel" type="Polygon2D" parent="Art"]
+polygon = PackedVector2Array(117.75, 84.28, 27.65, 118.2, 27.65, 53.2, 117.75, 19.28)
+color = Color(0.129412, 0.247059, 0.282353, 1)
 
-[node name="Microphone" type="Control" parent="."]
-unique_name_in_owner = true
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-mouse_filter = 2
+[node name="Screen" type="Polygon2D" parent="Art"]
+polygon = PackedVector2Array(112.225, 80.68, 34.025, 110.12, 34.025, 57.12, 112.225, 27.68)
+color = Color(0.352941, 0.572549, 0.580392, 1)
+metadata/upgraded_color = Color(0.439216, 0.643137, 0.643137, 1)
+
+[node name="ScreenHeader" type="Polygon2D" parent="Art"]
+polygon = PackedVector2Array(104.15, 42.04, 46.35, 63.8, 46.35, 59.8, 104.15, 38.04)
+color = Color(0.709804, 0.839216, 0.784314, 1)
+
+[node name="ScreenText" type="Polygon2D" parent="Art"]
+polygon = PackedVector2Array(104.15, 55.04, 61.65, 71.04, 61.65, 67.04, 104.15, 51.04)
+color = Color(0.847059, 0.835294, 0.603922, 1)
+
+[node name="TowerSide" type="Polygon2D" parent="Art"]
+polygon = PackedVector2Array(207.85, 110.6, 172.15, 124.04, 172.15, 46.04, 207.85, 32.6)
+color = Color(0.254902, 0.356863, 0.345098, 1)
+
+[node name="TowerFront" type="Polygon2D" parent="Art"]
+polygon = PackedVector2Array(119.45, 104.2, 172.15, 124.04, 172.15, 46.04, 119.45, 26.2)
+color = Color(0.376471, 0.462745, 0.435294, 1)
+
+[node name="TowerTop" type="Polygon2D" parent="Art"]
+polygon = PackedVector2Array(155.15, 12.76, 207.85, 32.6, 172.15, 46.04, 119.45, 26.2)
+color = Color(0.490196, 0.560784, 0.513725, 1)
+
+[node name="Vent0" type="Polygon2D" parent="Art"]
+polygon = PackedVector2Array(204.45, 56.52, 179.8, 65.8, 179.8, 62.8, 204.45, 53.52)
+color = Color(0.160784, 0.243137, 0.254902, 1)
+
+[node name="Vent1" type="Polygon2D" parent="Art"]
+polygon = PackedVector2Array(204.45, 65.52, 179.8, 74.8, 179.8, 71.8, 204.45, 62.52)
+color = Color(0.160784, 0.243137, 0.254902, 1)
+
+[node name="Vent2" type="Polygon2D" parent="Art"]
+polygon = PackedVector2Array(204.45, 74.52, 179.8, 83.8, 179.8, 80.8, 204.45, 71.52)
+color = Color(0.160784, 0.243137, 0.254902, 1)
+
+[node name="PowerLED" type="Polygon2D" parent="Art"]
+polygon = PackedVector2Array(197.225, 100.56, 191.275, 102.8, 191.275, 95.8, 197.225, 93.56)
+color = Color(0.701961, 0.847059, 0.482353, 1)
+
+[node name="Microphone" type="Node2D" parent="Art"]
 visible = false
 
-[node name="Mic0" type="ColorRect" parent="Microphone"]
-mouse_filter = 2
-color = Color(0.7647058823529411, 0.7725490196078432, 0.6666666666666666, 1)
-layout_mode = 1
-anchor_left = 0.04
-anchor_top = 0.74
-anchor_right = 0.11
-anchor_bottom = 0.88
+[node name="MicStem" type="Polygon2D" parent="Art/Microphone"]
+polygon = PackedVector2Array(14, 134.72, 18, 134.72, 18, 150.72, 14, 150.72)
+color = Color(0.486275, 0.549020, 0.529412, 1)
 
-[node name="Mic1" type="ColorRect" parent="Microphone"]
-mouse_filter = 2
-color = Color(0.2627450980392157, 0.2980392156862745, 0.2784313725490196, 1)
-layout_mode = 1
-anchor_left = 0.06
-anchor_top = 0.88
-anchor_right = 0.09
-anchor_bottom = 0.96
+[node name="MicHead" type="Polygon2D" parent="Art/Microphone"]
+polygon = PackedVector2Array(11, 121.72, 22, 121.72, 22, 136.72, 11, 136.72)
+color = Color(0.764706, 0.772549, 0.666667, 1)
 
-[node name="Mic2" type="ColorRect" parent="Microphone"]
-mouse_filter = 2
-color = Color(0.2627450980392157, 0.2980392156862745, 0.2784313725490196, 1)
-layout_mode = 1
-anchor_left = 0.01
-anchor_top = 0.95
-anchor_right = 0.15
-anchor_bottom = 0.98

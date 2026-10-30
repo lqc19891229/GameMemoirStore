@@ -34,8 +34,9 @@ func fit() -> void:
 func _drag(event: InputEvent) -> void:
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
 		dragging = event.pressed
-		drag_origin = get_global_mouse_position() - global_position
+		drag_origin = get_parent().get_local_mouse_position() - position
 		move_to_front()
 	elif event is InputEventMouseMotion and dragging:
-		var target := get_global_mouse_position() - drag_origin
-		global_position = Vector2(clampf(target.x, -size.x + 180, get_viewport_rect().size.x - 180), clampf(target.y, 0, get_viewport_rect().size.y - 100))
+		var bounds: Vector2 = get_parent().size
+		var target: Vector2 = get_parent().get_local_mouse_position() - drag_origin
+		position = Vector2(clampf(target.x, 0.0, maxf(0.0, bounds.x - size.x)), clampf(target.y, 0.0, maxf(0.0, bounds.y - size.y)))
