@@ -1,8 +1,12 @@
-[gd_scene load_steps=5 format=3]
+[gd_scene load_steps=7 format=3]
 
 [ext_resource type="Theme" path="res://assets/client_theme.tres" id="1"]
 
 [ext_resource type="Script" path="res://scripts/life/furniture_item.gd" id="2"]
+
+[ext_resource type="Texture2D" path="res://assets/art/life/cabinet.png" id="art"]
+
+[ext_resource type="Texture2D" path="res://assets/art/life/trophy.png" id="trophy"]
 
 [sub_resource type="StyleBoxFlat" id="Transparent"]
 bg_color = Color(0.000000, 0.000000, 0.000000, 0.000000)
@@ -26,92 +30,60 @@ custom_minimum_size = Vector2(0, 0)
 offset_right = 198.1
 offset_bottom = 244.56
 mouse_default_cursor_shape = 2
-art_size = Vector2(198.1, 244.56)
 theme_override_styles/normal = SubResource("Transparent")
 theme_override_styles/pressed = SubResource("Transparent")
 theme_override_styles/hover = SubResource("Hover")
 theme_override_styles/focus = SubResource("Hover")
 
-[node name="Art" type="Node2D" parent="."]
+[node name="Art" type="TextureRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture_filter = 1
+texture = ExtResource("art")
+expand_mode = 1
+stretch_mode = 5
+flip_h = true
 
-
-[node name="CabinetShadow" type="Polygon2D" parent="Art"]
-polygon = PackedVector2Array(86.3, 169.24, 195.1, 210.2, 111.8, 241.56, 3, 200.6)
-color = Color(0.078431, 0.109804, 0.094118, 0.219608)
-
-[node name="CabinetSide" type="Polygon2D" parent="Art"]
-polygon = PackedVector2Array(176.4, 209.56, 116.9, 231.96, 116.9, 59.96, 176.4, 37.56)
-color = Color(0.360784, 0.341176, 0.270588, 1)
-
-[node name="CabinetFront" type="Polygon2D" parent="Art"]
-polygon = PackedVector2Array(25.1, 197.4, 116.9, 231.96, 116.9, 59.96, 25.1, 25.4)
-color = Color(0.462745, 0.400000, 0.305882, 1)
-metadata/upgraded_color = Color(0.572549, 0.486275, 0.337255, 1)
-
-[node name="CabinetTop" type="Polygon2D" parent="Art"]
-polygon = PackedVector2Array(84.6, 3, 176.4, 37.56, 116.9, 59.96, 25.1, 25.4)
-color = Color(0.631373, 0.541176, 0.392157, 1)
-metadata/upgraded_color = Color(0.572549, 0.486275, 0.337255, 1)
-
-[node name="Interior" type="Polygon2D" parent="Art"]
-polygon = PackedVector2Array(32.75, 188.92, 107.55, 217.08, 107.55, 68.08, 32.75, 39.92)
-color = Color(0.207843, 0.286275, 0.262745, 1)
-metadata/upgraded_color = Color(0.196078, 0.278431, 0.266667, 1)
-
-[node name="Shelf0" type="Polygon2D" parent="Art"]
-polygon = PackedVector2Array(29.35, 184.28, 110.1, 214.68, 110.1, 209.68, 29.35, 179.28)
-color = Color(0.705882, 0.603922, 0.427451, 1)
-
-[node name="Shelf1" type="Polygon2D" parent="Art"]
-polygon = PackedVector2Array(29.35, 136.28, 110.1, 166.68, 110.1, 161.68, 29.35, 131.28)
-color = Color(0.705882, 0.603922, 0.427451, 1)
-
-[node name="Shelf2" type="Polygon2D" parent="Art"]
-polygon = PackedVector2Array(29.35, 88.28, 110.1, 118.68, 110.1, 113.68, 29.35, 83.28)
-color = Color(0.705882, 0.603922, 0.427451, 1)
-
-[node name="Trophy0" type="Node2D" parent="Art"]
+[node name="Trophy0" type="TextureRect" parent="."]
 visible = false
+layout_mode = 1
+anchor_left = 0.29
+anchor_top = 0.28
+anchor_right = 0.52
+anchor_bottom = 0.44000000000000006
+mouse_filter = 2
+texture_filter = 1
+texture = ExtResource("trophy")
+expand_mode = 1
+stretch_mode = 5
 
-[node name="Cup" type="Polygon2D" parent="Art/Trophy0"]
-polygon = PackedVector2Array(58.25, 149.52, 78.25, 156.52, 73.25, 168.52, 63.25, 164.52)
-color = Color(0.850980, 0.713725, 0.435294, 1)
-
-[node name="Stem" type="Polygon2D" parent="Art/Trophy0"]
-polygon = PackedVector2Array(67.25, 165.52, 70.25, 166.52, 70.25, 175.52, 67.25, 174.52)
-color = Color(0.729412, 0.568627, 0.298039, 1)
-
-[node name="Base" type="Polygon2D" parent="Art/Trophy0"]
-polygon = PackedVector2Array(60.25, 172.52, 77.25, 178.52, 73.25, 181.52, 56.25, 175.52)
-color = Color(0.909804, 0.803922, 0.564706, 1)
-
-[node name="Trophy1" type="Node2D" parent="Art"]
+[node name="Trophy1" type="TextureRect" parent="."]
 visible = false
+layout_mode = 1
+anchor_left = 0.29
+anchor_top = 0.48
+anchor_right = 0.52
+anchor_bottom = 0.64
+mouse_filter = 2
+texture_filter = 1
+texture = ExtResource("trophy")
+expand_mode = 1
+stretch_mode = 5
 
-[node name="Cup" type="Polygon2D" parent="Art/Trophy1"]
-polygon = PackedVector2Array(58.25, 102.52, 78.25, 109.52, 73.25, 121.52, 63.25, 117.52)
-color = Color(0.850980, 0.713725, 0.435294, 1)
-
-[node name="Stem" type="Polygon2D" parent="Art/Trophy1"]
-polygon = PackedVector2Array(67.25, 118.52, 70.25, 119.52, 70.25, 128.52, 67.25, 127.52)
-color = Color(0.729412, 0.568627, 0.298039, 1)
-
-[node name="Base" type="Polygon2D" parent="Art/Trophy1"]
-polygon = PackedVector2Array(60.25, 125.52, 77.25, 131.52, 73.25, 134.52, 56.25, 128.52)
-color = Color(0.909804, 0.803922, 0.564706, 1)
-
-[node name="Trophy2" type="Node2D" parent="Art"]
+[node name="Trophy2" type="TextureRect" parent="."]
 visible = false
-
-[node name="Cup" type="Polygon2D" parent="Art/Trophy2"]
-polygon = PackedVector2Array(58.25, 55.52, 78.25, 62.52, 73.25, 74.52, 63.25, 70.52)
-color = Color(0.850980, 0.713725, 0.435294, 1)
-
-[node name="Stem" type="Polygon2D" parent="Art/Trophy2"]
-polygon = PackedVector2Array(67.25, 71.52, 70.25, 72.52, 70.25, 81.52, 67.25, 80.52)
-color = Color(0.729412, 0.568627, 0.298039, 1)
-
-[node name="Base" type="Polygon2D" parent="Art/Trophy2"]
-polygon = PackedVector2Array(60.25, 78.52, 77.25, 84.52, 73.25, 87.52, 56.25, 81.52)
-color = Color(0.909804, 0.803922, 0.564706, 1)
-
+layout_mode = 1
+anchor_left = 0.29
+anchor_top = 0.7
+anchor_right = 0.52
+anchor_bottom = 0.86
+mouse_filter = 2
+texture_filter = 1
+texture = ExtResource("trophy")
+expand_mode = 1
+stretch_mode = 5

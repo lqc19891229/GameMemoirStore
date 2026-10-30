@@ -17,15 +17,19 @@ func frames() -> void:
 	for _i in range(5): await process_frame
 
 func click_at(point: Vector2) -> void:
+	var motion := InputEventMouseMotion.new()
+	motion.position = point
+	motion.global_position = point
+	root.push_input(motion, true)
 	var event := InputEventMouseButton.new()
 	event.button_index = MOUSE_BUTTON_LEFT
 	event.position = point
 	event.global_position = point
 	event.pressed = true
-	root.push_input(event)
+	root.push_input(event, true)
 	event = event.duplicate() as InputEventMouseButton
 	event.pressed = false
-	root.push_input(event)
+	root.push_input(event, true)
 	await frames()
 
 func click_screen(desktop: Control, target: Control) -> void:

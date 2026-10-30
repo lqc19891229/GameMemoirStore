@@ -276,6 +276,10 @@ default_color = Color(0.639216, 0.698039, 0.603922, 1)
 width = 2
 
 [node name="Furniture_desk" parent="RoomCanvas" instance=ExtResource("3")]
+offset_left = 0.0
+offset_top = 0.0
+offset_right = 0.0
+offset_bottom = 0.0
 unique_name_in_owner = true
 layout_mode = 1
 anchor_left = 0.1855
@@ -286,6 +290,10 @@ custom_minimum_size = Vector2(0, 0)
 tooltip_text = "更换家具"
 
 [node name="Furniture_computer" parent="RoomCanvas" instance=ExtResource("4")]
+offset_left = 0.0
+offset_top = 0.0
+offset_right = 0.0
+offset_bottom = 0.0
 unique_name_in_owner = true
 layout_mode = 1
 anchor_left = 0.2679
@@ -296,6 +304,10 @@ custom_minimum_size = Vector2(0, 0)
 tooltip_text = "点击显示器，使用电脑"
 
 [node name="Furniture_peripheral" parent="RoomCanvas" instance=ExtResource("5")]
+offset_left = 0.0
+offset_top = 0.0
+offset_right = 0.0
+offset_bottom = 0.0
 unique_name_in_owner = true
 layout_mode = 1
 anchor_left = 0.3077
@@ -306,6 +318,10 @@ custom_minimum_size = Vector2(0, 0)
 tooltip_text = "更换外设"
 
 [node name="Furniture_cabinet" parent="RoomCanvas" instance=ExtResource("6")]
+offset_left = 0.0
+offset_top = 0.0
+offset_right = 0.0
+offset_bottom = 0.0
 unique_name_in_owner = true
 layout_mode = 1
 anchor_left = 0.673
@@ -316,6 +332,10 @@ custom_minimum_size = Vector2(0, 0)
 tooltip_text = "打开成就展示柜"
 
 [node name="Furniture_decor" parent="RoomCanvas" instance=ExtResource("7")]
+offset_left = 0.0
+offset_top = 0.0
+offset_right = 0.0
+offset_bottom = 0.0
 unique_name_in_owner = true
 layout_mode = 1
 anchor_left = 0.2154

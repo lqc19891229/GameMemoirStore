@@ -24,6 +24,15 @@ func run() -> void:
 		if "furniture/" in path:
 			check(node.get_child_count() > 0, "furniture contains real art nodes: " + path)
 		node.free()
+	for kind in ["desk", "computer", "peripheral", "cabinet", "decor"]:
+		var item = load("res://scenes/life/furniture/%s.tscn" % kind).instantiate()
+		check(item.get_node("Art") is TextureRect and item.get_node("Art").texture != null, "furniture uses a real texture: " + kind)
+		check(item.get_child_count() <= 4, "furniture keeps only meaningful sprite layers: " + kind)
+		item.free()
+	var closeup = load("res://scenes/life/computer_desktop.tscn").instantiate()
+	check(closeup.get_node("WorkstationArt") is TextureRect, "close-up uses one backdrop texture")
+	check(closeup.get_child_count() == 2, "close-up only has art and live monitor screen")
+	closeup.free()
 	var game = load("res://scenes/game_root.tscn").instantiate()
 	check(game.has_node("PlayerRoom/RoomCanvas/Furniture_computer"), "main scene contains room and furniture instances")
 	check(game.has_node("ComputerDesktop/MonitorScreen/ScreenViewport/DesktopViewport/DesktopScreen/ApplicationArea"), "desktop shell exists before running")

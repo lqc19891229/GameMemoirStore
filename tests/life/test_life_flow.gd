@@ -83,6 +83,7 @@ func run() -> void:
 	check(state.life["equipped"]["peripheral"] == "precise_mouse" and session.challenge_rate(id) > rate, "equipping an owned peripheral affects challenge efficiency")
 	game.show_room()
 	check(game.room.furniture["peripheral"].upgraded, "installed peripheral is reflected in the room")
+	check(game.room.furniture["peripheral"].get_node("Art").self_modulate != Color.WHITE, "equipped peripheral updates its sprite appearance")
 	game.room.find_child("RoomLayout", true, false).pressed.emit()
 	check(state.life["room_layout"] == 1, "room layout can be changed")
 	before = state.wallet
@@ -123,6 +124,7 @@ func run() -> void:
 	game.cabinet.find_child("Display_" + id + "_first_memory", true, false).pressed.emit()
 	await frames()
 	check(state.life["displayed"].size() == 1 and game.room.furniture["cabinet"].trophy_count == 1, "unlocked trophy can be displayed in the physical cabinet")
+	check(game.room.furniture["cabinet"].get_node("Trophy0").visible and not game.room.furniture["cabinet"].get_node("Trophy1").visible, "cabinet sprite shows exactly the displayed trophy layers")
 	session.toggle_display(id, "unknown")
 	check(state.life["displayed"].size() == 1, "unearned trophy cannot be displayed")
 	session.start_play(id)
