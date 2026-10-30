@@ -36,6 +36,7 @@ func activity_text() -> String:
 
 func buy_item(id: String) -> String:
 	if not Data.ITEMS.has(id) or int(Data.ITEMS[id]["price"]) <= 0: return "商品不存在。"
+	if Data.ROOM_ONLY_SLOTS.has(Data.ITEMS[id]["slot"]): return "该商品已停售。"
 	if state.life["items"].has(id): return "已经拥有这件物品。"
 	var cost: int = int(Data.ITEMS[id]["price"])
 	if state.wallet < cost: return "预算不足，还差 %d 点。" % (cost - state.wallet)
@@ -151,18 +152,6 @@ func tick(minutes: int = 1) -> void:
 				state.life["guide_income"] = int(state.life["guide_income"]) + 1
 		if int(state.life["elapsed"]) % 5 == 0: state.save_state(false)
 	tick_updated.emit()
-
-func toggle_display(game_id: String, achievement: String) -> String:
-	if not state.life["achievements"].get(game_id, []).has(achievement): return "这项成就尚未解锁。"
-	var item := {"game_id": game_id, "achievement": achievement}
-	var displayed: Array = state.life["displayed"]
-	if displayed.has(item): displayed.erase(item)
-	else:
-		var capacity: int = int(Data.ITEMS[state.life["equipped"]["cabinet"]].get("capacity", 1))
-		if displayed.size() >= capacity: return "展示位已满，请先收起一枚奖杯，或更换展示柜。"
-		displayed.append(item)
-	state.save_state()
-	return "成就展示已更新。"
 
 func reset_run() -> void:
 	var persistent: bool = state.persistence_enabled

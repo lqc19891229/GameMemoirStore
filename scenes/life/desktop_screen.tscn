@@ -133,14 +133,6 @@ layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 8
 
-[node name="DesktopRoom" type="Button" parent="Taskbar/TaskbarRow"]
-unique_name_in_owner = true
-layout_mode = 2
-text = "< 房间"
-custom_minimum_size = Vector2(100, 32)
-mouse_default_cursor_shape = 2
-theme_type_variation = "FlatButton"
-
 [node name="TaskbarPlatform" type="Button" parent="Taskbar/TaskbarRow"]
 unique_name_in_owner = true
 layout_mode = 2
