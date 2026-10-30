@@ -7,7 +7,7 @@
 | 想编辑的内容 | 打开的场景 |
 |---|---|
 | 整体入口和房间 / 桌面层级 | `scenes/game_root.tscn` |
-| 房间、窗户、地板、海报、家具位置 | `scenes/life/player_room.tscn` |
+| 房间背景、家具位置 | `scenes/life/player_room.tscn` |
 | 桌子、电脑、外设、展示柜、台灯的外观 | `scenes/life/furniture/*.tscn` |
 | 显示器、主机、键盘、鼠标的电脑近景 | `scenes/life/computer_desktop.tscn` |
 | 显示器内部的桌面、快捷方式、任务栏 | `scenes/life/desktop_screen.tscn` |
@@ -24,7 +24,7 @@
 
 ## 布局与美术
 
-- `PlayerRoom/RoomCanvas/Art` 下的两面墙、地面、窗户和海报使用静态 `Polygon2D` / `Line2D`，构成斜视房间。家具是独立 `Button` 场景实例，内部的 `Art` 是一张 `TextureRect` 贴图，没有 `_draw()` 绘图。背景的 `@tool` 脚本只缩放已有墙面节点。
+- `PlayerRoom/RoomCanvas/Art` 是一个没有子节点的 `TextureRect`，使用 `assets/art/life/room_background.svg` 表现两面墙、地面、窗户、海报和地毯。背景保留原有构图，原先的多边形和线条已从场景树移除。家具仍是独立 `Button` 场景实例，内部的 `Art` 同样是一张贴图。背景与家具都无需 `@tool` 才能在编辑器中显示。
 - 家具位置、大小通过锚点和偏移编辑。默认布置使用编辑器保存的位置；“换个布置”只叠加一个相对位移，不再每次刷新用硬编码坐标覆盖它们。
 - 家具的 `Art` 节点的 `Texture` 属性决定整件家具外观。替换 `assets/art/life/` 下的对应 PNG，或在 Inspector 里给 `Art` 指定新贴图即可；`Art` 本身没有子节点。电脑额外保留一个麦克风贴图，展示柜额外保留三个奖杯贴图，脚本只切换这些有独立状态的物件。根节点可选的 `Upgraded Texture` 用于升级版本贴图，未配置时使用轻微暖色调表示升级。
 - UI 使用 `Container` 布局。容器内控件的位置由父容器计算，调整 `Custom Minimum Size`、`Size Flags`、容器间距或外边距；自由放置的房间家具可以直接移动和缩放。
@@ -60,3 +60,5 @@
 `assets/art/life/` 包含 desk、computer、keyboard_mouse、cabinet、desk_lamp、microphone、trophy 和 workstation 共 8 张 PNG。家具素材保留 alpha 通道；生成提示词与方式记录在同目录 `ASSET_PROMPTS.md`。
 
 家具实例的锚点决定位置和大小，实例上的四个 Offset 均为 0，避免叠加源场景的预览尺寸。显示器点击使用容器本地事件坐标；测试以 viewport 本地坐标注入输入，支持无界面环境。
+
+房间背景已进一步合并：`RoomCanvas/Art` 只有一张 `room_background.svg` 贴图，内部 0 个子节点；`RoomCanvas` 只保留 Art 和五件家具。选中 Art 的 Texture 属性可整体替换背景；需要修改墙面、窗户、海报或地毯的细节时，编辑这个 SVG 素材文件。SVG 由当前静态几何合并而来，不含家具，家具的位置和交互仍在各自场景中管理。

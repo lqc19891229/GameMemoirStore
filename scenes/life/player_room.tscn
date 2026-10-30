@@ -14,7 +14,7 @@
 
 [ext_resource type="PackedScene" path="res://scenes/life/furniture/decor.tscn" id="7"]
 
-[ext_resource type="Script" path="res://scripts/life/authored_art.gd" id="8"]
+[ext_resource type="Texture2D" path="res://assets/art/life/room_background.svg" id="8"]
 
 [sub_resource type="StyleBoxFlat" id="Style0"]
 bg_color = Color(0.14901960784313725, 0.24313725490196078, 0.23137254901960785, 1)
@@ -70,210 +70,18 @@ offset_top = 74
 offset_bottom = -116
 mouse_filter = 2
 
-[node name="Art" type="Node2D" parent="RoomCanvas"]
-script = ExtResource("8")
-reference_size = Vector2(1280, 610)
-
-[node name="RoomShadow" type="Polygon2D" parent="RoomCanvas/Art"]
-polygon = PackedVector2Array(156, 414, 640, 604, 1124, 414, 640, 225)
-color = Color(0.054902, 0.094118, 0.098039, 0.301961)
-
-[node name="FloorThicknessLeft" type="Polygon2D" parent="RoomCanvas/Art"]
-polygon = PackedVector2Array(164, 409.2, 640, 588.4, 640, 600, 164, 421)
-color = Color(0.458824, 0.388235, 0.301961, 1)
-
-[node name="FloorThicknessRight" type="Polygon2D" parent="RoomCanvas/Art"]
-polygon = PackedVector2Array(640, 588.4, 1116, 409.2, 1116, 421, 640, 600)
-color = Color(0.388235, 0.341176, 0.266667, 1)
-
-[node name="Floor" type="Polygon2D" parent="RoomCanvas/Art"]
-polygon = PackedVector2Array(640, 230, 1116, 409.2, 640, 588.4, 164, 409.2)
-color = Color(0.701961, 0.607843, 0.458824, 1)
-
-[node name="FloorU1" type="Line2D" parent="RoomCanvas/Art"]
-points = PackedVector2Array(699.5, 252.4, 223.5, 431.6)
-default_color = Color(0.596078, 0.505882, 0.368627, 1)
-width = 1.5
-
-[node name="FloorV1" type="Line2D" parent="RoomCanvas/Art"]
-points = PackedVector2Array(580.5, 252.4, 1056.5, 431.6)
-default_color = Color(0.596078, 0.505882, 0.368627, 1)
-width = 1.5
-
-[node name="FloorU2" type="Line2D" parent="RoomCanvas/Art"]
-points = PackedVector2Array(759, 274.8, 283, 454)
-default_color = Color(0.596078, 0.505882, 0.368627, 1)
-width = 1.5
-
-[node name="FloorV2" type="Line2D" parent="RoomCanvas/Art"]
-points = PackedVector2Array(521, 274.8, 997, 454)
-default_color = Color(0.596078, 0.505882, 0.368627, 1)
-width = 1.5
-
-[node name="FloorU3" type="Line2D" parent="RoomCanvas/Art"]
-points = PackedVector2Array(818.5, 297.2, 342.5, 476.4)
-default_color = Color(0.596078, 0.505882, 0.368627, 1)
-width = 1.5
-
-[node name="FloorV3" type="Line2D" parent="RoomCanvas/Art"]
-points = PackedVector2Array(461.5, 297.2, 937.5, 476.4)
-default_color = Color(0.596078, 0.505882, 0.368627, 1)
-width = 1.5
-
-[node name="FloorU4" type="Line2D" parent="RoomCanvas/Art"]
-points = PackedVector2Array(878, 319.6, 402, 498.8)
-default_color = Color(0.596078, 0.505882, 0.368627, 1)
-width = 1.5
-
-[node name="FloorV4" type="Line2D" parent="RoomCanvas/Art"]
-points = PackedVector2Array(402, 319.6, 878, 498.8)
-default_color = Color(0.596078, 0.505882, 0.368627, 1)
-width = 1.5
-
-[node name="FloorU5" type="Line2D" parent="RoomCanvas/Art"]
-points = PackedVector2Array(937.5, 342, 461.5, 521.2)
-default_color = Color(0.596078, 0.505882, 0.368627, 1)
-width = 1.5
-
-[node name="FloorV5" type="Line2D" parent="RoomCanvas/Art"]
-points = PackedVector2Array(342.5, 342, 818.5, 521.2)
-default_color = Color(0.596078, 0.505882, 0.368627, 1)
-width = 1.5
-
-[node name="FloorU6" type="Line2D" parent="RoomCanvas/Art"]
-points = PackedVector2Array(997, 364.4, 521, 543.6)
-default_color = Color(0.596078, 0.505882, 0.368627, 1)
-width = 1.5
-
-[node name="FloorV6" type="Line2D" parent="RoomCanvas/Art"]
-points = PackedVector2Array(283, 364.4, 759, 543.6)
-default_color = Color(0.596078, 0.505882, 0.368627, 1)
-width = 1.5
-
-[node name="FloorU7" type="Line2D" parent="RoomCanvas/Art"]
-points = PackedVector2Array(1056.5, 386.8, 580.5, 566)
-default_color = Color(0.596078, 0.505882, 0.368627, 1)
-width = 1.5
-
-[node name="FloorV7" type="Line2D" parent="RoomCanvas/Art"]
-points = PackedVector2Array(223.5, 386.8, 699.5, 566)
-default_color = Color(0.596078, 0.505882, 0.368627, 1)
-width = 1.5
-
-[node name="LeftWall" type="Polygon2D" parent="RoomCanvas/Art"]
-polygon = PackedVector2Array(640, 230, 164, 409.2, 164, 214.2, 640, 35)
-color = Color(0.819608, 0.764706, 0.635294, 1)
-
-[node name="RightWall" type="Polygon2D" parent="RoomCanvas/Art"]
-polygon = PackedVector2Array(640, 230, 1116, 409.2, 1116, 214.2, 640, 35)
-color = Color(0.705882, 0.709804, 0.607843, 1)
-
-[node name="LeftWallTop" type="Line2D" parent="RoomCanvas/Art"]
-points = PackedVector2Array(164, 214.2, 640, 35)
-default_color = Color(0.909804, 0.854902, 0.721569, 1)
-width = 5
-
-[node name="RightWallTop" type="Line2D" parent="RoomCanvas/Art"]
-points = PackedVector2Array(640, 35, 1116, 214.2)
-default_color = Color(0.815686, 0.815686, 0.701961, 1)
-width = 5
-
-[node name="RoomCorner" type="Line2D" parent="RoomCanvas/Art"]
-points = PackedVector2Array(640, 230, 640, 35)
-default_color = Color(0.600000, 0.619608, 0.501961, 1)
-width = 3
-
-[node name="LeftSkirting" type="Line2D" parent="RoomCanvas/Art"]
-points = PackedVector2Array(164, 404.2, 640, 225)
-default_color = Color(0.545098, 0.556863, 0.443137, 1)
-width = 7
-
-[node name="RightSkirting" type="Line2D" parent="RoomCanvas/Art"]
-points = PackedVector2Array(640, 225, 1116, 404.2)
-default_color = Color(0.494118, 0.545098, 0.439216, 1)
-width = 7
-
-[node name="WindowFrame" type="Polygon2D" parent="RoomCanvas/Art"]
-polygon = PackedVector2Array(334, 262.2, 202.25, 311.8, 202.25, 220.8, 334, 171.2)
-color = Color(0.411765, 0.501961, 0.462745, 1)
-
-[node name="WindowSky" type="Polygon2D" parent="RoomCanvas/Art"]
-polygon = PackedVector2Array(326.35, 257.08, 209.9, 300.92, 209.9, 225.92, 326.35, 182.08)
-color = Color(0.423529, 0.596078, 0.611765, 1)
-
-[node name="CityBuilding0" type="Polygon2D" parent="RoomCanvas/Art"]
-polygon = PackedVector2Array(322.95, 257.36, 308.5, 262.8, 308.5, 242.8, 322.95, 237.36)
-color = Color(0.321569, 0.482353, 0.501961, 1)
-
-[node name="CityBuilding1" type="Polygon2D" parent="RoomCanvas/Art"]
-polygon = PackedVector2Array(304.25, 264.4, 289.8, 269.84, 289.8, 232.84, 304.25, 227.4)
-color = Color(0.278431, 0.431373, 0.470588, 1)
-
-[node name="CityBuilding2" type="Polygon2D" parent="RoomCanvas/Art"]
-polygon = PackedVector2Array(285.55, 271.44, 271.1, 276.88, 271.1, 222.88, 285.55, 217.44)
-color = Color(0.321569, 0.482353, 0.501961, 1)
-
-[node name="CityBuilding3" type="Polygon2D" parent="RoomCanvas/Art"]
-polygon = PackedVector2Array(266.85, 278.48, 252.4, 283.92, 252.4, 252.92, 266.85, 247.48)
-color = Color(0.278431, 0.431373, 0.470588, 1)
-
-[node name="CityBuilding4" type="Polygon2D" parent="RoomCanvas/Art"]
-polygon = PackedVector2Array(248.15, 285.52, 233.7, 290.96, 233.7, 242.96, 248.15, 237.52)
-color = Color(0.321569, 0.482353, 0.501961, 1)
-
-[node name="CityBuilding5" type="Polygon2D" parent="RoomCanvas/Art"]
-polygon = PackedVector2Array(229.45, 292.56, 215, 298, 215, 273, 229.45, 267.56)
-color = Color(0.278431, 0.431373, 0.470588, 1)
-
-[node name="WindowMullion" type="Line2D" parent="RoomCanvas/Art"]
-points = PackedVector2Array(267.7, 279.16, 267.7, 204.16)
-default_color = Color(0.854902, 0.807843, 0.666667, 1)
-width = 4
-
-[node name="WindowCrossbar" type="Line2D" parent="RoomCanvas/Art"]
-points = PackedVector2Array(326.35, 221.08, 209.9, 264.92)
-default_color = Color(0.854902, 0.807843, 0.666667, 1)
-width = 4
-
-[node name="PosterFrame" type="Polygon2D" parent="RoomCanvas/Art"]
-polygon = PackedVector2Array(818.5, 227.2, 950.25, 276.8, 950.25, 188.8, 818.5, 139.2)
-color = Color(0.403922, 0.470588, 0.407843, 1)
-
-[node name="Poster" type="Polygon2D" parent="RoomCanvas/Art"]
-polygon = PackedVector2Array(825.3, 222.76, 943.45, 267.24, 943.45, 193.24, 825.3, 148.76)
-color = Color(0.168627, 0.325490, 0.349020, 1)
-
-[node name="PosterTitle" type="Line2D" parent="RoomCanvas/Art"]
-points = PackedVector2Array(839.75, 169.2, 926.45, 201.84)
-default_color = Color(0.815686, 0.792157, 0.619608, 1)
-width = 4
-
-[node name="PosterMoon" type="Polygon2D" parent="RoomCanvas/Art"]
-polygon = PackedVector2Array(872.9, 223.68, 895, 232, 895, 205, 872.9, 196.68)
-color = Color(0.525490, 0.666667, 0.552941, 1)
-
-[node name="RugBorder" type="Polygon2D" parent="RoomCanvas/Art"]
-polygon = PackedVector2Array(657, 353.8, 861, 430.6, 665.5, 504.2, 461.5, 427.4)
-color = Color(0.309804, 0.431373, 0.400000, 1)
-
-[node name="Rug" type="Polygon2D" parent="RoomCanvas/Art"]
-polygon = PackedVector2Array(657, 360.98, 840.6, 430.1, 665.5, 496.02, 481.9, 426.9)
-color = Color(0.466667, 0.568627, 0.501961, 1)
-
-[node name="RugStripe0" type="Line2D" parent="RoomCanvas/Art"]
-points = PackedVector2Array(651.05, 369.76, 814.25, 431.2)
-default_color = Color(0.639216, 0.698039, 0.603922, 1)
-width = 2
-
-[node name="RugStripe1" type="Line2D" parent="RoomCanvas/Art"]
-points = PackedVector2Array(603.45, 387.68, 766.65, 449.12)
-default_color = Color(0.639216, 0.698039, 0.603922, 1)
-width = 2
-
-[node name="RugStripe2" type="Line2D" parent="RoomCanvas/Art"]
-points = PackedVector2Array(555.85, 405.6, 719.05, 467.04)
-default_color = Color(0.639216, 0.698039, 0.603922, 1)
-width = 2
+[node name="Art" type="TextureRect" parent="RoomCanvas"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture_filter = 1
+texture = ExtResource("8")
+expand_mode = 1
+stretch_mode = 0
 
 [node name="Furniture_desk" parent="RoomCanvas" instance=ExtResource("3")]
 offset_left = 0.0

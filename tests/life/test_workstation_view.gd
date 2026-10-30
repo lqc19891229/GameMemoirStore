@@ -44,8 +44,8 @@ func run() -> void:
 	root.add_child(game)
 	game.session.timer.stop()
 	await frames()
-	check(game.room.get_node("RoomCanvas/Art/LeftWall") is Polygon2D, "left wall is an authored polygon")
-	check(game.room.get_node("RoomCanvas/Art/RightWall") is Polygon2D, "right wall is an authored polygon")
+	check(game.room.get_node("RoomCanvas/Art") is TextureRect, "room background is a single texture")
+	check(game.room.get_node("RoomCanvas/Art").get_child_count() == 0, "room background contains no child geometry")
 	var room_screen: Button = game.room.furniture["computer"]
 	await click_at(room_screen.get_global_rect().get_center())
 	check(game.desktop.visible, "clicking the computer enters its close-up")

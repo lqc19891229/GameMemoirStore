@@ -6,7 +6,7 @@
 - 原始授权文件：`assets/fonts/OFL.txt`。
 - 旧演示游戏封面与平台图标：本工程早期的程序绘制像素素材，现保留给测试和客户端使用。
 - CounterSquad 封面和四张展示图：用户提供，保存在 `assets/art/CounterSquad/`。
-- 房间墙面和地板：场景内的静态 2D 节点。
+- 房间墙面、地板、窗户、海报和地毯：由原场景的静态几何合并为 `assets/art/life/room_background.svg`，作为一张背景贴图使用。
 - 家具与电脑近景：本项目通过内置 ImageGen 生成的 8 张 PNG，位于 `assets/art/life/`；家具素材保留透明通道，提示词见该目录的 `ASSET_PROMPTS.md`。
 - 作品名称、制作组、评价、价格与本次演示日期为游戏内演示资料。
 

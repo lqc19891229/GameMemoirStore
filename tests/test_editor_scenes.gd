@@ -35,6 +35,11 @@ func run() -> void:
 	closeup.free()
 	var game = load("res://scenes/game_root.tscn").instantiate()
 	check(game.has_node("PlayerRoom/RoomCanvas/Furniture_computer"), "main scene contains room and furniture instances")
+	var background = game.get_node("PlayerRoom/RoomCanvas/Art")
+	check(background is TextureRect, "room art is a texture node before ready")
+	check(background.texture != null, "room background texture loads before ready")
+	check(background.get_child_count() == 0, "room art has no hidden geometry children")
+	check(game.get_node("PlayerRoom/RoomCanvas").get_child_count() == 6, "room canvas only contains background plus five furniture instances")
 	check(game.has_node("ComputerDesktop/MonitorScreen/ScreenViewport/DesktopViewport/DesktopScreen/ApplicationArea"), "desktop shell exists before running")
 	var furniture: Control = game.get_node("PlayerRoom/RoomCanvas/Furniture_computer")
 	var anchor := furniture.anchor_left + 0.025

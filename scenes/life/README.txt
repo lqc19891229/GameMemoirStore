@@ -1,6 +1,6 @@
 房间与电脑场景
 
-player_room.tscn：固定视角的像素房间与电脑、库存、展示柜入口。
+player_room.tscn：Art 是一张无子节点的房间背景贴图，家具独立于背景，保留电脑、库存、展示柜入口。
 computer_desktop.tscn：一张工作台近景贴图，屏幕内嵌独立桌面视口。
 desktop_screen.tscn：显示器内部的桌面、快捷方式、任务栏和通知。
 app_window.tscn：可复用窗口壳，提供拖动、最小化、铺满和关闭。
