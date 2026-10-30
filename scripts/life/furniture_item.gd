@@ -1,33 +1,21 @@
-@tool
 extends Button
-## Authored Polygon2D / ColorRect nodes; no runtime geometry construction.
+## One texture per furniture item; optional sprite overlays carry actual gameplay state.
 @export_enum("computer", "desk", "peripheral", "cabinet", "decor") var kind := "computer"
-@export var art_size := Vector2(100, 100)
+## Optional upgraded artwork. Leave empty to use a subtle warm tint on the base sprite.
+@export var upgraded_texture: Texture2D
 var upgraded := false
 var trophy_count := 0
 var microphone := false
-var original_colors: Dictionary = {}
+var base_texture: Texture2D
 
 func _ready() -> void:
-	_remember_colors(self)
-	resized.connect(_fit_art)
-	_fit_art()
-
-func _remember_colors(parent: Node) -> void:
-	for child in parent.get_children():
-		if (child is ColorRect or child is Polygon2D) and child.has_meta("upgraded_color"):
-			original_colors[child] = child.color
-		_remember_colors(child)
-
-func _fit_art() -> void:
-	if has_node("Art") and art_size.x > 0 and art_size.y > 0:
-		$Art.scale = size / art_size
+	base_texture = $Art.texture
 
 func refresh_appearance() -> void:
-	for child in original_colors:
-		child.color = child.get_meta("upgraded_color") if upgraded else original_colors[child]
-	var microphone_node := get_node_or_null("Art/Microphone")
+	$Art.texture = upgraded_texture if upgraded and upgraded_texture != null else base_texture
+	$Art.self_modulate = Color(1.0, 0.97, 0.87) if upgraded and upgraded_texture == null else Color.WHITE
+	var microphone_node := get_node_or_null("Microphone")
 	if microphone_node != null: microphone_node.visible = microphone
 	for index in range(3):
-		var trophy := get_node_or_null("Art/Trophy%d" % index)
+		var trophy := get_node_or_null("Trophy%d" % index)
 		if trophy != null: trophy.visible = index < trophy_count

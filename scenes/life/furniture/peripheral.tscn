@@ -1,8 +1,10 @@
-[gd_scene load_steps=5 format=3]
+[gd_scene load_steps=6 format=3]
 
 [ext_resource type="Theme" path="res://assets/client_theme.tres" id="1"]
 
 [ext_resource type="Script" path="res://scripts/life/furniture_item.gd" id="2"]
+
+[ext_resource type="Texture2D" path="res://assets/art/life/keyboard_mouse.png" id="art"]
 
 [sub_resource type="StyleBoxFlat" id="Transparent"]
 bg_color = Color(0.000000, 0.000000, 0.000000, 0.000000)
@@ -26,180 +28,20 @@ custom_minimum_size = Vector2(0, 0)
 offset_right = 154.75
 offset_bottom = 71.28
 mouse_default_cursor_shape = 2
-art_size = Vector2(154.75, 71.28)
 theme_override_styles/normal = SubResource("Transparent")
 theme_override_styles/pressed = SubResource("Transparent")
 theme_override_styles/hover = SubResource("Hover")
 theme_override_styles/focus = SubResource("Hover")
 
-[node name="Art" type="Node2D" parent="."]
-
-
-[node name="KeyboardSide" type="Polygon2D" parent="Art"]
-polygon = PackedVector2Array(128.8, 34.68, 39.55, 68.28, 39.55, 64.28, 128.8, 30.68)
-color = Color(0.321569, 0.400000, 0.368627, 1)
-
-[node name="KeyboardFront" type="Polygon2D" parent="Art"]
-polygon = PackedVector2Array(3, 54.52, 39.55, 68.28, 39.55, 64.28, 3, 50.52)
-color = Color(0.400000, 0.482353, 0.439216, 1)
-metadata/upgraded_color = Color(0.768627, 0.729412, 0.556863, 1)
-
-[node name="KeyboardTop" type="Polygon2D" parent="Art"]
-polygon = PackedVector2Array(92.25, 16.92, 128.8, 30.68, 39.55, 64.28, 3, 50.52)
-color = Color(0.603922, 0.635294, 0.545098, 1)
-metadata/upgraded_color = Color(0.768627, 0.729412, 0.556863, 1)
-
-[node name="Key134_316" type="Polygon2D" parent="Art"]
-polygon = PackedVector2Array(91.4, 19.44, 96.5, 21.36, 89.7, 23.92, 84.6, 22)
-color = Color(0.776471, 0.784314, 0.666667, 1)
-metadata/upgraded_color = Color(0.898039, 0.823529, 0.627451, 1)
-
-[node name="Key134_329" type="Polygon2D" parent="Art"]
-polygon = PackedVector2Array(80.35, 23.6, 85.45, 25.52, 78.65, 28.08, 73.55, 26.16)
-color = Color(0.776471, 0.784314, 0.666667, 1)
-metadata/upgraded_color = Color(0.898039, 0.823529, 0.627451, 1)
-
-[node name="Key134_342" type="Polygon2D" parent="Art"]
-polygon = PackedVector2Array(69.3, 27.76, 74.4, 29.68, 67.6, 32.24, 62.5, 30.32)
-color = Color(0.776471, 0.784314, 0.666667, 1)
-metadata/upgraded_color = Color(0.898039, 0.823529, 0.627451, 1)
-
-[node name="Key134_355" type="Polygon2D" parent="Art"]
-polygon = PackedVector2Array(58.25, 31.92, 63.35, 33.84, 56.55, 36.4, 51.45, 34.48)
-color = Color(0.776471, 0.784314, 0.666667, 1)
-metadata/upgraded_color = Color(0.898039, 0.823529, 0.627451, 1)
-
-[node name="Key134_368" type="Polygon2D" parent="Art"]
-polygon = PackedVector2Array(47.2, 36.08, 52.3, 38, 45.5, 40.56, 40.4, 38.64)
-color = Color(0.776471, 0.784314, 0.666667, 1)
-metadata/upgraded_color = Color(0.898039, 0.823529, 0.627451, 1)
-
-[node name="Key134_381" type="Polygon2D" parent="Art"]
-polygon = PackedVector2Array(36.15, 40.24, 41.25, 42.16, 34.45, 44.72, 29.35, 42.8)
-color = Color(0.776471, 0.784314, 0.666667, 1)
-metadata/upgraded_color = Color(0.898039, 0.823529, 0.627451, 1)
-
-[node name="Key134_394" type="Polygon2D" parent="Art"]
-polygon = PackedVector2Array(25.1, 44.4, 30.2, 46.32, 23.4, 48.88, 18.3, 46.96)
-color = Color(0.776471, 0.784314, 0.666667, 1)
-metadata/upgraded_color = Color(0.898039, 0.823529, 0.627451, 1)
-
-[node name="Key144_316" type="Polygon2D" parent="Art"]
-polygon = PackedVector2Array(99.9, 22.64, 105, 24.56, 98.2, 27.12, 93.1, 25.2)
-color = Color(0.776471, 0.784314, 0.666667, 1)
-metadata/upgraded_color = Color(0.898039, 0.823529, 0.627451, 1)
-
-[node name="Key144_329" type="Polygon2D" parent="Art"]
-polygon = PackedVector2Array(88.85, 26.8, 93.95, 28.72, 87.15, 31.28, 82.05, 29.36)
-color = Color(0.776471, 0.784314, 0.666667, 1)
-metadata/upgraded_color = Color(0.898039, 0.823529, 0.627451, 1)
-
-[node name="Key144_342" type="Polygon2D" parent="Art"]
-polygon = PackedVector2Array(77.8, 30.96, 82.9, 32.88, 76.1, 35.44, 71, 33.52)
-color = Color(0.776471, 0.784314, 0.666667, 1)
-metadata/upgraded_color = Color(0.898039, 0.823529, 0.627451, 1)
-
-[node name="Key144_355" type="Polygon2D" parent="Art"]
-polygon = PackedVector2Array(66.75, 35.12, 71.85, 37.04, 65.05, 39.6, 59.95, 37.68)
-color = Color(0.776471, 0.784314, 0.666667, 1)
-metadata/upgraded_color = Color(0.898039, 0.823529, 0.627451, 1)
-
-[node name="Key144_368" type="Polygon2D" parent="Art"]
-polygon = PackedVector2Array(55.7, 39.28, 60.8, 41.2, 54, 43.76, 48.9, 41.84)
-color = Color(0.776471, 0.784314, 0.666667, 1)
-metadata/upgraded_color = Color(0.898039, 0.823529, 0.627451, 1)
-
-[node name="Key144_381" type="Polygon2D" parent="Art"]
-polygon = PackedVector2Array(44.65, 43.44, 49.75, 45.36, 42.95, 47.92, 37.85, 46)
-color = Color(0.776471, 0.784314, 0.666667, 1)
-metadata/upgraded_color = Color(0.898039, 0.823529, 0.627451, 1)
-
-[node name="Key144_394" type="Polygon2D" parent="Art"]
-polygon = PackedVector2Array(33.6, 47.6, 38.7, 49.52, 31.9, 52.08, 26.8, 50.16)
-color = Color(0.776471, 0.784314, 0.666667, 1)
-metadata/upgraded_color = Color(0.898039, 0.823529, 0.627451, 1)
-
-[node name="Key154_316" type="Polygon2D" parent="Art"]
-polygon = PackedVector2Array(108.4, 25.84, 113.5, 27.76, 106.7, 30.32, 101.6, 28.4)
-color = Color(0.776471, 0.784314, 0.666667, 1)
-metadata/upgraded_color = Color(0.898039, 0.823529, 0.627451, 1)
-
-[node name="Key154_329" type="Polygon2D" parent="Art"]
-polygon = PackedVector2Array(97.35, 30, 102.45, 31.92, 95.65, 34.48, 90.55, 32.56)
-color = Color(0.776471, 0.784314, 0.666667, 1)
-metadata/upgraded_color = Color(0.898039, 0.823529, 0.627451, 1)
-
-[node name="Key154_342" type="Polygon2D" parent="Art"]
-polygon = PackedVector2Array(86.3, 34.16, 91.4, 36.08, 84.6, 38.64, 79.5, 36.72)
-color = Color(0.776471, 0.784314, 0.666667, 1)
-metadata/upgraded_color = Color(0.898039, 0.823529, 0.627451, 1)
-
-[node name="Key154_355" type="Polygon2D" parent="Art"]
-polygon = PackedVector2Array(75.25, 38.32, 80.35, 40.24, 73.55, 42.8, 68.45, 40.88)
-color = Color(0.776471, 0.784314, 0.666667, 1)
-metadata/upgraded_color = Color(0.898039, 0.823529, 0.627451, 1)
-
-[node name="Key154_368" type="Polygon2D" parent="Art"]
-polygon = PackedVector2Array(64.2, 42.48, 69.3, 44.4, 62.5, 46.96, 57.4, 45.04)
-color = Color(0.776471, 0.784314, 0.666667, 1)
-metadata/upgraded_color = Color(0.898039, 0.823529, 0.627451, 1)
-
-[node name="Key154_381" type="Polygon2D" parent="Art"]
-polygon = PackedVector2Array(53.15, 46.64, 58.25, 48.56, 51.45, 51.12, 46.35, 49.2)
-color = Color(0.776471, 0.784314, 0.666667, 1)
-metadata/upgraded_color = Color(0.898039, 0.823529, 0.627451, 1)
-
-[node name="Key154_394" type="Polygon2D" parent="Art"]
-polygon = PackedVector2Array(42.1, 50.8, 47.2, 52.72, 40.4, 55.28, 35.3, 53.36)
-color = Color(0.776471, 0.784314, 0.666667, 1)
-metadata/upgraded_color = Color(0.898039, 0.823529, 0.627451, 1)
-
-[node name="Key164_316" type="Polygon2D" parent="Art"]
-polygon = PackedVector2Array(116.9, 29.04, 122, 30.96, 115.2, 33.52, 110.1, 31.6)
-color = Color(0.776471, 0.784314, 0.666667, 1)
-metadata/upgraded_color = Color(0.898039, 0.823529, 0.627451, 1)
-
-[node name="Key164_329" type="Polygon2D" parent="Art"]
-polygon = PackedVector2Array(105.85, 33.2, 110.95, 35.12, 104.15, 37.68, 99.05, 35.76)
-color = Color(0.776471, 0.784314, 0.666667, 1)
-metadata/upgraded_color = Color(0.898039, 0.823529, 0.627451, 1)
-
-[node name="Key164_342" type="Polygon2D" parent="Art"]
-polygon = PackedVector2Array(94.8, 37.36, 99.9, 39.28, 93.1, 41.84, 88, 39.92)
-color = Color(0.776471, 0.784314, 0.666667, 1)
-metadata/upgraded_color = Color(0.898039, 0.823529, 0.627451, 1)
-
-[node name="Key164_355" type="Polygon2D" parent="Art"]
-polygon = PackedVector2Array(83.75, 41.52, 88.85, 43.44, 82.05, 46, 76.95, 44.08)
-color = Color(0.776471, 0.784314, 0.666667, 1)
-metadata/upgraded_color = Color(0.898039, 0.823529, 0.627451, 1)
-
-[node name="Key164_368" type="Polygon2D" parent="Art"]
-polygon = PackedVector2Array(72.7, 45.68, 77.8, 47.6, 71, 50.16, 65.9, 48.24)
-color = Color(0.776471, 0.784314, 0.666667, 1)
-metadata/upgraded_color = Color(0.898039, 0.823529, 0.627451, 1)
-
-[node name="Key164_381" type="Polygon2D" parent="Art"]
-polygon = PackedVector2Array(61.65, 49.84, 66.75, 51.76, 59.95, 54.32, 54.85, 52.4)
-color = Color(0.776471, 0.784314, 0.666667, 1)
-metadata/upgraded_color = Color(0.898039, 0.823529, 0.627451, 1)
-
-[node name="Key164_394" type="Polygon2D" parent="Art"]
-polygon = PackedVector2Array(50.6, 54, 55.7, 55.92, 48.9, 58.48, 43.8, 56.56)
-color = Color(0.776471, 0.784314, 0.666667, 1)
-metadata/upgraded_color = Color(0.898039, 0.823529, 0.627451, 1)
-
-[node name="MouseSide" type="Polygon2D" parent="Art"]
-polygon = PackedVector2Array(151.75, 17.72, 132.2, 25.08, 132.2, 17.08, 151.75, 9.72)
-color = Color(0.325490, 0.431373, 0.407843, 1)
-
-[node name="MouseFront" type="Polygon2D" parent="Art"]
-polygon = PackedVector2Array(114.35, 18.36, 132.2, 25.08, 132.2, 17.08, 114.35, 10.36)
-color = Color(0.450980, 0.541176, 0.513725, 1)
-metadata/upgraded_color = Color(0.827451, 0.788235, 0.647059, 1)
-
-[node name="MouseTop" type="Polygon2D" parent="Art"]
-polygon = PackedVector2Array(133.9, 3, 151.75, 9.72, 132.2, 17.08, 114.35, 10.36)
-color = Color(0.721569, 0.764706, 0.647059, 1)
-metadata/upgraded_color = Color(0.827451, 0.788235, 0.647059, 1)
-
+[node name="Art" type="TextureRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture_filter = 1
+texture = ExtResource("art")
+expand_mode = 1
+stretch_mode = 5
