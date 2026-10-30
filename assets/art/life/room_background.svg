@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="610" viewBox="0 0 1280 610">
+  <title>游戏回忆录：斜视房间背景</title>
+  <desc>由原房间场景的静态几何合并，保留墙面、地板、窗户、海报和地毯；家具独立于本图。</desc>
+  <polygon id="RoomShadow" points="156,414 640,604 1124,414 640,225" fill="#0e1819" fill-opacity="0.301961"/>
+  <polygon id="FloorThicknessLeft" points="164,409.2 640,588.4 640,600 164,421" fill="#75634d" fill-opacity="1"/>
+  <polygon id="FloorThicknessRight" points="640,588.4 1116,409.2 1116,421 640,600" fill="#635744" fill-opacity="1"/>
+  <polygon id="Floor" points="640,230 1116,409.2 640,588.4 164,409.2" fill="#b39b75" fill-opacity="1"/>
+  <polyline id="FloorU1" points="699.5,252.4 223.5,431.6" fill="none" stroke="#98815e" stroke-opacity="1" stroke-width="1.5" stroke-linecap="butt" stroke-linejoin="miter"/>
+  <polyline id="FloorV1" points="580.5,252.4 1056.5,431.6" fill="none" stroke="#98815e" stroke-opacity="1" stroke-width="1.5" stroke-linecap="butt" stroke-linejoin="miter"/>
+  <polyline id="FloorU2" points="759,274.8 283,454" fill="none" stroke="#98815e" stroke-opacity="1" stroke-width="1.5" stroke-linecap="butt" stroke-linejoin="miter"/>
+  <polyline id="FloorV2" points="521,274.8 997,454" fill="none" stroke="#98815e" stroke-opacity="1" stroke-width="1.5" stroke-linecap="butt" stroke-linejoin="miter"/>
+  <polyline id="FloorU3" points="818.5,297.2 342.5,476.4" fill="none" stroke="#98815e" stroke-opacity="1" stroke-width="1.5" stroke-linecap="butt" stroke-linejoin="miter"/>
+  <polyline id="FloorV3" points="461.5,297.2 937.5,476.4" fill="none" stroke="#98815e" stroke-opacity="1" stroke-width="1.5" stroke-linecap="butt" stroke-linejoin="miter"/>
+  <polyline id="FloorU4" points="878,319.6 402,498.8" fill="none" stroke="#98815e" stroke-opacity="1" stroke-width="1.5" stroke-linecap="butt" stroke-linejoin="miter"/>
+  <polyline id="FloorV4" points="402,319.6 878,498.8" fill="none" stroke="#98815e" stroke-opacity="1" stroke-width="1.5" stroke-linecap="butt" stroke-linejoin="miter"/>
+  <polyline id="FloorU5" points="937.5,342 461.5,521.2" fill="none" stroke="#98815e" stroke-opacity="1" stroke-width="1.5" stroke-linecap="butt" stroke-linejoin="miter"/>
+  <polyline id="FloorV5" points="342.5,342 818.5,521.2" fill="none" stroke="#98815e" stroke-opacity="1" stroke-width="1.5" stroke-linecap="butt" stroke-linejoin="miter"/>
+  <polyline id="FloorU6" points="997,364.4 521,543.6" fill="none" stroke="#98815e" stroke-opacity="1" stroke-width="1.5" stroke-linecap="butt" stroke-linejoin="miter"/>
+  <polyline id="FloorV6" points="283,364.4 759,543.6" fill="none" stroke="#98815e" stroke-opacity="1" stroke-width="1.5" stroke-linecap="butt" stroke-linejoin="miter"/>
+  <polyline id="FloorU7" points="1056.5,386.8 580.5,566" fill="none" stroke="#98815e" stroke-opacity="1" stroke-width="1.5" stroke-linecap="butt" stroke-linejoin="miter"/>
+  <polyline id="FloorV7" points="223.5,386.8 699.5,566" fill="none" stroke="#98815e" stroke-opacity="1" stroke-width="1.5" stroke-linecap="butt" stroke-linejoin="miter"/>
+  <polygon id="LeftWall" points="640,230 164,409.2 164,214.2 640,35" fill="#d1c3a2" fill-opacity="1"/>
+  <polygon id="RightWall" points="640,230 1116,409.2 1116,214.2 640,35" fill="#b4b59b" fill-opacity="1"/>
+  <polyline id="LeftWallTop" points="164,214.2 640,35" fill="none" stroke="#e8dab8" stroke-opacity="1" stroke-width="5" stroke-linecap="butt" stroke-linejoin="miter"/>
+  <polyline id="RightWallTop" points="640,35 1116,214.2" fill="none" stroke="#d0d0b3" stroke-opacity="1" stroke-width="5" stroke-linecap="butt" stroke-linejoin="miter"/>
+  <polyline id="RoomCorner" points="640,230 640,35" fill="none" stroke="#999e80" stroke-opacity="1" stroke-width="3" stroke-linecap="butt" stroke-linejoin="miter"/>
+  <polyline id="LeftSkirting" points="164,404.2 640,225" fill="none" stroke="#8b8e71" stroke-opacity="1" stroke-width="7" stroke-linecap="butt" stroke-linejoin="miter"/>
+  <polyline id="RightSkirting" points="640,225 1116,404.2" fill="none" stroke="#7e8b70" stroke-opacity="1" stroke-width="7" stroke-linecap="butt" stroke-linejoin="miter"/>
+  <polygon id="WindowFrame" points="334,262.2 202.25,311.8 202.25,220.8 334,171.2" fill="#698076" fill-opacity="1"/>
+  <polygon id="WindowSky" points="326.35,257.08 209.9,300.92 209.9,225.92 326.35,182.08" fill="#6c989c" fill-opacity="1"/>
+  <polygon id="CityBuilding0" points="322.95,257.36 308.5,262.8 308.5,242.8 322.95,237.36" fill="#527b80" fill-opacity="1"/>
+  <polygon id="CityBuilding1" points="304.25,264.4 289.8,269.84 289.8,232.84 304.25,227.4" fill="#476e78" fill-opacity="1"/>
+  <polygon id="CityBuilding2" points="285.55,271.44 271.1,276.88 271.1,222.88 285.55,217.44" fill="#527b80" fill-opacity="1"/>
+  <polygon id="CityBuilding3" points="266.85,278.48 252.4,283.92 252.4,252.92 266.85,247.48" fill="#476e78" fill-opacity="1"/>
+  <polygon id="CityBuilding4" points="248.15,285.52 233.7,290.96 233.7,242.96 248.15,237.52" fill="#527b80" fill-opacity="1"/>
+  <polygon id="CityBuilding5" points="229.45,292.56 215,298 215,273 229.45,267.56" fill="#476e78" fill-opacity="1"/>
+  <polyline id="WindowMullion" points="267.7,279.16 267.7,204.16" fill="none" stroke="#daceaa" stroke-opacity="1" stroke-width="4" stroke-linecap="butt" stroke-linejoin="miter"/>
+  <polyline id="WindowCrossbar" points="326.35,221.08 209.9,264.92" fill="none" stroke="#daceaa" stroke-opacity="1" stroke-width="4" stroke-linecap="butt" stroke-linejoin="miter"/>
+  <polygon id="PosterFrame" points="818.5,227.2 950.25,276.8 950.25,188.8 818.5,139.2" fill="#677868" fill-opacity="1"/>
+  <polygon id="Poster" points="825.3,222.76 943.45,267.24 943.45,193.24 825.3,148.76" fill="#2b5359" fill-opacity="1"/>
+  <polyline id="PosterTitle" points="839.75,169.2 926.45,201.84" fill="none" stroke="#d0ca9e" stroke-opacity="1" stroke-width="4" stroke-linecap="butt" stroke-linejoin="miter"/>
+  <polygon id="PosterMoon" points="872.9,223.68 895,232 895,205 872.9,196.68" fill="#86aa8d" fill-opacity="1"/>
+  <polygon id="RugBorder" points="657,353.8 861,430.6 665.5,504.2 461.5,427.4" fill="#4f6e66" fill-opacity="1"/>
+  <polygon id="Rug" points="657,360.98 840.6,430.1 665.5,496.02 481.9,426.9" fill="#779180" fill-opacity="1"/>
+  <polyline id="RugStripe0" points="651.05,369.76 814.25,431.2" fill="none" stroke="#a3b29a" stroke-opacity="1" stroke-width="2" stroke-linecap="butt" stroke-linejoin="miter"/>
+  <polyline id="RugStripe1" points="603.45,387.68 766.65,449.12" fill="none" stroke="#a3b29a" stroke-opacity="1" stroke-width="2" stroke-linecap="butt" stroke-linejoin="miter"/>
+  <polyline id="RugStripe2" points="555.85,405.6 719.05,467.04" fill="none" stroke="#a3b29a" stroke-opacity="1" stroke-width="2" stroke-linecap="butt" stroke-linejoin="miter"/>
+</svg>
