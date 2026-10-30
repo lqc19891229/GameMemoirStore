@@ -44,11 +44,9 @@ func run() -> void:
 	root.add_child(game)
 	game.session.timer.stop()
 	await frames()
-	check(game.room.get_node("RoomCanvas/Art") is TextureRect, "room background is a single texture")
-	check(game.room.get_node("RoomCanvas/Art").get_child_count() == 0, "room background contains no child geometry")
-	var room_screen: Button = game.room.furniture["computer"]
-	await click_at(room_screen.get_global_rect().get_center())
-	check(game.desktop.visible, "clicking the computer enters its close-up")
+	check(game.desktop.visible, "game starts directly at the computer close-up")
+	check(not game.has_node("PlayerRoom"), "main scene has no room instance")
+	check(game.desktop.screen_node("TaskbarRow").get_node_or_null("DesktopRoom") == null, "taskbar has no room return button")
 	var desktop: Control = game.desktop
 	var viewport: SubViewport = desktop.get_node("%DesktopViewport")
 	var container: SubViewportContainer = desktop.get_node("%ScreenViewport")
@@ -84,8 +82,15 @@ func run() -> void:
 		await frames()
 	desktop.show_notice("screen notification")
 	check(desktop.screen_node("ScreenToast").visible, "notifications are displayed inside the screen")
-	await click_screen(desktop, desktop.screen_node("DesktopRoom"))
-	check(game.room.visible and not desktop.visible, "screen taskbar returns to the room")
+	var escape := InputEventKey.new()
+	escape.keycode = KEY_ESCAPE
+	escape.pressed = true
+	root.push_input(escape, true)
+	escape = escape.duplicate() as InputEventKey
+	escape.pressed = false
+	root.push_input(escape, true)
+	await frames()
+	check(desktop.visible, "Escape never hides the only desktop view")
 	game.queue_free()
 	await frames()
 	print("WORKSTATION_CHECKS: %d / %d passed" % [checks - failures, checks])

@@ -1,5 +1,4 @@
 extends Control
-signal room_requested
 const WindowScene = preload("res://scenes/life/app_window.tscn")
 const APPS := {"platform": ["游戏平台", "res://scenes/store.tscn"], "browser": ["回忆生活 · 购物网页", "res://scenes/life/browser.tscn"], "game": ["正在游玩", "res://scenes/life/game_player.tscn"]}
 var session: MemoirGameSession
@@ -21,7 +20,6 @@ func _ready() -> void:
 	screen_node("DesktopPlatform").pressed.connect(func() -> void: open_app("platform"))
 	screen_node("DesktopBrowser").pressed.connect(func() -> void: open_app("browser"))
 	resume_button.pressed.connect(func() -> void: open_app("game"))
-	screen_node("DesktopRoom").pressed.connect(func() -> void: room_requested.emit())
 	screen_node("TaskbarPlatform").pressed.connect(func() -> void: open_app("platform"))
 	screen_node("TaskbarBrowser").pressed.connect(func() -> void: open_app("browser"))
 	if session == null: return

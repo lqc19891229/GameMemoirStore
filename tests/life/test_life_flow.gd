@@ -33,9 +33,7 @@ func run() -> void:
 	session.timer.stop()
 	var state = session.state
 	var id: String = state.catalog[0]["id"]
-	check(game.room.visible and not game.desktop.visible, "new game starts in the room")
-	game.room.find_child("RoomComputer", true, false).pressed.emit()
-	check(game.desktop.visible and not game.room.visible, "computer interaction enters desktop")
+	check(game.desktop.visible and not game.has_node("PlayerRoom"), "new game starts directly at the desktop without a room")
 	var client = game.desktop.open_app("platform")
 	await frames()
 	check(client.state == state and client.session == session, "platform shares the root player state")
@@ -61,11 +59,10 @@ func run() -> void:
 	playing.find_child("PlayStream", true, false).pressed.emit()
 	check(session.active().get("streaming", false), "game view can start a livestream")
 	game.desktop.minimize_app("game")
-	game.show_room()
 	var before: int = state.wallet
 	session.tick(10)
 	await frames()
-	check(state.play_minutes[id] == 10 and session.active()["minutes"] == 10, "returning to room does not stop or double-count play")
+	check(state.play_minutes[id] == 10 and session.active()["minutes"] == 10, "minimizing the game does not stop or double-count play")
 	check(state.wallet == before + 4 and state.life["stream_income"] == 4, "livestream settles once per five simulated minutes")
 	check(state.life["achievements"].get(id, []).has("first_memory"), "play unlocks the first achievement")
 	check(float(state.life["attributes"]["协作"]) > 10.0, "multiplayer games also grow cooperative ability")
@@ -76,16 +73,16 @@ func run() -> void:
 	browser.find_child("Buy_precise_mouse", true, false).pressed.emit()
 	await frames()
 	check(state.wallet == before - 28 and state.life["items"].has("precise_mouse"), "web shop spends the same wallet and adds inventory")
+	check(browser.find_child("Buy_oak_desk", true, false) == null and browser.find_child("Buy_reading_lamp", true, false) == null and browser.find_child("Buy_display_cabinet", true, false) == null, "removed room furniture is not offered in the shop")
+	check(browser.find_child("Buy_workstation", true, false) != null and browser.find_child("Buy_stream_mic", true, false) != null, "computer and microphone remain on sale")
 	var rate: float = session.challenge_rate(id)
 	browser.set_tab("inventory")
 	browser.find_child("Equip_precise_mouse", true, false).pressed.emit()
 	await frames()
 	check(state.life["equipped"]["peripheral"] == "precise_mouse" and session.challenge_rate(id) > rate, "equipping an owned peripheral affects challenge efficiency")
-	game.show_room()
-	check(game.room.furniture["peripheral"].upgraded, "installed peripheral is reflected in the room")
-	check(game.room.furniture["peripheral"].get_node("Art").self_modulate != Color.WHITE, "equipped peripheral updates its sprite appearance")
-	game.room.find_child("RoomLayout", true, false).pressed.emit()
-	check(state.life["room_layout"] == 1, "room layout can be changed")
+	before = state.wallet
+	session.buy_item("oak_desk")
+	check(state.wallet == before and not state.life["items"].has("oak_desk"), "retired room goods cannot debit the wallet")
 	before = state.wallet
 	session.buy_item("precise_mouse")
 	check(state.wallet == before, "duplicate purchase cannot debit money twice")
@@ -93,7 +90,7 @@ func run() -> void:
 	check(state.life["equipped"]["computer"] == "starter_pc", "unowned equipment cannot be installed")
 	before = state.wallet
 	session.buy_item("workstation")
-	check(state.wallet == before and not state.life["items"].has("workstation"), "over-budget furniture purchase has no partial effects")
+	check(state.wallet == before and not state.life["items"].has("workstation"), "over-budget equipment purchase has no partial effects")
 	game.desktop.close_app("platform")
 	await frames()
 	check(session.active().get("kind") == "play", "closing platform does not terminate the game process")
@@ -119,14 +116,11 @@ func run() -> void:
 	await frames()
 	check(session.active().is_empty() and state.life["guides"].has(id) and state.wallet >= before + 20, "guide completes, pays and is published")
 	check(state.life["guides"][id]["royalties"] == 0, "new guide does not receive readership royalties immediately on publication")
-	game.show_room()
-	game.show_cabinet()
-	game.cabinet.find_child("Display_" + id + "_first_memory", true, false).pressed.emit()
-	await frames()
-	check(state.life["displayed"].size() == 1 and game.room.furniture["cabinet"].trophy_count == 1, "unlocked trophy can be displayed in the physical cabinet")
-	check(game.room.furniture["cabinet"].get_node("Trophy0").visible and not game.room.furniture["cabinet"].get_node("Trophy1").visible, "cabinet sprite shows exactly the displayed trophy layers")
-	session.toggle_display(id, "unknown")
-	check(state.life["displayed"].size() == 1, "unearned trophy cannot be displayed")
+	# Preserve historical furniture and display data without instantiating a room.
+	state.life["items"].append("oak_desk")
+	state.life["equipped"]["desk"] = "oak_desk"
+	state.life["room_layout"] = 1
+	state.life["displayed"] = [{"game_id": id, "achievement": "first_memory"}]
 	session.start_play(id)
 	session.toggle_stream()
 	session.tick(3)
@@ -143,7 +137,12 @@ func run() -> void:
 	root.add_child(resumed)
 	resumed.session.timer.stop()
 	await frames()
-	resumed.show_desktop()
+	check(resumed.desktop.visible, "restored save also starts at the desktop")
+	var restored_inventory = resumed.desktop.open_app("browser", "inventory")
+	await frames()
+	var legacy_item: Button = restored_inventory.find_child("Equip_oak_desk", true, false)
+	check(legacy_item != null and legacy_item.disabled and legacy_item.text == "已收藏", "legacy furniture remains in inventory as a collection record")
+	check(restored.life["room_layout"] == 1 and restored.life["displayed"].size() == 1, "historical room layout and trophy selection survive save loading")
 	var continue_button: Button = resumed.desktop.find_child("DesktopResume", true, false)
 	check(not continue_button.disabled, "restored active game is accessible from the desktop")
 	continue_button.pressed.emit()
@@ -157,7 +156,7 @@ func run() -> void:
 	var migrated = State.new()
 	migrated.save_path = state.save_path
 	migrated.load_state()
-	check(migrated.wallet == 81 and migrated.owned.has(id) and migrated.installed.has(id) and migrated.life["equipped"]["computer"] == "starter_pc", "version-2 saves gain starter room equipment without losing purchases")
+	check(migrated.wallet == 81 and migrated.owned.has(id) and migrated.installed.has(id) and migrated.life["equipped"]["computer"] == "starter_pc", "version-2 saves gain starter equipment without losing purchases")
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(state.save_path))
 	state.persistence_enabled = false
 	session.stop_play()

@@ -40,7 +40,7 @@ func refresh() -> void:
 	for id: String in Data.ITEMS:
 		var item: Dictionary = Data.ITEMS[id]
 		var owned: bool = session.state.life["items"].has(id)
-		if tab == "shop" and int(item["price"]) == 0: continue
+		if tab == "shop" and (int(item["price"]) == 0 or Data.ROOM_ONLY_SLOTS.has(item["slot"])): continue
 		if tab == "inventory" and not owned: continue
 		var row = preload("res://scenes/client/components/inventory_row.tscn").instantiate()
 		box.add_child(row)
@@ -58,10 +58,12 @@ func refresh() -> void:
 			button.disabled = owned or session.state.wallet < int(item["price"])
 		else:
 			var equipped: bool = session.state.life["equipped"].get(item["slot"], "") == id
-			button.text = "使用中" if equipped else "安装 / 摆放"
+			var room_item: bool = Data.ROOM_ONLY_SLOTS.has(item["slot"])
+			button.text = "已收藏" if room_item else ("使用中" if equipped else "安装")
+			if room_item: row.get_node("%Description").text = "保留的历史物品记录。"
 			button.pressed.connect(func() -> void: message.text = session.equip_item(key))
 			button.name = "Equip_" + id
-			button.disabled = equipped
+			button.disabled = equipped or room_item
 
 func _tick() -> void:
 	if is_instance_valid(wallet_label): wallet_label.text = "钱包余额  %d 点   ·   %s" % [session.state.wallet, "所有物品即时加入库存" if tab == "shop" else "每种物品安装在对应位置"]

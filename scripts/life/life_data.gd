@@ -2,6 +2,8 @@ class_name MemoirLifeData
 extends RefCounted
 ## 初版生活系统的商品、属性与通用成就模板；与 Excel 游戏目录分开。
 const ATTRIBUTES := ["反应", "操作", "思考", "探索", "规划", "协作"]
+# Legacy room items remain defined for lossless version-3 save loading.
+const ROOM_ONLY_SLOTS := ["desk", "cabinet", "decor"]
 const ITEMS := {
 	"starter_pc": {"name": "旧日主机", "slot": "computer", "price": 0, "speed": 1.0, "description": "陪你开始收藏的第一台电脑。"},
 	"starter_mouse": {"name": "有线键鼠", "slot": "peripheral", "price": 0, "speed": 1.0, "description": "可靠的入门外设。"},

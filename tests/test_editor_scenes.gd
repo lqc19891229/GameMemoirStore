@@ -11,7 +11,7 @@ func _initialize() -> void:
 	run.call_deferred()
 func run() -> void:
 	var paths: Array[String] = ["res://scenes/game_root.tscn", "res://scenes/store.tscn"]
-	for dir in ["life", "client/pages", "client/components", "life/furniture"]:
+	for dir in ["life", "client/pages", "client/components"]:
 		for file in DirAccess.get_files_at("res://scenes/" + dir):
 			if file.ends_with(".tscn"): paths.append("res://scenes/" + dir + "/" + file)
 	for path in paths:
@@ -21,35 +21,18 @@ func run() -> void:
 		var node := scene.instantiate()
 		if node is Control and not node is Label and not node is Button:
 			check(node.get_child_count() > 0, "visible layout exists before ready: " + path)
-		if "furniture/" in path:
-			check(node.get_child_count() > 0, "furniture contains real art nodes: " + path)
 		node.free()
-	for kind in ["desk", "computer", "peripheral", "cabinet", "decor"]:
-		var item = load("res://scenes/life/furniture/%s.tscn" % kind).instantiate()
-		check(item.get_node("Art") is TextureRect and item.get_node("Art").texture != null, "furniture uses a real texture: " + kind)
-		check(item.get_child_count() <= 4, "furniture keeps only meaningful sprite layers: " + kind)
-		item.free()
 	var closeup = load("res://scenes/life/computer_desktop.tscn").instantiate()
 	check(closeup.get_node("WorkstationArt") is TextureRect, "close-up uses one backdrop texture")
 	check(closeup.get_child_count() == 2, "close-up only has art and live monitor screen")
 	closeup.free()
 	var game = load("res://scenes/game_root.tscn").instantiate()
-	check(game.has_node("PlayerRoom/RoomCanvas/Furniture_computer"), "main scene contains room and furniture instances")
-	var background = game.get_node("PlayerRoom/RoomCanvas/Art")
-	check(background is TextureRect, "room art is a texture node before ready")
-	check(background.texture != null, "room background texture loads before ready")
-	check(background.get_child_count() == 0, "room art has no hidden geometry children")
-	check(game.get_node("PlayerRoom/RoomCanvas").get_child_count() == 6, "room canvas only contains background plus five furniture instances")
+	check(game.get_child_count() == 2, "main scene only contains shared session and desktop")
+	check(not game.has_node("PlayerRoom") and not game.has_node("AchievementCabinet"), "room presentation has been removed")
+	check(game.get_node("ComputerDesktop").visible, "desktop is visible in the authored main scene")
 	check(game.has_node("ComputerDesktop/MonitorScreen/ScreenViewport/DesktopViewport/DesktopScreen/ApplicationArea"), "desktop shell exists before running")
-	var furniture: Control = game.get_node("PlayerRoom/RoomCanvas/Furniture_computer")
-	var anchor := furniture.anchor_left + 0.025
-	furniture.anchor_left = anchor
-	furniture.anchor_right += 0.025
 	root.add_child(game)
 	game.session.timer.stop()
-	check(is_equal_approx(furniture.anchor_left, anchor), "ready preserves editor-authored furniture anchors")
-	game.room.refresh()
-	check(is_equal_approx(furniture.anchor_left, anchor), "refresh preserves editor-authored furniture anchors")
 	var client = load("res://scenes/store.tscn").instantiate()
 	client.get_node("%ClientHeader").custom_minimum_size.y = 120
 	var original_home: Node = client.get_node("%PageContent").get_child(0)
@@ -59,9 +42,9 @@ func run() -> void:
 	client.refresh_client()
 	check(client.get_node("%PageContent").get_child(0) == original_home, "data refresh keeps static page nodes")
 	check(client.get_node("%ClientHeader").custom_minimum_size.y == 120, "runtime preserves inspector layout changes")
-	for script in ["client.gd", "client_pages.gd", "client_ui.gd", "life/player_room.gd", "life/furniture_item.gd"]:
+	for script in ["client.gd", "client_pages.gd", "client_ui.gd", "life/game_root.gd", "life/computer_desktop.gd"]:
 		var source := FileAccess.get_file_as_string("res://scripts/" + script)
-		check(not source.contains("func _draw") and not source.contains("Button.new()") and not source.contains("Label.new()") and not source.contains("ColorRect.new()"), "no procedural layout or room drawing: " + script)
+		check(not source.contains("func _draw") and not source.contains("Button.new()") and not source.contains("Label.new()") and not source.contains("ColorRect.new()"), "no procedural layout: " + script)
 	client.queue_free()
 	game.queue_free()
 	await process_frame
