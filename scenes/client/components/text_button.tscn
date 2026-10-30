@@ -1,0 +1,10 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Theme" path="res://assets/client_theme.tres" id="1"]
+
+[node name="TextButton" type="Button"]
+theme = ExtResource("1")
+size_flags_horizontal = 3
+text = "分类"
+custom_minimum_size = Vector2(0, 32)
+theme_type_variation = "FlatButton"

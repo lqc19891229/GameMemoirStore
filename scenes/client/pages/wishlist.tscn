@@ -1,0 +1,99 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/client/components/wishlist_row.tscn" id="preview"]
+
+[ext_resource type="Theme" path="res://assets/client_theme.tres" id="1"]
+
+[node name="WishlistPage" type="MarginContainer"]
+theme = ExtResource("1")
+theme_override_constants/margin_left = 28
+theme_override_constants/margin_right = 28
+theme_override_constants/margin_top = 28
+theme_override_constants/margin_bottom = 28
+size_flags_horizontal = 3
+
+[node name="PageLayout" type="VBoxContainer" parent="."]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 18
+
+[node name="Heading" type="Label" parent="PageLayout"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+custom_minimum_size = Vector2(0, 34)
+text = "像素收藏家的愿望单"
+theme_override_font_sizes/font_size = 24
+theme_override_colors/font_color = Color(1.0, 1.0, 1.0, 1)
+vertical_alignment = 1
+mouse_filter = 2
+
+[node name="Subtitle" type="Label" parent="PageLayout"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+custom_minimum_size = Vector2(0, 22)
+text = "排好下一次心动的顺序。"
+theme_override_font_sizes/font_size = 12
+theme_override_colors/font_color = Color(0.5607843137254902, 0.596078431372549, 0.6274509803921569, 1)
+vertical_alignment = 1
+mouse_filter = 2
+autowrap_mode = 2
+
+[node name="Tools" type="HBoxContainer" parent="PageLayout"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="Count" type="Label" parent="PageLayout/Tools"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+custom_minimum_size = Vector2(0, 22)
+text = "按您的偏好寻找下一段回忆。"
+theme_override_font_sizes/font_size = 12
+theme_override_colors/font_color = Color(0.5607843137254902, 0.596078431372549, 0.6274509803921569, 1)
+vertical_alignment = 1
+mouse_filter = 2
+
+[node name="Sort" type="OptionButton" parent="PageLayout/Tools"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(0, 32)
+
+[node name="EmptyState" type="VBoxContainer" parent="PageLayout"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 16
+
+visible = false
+[node name="EmptyText" type="Label" parent="PageLayout/EmptyState"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+custom_minimum_size = Vector2(0, 34)
+text = "没有找到符合条件的游戏。"
+theme_override_font_sizes/font_size = 24
+theme_override_colors/font_color = Color(0.7803921568627451, 0.8352941176470589, 0.8784313725490196, 1)
+vertical_alignment = 1
+mouse_filter = 2
+autowrap_mode = 2
+
+[node name="BrowseStore" type="Button" parent="PageLayout/EmptyState"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "浏览商店"
+custom_minimum_size = Vector2(160, 32)
+mouse_default_cursor_shape = 2
+theme_type_variation = "BlueButton"
+
+[node name="Rows" type="VBoxContainer" parent="PageLayout"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 12
+
+[node name="Preview" parent="PageLayout/Rows" instance=ExtResource("preview")]

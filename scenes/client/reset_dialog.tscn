@@ -1,0 +1,10 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Theme" path="res://assets/client_theme.tres" id="1"]
+
+[node name="ResetConfirmation" type="ConfirmationDialog"]
+theme = ExtResource("1")
+title = "重新开始"
+dialog_text = "将恢复初始预算和游戏库，是否继续？"
+ok_button_text = "重新开始"
+cancel_button_text = "取消"

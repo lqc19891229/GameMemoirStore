@@ -1,0 +1,15 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Theme" path="res://assets/client_theme.tres" id="1"]
+
+[node name="LibraryContext" type="PopupMenu"]
+theme = ExtResource("1")
+item_count = 4
+item_0/text = "开始游戏"
+item_0/id = 0
+item_1/text = "添加至收藏夹"
+item_1/id = 1
+item_2/text = "查看商店页面"
+item_2/id = 2
+item_3/text = "卸载游戏"
+item_3/id = 3

@@ -14,10 +14,8 @@ func _ready() -> void:
 	state.persistence_enabled = not OS.get_cmdline_user_args().has("--fresh")
 	state.load_state()
 	state.changed.connect(_state_changed)
-	timer = Timer.new()
-	timer.wait_time = 1.0
+	timer = $SimulationTimer
 	timer.timeout.connect(tick)
-	add_child(timer)
 	timer.start()
 
 func _exit_tree() -> void:

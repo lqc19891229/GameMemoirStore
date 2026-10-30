@@ -1,0 +1,238 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="Theme" path="res://assets/client_theme.tres" id="1"]
+
+[ext_resource type="Script" path="res://scripts/life/furniture_item.gd" id="2"]
+
+[sub_resource type="StyleBoxFlat" id="Style0"]
+bg_color = Color(0.0, 0.0, 0.0, 0.0)
+border_color = Color(0.9372549019607843, 0.8588235294117647, 0.6588235294117647, 1)
+content_margin_left = 0.0
+border_width_left = 1
+content_margin_right = 0.0
+border_width_right = 1
+content_margin_top = 0.0
+border_width_top = 1
+content_margin_bottom = 0.0
+border_width_bottom = 1
+
+[sub_resource type="StyleBoxFlat" id="Style1"]
+bg_color = Color(0.0, 0.0, 0.0, 0.0)
+border_color = Color(0.9372549019607843, 0.8588235294117647, 0.6588235294117647, 1)
+content_margin_left = 0.0
+border_width_left = 1
+content_margin_right = 0.0
+border_width_right = 1
+content_margin_top = 0.0
+border_width_top = 1
+content_margin_bottom = 0.0
+border_width_bottom = 1
+
+[node name="Peripheral" type="Button"]
+theme = ExtResource("1")
+script = ExtResource("2")
+kind = "peripheral"
+flat = true
+custom_minimum_size = Vector2(100, 100)
+mouse_default_cursor_shape = 2
+theme_override_styles/focus = SubResource("Style0")
+theme_override_styles/hover = SubResource("Style1")
+
+[node name="Part0" type="ColorRect" parent="."]
+mouse_filter = 2
+color = Color(0.18823529411764706, 0.2627450980392157, 0.2901960784313726, 1)
+layout_mode = 1
+anchor_left = 0.0
+anchor_top = 0.12
+anchor_right = 0.77
+anchor_bottom = 0.82
+
+[node name="Part1" type="ColorRect" parent="."]
+mouse_filter = 2
+color = Color(0.5450980392156862, 0.6078431372549019, 0.5372549019607843, 1)
+layout_mode = 1
+anchor_left = 0.07
+anchor_top = 0.24
+anchor_right = 0.15
+anchor_bottom = 0.33
+metadata/upgraded_color = Color(0.7686274509803922, 0.7294117647058823, 0.5568627450980392, 1)
+
+[node name="Part2" type="ColorRect" parent="."]
+mouse_filter = 2
+color = Color(0.5450980392156862, 0.6078431372549019, 0.5372549019607843, 1)
+layout_mode = 1
+anchor_left = 0.07
+anchor_top = 0.43
+anchor_right = 0.15
+anchor_bottom = 0.52
+metadata/upgraded_color = Color(0.7686274509803922, 0.7294117647058823, 0.5568627450980392, 1)
+
+[node name="Part3" type="ColorRect" parent="."]
+mouse_filter = 2
+color = Color(0.5450980392156862, 0.6078431372549019, 0.5372549019607843, 1)
+layout_mode = 1
+anchor_left = 0.07
+anchor_top = 0.62
+anchor_right = 0.15
+anchor_bottom = 0.71
+metadata/upgraded_color = Color(0.7686274509803922, 0.7294117647058823, 0.5568627450980392, 1)
+
+[node name="Part4" type="ColorRect" parent="."]
+mouse_filter = 2
+color = Color(0.5450980392156862, 0.6078431372549019, 0.5372549019607843, 1)
+layout_mode = 1
+anchor_left = 0.19
+anchor_top = 0.24
+anchor_right = 0.27
+anchor_bottom = 0.33
+metadata/upgraded_color = Color(0.7686274509803922, 0.7294117647058823, 0.5568627450980392, 1)
+
+[node name="Part5" type="ColorRect" parent="."]
+mouse_filter = 2
+color = Color(0.5450980392156862, 0.6078431372549019, 0.5372549019607843, 1)
+layout_mode = 1
+anchor_left = 0.19
+anchor_top = 0.43
+anchor_right = 0.27
+anchor_bottom = 0.52
+metadata/upgraded_color = Color(0.7686274509803922, 0.7294117647058823, 0.5568627450980392, 1)
+
+[node name="Part6" type="ColorRect" parent="."]
+mouse_filter = 2
+color = Color(0.5450980392156862, 0.6078431372549019, 0.5372549019607843, 1)
+layout_mode = 1
+anchor_left = 0.19
+anchor_top = 0.62
+anchor_right = 0.27
+anchor_bottom = 0.71
+metadata/upgraded_color = Color(0.7686274509803922, 0.7294117647058823, 0.5568627450980392, 1)
+
+[node name="Part7" type="ColorRect" parent="."]
+mouse_filter = 2
+color = Color(0.5450980392156862, 0.6078431372549019, 0.5372549019607843, 1)
+layout_mode = 1
+anchor_left = 0.31
+anchor_top = 0.24
+anchor_right = 0.39
+anchor_bottom = 0.33
+metadata/upgraded_color = Color(0.7686274509803922, 0.7294117647058823, 0.5568627450980392, 1)
+
+[node name="Part8" type="ColorRect" parent="."]
+mouse_filter = 2
+color = Color(0.5450980392156862, 0.6078431372549019, 0.5372549019607843, 1)
+layout_mode = 1
+anchor_left = 0.31
+anchor_top = 0.43
+anchor_right = 0.39
+anchor_bottom = 0.52
+metadata/upgraded_color = Color(0.7686274509803922, 0.7294117647058823, 0.5568627450980392, 1)
+
+[node name="Part9" type="ColorRect" parent="."]
+mouse_filter = 2
+color = Color(0.5450980392156862, 0.6078431372549019, 0.5372549019607843, 1)
+layout_mode = 1
+anchor_left = 0.31
+anchor_top = 0.62
+anchor_right = 0.39
+anchor_bottom = 0.71
+metadata/upgraded_color = Color(0.7686274509803922, 0.7294117647058823, 0.5568627450980392, 1)
+
+[node name="Part10" type="ColorRect" parent="."]
+mouse_filter = 2
+color = Color(0.5450980392156862, 0.6078431372549019, 0.5372549019607843, 1)
+layout_mode = 1
+anchor_left = 0.43
+anchor_top = 0.24
+anchor_right = 0.51
+anchor_bottom = 0.33
+metadata/upgraded_color = Color(0.7686274509803922, 0.7294117647058823, 0.5568627450980392, 1)
+
+[node name="Part11" type="ColorRect" parent="."]
+mouse_filter = 2
+color = Color(0.5450980392156862, 0.6078431372549019, 0.5372549019607843, 1)
+layout_mode = 1
+anchor_left = 0.43
+anchor_top = 0.43
+anchor_right = 0.51
+anchor_bottom = 0.52
+metadata/upgraded_color = Color(0.7686274509803922, 0.7294117647058823, 0.5568627450980392, 1)
+
+[node name="Part12" type="ColorRect" parent="."]
+mouse_filter = 2
+color = Color(0.5450980392156862, 0.6078431372549019, 0.5372549019607843, 1)
+layout_mode = 1
+anchor_left = 0.43
+anchor_top = 0.62
+anchor_right = 0.51
+anchor_bottom = 0.71
+metadata/upgraded_color = Color(0.7686274509803922, 0.7294117647058823, 0.5568627450980392, 1)
+
+[node name="Part13" type="ColorRect" parent="."]
+mouse_filter = 2
+color = Color(0.5450980392156862, 0.6078431372549019, 0.5372549019607843, 1)
+layout_mode = 1
+anchor_left = 0.55
+anchor_top = 0.24
+anchor_right = 0.63
+anchor_bottom = 0.33
+metadata/upgraded_color = Color(0.7686274509803922, 0.7294117647058823, 0.5568627450980392, 1)
+
+[node name="Part14" type="ColorRect" parent="."]
+mouse_filter = 2
+color = Color(0.5450980392156862, 0.6078431372549019, 0.5372549019607843, 1)
+layout_mode = 1
+anchor_left = 0.55
+anchor_top = 0.43
+anchor_right = 0.63
+anchor_bottom = 0.52
+metadata/upgraded_color = Color(0.7686274509803922, 0.7294117647058823, 0.5568627450980392, 1)
+
+[node name="Part15" type="ColorRect" parent="."]
+mouse_filter = 2
+color = Color(0.5450980392156862, 0.6078431372549019, 0.5372549019607843, 1)
+layout_mode = 1
+anchor_left = 0.55
+anchor_top = 0.62
+anchor_right = 0.63
+anchor_bottom = 0.71
+metadata/upgraded_color = Color(0.7686274509803922, 0.7294117647058823, 0.5568627450980392, 1)
+
+[node name="Part16" type="ColorRect" parent="."]
+mouse_filter = 2
+color = Color(0.5450980392156862, 0.6078431372549019, 0.5372549019607843, 1)
+layout_mode = 1
+anchor_left = 0.67
+anchor_top = 0.24
+anchor_right = 0.75
+anchor_bottom = 0.33
+metadata/upgraded_color = Color(0.7686274509803922, 0.7294117647058823, 0.5568627450980392, 1)
+
+[node name="Part17" type="ColorRect" parent="."]
+mouse_filter = 2
+color = Color(0.5450980392156862, 0.6078431372549019, 0.5372549019607843, 1)
+layout_mode = 1
+anchor_left = 0.67
+anchor_top = 0.43
+anchor_right = 0.75
+anchor_bottom = 0.52
+metadata/upgraded_color = Color(0.7686274509803922, 0.7294117647058823, 0.5568627450980392, 1)
+
+[node name="Part18" type="ColorRect" parent="."]
+mouse_filter = 2
+color = Color(0.5450980392156862, 0.6078431372549019, 0.5372549019607843, 1)
+layout_mode = 1
+anchor_left = 0.67
+anchor_top = 0.62
+anchor_right = 0.75
+anchor_bottom = 0.71
+metadata/upgraded_color = Color(0.7686274509803922, 0.7294117647058823, 0.5568627450980392, 1)
+
+[node name="Part19" type="ColorRect" parent="."]
+mouse_filter = 2
+color = Color(0.45098039215686275, 0.5411764705882353, 0.5137254901960784, 1)
+layout_mode = 1
+anchor_left = 0.84
+anchor_top = 0.18
+anchor_right = 0.99
+anchor_bottom = 0.82
+metadata/upgraded_color = Color(0.7215686274509804, 0.7647058823529411, 0.6470588235294118, 1)

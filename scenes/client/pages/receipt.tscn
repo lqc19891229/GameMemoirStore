@@ -1,0 +1,94 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/client/components/game_row.tscn" id="preview"]
+
+[ext_resource type="Theme" path="res://assets/client_theme.tres" id="1"]
+
+[node name="ReceiptPage" type="MarginContainer"]
+theme = ExtResource("1")
+theme_override_constants/margin_left = 28
+theme_override_constants/margin_right = 28
+theme_override_constants/margin_top = 28
+theme_override_constants/margin_bottom = 28
+size_flags_horizontal = 3
+
+[node name="PageLayout" type="VBoxContainer" parent="."]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 18
+
+[node name="Heading" type="Label" parent="PageLayout"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+custom_minimum_size = Vector2(0, 34)
+text = "感谢您的购买！"
+theme_override_font_sizes/font_size = 24
+theme_override_colors/font_color = Color(1.0, 1.0, 1.0, 1)
+vertical_alignment = 1
+mouse_filter = 2
+
+[node name="Subtitle" type="Label" parent="PageLayout"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+custom_minimum_size = Vector2(0, 22)
+text = "新的游戏已经添加到您的库中。"
+theme_override_font_sizes/font_size = 12
+theme_override_colors/font_color = Color(0.5607843137254902, 0.596078431372549, 0.6274509803921569, 1)
+vertical_alignment = 1
+mouse_filter = 2
+autowrap_mode = 2
+
+[node name="OrderInfo" type="Label" parent="PageLayout"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+custom_minimum_size = Vector2(0, 22)
+text = "游戏内订单已完成"
+theme_override_font_sizes/font_size = 12
+theme_override_colors/font_color = Color(0.7019607843137254, 0.8470588235294118, 0.4823529411764706, 1)
+vertical_alignment = 1
+mouse_filter = 2
+
+[node name="Rows" type="VBoxContainer" parent="PageLayout"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="Total" type="Label" parent="PageLayout"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+custom_minimum_size = Vector2(0, 34)
+text = "本次支出 0 点 · 钱包剩余 160 点"
+theme_override_font_sizes/font_size = 24
+theme_override_colors/font_color = Color(1.0, 1.0, 1.0, 1)
+vertical_alignment = 1
+mouse_filter = 2
+
+[node name="Actions" type="HBoxContainer" parent="PageLayout"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="Library" type="Button" parent="PageLayout/Actions"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "前往游戏库"
+custom_minimum_size = Vector2(180, 32)
+mouse_default_cursor_shape = 2
+theme_type_variation = "BlueButton"
+
+[node name="Home" type="Button" parent="PageLayout/Actions"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "继续购物"
+custom_minimum_size = Vector2(160, 32)
+mouse_default_cursor_shape = 2
+theme_type_variation = "FlatButton"
+
+[node name="Preview" parent="PageLayout/Rows" instance=ExtResource("preview")]

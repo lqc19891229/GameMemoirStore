@@ -1,18 +1,83 @@
-[gd_scene load_steps=4 format=3]
+[gd_scene load_steps=8 format=3]
 
-[ext_resource type="Script" path="res://scripts/life/game_root.gd" id="root"]
-[ext_resource type="Script" path="res://scripts/life/game_session.gd" id="session"]
-[ext_resource type="Theme" path="res://assets/client_theme.tres" id="theme"]
+[ext_resource type="Theme" path="res://assets/client_theme.tres" id="1"]
+
+[ext_resource type="Script" path="res://scripts/life/game_root.gd" id="2"]
+
+[ext_resource type="Script" path="res://scripts/life/game_session.gd" id="3"]
+
+[ext_resource type="PackedScene" path="res://scenes/life/player_room.tscn" id="4"]
+
+[ext_resource type="PackedScene" path="res://scenes/life/computer_desktop.tscn" id="5"]
+
+[ext_resource type="PackedScene" path="res://scenes/life/achievement_cabinet.tscn" id="6"]
+
+[sub_resource type="StyleBoxFlat" id="Style0"]
+bg_color = Color(0.16862745098039217, 0.25098039215686274, 0.23137254901960785, 1)
+border_color = Color(0.6509803921568628, 0.7254901960784313, 0.596078431372549, 1)
+content_margin_left = 12.0
+border_width_left = 1
+content_margin_right = 12.0
+border_width_right = 1
+content_margin_top = 12.0
+border_width_top = 1
+content_margin_bottom = 12.0
+border_width_bottom = 1
 
 [node name="GameRoot" type="Control"]
+theme = ExtResource("1")
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-theme = ExtResource("theme")
-script = ExtResource("root")
+script = ExtResource("2")
 
 [node name="GameSession" type="Node" parent="."]
-script = ExtResource("session")
+unique_name_in_owner = true
+script = ExtResource("3")
+
+[node name="SimulationTimer" type="Timer" parent="GameSession"]
+wait_time = 1.0
+
+[node name="PlayerRoom" parent="." instance=ExtResource("4")]
+unique_name_in_owner = true
+visible = true
+
+[node name="ComputerDesktop" parent="." instance=ExtResource("5")]
+unique_name_in_owner = true
+visible = false
+
+[node name="AchievementCabinet" parent="." instance=ExtResource("6")]
+unique_name_in_owner = true
+visible = false
+
+[node name="Toast" type="Label" parent="."]
+unique_name_in_owner = true
+layout_mode = 1
+size_flags_horizontal = 3
+custom_minimum_size = Vector2(0, 22)
+text = "已添加新的回忆。"
+theme_override_font_sizes/font_size = 12
+theme_override_colors/font_color = Color(0.9568627450980393, 0.8745098039215686, 0.6980392156862745, 1)
+vertical_alignment = 1
+mouse_filter = 2
+autowrap_mode = 2
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+anchor_top = 1.0
+offset_left = 28.0
+offset_right = -28.0
+offset_top = -165.0
+offset_bottom = -123.0
+visible = false
+theme_override_styles/normal = SubResource("Style0")
+
+[node name="ToastTimer" type="Timer" parent="."]
+unique_name_in_owner = true
+one_shot = true
+wait_time = 4.0

@@ -1,6 +1,101 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=5 format=3]
 
-[ext_resource type="Script" path="res://scripts/life/app_window.gd" id="1"]
+[ext_resource type="Theme" path="res://assets/client_theme.tres" id="1"]
+
+[ext_resource type="Script" path="res://scripts/life/app_window.gd" id="2"]
+
+[sub_resource type="StyleBoxFlat" id="Style0"]
+bg_color = Color(0.09411764705882353, 0.15294117647058825, 0.20784313725490197, 1)
+border_color = Color(0.4, 0.5176470588235295, 0.5803921568627451, 1)
+content_margin_left = 0.0
+border_width_left = 2
+content_margin_right = 0.0
+border_width_right = 2
+content_margin_top = 0.0
+border_width_top = 2
+content_margin_bottom = 0.0
+border_width_bottom = 2
+
+[sub_resource type="StyleBoxFlat" id="Style1"]
+bg_color = Color(0.1450980392156863, 0.23921568627450981, 0.30196078431372547, 1)
+border_color = Color(0.0, 0.0, 0.0, 0.0)
+content_margin_left = 4.0
+border_width_left = 0
+content_margin_right = 4.0
+border_width_right = 0
+content_margin_top = 4.0
+border_width_top = 0
+content_margin_bottom = 4.0
+border_width_bottom = 0
 
 [node name="AppWindow" type="PanelContainer"]
-script = ExtResource("1")
+theme = ExtResource("1")
+script = ExtResource("2")
+offset_right = 1100.0
+offset_bottom = 700.0
+theme_override_styles/panel = SubResource("Style0")
+
+[node name="Layout" type="VBoxContainer" parent="."]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 0
+size_flags_vertical = 3
+
+[node name="Titlebar" type="PanelContainer" parent="Layout"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("Style1")
+custom_minimum_size = Vector2(0, 32)
+
+[node name="TitlebarRow" type="HBoxContainer" parent="Layout/Titlebar"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 6
+
+[node name="WindowTitle" type="Label" parent="Layout/Titlebar/TitlebarRow"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+custom_minimum_size = Vector2(0, 22)
+text = "  应用"
+theme_override_font_sizes/font_size = 12
+theme_override_colors/font_color = Color(0.8509803921568627, 0.9137254901960784, 0.9215686274509803, 1)
+vertical_alignment = 1
+mouse_filter = 0
+
+[node name="Minimize" type="Button" parent="Layout/Titlebar/TitlebarRow"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "—"
+custom_minimum_size = Vector2(36, 32)
+mouse_default_cursor_shape = 2
+theme_type_variation = "FlatButton"
+
+[node name="Maximize" type="Button" parent="Layout/Titlebar/TitlebarRow"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "□"
+custom_minimum_size = Vector2(36, 32)
+mouse_default_cursor_shape = 2
+theme_type_variation = "FlatButton"
+
+[node name="Close" type="Button" parent="Layout/Titlebar/TitlebarRow"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "×"
+custom_minimum_size = Vector2(36, 32)
+mouse_default_cursor_shape = 2
+theme_type_variation = "DangerButton"
+
+[node name="Body" type="MarginContainer" parent="Layout"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/margin_left = 0
+theme_override_constants/margin_top = 0
+theme_override_constants/margin_right = 0
+theme_override_constants/margin_bottom = 0
+size_flags_vertical = 3

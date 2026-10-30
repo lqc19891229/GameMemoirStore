@@ -1,52 +1,324 @@
-[gd_scene load_steps=5 format=3]
+[gd_scene load_steps=8 format=3]
 
-[ext_resource type="Script" path="res://scripts/client.gd" id="script"]
-[ext_resource type="Theme" path="res://assets/client_theme.tres" id="theme"]
+[ext_resource type="Theme" path="res://assets/client_theme.tres" id="1"]
 
-[sub_resource type="Shader" id="background_shader"]
-code = "shader_type canvas_item; void fragment(){ COLOR = mix(vec4(0.16,0.27,0.35,1.0),vec4(0.105,0.157,0.22,1.0),min(UV.y*2.0,1.0)); }"
+[ext_resource type="Script" path="res://scripts/client.gd" id="2"]
 
-[sub_resource type="ShaderMaterial" id="background_material"]
-shader = SubResource("background_shader")
+[ext_resource type="PackedScene" path="res://scenes/client/pages/home.tscn" id="3"]
+
+[sub_resource type="StyleBoxFlat" id="Style0"]
+bg_color = Color(0.09019607843137255, 0.10196078431372549, 0.12941176470588237, 1)
+border_color = Color(0.0, 0.0, 0.0, 0.0)
+content_margin_left = 0.0
+border_width_left = 0
+content_margin_right = 0.0
+border_width_right = 0
+content_margin_top = 0.0
+border_width_top = 0
+content_margin_bottom = 0.0
+border_width_bottom = 0
+
+[sub_resource type="StyleBoxFlat" id="Style1"]
+bg_color = Color(0.13725490196078433, 0.24705882352941178, 0.3254901960784314, 1)
+border_color = Color(0.0, 0.0, 0.0, 0.0)
+content_margin_left = 0.0
+border_width_left = 0
+content_margin_right = 0.0
+border_width_right = 0
+content_margin_top = 0.0
+border_width_top = 0
+content_margin_bottom = 0.0
+border_width_bottom = 0
+
+[sub_resource type="StyleBoxFlat" id="Style2"]
+bg_color = Color(0.09019607843137255, 0.10196078431372549, 0.12941176470588237, 1)
+border_color = Color(0.0, 0.0, 0.0, 0.0)
+content_margin_left = 2.0
+border_width_left = 0
+content_margin_right = 2.0
+border_width_right = 0
+content_margin_top = 2.0
+border_width_top = 0
+content_margin_bottom = 2.0
+border_width_bottom = 0
+
+[sub_resource type="StyleBoxFlat" id="Style3"]
+bg_color = Color(0.13725490196078433, 0.23921568627450981, 0.3137254901960784, 1)
+border_color = Color(0.0, 0.0, 0.0, 0.0)
+content_margin_left = 16.0
+border_width_left = 0
+content_margin_right = 16.0
+border_width_right = 0
+content_margin_top = 16.0
+border_width_top = 0
+content_margin_bottom = 16.0
+border_width_bottom = 0
 
 [node name="MemoirClient" type="Control"]
+theme = ExtResource("1")
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-theme = ExtResource("theme")
-script = ExtResource("script")
+script = ExtResource("2")
 
 [node name="Background" type="ColorRect" parent="."]
+unique_name_in_owner = true
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.10588235294117647, 0.1568627450980392, 0.2196078431372549, 1)
 mouse_filter = 2
-material = SubResource("background_material")
 
 [node name="Layout" type="VBoxContainer" parent="."]
+unique_name_in_owner = true
 layout_mode = 1
+size_flags_horizontal = 3
+theme_override_constants/separation = 0
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-theme_override_constants/separation = 0
+grow_horizontal = 2
+grow_vertical = 2
 
 [node name="ClientHeader" type="PanelContainer" parent="Layout"]
 unique_name_in_owner = true
 layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("Style0")
 custom_minimum_size = Vector2(0, 96)
+
+[node name="HeaderMargin" type="MarginContainer" parent="Layout/ClientHeader"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/margin_left = 14
+theme_override_constants/margin_top = 14
+theme_override_constants/margin_right = 14
+theme_override_constants/margin_bottom = 14
+
+[node name="HeaderLayout" type="VBoxContainer" parent="Layout/ClientHeader/HeaderMargin"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 3
+
+[node name="Menus" type="HBoxContainer" parent="Layout/ClientHeader/HeaderMargin/HeaderLayout"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 12
+
+[node name="AccountMenu" type="MenuButton" parent="Layout/ClientHeader/HeaderMargin/HeaderLayout/Menus"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "游戏回忆录"
+custom_minimum_size = Vector2(0, 28)
+
+[node name="ViewMenu" type="MenuButton" parent="Layout/ClientHeader/HeaderMargin/HeaderLayout/Menus"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "查看"
+custom_minimum_size = Vector2(0, 28)
+
+[node name="FriendsMenu" type="MenuButton" parent="Layout/ClientHeader/HeaderMargin/HeaderLayout/Menus"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "好友"
+custom_minimum_size = Vector2(0, 28)
+
+[node name="GamesMenu" type="MenuButton" parent="Layout/ClientHeader/HeaderMargin/HeaderLayout/Menus"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "游戏"
+custom_minimum_size = Vector2(0, 28)
+
+[node name="HelpMenu" type="MenuButton" parent="Layout/ClientHeader/HeaderMargin/HeaderLayout/Menus"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "帮助"
+custom_minimum_size = Vector2(0, 28)
+
+[node name="MenuSpring" type="Control" parent="Layout/ClientHeader/HeaderMargin/HeaderLayout/Menus"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="WalletButton" type="Button" parent="Layout/ClientHeader/HeaderMargin/HeaderLayout/Menus"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "钱包"
+custom_minimum_size = Vector2(0, 32)
+mouse_default_cursor_shape = 2
+theme_type_variation = "FlatButton"
+
+[node name="MinimizeClient" type="Button" parent="Layout/ClientHeader/HeaderMargin/HeaderLayout/Menus"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "—"
+custom_minimum_size = Vector2(28, 32)
+mouse_default_cursor_shape = 2
+theme_type_variation = "FlatButton"
+
+[node name="MaximizeClient" type="Button" parent="Layout/ClientHeader/HeaderMargin/HeaderLayout/Menus"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "□"
+custom_minimum_size = Vector2(28, 32)
+mouse_default_cursor_shape = 2
+theme_type_variation = "FlatButton"
+
+[node name="CloseClient" type="Button" parent="Layout/ClientHeader/HeaderMargin/HeaderLayout/Menus"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "×"
+custom_minimum_size = Vector2(28, 32)
+mouse_default_cursor_shape = 2
+theme_type_variation = "FlatButton"
+
+[node name="MainNavigation" type="HBoxContainer" parent="Layout/ClientHeader/HeaderMargin/HeaderLayout"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 16
+
+[node name="Back" type="Button" parent="Layout/ClientHeader/HeaderMargin/HeaderLayout/MainNavigation"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "<"
+custom_minimum_size = Vector2(30, 32)
+mouse_default_cursor_shape = 2
+theme_type_variation = "FlatButton"
+
+[node name="Forward" type="Button" parent="Layout/ClientHeader/HeaderMargin/HeaderLayout/MainNavigation"]
+unique_name_in_owner = true
+layout_mode = 2
+text = ">"
+custom_minimum_size = Vector2(30, 32)
+mouse_default_cursor_shape = 2
+theme_type_variation = "FlatButton"
+
+[node name="Store" type="Button" parent="Layout/ClientHeader/HeaderMargin/HeaderLayout/MainNavigation"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "商店"
+custom_minimum_size = Vector2(0, 32)
+mouse_default_cursor_shape = 2
+theme_type_variation = "FlatButton"
+theme_override_font_sizes/font_size = 24
+
+[node name="Library" type="Button" parent="Layout/ClientHeader/HeaderMargin/HeaderLayout/MainNavigation"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "库"
+custom_minimum_size = Vector2(0, 32)
+mouse_default_cursor_shape = 2
+theme_type_variation = "FlatButton"
+theme_override_font_sizes/font_size = 24
+
+[node name="Community" type="Button" parent="Layout/ClientHeader/HeaderMargin/HeaderLayout/MainNavigation"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "创作"
+custom_minimum_size = Vector2(0, 32)
+mouse_default_cursor_shape = 2
+theme_type_variation = "FlatButton"
+theme_override_font_sizes/font_size = 24
+
+[node name="Profile" type="Button" parent="Layout/ClientHeader/HeaderMargin/HeaderLayout/MainNavigation"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "像素收藏家"
+custom_minimum_size = Vector2(0, 32)
+mouse_default_cursor_shape = 2
+theme_type_variation = "FlatButton"
+theme_override_font_sizes/font_size = 24
+
+[node name="Online" type="Label" parent="Layout/ClientHeader/HeaderMargin/HeaderLayout/MainNavigation"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 8
+custom_minimum_size = Vector2(0, 22)
+text = "● 在线"
+theme_override_font_sizes/font_size = 12
+theme_override_colors/font_color = Color(0.4, 0.7529411764705882, 0.9568627450980393, 1)
+vertical_alignment = 1
+mouse_filter = 2
 
 [node name="StoreNavigation" type="PanelContainer" parent="Layout"]
 unique_name_in_owner = true
 layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("Style1")
 custom_minimum_size = Vector2(0, 44)
+
+[node name="NavMargin" type="MarginContainer" parent="Layout/StoreNavigation"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/margin_left = 6
+theme_override_constants/margin_top = 6
+theme_override_constants/margin_right = 6
+theme_override_constants/margin_bottom = 6
+
+[node name="StoreNavRow" type="HBoxContainer" parent="Layout/StoreNavigation/NavMargin"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="StoreMenu" type="MenuButton" parent="Layout/StoreNavigation/NavMargin/StoreNavRow"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "您的商店 v"
+
+[node name="NewMenu" type="MenuButton" parent="Layout/StoreNavigation/NavMargin/StoreNavRow"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "新品与热门商品 v"
+
+[node name="GenreMenu" type="MenuButton" parent="Layout/StoreNavigation/NavMargin/StoreNavRow"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "类别 v"
+
+[node name="NavSpring" type="Control" parent="Layout/StoreNavigation/NavMargin/StoreNavRow"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Wish" type="Button" parent="Layout/StoreNavigation/NavMargin/StoreNavRow"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "愿望单"
+custom_minimum_size = Vector2(0, 32)
+mouse_default_cursor_shape = 2
+theme_type_variation = "DarkButton"
+
+[node name="Cart" type="Button" parent="Layout/StoreNavigation/NavMargin/StoreNavRow"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "购物车"
+custom_minimum_size = Vector2(0, 32)
+mouse_default_cursor_shape = 2
+theme_type_variation = "GreenButton"
+
+[node name="Search" type="LineEdit" parent="Layout/StoreNavigation/NavMargin/StoreNavRow"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(228, 32)
+placeholder_text = "搜索商店 · 回车"
+clear_button_enabled = true
 
 [node name="ContentScroll" type="ScrollContainer" parent="Layout"]
 unique_name_in_owner = true
 layout_mode = 2
+size_flags_horizontal = 3
 size_flags_vertical = 3
 horizontal_scroll_mode = 0
 
@@ -56,15 +328,65 @@ layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 0
 
+[node name="HomePage" parent="Layout/ContentScroll/PageContent" instance=ExtResource("3")]
+unique_name_in_owner = true
+
 [node name="StatusBar" type="PanelContainer" parent="Layout"]
 unique_name_in_owner = true
 layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("Style2")
 custom_minimum_size = Vector2(0, 34)
+
+[node name="StatusRow" type="HBoxContainer" parent="Layout/StatusBar"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="AddGame" type="Button" parent="Layout/StatusBar/StatusRow"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "+ 添加游戏"
+custom_minimum_size = Vector2(130, 32)
+mouse_default_cursor_shape = 2
+theme_type_variation = "FlatButton"
+
+[node name="Downloads" type="Button" parent="Layout/StatusBar/StatusRow"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "下载"
+custom_minimum_size = Vector2(220, 32)
+mouse_default_cursor_shape = 2
+theme_type_variation = "FlatButton"
+
+[node name="StatusSpring" type="Control" parent="Layout/StatusBar/StatusRow"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Month" type="Button" parent="Layout/StatusBar/StatusRow"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "年月"
+custom_minimum_size = Vector2(224, 32)
+mouse_default_cursor_shape = 2
+theme_type_variation = "FlatButton"
+
+[node name="Friends" type="Button" parent="Layout/StatusBar/StatusRow"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "好友与聊天 ▣"
+custom_minimum_size = Vector2(146, 32)
+mouse_default_cursor_shape = 2
+theme_type_variation = "FlatButton"
 
 [node name="Notification" type="PanelContainer" parent="."]
 unique_name_in_owner = true
 layout_mode = 1
-anchors_preset = 3
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("Style3")
+visible = false
 anchor_left = 1.0
 anchor_top = 1.0
 anchor_right = 1.0
@@ -73,13 +395,25 @@ offset_left = -402.0
 offset_top = -110.0
 offset_right = -18.0
 offset_bottom = -48.0
-grow_horizontal = 0
-grow_vertical = 0
-visible = false
 mouse_filter = 2
 
 [node name="Message" type="Label" parent="Notification"]
+unique_name_in_owner = true
 layout_mode = 2
+size_flags_horizontal = 3
+custom_minimum_size = Vector2(0, 22)
 text = "游戏已添加到购物车"
-autowrap_mode = 2
+theme_override_font_sizes/font_size = 12
+theme_override_colors/font_color = Color(0.7803921568627451, 0.8352941176470589, 0.8784313725490196, 1)
+vertical_alignment = 1
 mouse_filter = 2
+autowrap_mode = 2
+
+[node name="NoticeTimer" type="Timer" parent="."]
+unique_name_in_owner = true
+wait_time = 3.0
+one_shot = true
+
+[node name="DownloadTimer" type="Timer" parent="."]
+unique_name_in_owner = true
+wait_time = 0.35

@@ -1,0 +1,199 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="Theme" path="res://assets/client_theme.tres" id="1"]
+
+[ext_resource type="Script" path="res://scripts/life/furniture_item.gd" id="2"]
+
+[sub_resource type="StyleBoxFlat" id="Style0"]
+bg_color = Color(0.0, 0.0, 0.0, 0.0)
+border_color = Color(0.9372549019607843, 0.8588235294117647, 0.6588235294117647, 1)
+content_margin_left = 0.0
+border_width_left = 1
+content_margin_right = 0.0
+border_width_right = 1
+content_margin_top = 0.0
+border_width_top = 1
+content_margin_bottom = 0.0
+border_width_bottom = 1
+
+[sub_resource type="StyleBoxFlat" id="Style1"]
+bg_color = Color(0.0, 0.0, 0.0, 0.0)
+border_color = Color(0.9372549019607843, 0.8588235294117647, 0.6588235294117647, 1)
+content_margin_left = 0.0
+border_width_left = 1
+content_margin_right = 0.0
+border_width_right = 1
+content_margin_top = 0.0
+border_width_top = 1
+content_margin_bottom = 0.0
+border_width_bottom = 1
+
+[node name="Cabinet" type="Button"]
+theme = ExtResource("1")
+script = ExtResource("2")
+kind = "cabinet"
+flat = true
+custom_minimum_size = Vector2(100, 100)
+mouse_default_cursor_shape = 2
+theme_override_styles/focus = SubResource("Style0")
+theme_override_styles/hover = SubResource("Style1")
+
+[node name="Part0" type="ColorRect" parent="."]
+mouse_filter = 2
+color = Color(0.4117647058823529, 0.3568627450980392, 0.29411764705882354, 1)
+layout_mode = 1
+anchor_left = 0.02
+anchor_top = 0.0
+anchor_right = 0.98
+anchor_bottom = 1.0
+
+[node name="Part1" type="ColorRect" parent="."]
+mouse_filter = 2
+color = Color(0.27058823529411763, 0.2823529411764706, 0.25098039215686274, 1)
+layout_mode = 1
+anchor_left = 0.1
+anchor_top = 0.07
+anchor_right = 0.9
+anchor_bottom = 0.92
+metadata/upgraded_color = Color(0.19607843137254902, 0.2784313725490196, 0.26666666666666666, 1)
+
+[node name="Part2" type="ColorRect" parent="."]
+mouse_filter = 2
+color = Color(0.6588235294117647, 0.5450980392156862, 0.4, 1)
+layout_mode = 1
+anchor_left = 0.07
+anchor_top = 0.31
+anchor_right = 0.93
+anchor_bottom = 0.35
+
+[node name="Part3" type="ColorRect" parent="."]
+mouse_filter = 2
+color = Color(0.6588235294117647, 0.5450980392156862, 0.4, 1)
+layout_mode = 1
+anchor_left = 0.07
+anchor_top = 0.61
+anchor_right = 0.93
+anchor_bottom = 0.65
+
+[node name="Part4" type="ColorRect" parent="."]
+mouse_filter = 2
+color = Color(0.6588235294117647, 0.5450980392156862, 0.4, 1)
+layout_mode = 1
+anchor_left = 0.07
+anchor_top = 0.91
+anchor_right = 0.93
+anchor_bottom = 0.95
+
+[node name="Trophy0" type="Control" parent="."]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+visible = false
+
+[node name="TrophyPart0" type="ColorRect" parent="Trophy0"]
+mouse_filter = 2
+color = Color(0.8509803921568627, 0.7137254901960784, 0.43529411764705883, 1)
+layout_mode = 1
+anchor_left = 0.33
+anchor_top = 0.18
+anchor_right = 0.67
+anchor_bottom = 0.27
+
+[node name="TrophyPart1" type="ColorRect" parent="Trophy0"]
+mouse_filter = 2
+color = Color(0.7294117647058823, 0.5686274509803921, 0.2980392156862745, 1)
+layout_mode = 1
+anchor_left = 0.43
+anchor_top = 0.25
+anchor_right = 0.57
+anchor_bottom = 0.32
+
+[node name="TrophyPart2" type="ColorRect" parent="Trophy0"]
+mouse_filter = 2
+color = Color(0.9098039215686274, 0.803921568627451, 0.5647058823529412, 1)
+layout_mode = 1
+anchor_left = 0.35
+anchor_top = 0.31
+anchor_right = 0.65
+anchor_bottom = 0.35
+
+[node name="Trophy1" type="Control" parent="."]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+visible = false
+
+[node name="TrophyPart0" type="ColorRect" parent="Trophy1"]
+mouse_filter = 2
+color = Color(0.8509803921568627, 0.7137254901960784, 0.43529411764705883, 1)
+layout_mode = 1
+anchor_left = 0.33
+anchor_top = 0.48
+anchor_right = 0.67
+anchor_bottom = 0.57
+
+[node name="TrophyPart1" type="ColorRect" parent="Trophy1"]
+mouse_filter = 2
+color = Color(0.7294117647058823, 0.5686274509803921, 0.2980392156862745, 1)
+layout_mode = 1
+anchor_left = 0.43
+anchor_top = 0.55
+anchor_right = 0.57
+anchor_bottom = 0.62
+
+[node name="TrophyPart2" type="ColorRect" parent="Trophy1"]
+mouse_filter = 2
+color = Color(0.9098039215686274, 0.803921568627451, 0.5647058823529412, 1)
+layout_mode = 1
+anchor_left = 0.35
+anchor_top = 0.61
+anchor_right = 0.65
+anchor_bottom = 0.65
+
+[node name="Trophy2" type="Control" parent="."]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+visible = false
+
+[node name="TrophyPart0" type="ColorRect" parent="Trophy2"]
+mouse_filter = 2
+color = Color(0.8509803921568627, 0.7137254901960784, 0.43529411764705883, 1)
+layout_mode = 1
+anchor_left = 0.33
+anchor_top = 0.78
+anchor_right = 0.67
+anchor_bottom = 0.87
+
+[node name="TrophyPart1" type="ColorRect" parent="Trophy2"]
+mouse_filter = 2
+color = Color(0.7294117647058823, 0.5686274509803921, 0.2980392156862745, 1)
+layout_mode = 1
+anchor_left = 0.43
+anchor_top = 0.85
+anchor_right = 0.57
+anchor_bottom = 0.92
+
+[node name="TrophyPart2" type="ColorRect" parent="Trophy2"]
+mouse_filter = 2
+color = Color(0.9098039215686274, 0.803921568627451, 0.5647058823529412, 1)
+layout_mode = 1
+anchor_left = 0.35
+anchor_top = 0.91
+anchor_right = 0.65
+anchor_bottom = 0.95

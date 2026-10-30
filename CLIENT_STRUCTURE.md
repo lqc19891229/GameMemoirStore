@@ -22,16 +22,16 @@ GameSession 持有唯一 `MemoirStoreState` 实例。平台通过 `session` 与 
 | 场景 | 脚本职责 |
 |---|---|
 | `game_root.tscn` | `game_root.gd`：组合场景，切换房间和桌面，打开展示柜，显示通知 |
-| `life/player_room.tscn` | `player_room.gd`：绘制房间、显示玩家状态，发送电脑 / 库存 / 展示柜交互信号 |
-| `life/furniture_item.tscn` | `furniture_item.gd`：可复用像素物件，按种类绘制电脑、桌子、外设、台灯、奖杯架 |
+| `life/player_room.tscn` | `player_room.gd`：绑定房间静态节点、显示玩家状态，发送电脑 / 库存 / 展示柜交互信号 |
+| `life/furniture_item.tscn` | `furniture_item.gd`：更新独立家具场景内的升级颜色、麦克风与奖杯节点 |
 | `life/computer_desktop.tscn` | `computer_desktop.gd`：桌面入口、任务栏、窗口创建与复用、最小化和关闭 |
 | `life/app_window.tscn` | `app_window.gd`：窗口标题栏、拖动、铺满、关闭和最小化信号，挂载应用内容 |
-| `store.tscn` | `client.gd`：平台路由与操作；`client_pages.gd` 构建页面；`client_ui.gd` 提供控件与样式 |
+| `store.tscn` | `client.gd`：平台路由与操作；`client_pages.gd` 绑定页面场景；`client_ui.gd` 提供图片资源工具 |
 | `life/browser.tscn` | `browser.gd`：购物、库存与安装界面，交易交给会话执行 |
 | `life/game_player.tscn` | `game_player.gd`：四图轮播、活动状态、成就进度和直播操作 |
 | `life/achievement_cabinet.tscn` | `achievement_cabinet.gd`：选择展示 / 收起奖杯，由房间物件同步显示 |
 
-生活脚本位于 `scripts/life/`。`life_data.gd` 定义商品、初始生活数据、能力权重、通用成就模板和存档数据清理规则。替换正式美术时，可先修改家具绘制 / 图片显示，不必修改交易或存档逻辑。
+生活脚本位于 `scripts/life/`。`life_data.gd` 定义商品、初始生活数据、能力权重、通用成就模板和存档数据清理规则。替换正式美术时，可先修改家具场景 / 图片显示，不必修改交易或存档逻辑。
 
 ## 操作如何传递
 
@@ -40,7 +40,7 @@ GameSession 持有唯一 `MemoirStoreState` 实例。平台通过 `session` 与 
 - 平台启动游戏 → GameSession 校验购买、安装和活动占用 → `play_requested` → 桌面打开游戏窗口。
 - 网页购买 / 安装 → GameSession 校验预算、库存和物品位置 → 修改共享状态 → 房间更新外观。
 - 游玩解锁成就 → State 保存记录 → 提示通知与展示柜更新。
-- 展示柜选择奖杯 → 更新 `life.displayed` → 房间奖杯架重绘。
+- 展示柜选择奖杯 → 更新 `life.displayed` → 房间奖杯节点更新。
 
 `changed` 用于交易、装备、成就和活动变化；`tick_updated` 用于每个模拟分钟的文字与进度更新。跨场景操作使用信号或会话方法，网页不直接寻找房间节点。
 
@@ -77,3 +77,7 @@ GameSession 的 1 秒 Timer 统一推进 1 分钟模拟活动，并处理下载�
 读取兼容版本 1、2、3，旧存档获得默认生活资料。生活存档会校验物品 ID、装备位置和所有权，限制属性范围，移除无效活动与未获得的展示奖杯。保存仍先写临时文件再替换。
 
 `tests/life/test_life_flow.gd` 覆盖房间→电脑→购买→安装→游玩→直播→购物→安装设备→攻略→展示柜→保存恢复的完整流程，并检查重复扣款、活动互斥、阅读收益上限和旧版迁移。
+
+## 可视化场景编辑
+
+固定界面、页面和家具外观均保存为真实 `.tscn` 节点。编辑入口、模板位置及运行数据与预览的区别见 [EDITOR_WORKFLOW.md](EDITOR_WORKFLOW.md)。

@@ -1,0 +1,462 @@
+[gd_scene load_steps=6 format=3]
+
+[ext_resource type="Theme" path="res://assets/client_theme.tres" id="1"]
+
+[ext_resource type="Texture2D" path="res://assets/art/CTA3/CTA3.png" id="2"]
+
+[sub_resource type="StyleBoxFlat" id="Style0"]
+bg_color = Color(0.10588235294117647, 0.12549019607843137, 0.1568627450980392, 1)
+border_color = Color(0.0, 0.0, 0.0, 0.0)
+content_margin_left = 14.0
+border_width_left = 0
+content_margin_right = 14.0
+border_width_right = 0
+content_margin_top = 14.0
+border_width_top = 0
+content_margin_bottom = 14.0
+border_width_bottom = 0
+
+[sub_resource type="StyleBoxFlat" id="Style1"]
+bg_color = Color(0.12549019607843137, 0.17254901960784313, 0.2235294117647059, 1)
+border_color = Color(0.0, 0.0, 0.0, 0.0)
+content_margin_left = 16.0
+border_width_left = 0
+content_margin_right = 16.0
+border_width_right = 0
+content_margin_top = 16.0
+border_width_top = 0
+content_margin_bottom = 16.0
+border_width_bottom = 0
+
+[sub_resource type="StyleBoxFlat" id="Style2"]
+bg_color = Color(0.1450980392156863, 0.21568627450980393, 0.2901960784313726, 1)
+border_color = Color(0.0, 0.0, 0.0, 0.0)
+content_margin_left = 16.0
+border_width_left = 0
+content_margin_right = 16.0
+border_width_right = 0
+content_margin_top = 16.0
+border_width_top = 0
+content_margin_bottom = 16.0
+border_width_bottom = 0
+
+[node name="LibraryPage" type="MarginContainer"]
+theme = ExtResource("1")
+theme_override_constants/margin_left = 28
+theme_override_constants/margin_right = 28
+theme_override_constants/margin_top = 28
+theme_override_constants/margin_bottom = 28
+size_flags_horizontal = 3
+
+[node name="PageLayout" type="VBoxContainer" parent="."]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 18
+
+[node name="Columns" type="HBoxContainer" parent="PageLayout"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 22
+
+[node name="SidePanel" type="PanelContainer" parent="PageLayout/Columns"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 0
+theme_override_styles/panel = SubResource("Style0")
+custom_minimum_size = Vector2(230, 0)
+
+[node name="Sidebar" type="VBoxContainer" parent="PageLayout/Columns/SidePanel"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 8
+
+[node name="LibraryHeading" type="Label" parent="PageLayout/Columns/SidePanel/Sidebar"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+custom_minimum_size = Vector2(0, 34)
+text = "游戏库"
+theme_override_font_sizes/font_size = 24
+theme_override_colors/font_color = Color(1.0, 1.0, 1.0, 1)
+vertical_alignment = 1
+mouse_filter = 2
+
+[node name="Collection" type="OptionButton" parent="PageLayout/Columns/SidePanel/Sidebar"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(0, 32)
+
+[node name="LibrarySearch" type="LineEdit" parent="PageLayout/Columns/SidePanel/Sidebar"]
+unique_name_in_owner = true
+layout_mode = 2
+placeholder_text = "按名称搜索 · 回车"
+
+[node name="ListScroll" type="ScrollContainer" parent="PageLayout/Columns/SidePanel/Sidebar"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+custom_minimum_size = Vector2(0, 180)
+
+[node name="GameList" type="VBoxContainer" parent="PageLayout/Columns/SidePanel/Sidebar/ListScroll"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 6
+
+[node name="Count" type="Label" parent="PageLayout/Columns/SidePanel/Sidebar/ListScroll/GameList"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+custom_minimum_size = Vector2(0, 22)
+text = "游戏（0）"
+theme_override_font_sizes/font_size = 12
+theme_override_colors/font_color = Color(0.5607843137254902, 0.596078431372549, 0.6274509803921569, 1)
+vertical_alignment = 1
+mouse_filter = 2
+
+[node name="Items" type="VBoxContainer" parent="PageLayout/Columns/SidePanel/Sidebar/ListScroll/GameList"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 6
+
+[node name="LibraryContentScroll" type="ScrollContainer" parent="PageLayout/Columns"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+custom_minimum_size = Vector2(0, 500)
+
+[node name="Main" type="VBoxContainer" parent="PageLayout/Columns/LibraryContentScroll"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 14
+
+[node name="EmptyState" type="VBoxContainer" parent="PageLayout/Columns/LibraryContentScroll/Main"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 16
+
+visible = false
+[node name="EmptyText" type="Label" parent="PageLayout/Columns/LibraryContentScroll/Main/EmptyState"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+custom_minimum_size = Vector2(0, 34)
+text = "您的游戏库正等待新的收藏。"
+theme_override_font_sizes/font_size = 24
+theme_override_colors/font_color = Color(0.7803921568627451, 0.8352941176470589, 0.8784313725490196, 1)
+vertical_alignment = 1
+mouse_filter = 2
+autowrap_mode = 2
+
+[node name="BrowseStore" type="Button" parent="PageLayout/Columns/LibraryContentScroll/Main/EmptyState"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "浏览商店"
+custom_minimum_size = Vector2(160, 32)
+mouse_default_cursor_shape = 2
+theme_type_variation = "BlueButton"
+
+[node name="GameContent" type="VBoxContainer" parent="PageLayout/Columns/LibraryContentScroll/Main"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 14
+
+[node name="CoverFrame" type="Control" parent="PageLayout/Columns/LibraryContentScroll/Main/GameContent"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(0, 220)
+size_flags_horizontal = 3
+
+[node name="Cover" type="TextureRect" parent="PageLayout/Columns/LibraryContentScroll/Main/GameContent/CoverFrame"]
+unique_name_in_owner = true
+layout_mode = 1
+custom_minimum_size = Vector2(0, 0)
+texture = ExtResource("2")
+expand_mode = 1
+stretch_mode = 6
+texture_filter = 1
+mouse_filter = 2
+size_flags_horizontal = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Title" type="Label" parent="PageLayout/Columns/LibraryContentScroll/Main/GameContent/CoverFrame"]
+unique_name_in_owner = true
+layout_mode = 1
+size_flags_horizontal = 3
+custom_minimum_size = Vector2(0, 46)
+text = "游戏名称"
+theme_override_font_sizes/font_size = 36
+theme_override_colors/font_color = Color(0.9294117647058824, 0.9607843137254902, 0.9294117647058824, 1)
+vertical_alignment = 1
+mouse_filter = 2
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 24.0
+offset_top = -65.0
+offset_bottom = -12.0
+
+[node name="ActionsPanel" type="PanelContainer" parent="PageLayout/Columns/LibraryContentScroll/Main/GameContent"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("Style1")
+
+[node name="Actions" type="HBoxContainer" parent="PageLayout/Columns/LibraryContentScroll/Main/GameContent/ActionsPanel"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 18
+
+[node name="LibraryAction" type="Button" parent="PageLayout/Columns/LibraryContentScroll/Main/GameContent/ActionsPanel/Actions"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "开始游戏"
+custom_minimum_size = Vector2(172, 48)
+mouse_default_cursor_shape = 2
+theme_type_variation = "GreenButton"
+theme_override_font_sizes/font_size = 24
+
+[node name="Stats" type="VBoxContainer" parent="PageLayout/Columns/LibraryContentScroll/Main/GameContent/ActionsPanel/Actions"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 0
+
+[node name="StatsHeading" type="Label" parent="PageLayout/Columns/LibraryContentScroll/Main/GameContent/ActionsPanel/Actions/Stats"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+custom_minimum_size = Vector2(0, 22)
+text = "游戏时间"
+theme_override_font_sizes/font_size = 12
+theme_override_colors/font_color = Color(0.5607843137254902, 0.596078431372549, 0.6274509803921569, 1)
+vertical_alignment = 1
+mouse_filter = 2
+
+[node name="Playtime" type="Label" parent="PageLayout/Columns/LibraryContentScroll/Main/GameContent/ActionsPanel/Actions/Stats"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+custom_minimum_size = Vector2(0, 22)
+text = "0 分钟 · 0 次游玩"
+theme_override_font_sizes/font_size = 12
+theme_override_colors/font_color = Color(0.7803921568627451, 0.8352941176470589, 0.8784313725490196, 1)
+vertical_alignment = 1
+mouse_filter = 2
+
+[node name="Favorite" type="Button" parent="PageLayout/Columns/LibraryContentScroll/Main/GameContent/ActionsPanel/Actions"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "☆"
+custom_minimum_size = Vector2(40, 32)
+mouse_default_cursor_shape = 2
+theme_type_variation = "FlatButton"
+
+[node name="Manage" type="MenuButton" parent="PageLayout/Columns/LibraryContentScroll/Main/GameContent/ActionsPanel/Actions"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "管理 v"
+
+[node name="DownloadProgress" type="ProgressBar" parent="PageLayout/Columns/LibraryContentScroll/Main/GameContent"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(0, 14)
+show_percentage = false
+
+[node name="Links" type="HBoxContainer" parent="PageLayout/Columns/LibraryContentScroll/Main/GameContent"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="Store" type="Button" parent="PageLayout/Columns/LibraryContentScroll/Main/GameContent/Links"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "商店页面"
+custom_minimum_size = Vector2(0, 32)
+mouse_default_cursor_shape = 2
+theme_type_variation = "FlatButton"
+
+[node name="Creation" type="Button" parent="PageLayout/Columns/LibraryContentScroll/Main/GameContent/Links"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "直播与攻略"
+custom_minimum_size = Vector2(0, 32)
+mouse_default_cursor_shape = 2
+theme_type_variation = "FlatButton"
+
+[node name="Records" type="Button" parent="PageLayout/Columns/LibraryContentScroll/Main/GameContent/Links"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "游戏记录"
+custom_minimum_size = Vector2(0, 32)
+mouse_default_cursor_shape = 2
+theme_type_variation = "FlatButton"
+
+[node name="NewsHeading" type="Label" parent="PageLayout/Columns/LibraryContentScroll/Main/GameContent"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+custom_minimum_size = Vector2(0, 34)
+text = "最近动态"
+theme_override_font_sizes/font_size = 24
+theme_override_colors/font_color = Color(1.0, 1.0, 1.0, 1)
+vertical_alignment = 1
+mouse_filter = 2
+
+[node name="NewsPanel" type="PanelContainer" parent="PageLayout/Columns/LibraryContentScroll/Main/GameContent"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("Style2")
+
+[node name="News" type="VBoxContainer" parent="PageLayout/Columns/LibraryContentScroll/Main/GameContent/NewsPanel"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 8
+
+[node name="Welcome" type="Label" parent="PageLayout/Columns/LibraryContentScroll/Main/GameContent/NewsPanel/News"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+custom_minimum_size = Vector2(0, 22)
+text = "欢迎回来"
+theme_override_font_sizes/font_size = 12
+theme_override_colors/font_color = Color(0.4, 0.7529411764705882, 0.9568627450980393, 1)
+vertical_alignment = 1
+mouse_filter = 2
+
+[node name="Feature" type="Label" parent="PageLayout/Columns/LibraryContentScroll/Main/GameContent/NewsPanel/News"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+custom_minimum_size = Vector2(0, 22)
+text = "游戏介绍"
+theme_override_font_sizes/font_size = 12
+theme_override_colors/font_color = Color(0.7803921568627451, 0.8352941176470589, 0.8784313725490196, 1)
+vertical_alignment = 1
+mouse_filter = 2
+autowrap_mode = 2
+
+[node name="NewsHint" type="Label" parent="PageLayout/Columns/LibraryContentScroll/Main/GameContent/NewsPanel/News"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+custom_minimum_size = Vector2(0, 22)
+text = "这里将记录您在这款游戏中度过的时光。"
+theme_override_font_sizes/font_size = 12
+theme_override_colors/font_color = Color(0.5607843137254902, 0.596078431372549, 0.6274509803921569, 1)
+vertical_alignment = 1
+mouse_filter = 2
+
+[node name="PlayRecords" type="VBoxContainer" parent="PageLayout/Columns/LibraryContentScroll/Main/GameContent"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 6
+
+[node name="PlayRecord0" type="Label" parent="PageLayout/Columns/LibraryContentScroll/Main/GameContent/PlayRecords"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+custom_minimum_size = Vector2(0, 22)
+text = "游玩记录 · 本次体验 45 分钟"
+theme_override_font_sizes/font_size = 12
+theme_override_colors/font_color = Color(0.7803921568627451, 0.8352941176470589, 0.8784313725490196, 1)
+vertical_alignment = 1
+mouse_filter = 2
+
+[node name="PlayRecord1" type="Label" parent="PageLayout/Columns/LibraryContentScroll/Main/GameContent/PlayRecords"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+custom_minimum_size = Vector2(0, 22)
+text = "游玩记录 · 本次体验 45 分钟"
+theme_override_font_sizes/font_size = 12
+theme_override_colors/font_color = Color(0.7803921568627451, 0.8352941176470589, 0.8784313725490196, 1)
+vertical_alignment = 1
+mouse_filter = 2
+
+[node name="PlayRecord2" type="Label" parent="PageLayout/Columns/LibraryContentScroll/Main/GameContent/PlayRecords"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+custom_minimum_size = Vector2(0, 22)
+text = "游玩记录 · 本次体验 45 分钟"
+theme_override_font_sizes/font_size = 12
+theme_override_colors/font_color = Color(0.7803921568627451, 0.8352941176470589, 0.8784313725490196, 1)
+vertical_alignment = 1
+mouse_filter = 2
+
+[node name="AchievementsHeading" type="Label" parent="PageLayout/Columns/LibraryContentScroll/Main/GameContent"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+custom_minimum_size = Vector2(0, 34)
+text = "成就"
+theme_override_font_sizes/font_size = 24
+theme_override_colors/font_color = Color(1.0, 1.0, 1.0, 1)
+vertical_alignment = 1
+mouse_filter = 2
+
+[node name="Milestone0" type="Label" parent="PageLayout/Columns/LibraryContentScroll/Main/GameContent"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+custom_minimum_size = Vector2(0, 22)
+text = "☆ 第一段回忆 · 0%"
+theme_override_font_sizes/font_size = 12
+theme_override_colors/font_color = Color(0.5607843137254902, 0.596078431372549, 0.6274509803921569, 1)
+vertical_alignment = 1
+mouse_filter = 2
+
+[node name="Milestone1" type="Label" parent="PageLayout/Columns/LibraryContentScroll/Main/GameContent"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+custom_minimum_size = Vector2(0, 22)
+text = "☆ 第一段回忆 · 0%"
+theme_override_font_sizes/font_size = 12
+theme_override_colors/font_color = Color(0.5607843137254902, 0.596078431372549, 0.6274509803921569, 1)
+vertical_alignment = 1
+mouse_filter = 2
+
+[node name="Milestone2" type="Label" parent="PageLayout/Columns/LibraryContentScroll/Main/GameContent"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+custom_minimum_size = Vector2(0, 22)
+text = "☆ 第一段回忆 · 0%"
+theme_override_font_sizes/font_size = 12
+theme_override_colors/font_color = Color(0.5607843137254902, 0.596078431372549, 0.6274509803921569, 1)
+vertical_alignment = 1
+mouse_filter = 2
+
+[node name="AchievementsHint" type="Label" parent="PageLayout/Columns/LibraryContentScroll/Main/GameContent"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+custom_minimum_size = Vector2(0, 22)
+text = "游玩积累挑战进度，玩家能力与已安装设备影响效率。解锁后可以在房间展示奖杯。"
+theme_override_font_sizes/font_size = 12
+theme_override_colors/font_color = Color(0.5607843137254902, 0.596078431372549, 0.6274509803921569, 1)
+vertical_alignment = 1
+mouse_filter = 2
+autowrap_mode = 2
