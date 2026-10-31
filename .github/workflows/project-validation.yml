@@ -84,7 +84,7 @@ jobs:
             tests/life/test_audit_regressions.gd
           do
             echo "Running $test"
-            godot --headless --path . --script "res://$test" -- --fresh
+            timeout 45s godot --headless --path . --script "res://$test" -- --fresh
           done
 
       - name: Install virtual display
