@@ -3,17 +3,6 @@ name: Showcase model build
 on:
   push:
     branches: [feature/desktop-showcase-models]
-  pull_request:
-    types: [opened, reopened]
-    branches: [main]
-    paths:
-      - "tools/models/**"
-      - "assets/models/**"
-      - "scenes/computer/hardware/**"
-      - "scenes/room/chair.tscn"
-      - "data/hardware/**"
-      - "tests/test_showcase_models.py"
-      - ".github/workflows/showcase-model-build.yml"
 
 permissions:
   contents: write
@@ -21,7 +10,6 @@ permissions:
 
 jobs:
   build:
-    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:
