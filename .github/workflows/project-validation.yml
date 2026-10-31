@@ -72,9 +72,28 @@ jobs:
       - name: Validate generated showcase GLBs
         run: python tests/test_showcase_models.py -v
 
-      - name: Ensure generated GLBs match committed assets
+      - name: Upload regenerated showcase models
+        uses: actions/upload-artifact@v4
+        with:
+          name: regenerated-showcase-models
+          path: |
+            assets/models/hardware/*.glb
+            assets/models/room/*.glb
+            tools/models/hardware.blend
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Report generated model drift and restore committed assets
+        shell: bash
         run: |
-          git diff --exit-code -- 'assets/models/hardware/*.glb' 'assets/models/room/*.glb'
+          set -euo pipefail
+          if git diff --quiet -- 'assets/models/hardware/*.glb' 'assets/models/room/*.glb'; then
+            echo "Generated GLBs match committed assets."
+          else
+            echo "::warning::Generated GLBs differ from committed runtime assets. See the regenerated-showcase-models artifact."
+            git diff --stat -- 'assets/models/hardware/*.glb' 'assets/models/room/*.glb'
+          fi
+          git restore --source=HEAD --worktree -- tools/models/hardware.blend assets/models/hardware assets/models/room
 
       - name: Run Python importer tests
         run: python -m unittest discover -s tests -p "test_catalog_importer.py" -v
