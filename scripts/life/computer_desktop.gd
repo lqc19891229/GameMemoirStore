@@ -1,4 +1,4 @@
-extends Control
+extends Node3D
 const WindowScene = preload("res://scenes/life/app_window.tscn")
 const APPS := {"platform": ["游戏平台", "res://scenes/store.tscn"], "browser": ["回忆生活 · 购物网页", "res://scenes/life/browser.tscn"], "game": ["正在游玩", "res://scenes/life/game_player.tscn"]}
 const Data = preload("res://scripts/life/life_data.gd")
@@ -13,6 +13,9 @@ var selected_role := "monitor"
 var modal_input_guard := false
 var dragging := false
 var orbiting := false
+var pointer_origin := Vector2.ZERO
+var camera_dragged := false
+const DRAG_THRESHOLD := 6.0
 var screen_mouse_down := false
 var last_screen_point := Vector2.ZERO
 @onready var world: Node3D = %Workstation3D
@@ -24,8 +27,10 @@ func screen_node(key: String) -> Node:
 
 func _ready() -> void:
 	get_window().window_input.connect(_forward_modal_input)
+	get_window().focus_exited.connect(_clear_gesture)
 	world.set_screen_texture(%DesktopViewport.get_texture())
-	%WorldViewport.size_changed.connect(_reframe_screen)
+	get_viewport().size_changed.connect(_reframe_screen)
+	%ResetView.pressed.connect(world.reset_overview)
 	%FocusToggle.pressed.connect(func() -> void: set_screen_focused(true))
 	%ReturnOverview.pressed.connect(func() -> void: set_screen_focused(false))
 	%ManageDevices.pressed.connect(func() -> void:
@@ -68,7 +73,7 @@ func _update_device_info() -> void:
 	var item: Dictionary = Data.ITEMS.get(id, {})
 	var label: String = {"monitor": "显示器", "computer": "机箱", "keyboard": "键盘", "mouse": "鼠标"}[selected_role]
 	%DeviceName.text = label + "  /  " + str(item.get("name", ""))
-	var hint := "拖动旋转 · 滚轮缩放 · Esc 返回工作台" if world.mode == "inspect" else "点击设备检视 · 点击屏幕使用电脑 · 右键拖动环顾"
+	var hint := "拖动旋转 · 滚轮缩放 · Esc 返回工作台" if world.mode == "inspect" else "拖动旋转 · 滚轮缩放 · 单击设备检视 / 屏幕操作"
 	%DeviceDescription.text = str(item.get("description", "")) + "  ·  " + hint
 
 func select_device(role: String, animate: bool = true) -> void:
@@ -89,20 +94,17 @@ func _set_mode(value: String, animate: bool) -> void:
 	orbiting = false
 	if value != "screen":
 		for dialog: Window in %DesktopViewport.get_embedded_subwindows(): dialog.hide()
-	%WorldView.stretch_shrink = 2 if value == "overview" else 1
 	world.set_mode(value, selected_role, animate)
 	_sync_mode()
 
 func _sync_mode() -> void:
 	%ReturnOverview.visible = world.mode != "overview"
+	%ResetView.visible = world.mode == "overview"
 	%FocusToggle.visible = not screen_focused
 	%ManageDevices.visible = not screen_focused
 	%DeviceInfo.visible = not screen_focused
 	%ViewTitle.text = {"overview": "我的 3D 工作台", "inspect": "设备检视", "screen": "屏幕操作"}[world.mode]
 	_update_device_info()
-
-func _view_point(point: Vector2) -> Vector2:
-	return (point - %WorldView.global_position) * Vector2(%WorldViewport.size) / %WorldView.size
 
 func _reframe_screen() -> void:
 	if not screen_focused: return
@@ -112,19 +114,18 @@ func _reframe_screen() -> void:
 		world.set_mode("screen", selected_role, false)
 
 func canvas_point_for_screen(logical: Vector2) -> Vector2:
-	var pixel: Vector2 = world.pixel_for_screen(logical / Vector2(%DesktopViewport.size))
-	return %WorldView.global_position + pixel * %WorldView.size / Vector2(%WorldViewport.size)
+	return world.pixel_for_screen(logical / Vector2(%DesktopViewport.size))
 
 func _push_screen_input(event: InputEvent, allow_outside: bool = false) -> bool:
 	var mapped := event.duplicate() as InputEvent
 	if event is InputEventMouse:
-		var uv: Variant = world.screen_uv(_view_point(event.position), not allow_outside)
+		var uv: Variant = world.screen_uv(event.position, not allow_outside)
 		if uv == null: return false
 		mapped.position = uv * Vector2(%DesktopViewport.size)
 		mapped.global_position = mapped.position
 		last_screen_point = mapped.position
 		if mapped is InputEventMouseMotion:
-			var previous: Variant = world.screen_uv(_view_point(event.position - event.relative), false)
+			var previous: Variant = world.screen_uv(event.position - event.relative, false)
 			if previous != null: mapped.relative = (uv - previous) * Vector2(%DesktopViewport.size)
 	%DesktopViewport.push_input(mapped, true)
 	return true
@@ -133,6 +134,9 @@ func _input(event: InputEvent) -> void:
 	if modal_input_guard:
 		get_viewport().set_input_as_handled()
 		return
+	# GUI can consume a release over the header; always end the camera gesture.
+	if event is InputEventMouseButton and not event.pressed and event.button_index in [MOUSE_BUTTON_LEFT, MOUSE_BUTTON_RIGHT]:
+		_clear_gesture.call_deferred()
 	if not event is InputEventKey or world.transitioning: return
 	if event.pressed and not event.echo and event.keycode == KEY_ESCAPE and world.mode != "overview":
 		if %DesktopViewport.get_embedded_subwindows().any(func(window: Window) -> bool: return window.visible): return
@@ -157,18 +161,34 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 	if event is InputEventMouseButton:
 		if event.button_index == MOUSE_BUTTON_LEFT:
+			var was_dragging := dragging
 			dragging = event.pressed
-			if event.pressed and world.mode == "overview":
-				var role: String = world.pick_at(_view_point(event.position))
-				if role == "monitor" and world.screen_uv(_view_point(event.position)) != null: set_screen_focused(true)
+			if event.pressed:
+				pointer_origin = event.position
+				camera_dragged = false
+			elif was_dragging and world.mode == "overview" and not camera_dragged and pointer_origin.distance_to(event.position) < DRAG_THRESHOLD:
+				var role: String = world.pick_at(event.position)
+				if role == "monitor" and world.screen_uv(event.position) != null: set_screen_focused(true)
 				elif not role.is_empty(): select_device(role)
-		elif event.button_index == MOUSE_BUTTON_RIGHT: orbiting = event.pressed
-		elif event.pressed and world.mode == "inspect":
-			if event.button_index == MOUSE_BUTTON_WHEEL_UP: world.zoom_product(0.9)
-			if event.button_index == MOUSE_BUTTON_WHEEL_DOWN: world.zoom_product(1.1)
+		elif event.button_index == MOUSE_BUTTON_RIGHT:
+			orbiting = event.pressed
+		elif event.pressed and event.button_index in [MOUSE_BUTTON_WHEEL_UP, MOUSE_BUTTON_WHEEL_DOWN]:
+			var amount := pow(0.9 if event.button_index == MOUSE_BUTTON_WHEEL_UP else 1.1, event.factor if event.factor > 0 else 1.0)
+			if world.mode == "overview": world.zoom_overview(amount)
+			else: world.zoom_product(amount)
+		else: return
+		get_viewport().set_input_as_handled()
 	elif event is InputEventMouseMotion:
-		if dragging: world.rotate_product(event.relative)
-		if orbiting: world.orbit_overview(event.relative)
+		if world.mode == "overview":
+			if dragging and pointer_origin.distance_to(event.position) >= DRAG_THRESHOLD: camera_dragged = true
+			if (dragging and camera_dragged) or orbiting: world.orbit_overview(event.relative)
+		elif dragging or orbiting:
+			world.rotate_product(event.relative)
+		if dragging or orbiting: get_viewport().set_input_as_handled()
+
+func _clear_gesture() -> void:
+	dragging = false
+	orbiting = false
 
 func _forward_modal_input(event: InputEvent) -> void:
 	if not screen_focused or world.transitioning: return

@@ -41,26 +41,98 @@ func escape_key() -> void:
 	event.pressed = false
 	dispatch(event)
 	await finish_transition()
-func click_screen(desktop: Control, target: Control) -> void:
+func click_screen(desktop: Node3D, target: Control) -> void:
 	var logical := target.get_global_rect().get_center()
 	if target.get_viewport() is Window and target.get_viewport() != root: logical += Vector2(target.get_viewport().position)
 	await click(desktop.canvas_point_for_screen(logical))
-func device_point(desktop: Control, role: String) -> Vector2:
+func device_point(desktop: Node3D, role: String) -> Vector2:
 	var device: Node3D = desktop.world.devices[role]
 	var center: Vector3 = device.to_global(Vector3(0, device.appearance.bounds.y / 2.0, 0))
 	var pixel: Vector2 = desktop.world.camera.unproject_position(center)
-	return desktop.get_node("%WorldView").global_position + pixel * desktop.get_node("%WorldView").size / Vector2(desktop.get_node("%WorldViewport").size)
+	return pixel
 func run() -> void:
 	var game = load("res://scenes/game_root.tscn").instantiate()
 	root.add_child(game)
 	game.session.timer.stop()
 	await frames()
-	var desktop: Control = game.desktop
+	var desktop: Node3D = game.desktop
 	var world = desktop.world
 	var viewport: SubViewport = desktop.get_node("%DesktopViewport")
 	check(world is Node3D and world.camera is Camera3D, "workstation uses actual 3D scene and camera")
 	check(world.mode == "overview" and not desktop.screen_focused, "new game starts at 3D overview")
 	check(not game.has_node("PlayerRoom"), "room scene remains removed")
+	check(desktop is Node3D and world.get_viewport() == root, "ComputerDesktop renders 3D directly in the main viewport")
+	var original_view: Transform3D = world.camera.transform
+	var original_distance: float = world.overview_distance
+	var point := device_point(desktop, "computer")
+	var press := InputEventMouseButton.new()
+	press.button_index = MOUSE_BUTTON_LEFT
+	press.position = point
+	press.pressed = true
+	dispatch(press)
+	var move := InputEventMouseMotion.new()
+	move.position = point + Vector2(160,50)
+	move.relative = Vector2(160,50)
+	dispatch(move)
+	press.position = move.position
+	press.pressed = false
+	dispatch(press)
+	await frames()
+	check(world.mode == "overview" and not world.camera.transform.is_equal_approx(original_view), "drag starting on a device orbits without entering inspection")
+	check(world.overview_pitch > 0.3, "vertical dragging changes elevation")
+	var wheel := InputEventMouseButton.new()
+	wheel.button_index = MOUSE_BUTTON_WHEEL_UP
+	wheel.position = root.get_visible_rect().size / 2.0
+	wheel.pressed = true
+	dispatch(wheel)
+	check(world.overview_distance < original_distance, "wheel zooms directly in desktop overview")
+	var retained_view: Transform3D = world.camera.transform
+	desktop.select_device("keyboard", false)
+	desktop.set_screen_focused(false, false)
+	check(world.camera.transform.is_equal_approx(retained_view), "return from inspection preserves overview orbit and zoom")
+	desktop.set_screen_focused(true, false)
+	desktop.set_screen_focused(false, false)
+	check(world.camera.transform.is_equal_approx(retained_view), "return from screen preserves overview orbit and zoom")
+	for i in range(100): dispatch(wheel)
+	check(is_equal_approx(world.overview_distance, world.minimum_distance), "overview zoom has a near limit")
+	wheel.button_index = MOUSE_BUTTON_WHEEL_DOWN
+	for i in range(100): dispatch(wheel)
+	check(is_equal_approx(world.overview_distance, world.maximum_distance), "overview zoom has a far limit")
+	var yaw: float = world.overview_yaw
+	press.button_index = MOUSE_BUTTON_RIGHT
+	press.position = wheel.position
+	press.pressed = true
+	dispatch(press)
+	move.relative = Vector2(350,0)
+	move.position = press.position + move.relative
+	dispatch(move)
+	press.pressed = false
+	dispatch(press)
+	await frames()
+	check(absf(angle_difference(yaw, world.overview_yaw)) > 1.5, "right drag orbits beyond the previous narrow angle limit")
+	var before_header: Transform3D = world.camera.transform
+	wheel.position = desktop.get_node("%ResetView").get_global_rect().get_center()
+	dispatch(wheel)
+	wheel.pressed = false
+	dispatch(wheel)
+	check(world.camera.transform.is_equal_approx(before_header), "scrolling over HUD never zooms the 3D world")
+	await click(desktop.get_node("%ResetView").get_global_rect().get_center())
+	check(world.camera.transform.is_equal_approx(original_view), "reset view restores the authored camera")
+	# A short movement is still a click, while a drag across the screen must not enter it.
+	point = desktop.canvas_point_for_screen(Vector2(640,400))
+	press.button_index = MOUSE_BUTTON_LEFT
+	press.position = point
+	press.pressed = true
+	dispatch(press)
+	move.position = point + Vector2(35,0)
+	move.relative = Vector2(35,0)
+	dispatch(move)
+	press.position = move.position
+	press.pressed = false
+	dispatch(press)
+	await frames()
+	check(world.mode == "overview", "dragging from the display never clicks through into screen operation")
+	world.reset_overview()
 	for role in ["computer", "keyboard", "mouse", "monitor"]:
 		var placement: Transform3D = world.devices[role].transform
 		await click(device_point(desktop, role) if role != "monitor" else desktop.canvas_point_for_screen(Vector2(640,400)))
@@ -71,22 +143,22 @@ func run() -> void:
 			check(world.mode == "inspect" and world.selected == role, "ray picks product: " + role)
 			check(not world.get_node("%Desk").visible and world.get_node("%Pedestal").visible, "inspection uses product stage")
 			check(desktop.windows.is_empty(), "hardware inspection never launches apps")
-			var yaw: float = world.devices[role].rotation.y
-			var point := desktop.size / 2.0
-			var press := InputEventMouseButton.new()
+			var product_yaw: float = world.devices[role].rotation.y
+			point = root.get_visible_rect().size / 2.0
+			press = InputEventMouseButton.new()
 			press.button_index = MOUSE_BUTTON_LEFT
 			press.position = point
 			press.pressed = true
 			dispatch(press)
-			var move := InputEventMouseMotion.new()
+			move = InputEventMouseMotion.new()
 			move.position = point + Vector2(90,20)
 			move.relative = Vector2(90,20)
 			dispatch(move)
 			press.pressed = false
 			dispatch(press)
-			check(not is_equal_approx(world.devices[role].rotation.y, yaw), "drag rotates real geometry: " + role)
+			check(not is_equal_approx(world.devices[role].rotation.y, product_yaw), "drag rotates real geometry: " + role)
 			var distance: float = world.inspect_distance
-			var wheel := InputEventMouseButton.new()
+			wheel = InputEventMouseButton.new()
 			wheel.position = point
 			wheel.button_index = MOUSE_BUTTON_WHEEL_UP
 			wheel.pressed = true
@@ -97,9 +169,8 @@ func run() -> void:
 	game.session.state.wallet = 1000
 	for id in ["lcd_monitor", "workstation", "precise_mouse"]: game.session.buy_item(id)
 	for settings: Array in [[Vector2(1280,800),"starter_monitor"],[Vector2(1280,800),"lcd_monitor"],[Vector2(960,600),"starter_monitor"],[Vector2(960,600),"lcd_monitor"],[Vector2(1440,810),"lcd_monitor"],[Vector2(1024,768),"starter_monitor"]]:
-		desktop.anchor_right = 0
-		desktop.anchor_bottom = 0
-		desktop.size = settings[0]
+		root.content_scale_size = settings[0]
+		root.size = settings[0]
 		game.session.equip_item(settings[1])
 		await frames()
 		await click(desktop.canvas_point_for_screen(Vector2(640,400)))
@@ -107,11 +178,11 @@ func run() -> void:
 		check(desktop.screen_focused and desktop.windows.is_empty(), "enter click never also launches app")
 		check(viewport.size == Vector2i(1280,800) and viewport.gui_embed_subwindows, "screen retains OS resolution and embedded windows")
 		var center: Vector2 = desktop.canvas_point_for_screen(Vector2(640,400))
-		var uv: Vector2 = world.screen_uv(desktop._view_point(center))
+		var uv: Vector2 = world.screen_uv(center)
 		check(uv.distance_to(Vector2(.5,.5)) < .002, "3D projection and UV input agree")
 		var top_left: Vector2 = desktop.canvas_point_for_screen(Vector2.ZERO)
 		var bottom_right: Vector2 = desktop.canvas_point_for_screen(Vector2(1280,800))
-		check(Rect2(Vector2.ZERO,desktop.size).encloses(Rect2(top_left,bottom_right-top_left)), "screen framing remains inside wide and narrow windows")
+		check(root.get_visible_rect().encloses(Rect2(top_left,bottom_right-top_left)), "screen framing remains inside wide and narrow windows")
 		await click_screen(desktop, desktop.screen_node("DesktopPlatform"))
 		check(desktop.windows.has("platform"), "3D screen input opens platform")
 		if desktop.windows.has("platform"):
