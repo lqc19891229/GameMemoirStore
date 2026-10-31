@@ -5,7 +5,7 @@
 
 ## 审计摘要
 
-当前仓库递归文件树包含 267 个文件、41 个目录和 47 个 Godot 场景；包含 15 个 GLB（9 个电脑硬件模型、6 个房间模型）、13 个 Godot 测试脚本、2 个 Python 测试脚本和 24 份 README。项目另有 35 个 GDScript、6 个 Python 源文件。
+当前仓库递归文件树包含 273 个文件、40 个目录和 49 个 Godot 场景；包含 15 个 GLB（9 个电脑硬件模型、6 个房间模型）、13 个 Godot 测试脚本、2 个 Python 测试脚本和 24 份 README。项目另有 37 个 GDScript、6 个 Python 源文件。
 
 本报告区分静态资源审计与实际运行验证。资源路径、UID、导入 sidecar 和 GLB 结构检查不能代替 Godot 场景运行；完整验证状态以对应提交的 GitHub Actions 工作流为准。
 
@@ -27,7 +27,7 @@
 | tests/fixtures/ | 固定测试数据，不加入正式商店 |
 | tools/ | Excel 导入、资源审计和模型制作工具 |
 
-主场景为 `scenes/main/game_root.tscn`。GameSession 是唯一玩家状态和模拟活动时钟的所有者。ComputerDesktop 承载 Workstation3D、DesktopViewport 和 HUD。Workstation3D 内包含 Room、TableGroup、Equipment、LayoutEditor、Lighting、Camera、环境和灯光；旧 旧像素后处理 已移除。
+主场景为 `scenes/main/game_root.tscn`。GameSession 是唯一玩家状态和模拟活动时钟的所有者。ComputerDesktop 承载 Workstation3D、DesktopViewport 和 HUD。Workstation3D 内包含 Room、TableGroup、Equipment、LayoutEditor、Lighting、Camera、环境和灯光；旧像素后处理已移除。
 
 ## 本轮维护
 
