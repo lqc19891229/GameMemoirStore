@@ -1,3 +1,29 @@
+# Godot editor and import cache (keep tracked *.import sidecars)
 .godot/
+
+# Python caches and local environments
 __pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+
+# Temporary files and editor backups
 *.tmp
+*.bak
+*.swp
+*~
+*.blend1
+*.blend2
+
+# Operating-system metadata
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Local export/build output
+/build/
+/export/
+/dist/
