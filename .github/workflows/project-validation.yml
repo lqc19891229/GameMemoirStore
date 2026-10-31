@@ -37,9 +37,30 @@ jobs:
           use-dotnet: false
 
       - name: Install Blender and Pillow
+        shell: bash
         run: |
-          curl -fsSL https://download.blender.org/release/Blender3.6/blender-3.6.23-linux-x64.tar.xz -o /tmp/blender.tar.xz
-          tar -xf /tmp/blender.tar.xz -C /tmp
+          set -euo pipefail
+          archive=/tmp/blender.tar.xz
+          downloaded=false
+          for url in \
+            https://mirror.blender.org/release/Blender3.6/blender-3.6.23-linux-x64.tar.xz \
+            https://ftp.blender.org/release/Blender3.6/blender-3.6.23-linux-x64.tar.xz \
+            https://download.blender.org/release/Blender3.6/blender-3.6.23-linux-x64.tar.xz
+          do
+            echo "Trying Blender mirror: $url"
+            if curl --fail --location --retry 2 --retry-delay 3 --connect-timeout 20 \
+              --user-agent "Mozilla/5.0 (compatible; GameMemoirStore-CI/1.0)" \
+              "$url" --output "$archive"; then
+              downloaded=true
+              break
+            fi
+            rm -f "$archive"
+          done
+          if [ "$downloaded" != true ]; then
+            echo "::error::Could not download Blender 3.6.23 from the official mirrors."
+            exit 1
+          fi
+          tar -xf "$archive" -C /tmp
           echo "/tmp/blender-3.6.23-linux-x64" >> "$GITHUB_PATH"
           python -m pip install Pillow
 
