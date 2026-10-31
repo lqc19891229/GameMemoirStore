@@ -75,7 +75,7 @@ func _build() -> void:
 	var art_blue := _material(Color("7d9ca6"), 0.82)
 	var art_sage := _material(Color("9eaa91"), 0.86)
 	var art_ochre := _material(Color("c69b65"), 0.82)
-	var glass := _material(Color(0.62, 0.79, 0.84, 0.24), 0.16, 0.08)
+	var glass := _material(Color(0.62, 0.79, 0.84, 0.12), 0.22, 0.03)
 	glass.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 
 	_build_floor()
@@ -84,12 +84,12 @@ func _build() -> void:
 	_build_ceiling_trim(trim, metal)
 
 func _build_floor() -> void:
-	var base := _material(Color("c7a47c"), 0.68)
+	var base := _material(Color("b99572"), 0.68)
 	_box(self, "Floor", Vector3(8.24, 0.2, 6.24), Vector3(0, -0.1, 0), base, "floor")
 	var tones := [0.96, 1.02, 0.99, 1.04]
 	for row in range(12):
 		var tone: float = tones[row % tones.size()]
-		var plank := _material(Color("c7a47c") * tone, 0.61)
+		var plank := _material(Color("b99572") * tone, 0.61)
 		var z := -2.75 + float(row) * 0.5
 		_box(self, "FloorBoard_%02d" % row, Vector3(8.0, 0.014, 0.486), Vector3(0, 0.006, z), plank, "floor", tone)
 
@@ -124,10 +124,10 @@ func _build_left_wall(wall: Material, trim: Material, wood: Material, metal: Mat
 	var sky := _material(Color("c6d7d8"), 1.0)
 	var distant := _material(Color("a8b8b5"), 1.0)
 	var near_building := _material(Color("899d9b"), 0.96)
-	_box(left, "WindowSky", Vector3(0.04, 2.65, 2.55), Vector3(-5.0, 2.0, -0.8), sky)
-	_box(left, "DistantBuilding", Vector3(0.08, 0.92, 0.62), Vector3(-4.72, 0.92, -1.48), distant)
-	_box(left, "DistantBuilding", Vector3(0.08, 1.24, 0.48), Vector3(-4.72, 1.08, -0.72), near_building)
-	_box(left, "DistantBuilding", Vector3(0.08, 0.76, 0.58), Vector3(-4.72, 0.84, 0.12), distant)
+	_box(left, "WindowSky", Vector3(0.04, 1.34, 2.18), Vector3(-5.0, 1.99, -0.8), sky)
+	_box(left, "DistantBuilding", Vector3(0.08, 0.58, 0.62), Vector3(-4.72, 1.58, -1.48), distant)
+	_box(left, "DistantBuilding", Vector3(0.08, 0.90, 0.48), Vector3(-4.72, 1.73, -0.72), near_building)
+	_box(left, "DistantBuilding", Vector3(0.08, 0.48, 0.58), Vector3(-4.72, 1.52, 0.12), distant)
 
 	# Warm painted skirting and a small timber cap at the window.
 	_box(left, "Left_Skirting", Vector3(0.10, 0.16, 6.05), Vector3(-3.94, 0.08, 0), trim)

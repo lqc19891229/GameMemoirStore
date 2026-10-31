@@ -4,7 +4,7 @@ extends Node3D
 ## Room appearance presets and cutaway visibility for the modern 3D sample room.
 
 const WALLS := [Color("f1eee8"), Color("e5e1da"), Color("dce6df")]
-const FLOORS := [Color("c7a47c"), Color("967153"), Color("a8ada8")]
+const FLOORS := [Color("b99572"), Color("967153"), Color("a8ada8")]
 const LIGHTS := [Color("fff0dc"), Color("e5efff"), Color("ffd1a1")]
 const FILL_LIGHTS := [Color("d9e4df"), Color("d9e8f4"), Color("a8a09a")]
 
@@ -60,14 +60,14 @@ func apply_style(value: Variant) -> void:
 	var fill := get_parent().get_node_or_null("FillLight") as DirectionalLight3D
 	if fill != null:
 		fill.light_color = FILL_LIGHTS[style.light]
-		fill.light_energy = [0.30, 0.36, 0.10][style.light]
+		fill.light_energy = [0.18, 0.24, 0.08][style.light]
 	var ceiling := get_parent().get_node_or_null("CeilingLight") as OmniLight3D
 	if ceiling != null:
 		ceiling.light_color = LIGHTS[style.light]
-		ceiling.light_energy = [0.30, 0.12, 0.48][style.light]
+		ceiling.light_energy = [0.12, 0.08, 0.32][style.light]
 	for item: Node3D in $Furniture.get_children():
 		if item.has_node("LampGlow"):
-			item.get_node("LampGlow").light_energy = [0.52, 0.22, 1.15][style.light]
+			item.get_node("LampGlow").light_energy = [0.36, 0.18, 0.85][style.light]
 	style_changed.emit(style)
 
 func update_cutaway(camera: Camera3D) -> void:
