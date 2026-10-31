@@ -42,7 +42,7 @@ Godot 4.6 像素 3D 房间布置与游戏收藏经营原型。玩家从自己的
 
 移动使用扫掠占地检测，旋转检查中间路径，避免快速拖动或转动穿过其他物件。地毯允许铺在家具下方。椅子、书架、灯、地毯和绿植可复制，每类最多 8 个副本；Ctrl + D 复制，Delete 删除选中的副本，初始家具不能删除。Ctrl + Z 撤销，Ctrl + Shift + Z / Ctrl + Y 重做。
 
-墙面、地板和灯光各有三套预设。“应用布置”保存家具、设备、副本和房间外观；取消 / Esc 丢弃未确认的草稿。“恢复默认布置”只修改草稿，仍需应用才会保存。屏幕操作、更换设备型号和后台自动保存不会覆盖未确认的草稿。详细规则见 docs/WORKSTATION_LAYOUT.md。
+墙面、地板和空间灯光各有三套预设。RGB 灯光另提供冰青、深蓝、紫罗兰、洋红、琥珀、薄荷和玫瑰七种颜色，亮度 0–100%，以及常亮、呼吸、彩虹循环三种灯效；亮度设为 0 时关闭 RGB 发光和辅助灯。空间预设控制主光、补光和落地灯，RGB 控制设备与桌底装饰灯光。应用布置会一起保存家具、设备、副本和六项房间外观设置；取消 / Esc 丢弃未确认的草稿。“恢复默认布置”只修改草稿，仍需应用才会保存。屏幕操作、更换设备型号和后台自动保存不会覆盖未确认的草稿。详见 docs/WORKSTATION_LAYOUT.md 与 docs/WORKSTATION_LIGHTING.md。
 
 ## 玩家能力与收入
 
@@ -122,6 +122,7 @@ data/catalog.json 按相同 ID 补充英文名、标签、评价、安装大小�
     python tools/project_audit.py
     python tools/catalog/import_games.py --project . --check
     python -m unittest discover -s tests -p "test_catalog_importer.py" -v
+    python -m unittest discover -s tests -p "test_showcase_models.py" -v
     godot --headless --path . --editor --import
 
 Godot Headless 回归：
@@ -133,11 +134,12 @@ Godot Headless 回归：
     godot --headless --path . --script res://tests/test_editor_scenes.gd -- --fresh
     godot --headless --path . --script res://tests/life/test_life_flow.gd -- --fresh
     godot --headless --path . --script res://tests/life/test_workstation_view.gd -- --fresh
+    godot --headless --path . --script res://tests/life/test_workstation_lighting.gd -- --fresh
     godot --headless --path . --script res://tests/life/test_workstation_layout.gd -- --fresh
     godot --headless --path . --script res://tests/life/test_workstation_collision.gd -- --fresh
     godot --headless --path . --script res://tests/life/test_pixel_room.gd -- --fresh
     godot --headless --path . --script res://tests/life/test_audit_regressions.gd -- --fresh
 
-test_client_windows.gd 需要图形环境；Linux CI 使用 Xvfb 执行。--fresh 禁用正常玩家存档读写，测试使用独立数据。GitHub Actions 会在 push、Pull Request 和手动触发时执行项目检查。
+test_client_windows.gd 需要图形环境；Linux CI 使用 Xvfb 执行。--fresh 禁用正常玩家存档读写，测试使用独立数据。GitHub Actions 会在 push、Pull Request 和手动触发时执行检查，包括模型重建、全部 GLB 结构检查、生成文件差异提示与模型构建产物上传、Godot Headless 回归和 Xvfb 图形测试。
 
 素材来源与授权见 ASSET_CREDITS.md；编辑入口见 EDITOR_WORKFLOW.md；完整结构见 CLIENT_STRUCTURE.md；当前维护审计见 docs/PROJECT_AUDIT.md。

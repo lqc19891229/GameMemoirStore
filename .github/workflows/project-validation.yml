@@ -6,6 +6,8 @@ on:
   pull_request:
   workflow_dispatch:
 
+# Validation executes code from pull requests, including forks. It only needs
+# read access; generated assets are checked, never pushed back by CI.
 permissions:
   contents: read
 
@@ -14,9 +16,6 @@ jobs:
     name: Python and Godot validation
     runs-on: ubuntu-latest
     timeout-minutes: 60
-    permissions:
-      contents: write
-      statuses: write
     steps:
       - name: Check out repository
         uses: actions/checkout@v7
@@ -24,6 +23,7 @@ jobs:
           repository: ${{ github.event.pull_request.head.repo.full_name || github.repository }}
           ref: ${{ github.event.pull_request.head.ref || github.ref_name }}
           fetch-depth: 0
+          persist-credentials: false
 
       - name: Set up Python
         uses: actions/setup-python@v7
@@ -36,23 +36,64 @@ jobs:
           version: "4.6.0"
           use-dotnet: false
 
-      - name: Install Blender and Pillow for same-repository PRs
-        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+      - name: Install Blender and Pillow
+        shell: bash
         run: |
-          curl -fsSL https://download.blender.org/release/Blender3.6/blender-3.6.23-linux-x64.tar.xz -o /tmp/blender.tar.xz
-          tar -xf /tmp/blender.tar.xz -C /tmp
+          set -euo pipefail
+          archive=/tmp/blender.tar.xz
+          downloaded=false
+          for url in \
+            https://mirror.blender.org/release/Blender3.6/blender-3.6.23-linux-x64.tar.xz \
+            https://ftp.blender.org/release/Blender3.6/blender-3.6.23-linux-x64.tar.xz \
+            https://download.blender.org/release/Blender3.6/blender-3.6.23-linux-x64.tar.xz
+          do
+            echo "Trying Blender mirror: $url"
+            if curl --fail --location --retry 2 --retry-delay 3 --connect-timeout 20 \
+              --user-agent "Mozilla/5.0 (compatible; GameMemoirStore-CI/1.0)" \
+              "$url" --output "$archive"; then
+              downloaded=true
+              break
+            fi
+            rm -f "$archive"
+          done
+          if [ "$downloaded" != true ]; then
+            echo "::error::Could not download Blender 3.6.23 from the official mirrors."
+            exit 1
+          fi
+          tar -xf "$archive" -C /tmp
           echo "/tmp/blender-3.6.23-linux-x64" >> "$GITHUB_PATH"
           python -m pip install Pillow
 
       - name: Rebuild desktop showcase models
-        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
         run: |
           blender --background --threads 1 --factory-startup --python tools/models/build_hardware.py
           python tools/models/build_room.py
 
       - name: Validate generated showcase GLBs
-        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
         run: python tests/test_showcase_models.py -v
+
+      - name: Upload regenerated showcase models
+        uses: actions/upload-artifact@v4
+        with:
+          name: regenerated-showcase-models
+          path: |
+            assets/models/hardware/*.glb
+            assets/models/room/*.glb
+            tools/models/hardware.blend
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Report generated model drift and restore committed assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          if git diff --quiet -- 'assets/models/hardware/*.glb' 'assets/models/room/*.glb'; then
+            echo "Generated GLBs match committed assets."
+          else
+            echo "::warning::Generated GLBs differ from committed runtime assets. See the regenerated-showcase-models artifact."
+            git diff --stat -- 'assets/models/hardware/*.glb' 'assets/models/room/*.glb'
+          fi
+          git restore --source=HEAD --worktree -- tools/models/hardware.blend assets/models/hardware assets/models/room
 
       - name: Run Python importer tests
         run: python -m unittest discover -s tests -p "test_catalog_importer.py" -v
@@ -94,35 +135,3 @@ jobs:
         env:
           SDL_AUDIODRIVER: dummy
         run: xvfb-run -a godot --path . --script res://tests/test_client_windows.gd -- --fresh
-
-      - name: Commit regenerated model assets
-        id: commit_assets
-        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
-        env:
-          BRANCH_NAME: ${{ github.event.pull_request.head.ref }}
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add tools/models/hardware.blend assets/models/hardware/*.glb assets/models/room/*.glb
-          if git diff --cached --quiet; then
-            echo "changed=false" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-          git commit -m "assets: generate desktop showcase models"
-          git push origin "HEAD:${BRANCH_NAME}"
-          echo "changed=true" >> "$GITHUB_OUTPUT"
-          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
-
-      - name: Mark regenerated model commit as validated
-        if: steps.commit_assets.outputs.changed == 'true'
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NEW_SHA: ${{ steps.commit_assets.outputs.sha }}
-          REPOSITORY: ${{ github.repository }}
-        run: |
-          curl --fail-with-body \
-            -X POST \
-            -H "Accept: application/vnd.github+json" \
-            -H "Authorization: Bearer ${GH_TOKEN}" \
-            "https://api.github.com/repos/${REPOSITORY}/statuses/${NEW_SHA}" \
-            -d '{"state":"success","context":"Python and Godot validation","description":"Regenerated desktop showcase GLBs passed bounds, import and regression tests."}'

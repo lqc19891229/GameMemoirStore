@@ -117,7 +117,7 @@ func run() -> void:
 	layout.set_style("wall",2)
 	layout.set_style("floor",1)
 	layout.set_style("light",2)
-	check(room.style == {"wall":2,"floor":1,"light":2}, "wall floor and light preview together")
+	check(room.style == {"wall":2,"floor":1,"light":2,"rgb":0,"brightness":70,"effect":0}, "wall floor and light preview preserves RGB defaults")
 	layout.undo()
 	check(room.style.light == 0 and room.style.wall == 2, "undo includes room appearance")
 	layout.redo()
