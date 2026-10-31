@@ -1,0 +1,30 @@
+[gd_resource type="Resource" script_class="MemoirHardwareCatalog" load_steps=10 format=3]
+
+[ext_resource type="Script" path="res://scripts/life/hardware_catalog.gd" id="1"]
+[ext_resource type="Resource" path="res://data/hardware/monitor_crt.tres" id="2"]
+[ext_resource type="Resource" path="res://data/hardware/case_beige.tres" id="3"]
+[ext_resource type="Resource" path="res://data/hardware/keyboard_beige.tres" id="4"]
+[ext_resource type="Resource" path="res://data/hardware/mouse_beige.tres" id="5"]
+[ext_resource type="Resource" path="res://data/hardware/case_charcoal.tres" id="6"]
+[ext_resource type="Resource" path="res://data/hardware/monitor_lcd.tres" id="7"]
+[ext_resource type="Resource" path="res://data/hardware/keyboard_charcoal.tres" id="8"]
+[ext_resource type="Resource" path="res://data/hardware/mouse_charcoal.tres" id="9"]
+
+[resource]
+script = ExtResource("1")
+monitors = {
+"starter_monitor": ExtResource("2"),
+"lcd_monitor": ExtResource("7")
+}
+computers = {
+"starter_pc": ExtResource("3"),
+"workstation": ExtResource("6")
+}
+keyboards = {
+"starter_mouse": ExtResource("4"),
+"precise_mouse": ExtResource("8")
+}
+mice = {
+"starter_mouse": ExtResource("5"),
+"precise_mouse": ExtResource("9")
+}

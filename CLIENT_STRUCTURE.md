@@ -2,7 +2,7 @@
 
 ## 主场景与共享数据
 
-`scenes/game_root.tscn` 是唯一主入口。GameRoot 只持有 GameSession 和 ComputerDesktop；启动后直接显示电脑近景，活动由持续存在的 GameSession 推进。
+`scenes/game_root.tscn` 是唯一主入口。GameRoot 只持有 GameSession 和 ComputerDesktop；启动后直接显示设备工作台，活动由持续存在的 GameSession 推进。
 
 ```mermaid
 flowchart TD
@@ -21,7 +21,7 @@ GameSession 持有唯一 `MemoirStoreState` 实例。平台通过 `session` 与 
 | 场景 | 脚本职责 |
 |---|---|
 | `game_root.tscn` | `game_root.gd`：注入共享会话、启动电脑桌面、连接游玩请求和屏幕通知 |
-| `life/computer_desktop.tscn` | `computer_desktop.gd`：桌面入口、任务栏、窗口创建与复用、最小化和关闭 |
+| `life/computer_desktop.tscn` | `computer_desktop.gd`：设备外观、展示 / 屏幕状态、任务栏、窗口创建与复用、最小化和关闭 |
 | `life/app_window.tscn` | `app_window.gd`：窗口标题栏、拖动、铺满、关闭和最小化信号，挂载应用内容 |
 | `store.tscn` | `client.gd`：平台路由与操作；`client_pages.gd` 绑定页面场景；`client_ui.gd` 提供图片资源工具 |
 | `life/browser.tscn` | `browser.gd`：购物、库存与安装界面，交易交给会话执行 |
@@ -42,7 +42,7 @@ GameSession 持有唯一 `MemoirStoreState` 实例。平台通过 `session` 与 
 
 GameSession 的 1 秒 Timer 统一推进 1 分钟模拟活动，并处理下载。`life.active` 同时只允许一项主要活动：play 或 guide。直播是 play 的附加状态；制作攻略与游玩互斥。
 
-最小化、关闭平台不会停止活动。关闭游戏窗口或点击结束游玩才调用 `stop_play()`，结束直播并只记录一次会话。重复关闭不重复增加游玩时间。进度在每分钟累计，结束时不会额外增加旧版的 45 分钟。
+工作台展示与屏幕操作之间只改变视图，不销毁桌面视口。最小化、返回设备展示、关闭平台不会停止活动。关闭游戏窗口或点击结束游玩才调用 `stop_play()`，结束直播并只记录一次会话。重复关闭不重复增加游玩时间。进度在每分钟累计，结束时不会额外增加旧版的 45 分钟。
 
 活动随版本 3 存档保存。重新进入后，时钟继续推进；“继续游玩”打开运行窗口，显示已有进度。离线时间不结算。发行年月仍沿用商店的手动月份进度和每月 60 点预算补充。
 
@@ -52,7 +52,7 @@ GameSession 的 1 秒 Timer 统一推进 1 分钟模拟活动，并处理下载�
 
 每款游戏初版共用 10、60、180 点三个里程碑。直播每 5 分钟结算一次，基础 2 点，主机 / 麦克风可增加收入。攻略需至少游玩 10 分钟，制作耗时 20 分钟；每款只可发布一次，成就数量影响稿费，后续每 10 分钟 1 点阅读收益，最多 60 次。
 
-每种设备同时安装一件拥有的物品。房间相关场景、贴图和展示操作已删除；房间专属商品停售。历史家具、装备位置、布置和展示记录继续通过版本 3 存档读写，库存中仅作为收藏记录。设备属性、价格和收益均为首版演示平衡值。CPU/GPU 型号暂作展示文本，不据此阻止启动游戏。
+每种设备同时安装一件拥有的物品。显示器使用独立 monitor 槽位；旧存档自动补入 starter_monitor，原有设备与钱包保留。外观目录为 data/hardware/_catalog.tres，显示器、机箱、键盘和鼠标各有独立贴图。房间相关场景、贴图和展示操作已删除；房间专属商品停售。历史家具、装备位置、布置和展示记录继续通过版本 3 存档读写，库存中仅作为收藏记录。设备属性、价格和收益均为首版演示平衡值。CPU/GPU 型号暂作展示文本，不据此阻止启动游戏。
 
 ## 平台页面与游戏数据
 

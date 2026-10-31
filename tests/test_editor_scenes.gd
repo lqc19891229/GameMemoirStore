@@ -23,16 +23,24 @@ func run() -> void:
 			check(node.get_child_count() > 0, "visible layout exists before ready: " + path)
 		node.free()
 	var closeup = load("res://scenes/life/computer_desktop.tscn").instantiate()
-	check(closeup.get_node("WorkstationArt") is TextureRect, "close-up uses one backdrop texture")
-	check(closeup.get_child_count() == 2, "close-up only has art and live monitor screen")
+	check(closeup.get_node("Background") is TextureRect, "workspace has one independent backdrop texture")
+	check(closeup.get_child_count() == 3, "workspace separates background, equipment and interface")
+	check(closeup.get_node("Equipment").get_child_count() == 4, "workspace has four independent device slots")
+	for role in ["Monitor", "Computer", "Keyboard", "Mouse"]:
+		var device: Control = closeup.get_node("Equipment/" + role)
+		check(device.get_node("Art") is TextureRect and device.visual.texture != null, "device has authored image before ready: " + role)
 	closeup.free()
 	var game = load("res://scenes/game_root.tscn").instantiate()
 	check(game.get_child_count() == 2, "main scene only contains shared session and desktop")
 	check(not game.has_node("PlayerRoom") and not game.has_node("AchievementCabinet"), "room presentation has been removed")
 	check(game.get_node("ComputerDesktop").visible, "desktop is visible in the authored main scene")
-	check(game.has_node("ComputerDesktop/MonitorScreen/ScreenViewport/DesktopViewport/DesktopScreen/ApplicationArea"), "desktop shell exists before running")
+	check(game.has_node("ComputerDesktop/Equipment/Monitor/MonitorScreen/ScreenViewport/DesktopViewport/DesktopScreen/ApplicationArea"), "desktop shell exists before running")
+	var original_anchor: float = game.get_node("ComputerDesktop/Equipment/Keyboard").anchor_left + 0.02
+	game.get_node("ComputerDesktop/Equipment/Keyboard").anchor_left = original_anchor
 	root.add_child(game)
 	game.session.timer.stop()
+	game.desktop.refresh()
+	check(is_equal_approx(game.get_node("ComputerDesktop/Equipment/Keyboard").anchor_left, original_anchor), "refresh preserves editor-authored device placement")
 	var client = load("res://scenes/store.tscn").instantiate()
 	client.get_node("%ClientHeader").custom_minimum_size.y = 120
 	var original_home: Node = client.get_node("%PageContent").get_child(0)

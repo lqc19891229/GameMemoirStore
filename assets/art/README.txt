@@ -1,6 +1,7 @@
 图片素材
 
 CounterSquad/：反击小队的商店封面和四张独立展示图。
+life/hardware/：空桌面背景、显示器、机箱、键盘和鼠标的独立贴图。
 icon.png：平台图标。
 stars.png、desert.png、valley.png、ocean.png、castle.png、train.png：旧演示游戏封面，测试样本仍会使用。
 素材生成说明.txt：建议尺寸、图片格式和游戏素材命名规则。

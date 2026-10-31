@@ -40,17 +40,18 @@
 
 检查场景在 `_ready()` 之前就有节点，并验证电脑默认可见、客户端布局和首页实例在运行 / 刷新后保持。原有客户端、资源接入、生活流程及原生窗口检查继续覆盖运行行为。
 
-## 电脑近景
+## 可更换设备工作台
 
-- `computer_desktop.tscn` 的 `WorkstationArt` 用一张完整的 `workstation.png` 表现显示器、主机、桌面、键盘和鼠标；场景根节点只有 `WorkstationArt` 和 `MonitorScreen` 两个直接子节点。选中 `MonitorScreen` 调整实际屏幕位置与尺寸，更换背景图时让它对齐新图的屏幕内框。
-- `MonitorScreen/ScreenViewport/DesktopViewport/DesktopScreen` 是真正的电脑系统界面，源场景为 `desktop_screen.tscn`；应用、快捷方式、任务栏和通知均在里面。要编辑系统界面，直接打开这个源场景。
-- `SubViewportContainer` 自动传递屏幕内的鼠标与键盘输入。逻辑分辨率固定为 1280 × 800，由 `size_2d_override` 和 `size_2d_override_stretch` 适配实际屏幕；缩放时不要手动修改容器的 `scale`。
-- 设置、菜单等弹窗启用 `gui_embed_subwindows`，保留在显示器屏幕内。物理主机、键盘和鼠标是装饰，点击这些区域不会打开应用。
-- 游戏直接进入电脑近景。在屏幕中点击图标、任务栏和窗口操作应用；任务栏已移除房间按钮，Esc 不再切换到其他场景。最小化应用不会停止游玩或下载。
-- 新增检查：`godot --headless --path . --script res://tests/life/test_workstation_view.gd -- --fresh`，覆盖两种尺寸下的屏幕点击、外壳点击、应用与任务栏操作以及内嵌设置弹窗。
+`computer_desktop.tscn` 顶层只有 Background、Equipment、Interface 三组。Background 是空桌面和墙面；Equipment 下有 Monitor、Computer、Keyboard、Mouse 四个独立实例，每个设备由一张整图表现。位置和尺寸通过各实例锚点调整，刷新库存不会重置摆放。
 
-## 当前电脑素材
+Monitor 内的 MonitorScreen 保留同一个实时桌面视口。默认展示全部设备，点击屏幕或“使用电脑”平滑放大；Esc /“查看设备”返回展示。弹窗存在时 Esc 优先关闭弹窗。切换只调整展示变换，不销毁应用、下载和游玩会话。右上“管理设备”进入放大屏幕中的物品栏。
 
-`assets/art/life/workstation.png` 是完整电脑近景背景。生成提示词与方式记录在同目录 `ASSET_PROMPTS.md`。房间和家具专用场景、脚本及贴图已移除。
+外观资源在 `data/hardware/*.tres`：Texture 是完整素材（键盘用 AtlasTexture 选取有效区域），Screen Rect 是屏幕内框相对素材的归一化坐标。`_catalog.tres` 将库存物品 ID 对应到显示器、机箱、键盘、鼠标外观；精准键鼠套装使用两张独立贴图。新增型号时先添加外观资源，再配置商品与目录。详细步骤见 `data/hardware/README.md`。
 
-显示器点击使用容器本地事件坐标；测试以 viewport 本地坐标注入输入，支持无界面环境。
+`desktop_device.gd` 的 @tool 只同步已保存的贴图与屏幕区域，节点全部保存在场景中，编辑器可见。更换 Texture、Screen Rect 或设备尺寸时，屏幕区域会更新。
+
+系统界面源场景仍为 `desktop_screen.tscn`。实时位置是 `Equipment/Monitor/MonitorScreen/ScreenViewport/DesktopViewport/DesktopScreen`。SubViewport 始终以 1280 × 800 渲染，容器匹配显示器屏幕尺寸；工作台放大不会沿用低分辨率缓存。设置、菜单等弹窗启用 gui_embed_subwindows，仍保留在屏幕内部。
+
+九张独立 PNG 位于 `assets/art/life/hardware/`，使用内置 ImageGen 生成，完整提示词在同目录 `ASSET_PROMPTS.md`。原来包含全部设备的 workstation.png 已替换并移除。
+
+输入检查：`godot --headless --path . --script res://tests/life/test_workstation_view.gd -- --fresh`，覆盖两种显示器、两种窗口尺寸、放大与返回、设备安装、屏幕点击、弹窗和存档。
