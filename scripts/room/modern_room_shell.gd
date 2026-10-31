@@ -4,7 +4,7 @@ extends Node3D
 ## Dimensions are in metres; the front and right sides remain open for the showcase camera.
 
 func _ready() -> void:
-	if get_child_count() == 0:
+	if not has_node("Floor"):
 		_build()
 
 func _material(color: Color, roughness: float = 0.8, metallic: float = 0.0) -> StandardMaterial3D:
@@ -117,7 +117,7 @@ func _build_left_wall(wall: Material, trim: Material, wood: Material, metal: Mat
 	for panel_center in [-1.72, 0.12]:
 		_box(left, "CurtainPanel", Vector3(0.075, 1.62, 0.42), Vector3(-3.83, 1.98, panel_center), linen)
 		for fold in range(5):
-			var fold_z := panel_center - 0.16 + float(fold) * 0.08
+			var fold_z: float = float(panel_center) - 0.16 + float(fold) * 0.08
 			_box(left, "CurtainFold", Vector3(0.018, 1.55, 0.025), Vector3(-3.785, 1.98, fold_z), trim)
 
 	# Outside view: a quiet, softly coloured neighbourhood rather than pixel skyline artwork.

@@ -4,3 +4,5 @@
 
 [node name="Shell" type="Node3D"]
 script = ExtResource("1")
+
+[node name="GeneratedGeometry" type="Node3D" parent="."]

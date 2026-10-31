@@ -112,7 +112,7 @@ func _build_bookcase(model: Node3D) -> void:
 	for row in range(4):
 		var base_y := 0.11 + float(row) * 0.63
 		for index in range(6):
-			var height := [0.34, 0.42, 0.38, 0.46, 0.32, 0.40][index]
+			var height: float = [0.34, 0.42, 0.38, 0.46, 0.32, 0.40][index]
 			var width := 0.115 + float(index % 2) * 0.018
 			var x := -0.54 + float(index) * 0.19
 			_box(model, "Book", Vector3(width, height, 0.30), Vector3(x, base_y + height * 0.5, 0.045), book_colors[index % book_colors.size()], (float(index % 3) - 1.0) * 0.025)
@@ -149,7 +149,7 @@ func _build_plant(model: Node3D) -> void:
 	_cylinder(model, "Soil", 0.225, 0.225, 0.025, Vector3(0, 0.425, 0), soil)
 	for index in range(7):
 		var angle := TAU * float(index) / 7.0
-		var height := [0.70, 0.86, 0.92, 0.78, 0.96, 0.74, 0.84][index]
+		var height: float = [0.70, 0.86, 0.92, 0.78, 0.96, 0.74, 0.84][index]
 		var radius := 0.12 + float(index % 3) * 0.065
 		var at := Vector3(cos(angle) * radius, 0.45 + height * 0.53, sin(angle) * radius)
 		var size := Vector3(0.25, height * 0.48, 0.19)
