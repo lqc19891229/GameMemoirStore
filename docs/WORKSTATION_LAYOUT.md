@@ -6,7 +6,7 @@ ComputerDesktop 是主 3D 场景入口，Workstation3D 负责房间、工作台�
 
 当前房间样板间采用现代轻写实 3D 风格：暖白墙面、浅橡木地板、窗户与亚麻窗帘、现代平板房门、低饱和墙面装饰，以及哑光金属和织物材质。房间保持 8 × 6 米的两面墙展示结构，正面和右侧开放，方便观察和编辑。
 
-房间壳体由 scenes/room/modern_room_shell.tscn 和 scripts/room/modern_room_shell.gd 生成；家具视觉模型由 scripts/room/room_furniture.gd 创建；桌子由 scenes/computer/hardware/modern_desk.tscn 创建。当前样板间不再引用旧的像素风房间 GLB。
+房间壳体由 scenes/room/modern_room_shell.tscn 和 scripts/room/modern_room_shell.gd 生成；椅子使用 assets/models/room/chair.glb，书架、落地灯、地毯和绿植由 scripts/room/room_furniture.gd 创建；桌子由 scenes/computer/hardware/modern_desk.tscn 创建。当前样板间不再引用旧的像素风房间 GLB。
 
 ## 操作
 

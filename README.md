@@ -55,14 +55,14 @@ Godot 4.6 现代轻写实 3D 房间布置与游戏收藏经营原型。玩家从
 ## 模型、美术与编辑入口
 
 - 电脑设备模型：assets/models/hardware/，共 9 个 GLB。
-- 现代房间外壳：scripts/room/modern_room_shell.gd；家具模型：scripts/room/room_furniture.gd，按场景生成现代材质与几何。
+- 现代房间外壳：scripts/room/modern_room_shell.gd；椅子使用 assets/models/room/chair.glb，书架、落地灯、地毯和绿植由 scripts/room/room_furniture.gd 生成。
 - 电脑模型源文件与重建脚本：tools/models/hardware.blend、build_hardware.py。
-- 历史房间 GLB 资源与生成脚本保留在 assets/models/room/ 和 tools/models/build_room.py，当前现代样板间不再引用这些旧像素模型。
+- 旧房间 GLB 与生成脚本保留在 assets/models/room/ 和 tools/models/build_room.py；当前现代样板间仅使用精细椅子 GLB，其余旧像素风房间模型暂不引用。
 - 3D 工作台编辑入口：scenes/computer/computer_desktop.tscn，展开 Workstation3D。
 - 房间家具场景：scenes/room/；房间表现逻辑：scripts/room/。
 - 设备目录与碰撞尺寸：data/hardware/。
 
-电脑设备继续使用已导出的 GLB；现代房间壳体、书架、椅子、落地灯、地毯、绿植和桌子由 Godot 场景脚本创建，不需要 Blender，也不会改变存档数据。
+电脑设备和椅子继续使用已导出的 GLB；现代房间壳体、书架、落地灯、地毯、绿植和桌子由 Godot 场景脚本创建，不需要改变玩家存档数据。
 
 新的现代样板间截图将在视觉验收后更新；旧像素风截图仅保留作历史参考，不再代表当前目标风格。
 

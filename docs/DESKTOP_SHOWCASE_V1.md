@@ -13,13 +13,13 @@
 | 房间外壳 | scenes/room/modern_room_shell.tscn、scripts/room/modern_room_shell.gd | 暖白墙、浅橡木分板地面、真实窗洞、窗框、玻璃、窗帘、窗外背景、现代房门、踢脚线、墙面装饰和开放式天花收边 |
 | 房间外观 | scripts/room/room_view.gd | 墙面、地板和空间灯光预设，墙体切换遮挡 |
 | 桌子 | scenes/computer/hardware/modern_desk.tscn、scripts/life/modern_desk.gd | 木质桌板、桌板边缘、金属桌腿、横梁、理线槽和桌底灯光锚点 |
-| 椅子 | scenes/room/chair.tscn、scripts/room/room_furniture.gd | 坐垫、靠背、扶手、气压杆、五星脚和脚轮的程序化占位模型 |
+| 椅子 | scenes/room/chair.tscn、assets/models/room/chair.glb | 已切换精细人体工学椅 GLB：分层坐垫和靠背、肩翼、腰靠、头枕、扶手、气压杆、五星脚和脚轮 |
 | 书架 | scenes/room/bookcase.tscn、scripts/room/room_furniture.gd | 木质侧板、背板、层板和书籍占位模型 |
 | 落地灯 | scenes/room/lamp.tscn、scripts/room/room_furniture.gd | 金属底座和灯杆、陶瓷灯罩、扩散罩及辅助灯 |
 | 地毯 | scenes/room/rug.tscn、scripts/room/room_furniture.gd | 织物底面、包边和简化图案 |
 | 绿植 | scenes/room/plant.tscn、scripts/room/room_furniture.gd | 花盆、盆沿、土壤和叶片占位模型 |
 
-当前房间、桌子和五类家具模型由 Godot 场景脚本生成，用于先验证房间结构、镜头、比例、碰撞、布置和灯光。它们不是最终精细化资产；通过真实游戏画面验收后，再按模型规范制作正式 GLB。
+当前房间壳体、桌子和四类家具（书架、落地灯、地毯、绿植）由 Godot 场景脚本生成，用于验证房间结构、镜头、比例、碰撞、布置和灯光；椅子已切换为精细人体工学 GLB。程序化模型仍是占位资产，后续通过真实游戏画面验收后，再按模型规范逐步替换正式 GLB。
 
 ## 第一批电脑设备资产
 
@@ -36,7 +36,7 @@
 | 入门鼠标 | assets/models/hardware/mouse_beige.glb | 人体工学外壳、滚轮、侧键、传感器和脚贴 | 0.19 × 0.13 × 0.31 m |
 | 进阶鼠标 | assets/models/hardware/mouse_charcoal.glb | 曲面外壳、RGB 装饰、DPI 键和侧键 | 0.19 × 0.13 × 0.31 m |
 
-桌子和椅子的旧 GLB 资源目前保留在 assets/models/hardware/desk.glb 和 assets/models/room/chair.glb 等历史路径中，但当前现代样板间使用上表的场景脚本模型，不应把旧文件误认为当前运行时模型。
+旧桌子 GLB 仍保留在 assets/models/hardware/desk.glb，但当前桌面仍由 modern_desk.gd 生成；椅子 GLB 已作为当前运行时资产。
 
 ## 视觉关系
 
@@ -70,7 +70,7 @@
 ## 后续精细化顺序
 
 1. 房间壳体、窗户、窗帘和墙面装饰的正式模型。
-2. 桌子和椅子的正式模型。
+2. 桌子的正式模型；椅子已切换为正式 GLB，后续进行材质和镜头校准。
 3. 显示器与机箱的细节、材质和近景质量。
 4. 键盘和鼠标的独立零件、材质分区和 RGB 区域。
 5. 书架、落地灯、地毯和绿植。
