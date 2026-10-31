@@ -14,7 +14,7 @@ func _initialize() -> void:
 	_run.call_deferred()
 
 func _run() -> void:
-	var client = load("res://scenes/store.tscn").instantiate()
+	var client = load("res://scenes/apps/platform/store.tscn").instantiate()
 	client.state = State.new(FIXTURE_CATALOG)
 	root.add_child(client)
 	await process_frame

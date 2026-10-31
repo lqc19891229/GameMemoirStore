@@ -12,7 +12,7 @@
 新增型号：
 
 1. 编辑 tools/models/hardware.blend 或提供其他 GLB，保持单位米、Y 向上、+Z 正面、底部原点。导出到 assets/models/hardware/。
-2. 在相应 scenes/life/hardware/*.tscn 的 Models 下添加该 GLB 实例，初始隐藏。现有默认 / 升级型号已保存在场景中，可直接在编辑器查看。
+2. 在相应 scenes/computer/hardware/*.tscn 的 Models 下添加该 GLB 实例，初始隐藏。现有默认 / 升级型号已保存在场景中，可直接在编辑器查看。
 3. 创建 MemoirDeviceModel 资源，指定 model 和 bounds；显示器需校准 screen_size 与 screen_position。
 4. 在 life_data.gd 的 ITEMS 增加商品，在 _catalog.tres 对应字典加入相同物品 ID。显示器为 monitor、机箱为 computer、键鼠为 peripheral 槽位。
 

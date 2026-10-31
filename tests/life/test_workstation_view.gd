@@ -51,7 +51,7 @@ func device_point(desktop: Node3D, role: String) -> Vector2:
 	var pixel: Vector2 = desktop.world.camera.unproject_position(center)
 	return pixel
 func run() -> void:
-	var game = load("res://scenes/game_root.tscn").instantiate()
+	var game = load("res://scenes/main/game_root.tscn").instantiate()
 	root.add_child(game)
 	game.session.timer.stop()
 	await frames()

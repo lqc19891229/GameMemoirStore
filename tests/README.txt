@@ -12,6 +12,6 @@ life/：电脑、购物、直播、攻略与存档兼容的完整流程检查。
 
 Python 检查：python -m unittest discover -s tests -p "test_catalog_importer.py"
 Godot 检查：godot --headless --path . --script res://tests/test_client.gd -- --fresh
-当前游戏资源相关检查含样例预期；更换表格数据后可能需要同步更新。
+当前目录检查遍历所有启用游戏，不再限定游戏数量或截图分辨率；固定交易样本保存在 fixtures 中。
 
 test_editor_scenes.gd：检查场景在运行之前具有节点、家具可编辑、静态布局在刷新后保留。

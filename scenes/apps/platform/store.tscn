@@ -4,7 +4,7 @@
 
 [ext_resource type="Script" path="res://scripts/client.gd" id="2"]
 
-[ext_resource type="PackedScene" path="res://scenes/client/pages/home.tscn" id="3"]
+[ext_resource type="PackedScene" path="res://scenes/apps/platform/pages/home.tscn" id="3"]
 
 [sub_resource type="StyleBoxFlat" id="Style0"]
 bg_color = Color(0.09019607843137255, 0.10196078431372549, 0.12941176470588237, 1)

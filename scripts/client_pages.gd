@@ -1,5 +1,5 @@
 extends RefCounted
-## 页面布局保存在 scenes/client/pages；这里只绑定数据、信号和列表场景。
+## 页面布局保存在 scenes/apps/platform/pages；这里只绑定数据、信号和列表场景。
 const U = preload("res://scripts/client_ui.gd")
 const LifeData = preload("res://scripts/life/life_data.gd")
 var c
@@ -35,7 +35,7 @@ func clear(parent: Node) -> void:
 
 func page(kind: String) -> Control:
 	var parent: Node = c.get_node("%PageContent")
-	var path := "res://scenes/client/pages/%s.tscn" % kind
+	var path := "res://scenes/apps/platform/pages/%s.tscn" % kind
 	var root: Control = parent.get_child(0) if parent.get_child_count() else null
 	if root == null or root.scene_file_path != path:
 		clear(parent)
@@ -46,12 +46,13 @@ func page(kind: String) -> Control:
 	return root
 
 func row(kind: String, parent: Node) -> Control:
-	var instance: Control = load("res://scenes/client/components/%s.tscn" % kind).instantiate()
+	var instance: Control = load("res://scenes/apps/platform/components/%s.tscn" % kind).instantiate()
 	parent.add_child(instance)
 	return instance
 
 func text_button(parent: Node, title: String, action: Callable) -> Button:
-	var button: Button = row("text_button", parent)
+	var button: Button = preload("res://scenes/shared/text_button.tscn").instantiate()
+	parent.add_child(button)
 	button.text = title
 	bind(button, action)
 	return button

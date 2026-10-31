@@ -3,7 +3,7 @@
 [ext_resource type="Theme" path="res://assets/client_theme.tres" id="1"]
 [ext_resource type="Script" path="res://scripts/life/game_root.gd" id="2"]
 [ext_resource type="Script" path="res://scripts/life/game_session.gd" id="3"]
-[ext_resource type="PackedScene" path="res://scenes/life/computer_desktop.tscn" id="5"]
+[ext_resource type="PackedScene" path="res://scenes/computer/computer_desktop.tscn" id="5"]
 
 [node name="GameRoot" type="Control"]
 theme = ExtResource("1")

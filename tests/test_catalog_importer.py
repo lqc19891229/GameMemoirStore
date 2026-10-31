@@ -30,7 +30,7 @@ class ImporterTests(unittest.TestCase):
     def test_actual_header_row_and_hardware_aliases(self):
         raw = mod.read_xlsx(ROOT/'game_catalog.xlsx', self.schema)
         self.assertEqual(list(raw),['游戏资料'])
-        self.assertEqual(raw['游戏资料'][0][0],4)
+        self.assertGreater(raw['游戏资料'][0][0],1)
         self.assertIn('cpu',raw['游戏资料'][0][1])
         self.assertIn('gpu',raw['游戏资料'][0][1])
         self.assertNotIn('capsule',raw['游戏资料'][0][1])
@@ -128,13 +128,14 @@ class ImporterTests(unittest.TestCase):
     def test_current_counter_squad_workbook_and_five_assets(self):
         raw=mod.read_xlsx(ROOT/'game_catalog.xlsx',self.schema)
         data,_=mod.validate(raw,self.schema,PROJECT)
-        self.assertEqual(len(data['游戏资料']),1)
-        game=data['游戏资料'][0]
+        self.assertTrue(data['游戏资料'])
+        game=next(g for g in data['游戏资料'] if g['game_id']=='CounterSquad')
         self.assertEqual(game['game_id'],'CounterSquad')
         self.assertEqual(game['capsule'],'res://assets/art/CounterSquad/CounterSquad.png')
         self.assertEqual(game['screenshots'],[f'res://assets/art/CounterSquad/CounterSquad{i:02d}.png' for i in range(1,5)])
         files=mod.render_files(data,'data/games')
-        self.assertEqual(set(files),{'CounterSquad.tres','_catalog.tres','README.txt'})
+        self.assertEqual(set(files),{g['game_id']+'.tres' for g in data['游戏资料']}|{'_catalog.tres','README.txt'})
+        mod.check_output(PROJECT,'data/games',files)
         text=files['CounterSquad.tres'].decode()
         self.assertIn('game_id = &"CounterSquad"',text)
         self.assertIn('load_steps=7',text)

@@ -1,6 +1,6 @@
 [gd_scene load_steps=12 format=3]
 
-[ext_resource type="PackedScene" path="res://scenes/client/components/game_row.tscn" id="preview"]
+[ext_resource type="PackedScene" path="res://scenes/apps/platform/components/game_row.tscn" id="preview"]
 
 [ext_resource type="Theme" path="res://assets/client_theme.tres" id="1"]
 

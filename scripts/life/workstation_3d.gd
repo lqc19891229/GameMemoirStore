@@ -50,7 +50,8 @@ func set_mode(value: String, role: String = "monitor", animate: bool = true) -> 
 		var distance := size.y / (2.0 * tan(deg_to_rad(camera.fov / 2.0)) * fill_height)
 		var target: Vector3 = screen.global_position
 		var front := screen.global_basis.z.normalized()
-		destination = Transform3D(Basis.IDENTITY, target + front * distance).looking_at(target, screen.global_basis.y.normalized())
+		var global_view := Transform3D(Basis.IDENTITY, target + front * distance).looking_at(target, screen.global_basis.y.normalized())
+		destination = camera.get_parent().global_transform.affine_inverse() * global_view
 	elif value == "inspect":
 		var device: Node3D = devices[role]
 		device.position = Vector3(0, 0.94, 0)
@@ -117,8 +118,10 @@ func zoom_overview(amount: float) -> void:
 func screen_uv(pixel: Vector2, clip: bool = true) -> Variant:
 	var screen: MeshInstance3D = %Monitor.get_node("Screen")
 	var normal := screen.global_basis.z.normalized()
+	var direction := camera.project_ray_normal(pixel)
+	if normal.dot(direction) >= 0.0: return null
 	var plane := Plane(normal, screen.global_position)
-	var hit: Variant = plane.intersects_ray(camera.project_ray_origin(pixel), camera.project_ray_normal(pixel))
+	var hit: Variant = plane.intersects_ray(camera.project_ray_origin(pixel), direction)
 	if hit == null: return null
 	var local: Vector3 = screen.to_local(hit)
 	var dimensions: Vector2 = screen.mesh.size

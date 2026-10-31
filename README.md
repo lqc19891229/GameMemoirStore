@@ -5,11 +5,11 @@ Godot 4.6 低模 3D 电脑展示与游戏收藏经营原型。游戏直接进入
 ## 打开与运行
 
 1. 使用 Godot 4.6 导入根目录 `project.godot`。
-2. 等待首次导入完成，按 **F5** 进入 3D 设备工作台。主场景为 `scenes/game_root.tscn`。
+2. 等待首次导入完成，按 **F5** 进入 3D 设备工作台。主场景为 `scenes/main/game_root.tscn`。
 3. 在工作台直接左键 / 右键拖动旋转、滚轮缩放，点击“重置视角”恢复默认镜头。
 4. 点击显示器屏幕或“使用电脑”，镜头移动到屏幕前，再点击“游戏平台”或“购物与物品”；Esc /“返回工作台”返回总览。
 
-使用 GDScript 与 Compatibility 渲染器，无需 .NET 或插件。单独运行 `scenes/store.tscn` 可预览客户端；完整生活系统请从主场景运行。
+使用 GDScript 与 Compatibility 渲染器，无需 .NET 或插件。单独运行 `scenes/apps/platform/store.tscn` 可预览客户端；完整生活系统请从主场景运行。
 
 ## 首次体验
 
@@ -46,7 +46,7 @@ Godot 4.6 低模 3D 电脑展示与游戏收藏经营原型。游戏直接进入
 
 显示器、机箱、键盘、鼠标是四个独立 3D 模型。点击机箱、键盘或鼠标进入商品检视，左键拖动旋转、滚轮缩放；总览中左键 / 右键拖动可水平环绕和调整俯仰，滚轮直接缩放，无需先进入单品检视；返回总览保留原有视角。安装设备会切换对应模型，精准键鼠套装同时更换键盘与鼠标。
 
-打开 `scenes/life/computer_desktop.tscn` 即进入 Godot 3D 编辑器，可在 Workstation3D 下直接调整设备位置、旋转、大小、灯光和相机。界面按钮位于 HUD/Interface 的 CanvasLayer 中，显示器内系统仍为 2D 纹理。模型源文件为 `tools/models/hardware.blend`，游戏加载已导出的 GLB，不依赖本地 Blender，也不在运行时建模。
+打开 `scenes/computer/computer_desktop.tscn` 即进入 Godot 3D 编辑器，可在 Workstation3D 下直接调整设备位置、旋转、大小、灯光和相机。界面按钮位于 HUD/Interface 的 CanvasLayer 中，显示器内系统仍为 2D 纹理。模型源文件为 `tools/models/hardware.blend`，游戏加载已导出的 GLB，不依赖本地 Blender，也不在运行时建模。
 
 商品与数值定义在 `scripts/life/life_data.gd`。房间、家具场景和展示柜界面已移除。网页继续销售显示器、主机、外设和麦克风；书桌、台灯及展示柜停售，已购买的历史物品仍保留在库存和存档中。硬件暂提供效率加成，尚未根据 Excel 的 CPU/GPU 型号设置运行门槛；每款游戏独立的成就条件、直播热度可后续扩展。
 
@@ -66,7 +66,7 @@ Godot 4.6 低模 3D 电脑展示与游戏收藏经营原型。游戏直接进入
 python tools/catalog/import_games.py --project .
 ```
 
-导入需要 Python 3.10 或以上版本，无第三方依赖。游戏运行不需要 Python。当前工作簿保留用户的 CounterSquad 测试数据。
+导入需要 Python 3.10 或以上版本，无第三方依赖。游戏运行不需要 Python。当前工作簿包含 CounterSquad 和 CTA3，未启用的资料仍作为草稿保留。
 
 | 表格字段 | 填写方式 |
 |---|---|
@@ -88,9 +88,11 @@ python tools/catalog/import_games.py --project . --check
 
 | 位置 | 用途 |
 |---|---|
-| `scenes/game_root.tscn` | 主入口，组合共享会话和 3D 工作台控制界面 |
-| `scenes/life/` | 3D 工作台、独立设备场景、屏幕桌面、应用窗口、网页和游戏画面 |
-| `scenes/store.tscn` | 可嵌入桌面的游戏平台客户端 |
+| `scenes/main/game_root.tscn` | 主入口，组合共享会话和 3D 工作台控制界面 |
+| `scenes/computer/` | 3D 工作台、hardware 设备、ui 系统桌面与应用窗口壳 |
+| `scenes/apps/browser/`、`scenes/apps/game/` | 购物网页、库存组件，以及游玩和直播界面 |
+| `scenes/shared/` | 多个应用共用的按钮组件 |
+| `scenes/apps/platform/` | store.tscn 客户端、pages 页面、components 列表、dialogs 弹窗 |
 | `scripts/life/` | 生活系统、统一时钟、设备、创作收入和成就逻辑 |
 | `scripts/client*.gd` | 平台导航、页面与通用界面控件 |
 | `scripts/store_state.gd` | 唯一玩家状态、游戏目录、交易和存档 |
@@ -105,6 +107,7 @@ python tools/catalog/import_games.py --project . --check
 继续使用 `user://memoir_store_v01.json`，保存格式升级为版本 3，兼容读取版本 1、2。旧版钱包、购买、愿望单、安装与游玩记录保留；没有生活数据的旧存档会获得初始家具和设备。
 
 ```bash
+python tools/project_audit.py
 python -m unittest discover -s tests -p "test_catalog_importer.py" -q
 godot --headless --path . --editor --import
 godot --headless --path . --script res://tests/test_catalog_resources.gd -- --fresh
@@ -112,8 +115,13 @@ godot --headless --path . --script res://tests/test_catalog_integration.gd -- --
 godot --headless --path . --script res://tests/test_client.gd -- --fresh
 godot --headless --path . --script res://tests/test_store.gd -- --fresh
 godot --headless --path . --script res://tests/life/test_life_flow.gd -- --fresh
+godot --headless --path . --script res://tests/test_editor_scenes.gd -- --fresh
+godot --headless --path . --script res://tests/life/test_workstation_view.gd -- --fresh
+godot --headless --path . --script res://tests/life/test_audit_regressions.gd -- --fresh
 # 以下检查需要图形环境：
 godot --path . --script res://tests/test_client_windows.gd -- --fresh
 ```
 
 `--fresh` 禁用正常存档读写；存档测试使用独立临时文件。购物与创作内容属于游戏世界，不连接现实直播、购物或游戏平台账号。素材与字体说明见 `ASSET_CREDITS.md`。
+
+最近一次目录与运行检查见 [项目检查报告](docs/PROJECT_AUDIT.md)。

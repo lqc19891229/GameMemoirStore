@@ -52,7 +52,7 @@ func _run() -> void:
 	check(model.current_ym() == 200309 and model.release_state("distant_signal") == &"coming_soon", "announced title is visible before release")
 	model.add_to_cart("distant_signal")
 	check(model.cart.is_empty(), "announced game cannot be purchased early")
-	var client = load("res://scenes/store.tscn").instantiate()
+	var client = load("res://scenes/apps/platform/store.tscn").instantiate()
 	root.add_child(client)
 	await process_frame
 	client.download_timer.stop()

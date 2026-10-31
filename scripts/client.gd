@@ -338,7 +338,7 @@ func launch_game(game_id: String) -> void:
 		return
 	if not state.installed.has(game_id) or not state.owned.has(game_id): return
 	running_game_id = game_id
-	running_window = preload("res://scenes/client/running_dialog.tscn").instantiate()
+	running_window = preload("res://scenes/apps/platform/dialogs/running_dialog.tscn").instantiate()
 	running_window.title = state.game(game_id)["title"]
 	add_child(running_window)
 	running_window.get_node("%Cover").texture = U.texture(state.game(game_id))
@@ -366,7 +366,7 @@ func advance_month() -> void:
 
 func dialog(title: String, text: String) -> void:
 	if is_instance_valid(popup): popup.queue_free()
-	popup = preload("res://scenes/client/message_dialog.tscn").instantiate()
+	popup = preload("res://scenes/apps/platform/dialogs/message_dialog.tscn").instantiate()
 	popup.title = title
 	popup.dialog_text = text
 	add_child(popup)
@@ -382,11 +382,11 @@ func friends() -> void:
 
 func settings() -> void:
 	if is_instance_valid(popup): popup.queue_free()
-	popup = preload("res://scenes/client/settings_dialog.tscn").instantiate()
+	popup = preload("res://scenes/apps/platform/dialogs/settings_dialog.tscn").instantiate()
 	add_child(popup)
 	pages.bind(popup.get_node("%ToggleFullscreen"), toggle_fullscreen)
 	pages.bind(popup.get_node("%Reset"), func() -> void:
-		var confirm = preload("res://scenes/client/reset_dialog.tscn").instantiate()
+		var confirm = preload("res://scenes/apps/platform/dialogs/reset_dialog.tscn").instantiate()
 		add_child(confirm)
 		confirm.confirmed.connect(func() -> void:
 			if session != null:
@@ -409,7 +409,7 @@ func settings() -> void:
 	popup.popup_centered(Vector2i(520, 290))
 
 func library_context(game_id: String) -> void:
-	var menu: PopupMenu = preload("res://scenes/client/library_context.tscn").instantiate()
+	var menu: PopupMenu = preload("res://scenes/apps/platform/dialogs/library_context.tscn").instantiate()
 	add_child(menu)
 	menu.set_item_text(0, "开始游戏" if state.installed.has(game_id) else "安装")
 	menu.set_item_text(1, "移出收藏夹" if state.favorites.has(game_id) else "添加至收藏夹")
@@ -458,29 +458,34 @@ func _capture() -> void:
 		if arg.begins_with("--capture="): output = arg.trim_prefix("--capture=")
 		if arg.begins_with("--view="): view = arg.trim_prefix("--view=")
 	if output.is_empty(): return
-	match view:
-		"product": navigate({"kind": "product", "id": "distant_signal"})
-		"wishlist":
-			for id: String in ["distant_signal", "mist_valley", "midnight_castle"]: state.toggle_wishlist(id)
-			navigate({"kind": "wishlist"})
-		"cart":
-			state.add_to_cart("distant_signal")
-			state.add_to_cart("mist_valley")
-			navigate({"kind": "cart"})
-		"library":
-			state.add_to_cart("distant_signal")
-			state.add_to_cart("mist_valley")
-			state.checkout()
-			state.start_install("distant_signal")
-			state.tick_downloads(100)
-			state.record_play("distant_signal")
-			navigate({"kind": "library", "id": "distant_signal"})
+	_prepare_capture(view)
 	await get_tree().process_frame
 	await get_tree().process_frame
 	await RenderingServer.frame_post_draw
 	var error := get_viewport().get_texture().get_image().save_png(output)
 	print("CLIENT_CAPTURE: ", output, " error=", error)
 	get_tree().quit(0 if error == OK else 1)
+
+func _prepare_capture(view: String) -> void:
+	var candidates := available_games()
+	var first_id: String = candidates[0]["id"] if not candidates.is_empty() else ""
+	match view:
+		"product": navigate({"kind": "product", "id": first_id})
+		"wishlist":
+			for entry: Dictionary in candidates.slice(0, 3):
+				if not state.wishlist.has(entry["id"]): state.toggle_wishlist(entry["id"])
+			navigate({"kind": "wishlist"})
+		"cart":
+			for entry: Dictionary in candidates.slice(0, 2): state.add_to_cart(entry["id"])
+			navigate({"kind": "cart"})
+		"library":
+			if not first_id.is_empty():
+				state.add_to_cart(first_id)
+				state.checkout()
+				state.start_install(first_id)
+				state.tick_downloads(100)
+				state.record_play(first_id)
+			navigate({"kind": "library", "id": first_id})
 
 func close_client() -> void:
 	state.save_state()
