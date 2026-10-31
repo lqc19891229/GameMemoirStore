@@ -23,11 +23,13 @@ func run() -> void:
 			check(node.get_child_count() > 0, "visible layout exists before ready: " + path)
 		node.free()
 	var closeup = load("res://scenes/life/computer_desktop.tscn").instantiate()
-	check(closeup.get_node("WorldView/WorldViewport/Workstation3D") is Node3D, "workspace uses a genuine authored 3D scene")
-	check(closeup.get_child_count() == 3, "workspace separates 3D view, desktop viewport and interface")
-	check(closeup.get_node("WorldView/WorldViewport/Workstation3D/Equipment").get_child_count() == 4, "workspace has four independent 3D device slots")
+	check(closeup.get_node("Workstation3D") is Node3D, "workspace uses a genuine authored 3D scene")
+	check(closeup is Node3D, "ComputerDesktop opens directly in the 3D editor")
+	check(not closeup.has_node("WorldView") and closeup.get_node("HUD") is CanvasLayer, "3D content is native; only HUD uses a canvas layer")
+	check(closeup.get_child_count() == 3, "workspace separates native 3D world, desktop texture and HUD")
+	check(closeup.get_node("Workstation3D/Equipment").get_child_count() == 4, "workspace has four independent 3D device slots")
 	for role in ["Monitor", "Computer", "Keyboard", "Mouse"]:
-		var device: Node3D = closeup.get_node("WorldView/WorldViewport/Workstation3D/Equipment/" + role)
+		var device: Node3D = closeup.get_node("Workstation3D/Equipment/" + role)
 		check(device.appearance.model is PackedScene and not device.find_children("*", "MeshInstance3D", true, false).is_empty(), "device has saved model geometry before ready: " + role)
 	closeup.free()
 	var game = load("res://scenes/game_root.tscn").instantiate()
@@ -35,7 +37,7 @@ func run() -> void:
 	check(not game.has_node("PlayerRoom") and not game.has_node("AchievementCabinet"), "room presentation has been removed")
 	check(game.get_node("ComputerDesktop").visible, "desktop is visible in the authored main scene")
 	check(game.has_node("ComputerDesktop/DesktopViewport/DesktopScreen/ApplicationArea"), "desktop shell exists before running")
-	var keyboard: Node3D = game.get_node("ComputerDesktop/WorldView/WorldViewport/Workstation3D/Equipment/Keyboard")
+	var keyboard: Node3D = game.get_node("ComputerDesktop/Workstation3D/Equipment/Keyboard")
 	keyboard.position.x += 0.1
 	var original_position := keyboard.position
 	root.add_child(game)

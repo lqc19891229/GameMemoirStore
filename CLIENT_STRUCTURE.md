@@ -22,11 +22,13 @@ GameSession 持有唯一 `MemoirStoreState` 实例。平台通过 `session` 与 
 | 场景 | 脚本职责 |
 |---|---|
 | `game_root.tscn` | `game_root.gd`：注入共享会话、启动电脑桌面、连接游玩请求和屏幕通知 |
-| `life/computer_desktop.tscn` | `computer_desktop.gd`：3D 总览 / 检视 / 屏幕状态、射线输入映射、任务栏和应用管理 |
+| `life/computer_desktop.tscn` | `computer_desktop.gd`：Node3D 根场景，主视口直接旋转 / 缩放、检视 / 屏幕状态、射线输入映射、任务栏和应用管理 |
 | `life/app_window.tscn` | `app_window.gd`：窗口标题栏、拖动、铺满、关闭和最小化信号，挂载应用内容 |
 | `store.tscn` | `client.gd`：平台路由与操作；`client_pages.gd` 绑定页面场景；`client_ui.gd` 提供图片资源工具 |
 | `life/browser.tscn` | `browser.gd`：购物、库存与安装界面，交易交给会话执行 |
 | `life/game_player.tscn` | `game_player.gd`：四图轮播、活动状态、成就进度和直播操作 |
+
+ComputerDesktop 是原生 Node3D 场景，Workstation3D 直接渲染到主视口，HUD 单独放在 CanvasLayer。总览拖动旋转与滚轮缩放直接操作相机；仅短距离单击才拾取设备或进入屏幕。切换模式保留总览视角，“重置视角”恢复编辑器默认镜头。
 
 屏幕输入由相机射线映射到实时纹理的 UV，再送入 DesktopViewport。嵌入的独占弹窗通过宿主 Window 输入桥接，保留原生按钮、Esc 与菜单处理，并防止关闭时点击穿透。
 
@@ -55,7 +57,7 @@ GameSession 的 1 秒 Timer 统一推进 1 分钟模拟活动，并处理下载�
 
 每款游戏初版共用 10、60、180 点三个里程碑。直播每 5 分钟结算一次，基础 2 点，主机 / 麦克风可增加收入。攻略需至少游玩 10 分钟，制作耗时 20 分钟；每款只可发布一次，成就数量影响稿费，后续每 10 分钟 1 点阅读收益，最多 60 次。
 
-每种设备同时安装一件拥有的物品。3D 设备源场景位于 scenes/life/hardware/，工作台相机、灯光和位置在 workstation_3d.tscn；模型来自 assets/models/hardware/*.glb，制作源文件与脚本在 tools/models/。显示器使用独立 monitor 槽位；旧存档自动补入 starter_monitor，原有设备与钱包保留。外观目录为 data/hardware/_catalog.tres，显示器、机箱、键盘和鼠标各有独立模型。房间相关场景、贴图和展示操作已删除；房间专属商品停售。历史家具、装备位置、布置和展示记录继续通过版本 3 存档读写，库存中仅作为收藏记录。设备属性、价格和收益均为首版演示平衡值。CPU/GPU 型号暂作展示文本，不据此阻止启动游戏。
+每种设备同时安装一件拥有的物品。3D 设备源场景位于 scenes/life/hardware/，工作台相机、灯光和位置可直接在 computer_desktop.tscn 的 Workstation3D 子树编辑，复用源场景为 workstation_3d.tscn；模型来自 assets/models/hardware/*.glb，制作源文件与脚本在 tools/models/。显示器使用独立 monitor 槽位；旧存档自动补入 starter_monitor，原有设备与钱包保留。外观目录为 data/hardware/_catalog.tres，显示器、机箱、键盘和鼠标各有独立模型。房间相关场景、贴图和展示操作已删除；房间专属商品停售。历史家具、装备位置、布置和展示记录继续通过版本 3 存档读写，库存中仅作为收藏记录。设备属性、价格和收益均为首版演示平衡值。CPU/GPU 型号暂作展示文本，不据此阻止启动游戏。
 
 ## 平台页面与游戏数据
 

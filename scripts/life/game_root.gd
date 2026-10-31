@@ -1,6 +1,6 @@
 extends Control
 var session: MemoirGameSession
-var desktop: Control
+var desktop: Node3D
 
 func _enter_tree() -> void:
 	# Inject before child _ready; the GameSession sibling is initialized first.
