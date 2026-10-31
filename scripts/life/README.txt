@@ -13,5 +13,5 @@ browser.gd：购物与库存界面；game_player.gd：轮播画面和进度显�
 
 房间表现层已删除；life_data 仍校验和保留历史家具与展示存档，避免丢失已购记录。
 
-workstation_layout.gd：玩家布置的草稿/确认布局、物品选择、拖动旋转、吸附及占地校验。
+workstation_layout.gd：玩家布置的草稿/确认布局、物品选择、拖动与旋转扫掠阻挡、吸附、桌沿约束及旧布局重叠恢复。
 workstation_layout_data.gd：布置存档字段校验与凸多边形占地碰撞。

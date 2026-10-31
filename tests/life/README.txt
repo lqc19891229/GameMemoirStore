@@ -10,3 +10,5 @@ test_workstation_view.gd：通过实际输入事件检查原生 3D 主视口、�
 test_audit_regressions.gd：检查独立网页预览、变换后的屏幕投影、显示器背面输入、当前目录截图预览，以及异常存档数值。
 
 test_workstation_layout.gd：布置模式的真实鼠标输入、手柄、吸附、桌沿、碰撞、应用/取消、设备跟随、存档恢复和编辑中退出。
+
+test_workstation_collision.gd：模型边界完整覆盖、快速拖动防穿透、旋转过程碰撞、接触后移开、变换后桌面与旧布局恢复。

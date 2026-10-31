@@ -8,6 +8,7 @@ const NAMES := {"desk":"桌子（整套）", "monitor":"显示器", "computer":"
 @export var desk_move_limit := 1.5
 @export var grid_step := 0.05
 @export var angle_step := 15.0
+@export_range(0.005, 0.1, 0.005) var collision_margin := 0.01
 var world: Node3D
 var group: Node3D
 var gizmo: Node3D
@@ -50,13 +51,17 @@ func restore(poses: Dictionary) -> void:
 func load_saved(raw: Variant) -> void:
 	if active: return
 	var cleaned := Data.clean(raw)
-	if cleaned == saved: return
+	if cleaned == saved and _layout_blocker().is_empty(): return
 	restore(authored)
 	for role: String in cleaned:
 		nodes[role].position.x = cleaned[role].x
 		nodes[role].position.z = cleaned[role].z
 		nodes[role].rotation.y = cleaned[role].yaw
 		clamp_pose(role)
+	# Older layouts may touch or overlap after a model/bounds change. Keep the
+	# table pose, but recover a usable equipment arrangement rather than loading penetration.
+	if not _layout_blocker().is_empty():
+		for role: String in world.devices: nodes[role].transform = authored[role]
 	saved = cleaned
 	committed = snapshot()
 
@@ -76,6 +81,7 @@ func begin() -> void:
 
 func finish(apply: bool) -> bool:
 	if not active: return false
+	if apply: update()
 	if apply and not valid: return false
 	end_drag()
 	if apply:
@@ -103,11 +109,14 @@ func reset_layout() -> void:
 	restore(authored)
 	update()
 
-func footprint(role: String) -> PackedVector2Array:
-	var size: Vector3 = nodes[role].appearance.bounds
+func footprint(role: String, padding: float = 0.0) -> PackedVector2Array:
+	return _footprint_at(role, nodes[role].transform, padding)
+
+func _footprint_at(role: String, pose: Transform3D, padding: float) -> PackedVector2Array:
+	var size: Vector3 = nodes[role].appearance.bounds + Vector3(padding * 2, 0, padding * 2)
 	var result := PackedVector2Array()
 	for corner: Vector2 in [Vector2(-1,-1),Vector2(1,-1),Vector2(1,1),Vector2(-1,1)]:
-		var point: Vector3 = nodes[role].transform * Vector3(corner.x * size.x/2, 0, corner.y * size.z/2)
+		var point: Vector3 = pose * Vector3(corner.x * size.x/2, 0, corner.y * size.z/2)
 		result.append(Vector2(point.x, point.z))
 	return result
 
@@ -119,7 +128,7 @@ func clamp_pose(role: String) -> void:
 		node.position.y = (authored[role] as Transform3D).origin.y
 		return
 	node.position.y = tabletop_height
-	var corners := footprint(role)
+	var corners := footprint(role, collision_margin)
 	var extent := Vector2.ZERO
 	for point in corners: extent = extent.max((point - Vector2(node.position.x,node.position.z)).abs())
 	var allowance := (tabletop_half_size - extent - Vector2.ONE * edge_margin).max(Vector2.ZERO)
@@ -128,19 +137,74 @@ func clamp_pose(role: String) -> void:
 
 func move_to(position_xz: Vector2) -> void:
 	if not active: return
+	var before: Transform3D = nodes[selected].transform
 	var point := position_xz
 	if snapping: point = point.snapped(Vector2.ONE * grid_step)
 	nodes[selected].position.x = point.x
 	nodes[selected].position.z = point.y
 	clamp_pose(selected)
-	update()
+	_constrain_motion(before, nodes[selected].transform)
 
 func rotate_to(yaw: float) -> void:
 	if not active: return
+	var before: Transform3D = nodes[selected].transform
 	if snapping: yaw = snappedf(yaw, deg_to_rad(angle_step))
 	nodes[selected].rotation.y = wrapf(yaw, -PI, PI)
 	clamp_pose(selected)
-	update()
+	_constrain_motion(before, nodes[selected].transform)
+
+func _blocker(role: String, polygon: PackedVector2Array) -> String:
+	for point in polygon:
+		if absf(point.x) > tabletop_half_size.x - edge_margin + 0.002 or absf(point.y) > tabletop_half_size.y - edge_margin + 0.002:
+			return NAMES[role] + "到达桌沿"
+	for other: String in world.devices:
+		if other != role and Data.overlap(polygon, footprint(other, collision_margin)):
+			return NAMES[role] + "碰到" + NAMES[other]
+	return ""
+
+func _layout_blocker() -> String:
+	for role: String in world.devices:
+		var blocker := _blocker(role, footprint(role, collision_margin))
+		if not blocker.is_empty(): return blocker
+	return ""
+
+func _sweep_blocker(role: String, before: Transform3D, after: Transform3D) -> String:
+	var points := _footprint_at(role, before, collision_margin)
+	points.append_array(_footprint_at(role, after, collision_margin))
+	var hull := Geometry2D.convex_hull(points)
+	# Geometry2D closes its hull; SAT expects each corner once.
+	if hull.size() > 1 and hull[0].is_equal_approx(hull[-1]): hull.resize(hull.size() - 1)
+	return _blocker(role, hull)
+
+func _constrain_motion(before: Transform3D, target: Transform3D) -> void:
+	if selected == "desk":
+		update()
+		return
+	var node: Node3D = nodes[selected]
+	node.transform = before
+	var angle := absf(angle_difference(before.basis.get_euler().y, target.basis.get_euler().y))
+	# Translation uses an exact convex swept footprint. Rotation is split into
+	# <=1-degree sweeps; padded bounds cover the small curved arc between samples.
+	var steps := maxi(1, ceili(angle / deg_to_rad(1.0)))
+	var blocker := ""
+	for i in range(1, steps + 1):
+		var next := before.interpolate_with(target, float(i) / steps)
+		var previous := node.transform
+		blocker = _sweep_blocker(selected, previous, next)
+		if blocker.is_empty():
+			node.transform = next
+			continue
+		# Find the last free pose, rather than jumping through a blocker or
+		# discarding all movement when the pointer is beyond the contact edge.
+		var low := 0.0
+		var high := 1.0
+		for iteration in range(12):
+			var middle := (low + high) * 0.5
+			if _sweep_blocker(selected, previous, previous.interpolate_with(next, middle)).is_empty(): low = middle
+			else: high = middle
+		node.transform = previous.interpolate_with(next, low)
+		break
+	update(blocker)
 
 func rotate_step(direction: float) -> void:
 	rotate_to(nodes[selected].rotation.y + deg_to_rad(angle_step) * direction)
@@ -192,24 +256,16 @@ func pick_handle(pixel: Vector2) -> String:
 	var result := world.get_world_3d().direct_space_state.intersect_ray(query)
 	return str(result.collider.get_meta("operation", "")) if not result.is_empty() else ""
 
-func update() -> void:
-	valid = true
+func update(contact: String = "") -> void:
+	var blocker := _layout_blocker()
+	valid = blocker.is_empty()
 	message = "右键环绕 · 滚轮缩放 · 拖动物品或手柄调整"
-	var roles: Array = world.devices.keys()
-	for role: String in roles:
-		for point in footprint(role):
-			if absf(point.x) > tabletop_half_size.x + .001 or absf(point.y) > tabletop_half_size.y + .001:
-				valid = false
-				message = NAMES[role] + "超出桌面，请调整角度或位置"
-	for i in range(roles.size()):
-		for j in range(i + 1,roles.size()):
-			if Data.overlap(footprint(roles[i]),footprint(roles[j])):
-				valid = false
-				message = NAMES[roles[i]] + "与" + NAMES[roles[j]] + "重叠，请移开后应用"
-	_update_gizmo()
+	if not valid: message = blocker + "，请恢复默认布置或调整设备"
+	elif not contact.is_empty(): message = "已阻挡：" + contact
+	_update_gizmo(not contact.is_empty())
 	changed.emit()
 
-func _update_gizmo() -> void:
+func _update_gizmo(contact: bool = false) -> void:
 	if not active or not gizmo.is_inside_tree(): return
 	gizmo.show()
 	var node: Node3D = nodes[selected]
@@ -219,7 +275,7 @@ func _update_gizmo() -> void:
 	gizmo.global_rotation.y = node.global_rotation.y
 	var outline: MeshInstance3D = gizmo.get_node("Outline")
 	outline.scale = Vector3(size.x + .06,size.z + .06,1)
-	outline.material_override.set_shader_parameter("line_color",Color("61d9ff") if valid else Color("ff756a"))
+	outline.material_override.set_shader_parameter("line_color",Color("ff756a") if not valid else (Color("ffc563") if contact else Color("61d9ff")))
 	var handle_height := 0.0 if selected == "desk" else size.y + .08
 	gizmo.get_node("MoveHandles").position.y = handle_height
 	gizmo.get_node("RotateHandles").position.y = handle_height

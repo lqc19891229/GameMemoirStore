@@ -21,7 +21,9 @@ static func overlap(a: PackedVector2Array, b: PackedVector2Array) -> bool:
 	# Separating axes for convex footprints; a tiny tolerance permits touching edges.
 	for polygon: PackedVector2Array in [a, b]:
 		for i in range(polygon.size()):
-			var axis := (polygon[(i + 1) % polygon.size()] - polygon[i]).orthogonal().normalized()
+			var edge := polygon[(i + 1) % polygon.size()] - polygon[i]
+			if edge.is_zero_approx(): continue
+			var axis := edge.orthogonal().normalized()
 			var amin := INF
 			var amax := -INF
 			var bmin := INF

@@ -115,8 +115,11 @@ func run() -> void:
 	layout.reset_layout()
 	layout.select("mouse")
 	layout.move_to(Vector2(world.devices.keyboard.position.x,world.devices.keyboard.position.z))
-	check(not layout.valid and desktop.get_node("%ApplyLayout").disabled, "overlapping footprints disable apply")
-	check(layout.message.contains("重叠"), "overlap names the conflicting equipment")
+	check(layout.valid and not LayoutData.overlap(layout.footprint("mouse"),layout.footprint("keyboard")), "movement stops before overlapping footprints")
+	check(layout.message.contains("已阻挡") and layout.message.contains("键盘"), "contact names the blocking equipment")
+	check(not desktop.get_node("%ApplyLayout").disabled, "last free contact pose remains applicable")
+	# Bypassing the placement tools still cannot save an invalid transform.
+	world.devices.mouse.position = world.devices.keyboard.position
 	desktop.finish_layout(true)
 	check(layout.active and game.session.state.life["workstation_layout"].is_empty(), "invalid arrangement cannot be committed through API")
 	await click(desktop.get_node("%RestoreLayout"))
