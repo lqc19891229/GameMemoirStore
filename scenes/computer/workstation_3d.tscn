@@ -1,4 +1,4 @@
-[gd_scene load_steps=14 format=3]
+[gd_scene load_steps=15 format=3]
 [ext_resource type="Script" path="res://scripts/life/workstation_3d.gd" id="1"]
 [ext_resource type="PackedScene" path="res://assets/models/hardware/desk.glb" id="2"]
 [ext_resource type="PackedScene" path="res://scenes/computer/hardware/monitor.tscn" id="3"]
@@ -9,6 +9,7 @@
 [ext_resource type="PackedScene" path="res://scenes/computer/ui/layout_gizmo.tscn" id="8"]
 [ext_resource type="PackedScene" path="res://scenes/room/room.tscn" id="9"]
 [ext_resource type="Shader" path="res://assets/shaders/pixel_room.gdshader" id="10"]
+[ext_resource type="Script" path="res://scripts/life/workstation_lighting.gd" id="11"]
 [sub_resource type="ShaderMaterial" id="Pixels"]
 shader = ExtResource("10")
 [sub_resource type="BoxShape3D" id="DeskPick"]
@@ -48,6 +49,12 @@ unique_name_in_owner = true
 position = Vector3(-0.7,0,-0.8)
 [node name="Desk" parent="TableGroup" instance=ExtResource("2")]
 unique_name_in_owner = true
+[node name="DeskGlow" type="OmniLight3D" parent="TableGroup"]
+unique_name_in_owner = true
+position = Vector3(0, 0.63, 1.06)
+light_color = Color(0.18, 0.72, 0.92, 1)
+light_energy = 0.24
+omni_range = 2.2
 [node name="DeskPickArea" type="Area3D" parent="TableGroup"]
 position = Vector3(0,0.73,0)
 collision_layer = 1
@@ -75,6 +82,8 @@ unique_name_in_owner = true
 [node name="LayoutEditor" type="Node" parent="."]
 unique_name_in_owner = true
 script = ExtResource("7")
+[node name="Lighting" type="Node" parent="."]
+script = ExtResource("11")
 
 [node name="PixelPass" type="CanvasLayer" parent="."]
 layer = 0

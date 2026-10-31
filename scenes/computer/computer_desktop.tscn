@@ -308,5 +308,27 @@ unique_name_in_owner = true
 layout_mode = 2
 text = "恢复默认布置"
 theme_type_variation = "DarkButton"
+[node name="RgbLabel" type="Label" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content"]
+layout_mode = 2
+text = "RGB 灯光颜色"
+[node name="Style_rgb" type="OptionButton" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+[node name="EffectLabel" type="Label" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content"]
+layout_mode = 2
+text = "RGB 灯效"
+[node name="Style_effect" type="OptionButton" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+[node name="BrightnessLabel" type="Label" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content"]
+layout_mode = 2
+text = "RGB 亮度"
+[node name="Style_brightness" type="HSlider" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+min_value = 0.0
+max_value = 100.0
+step = 5.0
+value = 70.0
 
 [editable path="Workstation3D"]

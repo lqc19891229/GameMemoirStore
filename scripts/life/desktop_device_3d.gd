@@ -22,3 +22,6 @@ func _apply_appearance() -> void:
 	if screen != null:
 		screen.position = appearance.screen_position
 		(screen.mesh as QuadMesh).size = appearance.screen_size
+	var backlight := get_node_or_null("Backlight") as OmniLight3D
+	if backlight != null:
+		backlight.position = Vector3(appearance.screen_position.x, appearance.screen_position.y, -appearance.bounds.z * 0.5 - 0.05)

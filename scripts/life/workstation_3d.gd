@@ -19,6 +19,10 @@ func _ready() -> void:
 	reset_overview()
 	devices = {"monitor": %Monitor, "computer": %Computer, "keyboard": %Keyboard, "mouse": %Mouse}
 	layout.setup(self)
+	var room: MemoirPixelRoom = $Room as MemoirPixelRoom
+	var lighting: MemoirWorkstationLighting = $Lighting as MemoirWorkstationLighting
+	room.style_changed.connect(lighting.apply_style)
+	lighting.apply_style(room.style)
 
 func _process(_delta: float) -> void:
 	$Room.update_cutaway(camera)

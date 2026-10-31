@@ -31,3 +31,8 @@ position = Vector3(0, 0.84, 0.35)
 mesh = SubResource("DisplayQuad")
 material_override = SubResource("ScreenGlass")
 cast_shadow = 0
+[node name="Backlight" type="OmniLight3D" parent="."]
+position = Vector3(0, 0.84, -0.4)
+light_color = Color(0.18, 0.72, 0.92, 1)
+light_energy = 0.35
+omni_range = 2.0
