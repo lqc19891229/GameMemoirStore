@@ -74,3 +74,5 @@ python -m unittest discover -s tests -p "test_catalog_importer.py" -q
 ```
 
 Godot 各项检查命令见根目录 README.md。`project_audit.py` 对动态模板做展开检查；“未引用”仅作为待审候选，不会自动删除文件。
+
+后续新增的玩家布置功能及其专项回归见 [工作台布置说明](WORKSTATION_LAYOUT.md)，上述统计记录本次场景整理时的结果。

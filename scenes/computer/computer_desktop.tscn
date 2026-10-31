@@ -58,6 +58,23 @@ layout_mode = 2
 text = "重置视角"
 theme_type_variation = "DarkButton"
 
+[node name="EditLayout" type="Button" parent="HUD/Interface/Header"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "调整布置"
+theme_type_variation = "DarkButton"
+[node name="ApplyLayout" type="Button" parent="HUD/Interface/Header"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+text = "应用布置"
+theme_type_variation = "BlueButton"
+[node name="CancelLayout" type="Button" parent="HUD/Interface/Header"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+text = "取消 · Esc"
+theme_type_variation = "DarkButton"
 [node name="ManageDevices" type="Button" parent="HUD/Interface/Header"]
 unique_name_in_owner = true
 layout_mode = 2
@@ -104,5 +121,106 @@ layout_mode = 2
 mouse_filter = 2
 text = "拖动旋转 · 滚轮缩放 · 单击设备检视 / 屏幕操作"
 theme_override_font_sizes/font_size = 12
+
+[node name="LayoutPanel" type="PanelContainer" parent="HUD/Interface"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 0
+offset_left = 20.0
+offset_top = 84.0
+offset_right = 248.0
+offset_bottom = 660.0
+[node name="Margin" type="MarginContainer" parent="HUD/Interface/LayoutPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 14
+theme_override_constants/margin_right = 14
+theme_override_constants/margin_top = 14
+theme_override_constants/margin_bottom = 14
+[node name="Content" type="VBoxContainer" parent="HUD/Interface/LayoutPanel/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 10
+[node name="LayoutSelection" type="Label" parent="HUD/Interface/LayoutPanel/Margin/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "选中：桌子（整套）"
+[node name="Layout_desk" type="Button" parent="HUD/Interface/LayoutPanel/Margin/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "桌子 · 整套移动"
+toggle_mode = true
+theme_type_variation = "DarkButton"
+[node name="Layout_monitor" type="Button" parent="HUD/Interface/LayoutPanel/Margin/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "显示器"
+toggle_mode = true
+theme_type_variation = "DarkButton"
+[node name="Layout_computer" type="Button" parent="HUD/Interface/LayoutPanel/Margin/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "机箱"
+toggle_mode = true
+theme_type_variation = "DarkButton"
+[node name="Layout_keyboard" type="Button" parent="HUD/Interface/LayoutPanel/Margin/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "键盘"
+toggle_mode = true
+theme_type_variation = "DarkButton"
+[node name="Layout_mouse" type="Button" parent="HUD/Interface/LayoutPanel/Margin/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "鼠标"
+toggle_mode = true
+theme_type_variation = "DarkButton"
+[node name="Tools" type="HBoxContainer" parent="HUD/Interface/LayoutPanel/Margin/Content"]
+layout_mode = 2
+[node name="MoveTool" type="Button" parent="HUD/Interface/LayoutPanel/Margin/Content/Tools"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "移动 G"
+tooltip_text = "红色手柄沿 X 轴，蓝色沿 Z 轴；黄色方块在平面移动"
+toggle_mode = true
+button_pressed = true
+[node name="RotateTool" type="Button" parent="HUD/Interface/LayoutPanel/Margin/Content/Tools"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "旋转 R"
+tooltip_text = "拖动黄色圆点旋转；Q / E 每次调整 15°"
+toggle_mode = true
+[node name="Angles" type="HBoxContainer" parent="HUD/Interface/LayoutPanel/Margin/Content"]
+layout_mode = 2
+[node name="RotateLeft" type="Button" parent="HUD/Interface/LayoutPanel/Margin/Content/Angles"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "-15° Q"
+[node name="RotateRight" type="Button" parent="HUD/Interface/LayoutPanel/Margin/Content/Angles"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "+15° E"
+[node name="SnapLayout" type="CheckButton" parent="HUD/Interface/LayoutPanel/Margin/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "吸附 5 cm / 15°"
+button_pressed = true
+[node name="LayoutPose" type="Label" parent="HUD/Interface/LayoutPanel/Margin/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "X 0.00  Z 0.00\n旋转 0°"
+[node name="LayoutMessage" type="Label" parent="HUD/Interface/LayoutPanel/Margin/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(200,70)
+text = "右键环绕 · 滚轮缩放"
+autowrap_mode = 2
+[node name="RestoreLayout" type="Button" parent="HUD/Interface/LayoutPanel/Margin/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "恢复默认布置"
+theme_type_variation = "DarkButton"
 
 [editable path="Workstation3D"]

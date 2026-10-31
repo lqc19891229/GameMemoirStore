@@ -38,6 +38,14 @@ Godot 4.6 低模 3D 电脑展示与游戏收藏经营原型。游戏直接进入
 
 应用窗口标题栏支持拖动、最小化、恢复铺满和关闭。桌面“继续游玩”可打开存档中正在运行的游戏。
 
+## 调整工作台布置
+
+顶栏点击“调整布置”，选择桌子或独立设备。拖动物品或移动手柄调整位置；按 R 切换旋转手柄，Q / E 每次水平旋转 15°。右键环绕、滚轮缩放，默认启用 5 cm / 15° 吸附，可关闭。
+
+移动桌子时所有设备一起跟随；键盘与鼠标可以独立摆放。设备不能移出桌沿，互相重叠时会提示并禁用“应用布置”。点击应用保存，取消 / Esc 恢复最后确认的布局。“恢复默认布置”先修改草稿，应用后才保存。
+
+检视、屏幕操作和更换型号会保留已确认布局；旧存档自动使用默认摆放。操作、场景结构与保存方式见 [工作台布置说明](docs/WORKSTATION_LAYOUT.md)。
+
 ## 玩家成长与收入
 
 六项能力为反应、操作、思考、探索、规划、协作。游戏类型决定初版能力权重，多人 / 合作标签增加协作占比。游玩会逐步提高相关能力；能力和已安装主机、外设共同影响挑战进度倍率。
@@ -117,6 +125,7 @@ godot --headless --path . --script res://tests/test_store.gd -- --fresh
 godot --headless --path . --script res://tests/life/test_life_flow.gd -- --fresh
 godot --headless --path . --script res://tests/test_editor_scenes.gd -- --fresh
 godot --headless --path . --script res://tests/life/test_workstation_view.gd -- --fresh
+godot --headless --path . --script res://tests/life/test_workstation_layout.gd -- --fresh
 godot --headless --path . --script res://tests/life/test_audit_regressions.gd -- --fresh
 # 以下检查需要图形环境：
 godot --path . --script res://tests/test_client_windows.gd -- --fresh

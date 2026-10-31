@@ -31,6 +31,19 @@ func _ready() -> void:
 	world.set_screen_texture(%DesktopViewport.get_texture())
 	get_viewport().size_changed.connect(_reframe_screen)
 	%ResetView.pressed.connect(world.reset_overview)
+	%EditLayout.pressed.connect(begin_layout)
+	%ApplyLayout.pressed.connect(func() -> void: finish_layout(true))
+	%CancelLayout.pressed.connect(func() -> void: finish_layout(false))
+	%RestoreLayout.pressed.connect(world.layout.reset_layout)
+	%MoveTool.pressed.connect(func() -> void: world.layout.set_tool("move"))
+	%RotateTool.pressed.connect(func() -> void: world.layout.set_tool("rotate"))
+	%SnapLayout.toggled.connect(func(enabled: bool) -> void: world.layout.snapping = enabled)
+	%RotateLeft.pressed.connect(func() -> void: world.layout.rotate_step(-1))
+	%RotateRight.pressed.connect(func() -> void: world.layout.rotate_step(1))
+	for role: String in world.layout.NAMES:
+		var key := role
+		get_node("%Layout_" + role).pressed.connect(func() -> void: world.layout.select(key))
+	world.layout.changed.connect(_sync_layout)
 	%FocusToggle.pressed.connect(func() -> void: set_screen_focused(true))
 	%ReturnOverview.pressed.connect(func() -> void: set_screen_focused(false))
 	%ManageDevices.pressed.connect(func() -> void:
@@ -63,6 +76,8 @@ func _update_equipment() -> void:
 		if model != null and world.devices[role].appearance != model:
 			world.devices[role].appearance = model
 			reposition = reposition or (screen_focused and role == "monitor") or (world.mode == "inspect" and role == selected_role)
+	world.layout.load_saved(session.state.life.get("workstation_layout", {}))
+	if world.layout.active: world.layout.update()
 	if reposition: world.set_mode(world.mode, selected_role, false)
 	_update_device_info()
 
@@ -76,11 +91,39 @@ func _update_device_info() -> void:
 	var hint := "拖动旋转 · 滚轮缩放 · Esc 返回工作台" if world.mode == "inspect" else "拖动旋转 · 滚轮缩放 · 单击设备检视 / 屏幕操作"
 	%DeviceDescription.text = str(item.get("description", "")) + "  ·  " + hint
 
+func begin_layout() -> void:
+	if world.transitioning or world.layout.active: return
+	_set_mode("layout", false)
+	world.layout.begin()
+	_sync_layout()
+
+func finish_layout(apply: bool) -> void:
+	if not world.layout.finish(apply): return
+	_set_mode("overview", false)
+	if apply and session != null:
+		session.state.life["workstation_layout"] = world.layout.export_layout()
+		session.state.save_state()
+
+func _sync_layout() -> void:
+	if not world.layout.active: return
+	var layout = world.layout
+	%LayoutSelection.text = "选中：" + layout.NAMES[layout.selected]
+	var node: Node3D = layout.nodes[layout.selected]
+	%LayoutPose.text = "X %.2f   Z %.2f\n旋转 %.0f°" % [node.position.x,node.position.z,rad_to_deg(node.rotation.y)]
+	%LayoutMessage.text = layout.message
+	%LayoutMessage.modulate = Color.WHITE if layout.valid else Color("ff756a")
+	%ApplyLayout.disabled = not layout.valid
+	%MoveTool.set_pressed_no_signal(layout.tool == "move")
+	%RotateTool.set_pressed_no_signal(layout.tool == "rotate")
+	for role: String in layout.NAMES: get_node("%Layout_" + role).set_pressed_no_signal(layout.selected == role)
+
 func select_device(role: String, animate: bool = true) -> void:
+	if world.layout.active: return
 	selected_role = role
 	_set_mode("inspect", animate)
 
 func set_screen_focused(value: bool, animate: bool = true) -> void:
+	if world.layout.active: return
 	_set_mode("screen" if value else "overview", animate)
 
 func _set_mode(value: String, animate: bool) -> void:
@@ -98,12 +141,16 @@ func _set_mode(value: String, animate: bool) -> void:
 	_sync_mode()
 
 func _sync_mode() -> void:
-	%ReturnOverview.visible = world.mode != "overview"
-	%ResetView.visible = world.mode == "overview"
-	%FocusToggle.visible = not screen_focused
-	%ManageDevices.visible = not screen_focused
-	%DeviceInfo.visible = not screen_focused
-	%ViewTitle.text = {"overview": "我的 3D 工作台", "inspect": "设备检视", "screen": "屏幕操作"}[world.mode]
+	%ReturnOverview.visible = world.mode not in ["overview", "layout"]
+	%ResetView.visible = world.mode in ["overview", "layout"]
+	%EditLayout.visible = world.mode == "overview"
+	%ApplyLayout.visible = world.mode == "layout"
+	%CancelLayout.visible = world.mode == "layout"
+	%LayoutPanel.visible = world.mode == "layout"
+	%FocusToggle.visible = world.mode in ["overview", "inspect"]
+	%ManageDevices.visible = world.mode in ["overview", "inspect"]
+	%DeviceInfo.visible = world.mode in ["overview", "inspect"]
+	%ViewTitle.text = {"overview": "我的 3D 工作台", "inspect": "设备检视", "screen": "屏幕操作", "layout":"调整布置"}[world.mode]
 	_update_device_info()
 
 func _reframe_screen() -> void:
@@ -138,6 +185,16 @@ func _input(event: InputEvent) -> void:
 	if event is InputEventMouseButton and not event.pressed and event.button_index in [MOUSE_BUTTON_LEFT, MOUSE_BUTTON_RIGHT]:
 		_clear_gesture.call_deferred()
 	if not event is InputEventKey or world.transitioning: return
+	if world.layout.active:
+		if event.pressed and not event.echo:
+			match event.keycode:
+				KEY_ESCAPE: finish_layout(false)
+				KEY_G: world.layout.set_tool("move")
+				KEY_R: world.layout.set_tool("rotate")
+				KEY_Q: world.layout.rotate_step(-1)
+				KEY_E: world.layout.rotate_step(1)
+		get_viewport().set_input_as_handled()
+		return
 	if event.pressed and not event.echo and event.keycode == KEY_ESCAPE and world.mode != "overview":
 		if %DesktopViewport.get_embedded_subwindows().any(func(window: Window) -> bool: return window.visible): return
 		set_screen_focused(false)
@@ -151,6 +208,9 @@ func _unhandled_input(event: InputEvent) -> void:
 		if event is InputEventMouseButton and not event.pressed:
 			dragging = false
 			orbiting = false
+		return
+	if world.layout.active:
+		_layout_input(event)
 		return
 	if screen_focused:
 		if event is InputEventMouse:
@@ -169,7 +229,7 @@ func _unhandled_input(event: InputEvent) -> void:
 			elif was_dragging and world.mode == "overview" and not camera_dragged and pointer_origin.distance_to(event.position) < DRAG_THRESHOLD:
 				var role: String = world.pick_at(event.position)
 				if role == "monitor" and world.screen_uv(event.position) != null: set_screen_focused(true)
-				elif not role.is_empty(): select_device(role)
+				elif world.devices.has(role): select_device(role)
 		elif event.button_index == MOUSE_BUTTON_RIGHT:
 			orbiting = event.pressed
 		elif event.pressed and event.button_index in [MOUSE_BUTTON_WHEEL_UP, MOUSE_BUTTON_WHEEL_DOWN]:
@@ -186,9 +246,34 @@ func _unhandled_input(event: InputEvent) -> void:
 			world.rotate_product(event.relative)
 		if dragging or orbiting: get_viewport().set_input_as_handled()
 
+func _layout_input(event: InputEvent) -> void:
+	var layout = world.layout
+	if event is InputEventMouseButton:
+		if event.button_index == MOUSE_BUTTON_LEFT:
+			if not event.pressed: layout.end_drag()
+			else:
+				var handle: String = layout.pick_handle(event.position)
+				if not handle.is_empty():
+					layout.begin_drag(event.position,"rotate" if handle == "rotate" else "move",handle,true)
+				else:
+					var role: String = world.pick_at(event.position)
+					if not role.is_empty():
+						layout.select(role)
+						layout.begin_drag(event.position,layout.tool)
+		elif event.button_index == MOUSE_BUTTON_RIGHT: orbiting = event.pressed
+		elif event.pressed and event.button_index in [MOUSE_BUTTON_WHEEL_UP,MOUSE_BUTTON_WHEEL_DOWN]:
+			world.zoom_overview(0.9 if event.button_index == MOUSE_BUTTON_WHEEL_UP else 1.1)
+		else: return
+		get_viewport().set_input_as_handled()
+	elif event is InputEventMouseMotion:
+		if orbiting: world.orbit_overview(event.relative)
+		else: layout.drag_to(event.position)
+		if orbiting or not layout.gesture.is_empty(): get_viewport().set_input_as_handled()
+
 func _clear_gesture() -> void:
 	dragging = false
 	orbiting = false
+	world.layout.end_drag()
 
 func _forward_modal_input(event: InputEvent) -> void:
 	if not screen_focused or world.transitioning: return
@@ -250,7 +335,7 @@ func _update_status() -> void:
 	if is_instance_valid(status): status.text = "%d 点 · %s" % [session.state.wallet, "直播中" if session.active().get("streaming", false) else ("游玩中" if session.active().get("kind") == "play" else "在线")]
 
 func refresh() -> void:
-	if session == null or not is_instance_valid(tasks): return
+	if session == null or not is_inside_tree() or not is_instance_valid(tasks): return
 	_update_equipment()
 	if windows.has("game") and session.active().get("kind") != "play":
 		close_app("game")
