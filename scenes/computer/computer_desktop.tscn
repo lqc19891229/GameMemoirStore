@@ -303,6 +303,11 @@ layout_mode = 2
 [node name="Style_light" type="OptionButton" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content"]
 unique_name_in_owner = true
 layout_mode = 2
+[node name="RestoreLayout" type="Button" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "恢复默认布置"
+theme_type_variation = "DarkButton"
 [node name="RgbLabel" type="Label" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content"]
 layout_mode = 2
 text = "RGB 灯光颜色"
@@ -325,10 +330,5 @@ min_value = 0.0
 max_value = 100.0
 step = 5.0
 value = 70.0
-[node name="RestoreLayout" type="Button" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content"]
-unique_name_in_owner = true
-layout_mode = 2
-text = "恢复默认布置"
-theme_type_variation = "DarkButton"
 
 [editable path="Workstation3D"]
