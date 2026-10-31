@@ -9,11 +9,15 @@ func check(value: bool, message: String) -> void:
 		push_error(message)
 func _initialize() -> void:
 	run.call_deferred()
+func scene_paths(directory: String) -> Array[String]:
+	var paths: Array[String] = []
+	for file in DirAccess.get_files_at(directory):
+		if file.ends_with(".tscn"): paths.append(directory.path_join(file))
+	for folder in DirAccess.get_directories_at(directory):
+		paths.append_array(scene_paths(directory.path_join(folder)))
+	return paths
 func run() -> void:
-	var paths: Array[String] = ["res://scenes/game_root.tscn", "res://scenes/store.tscn"]
-	for dir in ["life", "life/hardware", "client/pages", "client/components"]:
-		for file in DirAccess.get_files_at("res://scenes/" + dir):
-			if file.ends_with(".tscn"): paths.append("res://scenes/" + dir + "/" + file)
+	var paths := scene_paths("res://scenes")
 	for path in paths:
 		var scene: PackedScene = load(path)
 		check(scene != null, "scene loads: " + path)
@@ -22,7 +26,7 @@ func run() -> void:
 		if node is Control and not node is Label and not node is Button:
 			check(node.get_child_count() > 0, "visible layout exists before ready: " + path)
 		node.free()
-	var closeup = load("res://scenes/life/computer_desktop.tscn").instantiate()
+	var closeup = load("res://scenes/computer/computer_desktop.tscn").instantiate()
 	check(closeup.get_node("Workstation3D") is Node3D, "workspace uses a genuine authored 3D scene")
 	check(closeup is Node3D, "ComputerDesktop opens directly in the 3D editor")
 	check(not closeup.has_node("WorldView") and closeup.get_node("HUD") is CanvasLayer, "3D content is native; only HUD uses a canvas layer")
@@ -32,7 +36,7 @@ func run() -> void:
 		var device: Node3D = closeup.get_node("Workstation3D/Equipment/" + role)
 		check(device.appearance.model is PackedScene and not device.find_children("*", "MeshInstance3D", true, false).is_empty(), "device has saved model geometry before ready: " + role)
 	closeup.free()
-	var game = load("res://scenes/game_root.tscn").instantiate()
+	var game = load("res://scenes/main/game_root.tscn").instantiate()
 	check(game.get_child_count() == 2, "main scene only contains shared session and desktop")
 	check(not game.has_node("PlayerRoom") and not game.has_node("AchievementCabinet"), "room presentation has been removed")
 	check(game.get_node("ComputerDesktop").visible, "desktop is visible in the authored main scene")
@@ -47,7 +51,7 @@ func run() -> void:
 	game.desktop.select_device("keyboard", false)
 	game.desktop.set_screen_focused(false, false)
 	check(keyboard.position.is_equal_approx(original_position), "inspection restores editor-authored 3D placement")
-	var client = load("res://scenes/store.tscn").instantiate()
+	var client = load("res://scenes/apps/platform/store.tscn").instantiate()
 	client.get_node("%ClientHeader").custom_minimum_size.y = 120
 	var original_home: Node = client.get_node("%PageContent").get_child(0)
 	root.add_child(client)

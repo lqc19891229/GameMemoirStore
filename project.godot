@@ -12,7 +12,7 @@ config_version=5
 
 config/name="游戏回忆录"
 config/description="低模 3D 电脑工作台 · 游戏收藏经营模拟"
-run/main_scene="res://scenes/game_root.tscn"
+run/main_scene="res://scenes/main/game_root.tscn"
 config/features=PackedStringArray("4.6", "GL Compatibility")
 config/icon="res://assets/art/icon.png"
 

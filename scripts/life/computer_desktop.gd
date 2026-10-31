@@ -1,6 +1,6 @@
 extends Node3D
-const WindowScene = preload("res://scenes/life/app_window.tscn")
-const APPS := {"platform": ["游戏平台", "res://scenes/store.tscn"], "browser": ["回忆生活 · 购物网页", "res://scenes/life/browser.tscn"], "game": ["正在游玩", "res://scenes/life/game_player.tscn"]}
+const WindowScene = preload("res://scenes/computer/ui/app_window.tscn")
+const APPS := {"platform": ["游戏平台", "res://scenes/apps/platform/store.tscn"], "browser": ["回忆生活 · 购物网页", "res://scenes/apps/browser/browser.tscn"], "game": ["正在游玩", "res://scenes/apps/game/game_player.tscn"]}
 const Data = preload("res://scripts/life/life_data.gd")
 @export var hardware_catalog: MemoirHardwareCatalog
 var session: MemoirGameSession
@@ -260,7 +260,7 @@ func refresh() -> void:
 		child.queue_free()
 	for id: String in windows:
 		var key := id
-		var task = preload("res://scenes/client/components/text_button.tscn").instantiate()
+		var task = preload("res://scenes/shared/text_button.tscn").instantiate()
 		task.text = ("● " if windows[id].visible else "○ ") + APPS[id][0]
 		task.name = "Task_" + id
 		task.pressed.connect(func() -> void: open_app(key))

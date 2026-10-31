@@ -26,7 +26,7 @@ func _initialize() -> void:
 func frames() -> void:
 	for _i in range(5): await process_frame
 func run() -> void:
-	var game = load("res://scenes/game_root.tscn").instantiate()
+	var game = load("res://scenes/main/game_root.tscn").instantiate()
 	root.add_child(game)
 	await frames()
 	var session: MemoirGameSession = game.session
@@ -133,7 +133,7 @@ func run() -> void:
 	restored.load_state()
 	check(restored.wallet == state.wallet and restored.owned == state.owned, "save migration preserves game ownership and money")
 	check(equivalent(restored.life, state.life), "life save preserves active play, stream, attributes, items, guides and trophy display")
-	var resumed = load("res://scenes/game_root.tscn").instantiate()
+	var resumed = load("res://scenes/main/game_root.tscn").instantiate()
 	resumed.get_node("GameSession").state = restored
 	root.add_child(resumed)
 	resumed.session.timer.stop()

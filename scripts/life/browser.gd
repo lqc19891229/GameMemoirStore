@@ -30,7 +30,7 @@ func _queue_refresh() -> void:
 
 func refresh() -> void:
 	pending = false
-	if not is_instance_valid(box): return
+	if session == null or not is_instance_valid(box): return
 	for child: Node in box.get_children():
 		if child == wallet_label: continue
 		box.remove_child(child)
@@ -42,7 +42,7 @@ func refresh() -> void:
 		var owned: bool = session.state.life["items"].has(id)
 		if tab == "shop" and (int(item["price"]) == 0 or Data.ROOM_ONLY_SLOTS.has(item["slot"])): continue
 		if tab == "inventory" and not owned: continue
-		var row = preload("res://scenes/client/components/inventory_row.tscn").instantiate()
+		var row = preload("res://scenes/apps/browser/components/inventory_row.tscn").instantiate()
 		box.add_child(row)
 		row.get_node("%Title").text = item["name"]
 		row.get_node("%Description").text = item["description"]
@@ -66,6 +66,7 @@ func refresh() -> void:
 			button.disabled = equipped or room_item
 
 func _tick() -> void:
+	if session == null: return
 	if is_instance_valid(wallet_label): wallet_label.text = "钱包余额  %d 点   ·   %s" % [session.state.wallet, "所有物品即时加入库存" if tab == "shop" else "每种物品安装在对应位置"]
 	for id: String in purchase_buttons:
 		if is_instance_valid(purchase_buttons[id]): purchase_buttons[id].disabled = session.state.life["items"].has(id) or session.state.wallet < int(Data.ITEMS[id]["price"])

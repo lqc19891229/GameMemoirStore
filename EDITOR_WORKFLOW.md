@@ -4,15 +4,15 @@
 
 | 想编辑的内容 | 打开的文件 |
 |---|---|
-| 设备位置、旋转、缩放，相机和灯光 | `scenes/life/computer_desktop.tscn`，选择 3D，展开 Workstation3D |
-| 单件设备及默认 / 升级模型 | `scenes/life/hardware/*.tscn` |
+| 设备位置、旋转、缩放，相机和灯光 | `scenes/computer/computer_desktop.tscn`，选择 3D，展开 Workstation3D |
+| 单件设备及默认 / 升级模型 | `scenes/computer/hardware/*.tscn` |
 | 模型几何与材质源文件 | `tools/models/hardware.blend` |
 | 模型对应库存 ID、尺寸与屏幕位置 | `data/hardware/*.tres` |
-| 工作台控制界面、标题栏与按钮 | `scenes/life/computer_desktop.tscn` 的 HUD/Interface，选择 2D |
-| 显示器中的系统、快捷方式、任务栏 | `scenes/life/desktop_screen.tscn` |
-| 应用标题栏与窗口操作 | `scenes/life/app_window.tscn` |
-| 商城页面、游戏列表与卡片 | `scenes/store.tscn`、`scenes/client/pages/`、`scenes/client/components/` |
-| 购物网页与游玩界面 | `scenes/life/browser.tscn`、`game_player.tscn` |
+| 工作台控制界面、标题栏与按钮 | `scenes/computer/computer_desktop.tscn` 的 HUD/Interface，选择 2D |
+| 显示器中的系统、快捷方式、任务栏 | `scenes/computer/ui/desktop_screen.tscn` |
+| 应用标题栏与窗口操作 | `scenes/computer/ui/app_window.tscn` |
+| 商城页面、游戏列表与卡片 | `scenes/apps/platform/store.tscn`、`scenes/apps/platform/pages/`、`scenes/apps/platform/components/` |
+| 购物网页与游玩界面 | `scenes/apps/browser/browser.tscn`、`scenes/apps/game/game_player.tscn` |
 
 ## 3D 编辑
 
@@ -44,3 +44,5 @@ KeyLight、FillLight 和 Environment 控制灯光与背景。Camera 是默认总
 godot --headless --path . --script res://tests/test_editor_scenes.gd -- --fresh
 godot --headless --path . --script res://tests/life/test_workstation_view.gd -- --fresh
 ```
+
+场景按功能分别放在 main/、computer/、apps/platform/、apps/browser/、apps/game/、shared/。购物库存行归属 browser/components，通用按钮位于 shared；不要在旧 life/、client/ 目录另建副本。

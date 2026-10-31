@@ -22,7 +22,7 @@ Windows 可将 `python` 换成 `py -3`。停止正在运行的游戏，保存并
 
 ## 文件
 
-- `game_catalog.xlsx`：当前测试表，当前启用 CounterSquad，其余未填 enabled 的行作为草稿；“游戏原型”列仅作编辑备注。
+- `game_catalog.xlsx`：当前测试表，当前启用 CounterSquad 与 CTA3，其余未填 enabled 的行作为草稿；“游戏原型”列仅作编辑备注。
 - `schema.json`：字段类型、默认值、必填规则、CPU/GPU 列名映射和备注列白名单。
 - `import_games.py`：读取 Excel、校验并生成资源。
 - `.gdignore`：使 Godot 忽略开发工具与 Excel 文件。
@@ -94,4 +94,4 @@ godot --headless --path . --script res://tests/test_catalog_resources.gd
 godot --headless --path . --script res://tests/test_catalog_integration.gd -- --fresh
 ```
 
-资源加载与独立展示图接入检查针对当前 CounterSquad 测试数据。其余购买、存档、筛选与旧路径回归使用 tests/fixtures 中固定的旧目录，不影响正式商店。更换测试游戏时需要相应调整当前数据的预期，通用导入规则可继续用于新增数据。
+资源加载检查会遍历当前启用目录，校验每款作品的 ID、字段和图片引用，不固定游戏数量或截图分辨率；导入器检查同时确认生成资源与表格一致。购买、存档、筛选与旧路径回归使用 tests/fixtures 中固定的旧目录，不影响正式商店。

@@ -186,10 +186,10 @@ func load_state() -> void:
 	if not file:
 		return
 	var data: Variant = JSON.parse_string(file.get_as_text())
-	if not data is Dictionary or not int(data.get("version", 0)) in [1, 2, 3]:
+	if not data is Dictionary or not _saved_int(data.get("version", 0)) in [1, 2, 3]:
 		return
-	wallet = maxi(0, int(data.get("wallet", 160)))
-	month_index = clampi(int(data.get("month", 0)), 0, MAX_MONTH)
+	wallet = _saved_int(data.get("wallet", 160), 160)
+	month_index = _saved_int(data.get("month", 0), 0, MAX_MONTH)
 	owned = _validated_ids(data.get("owned", []), false)
 	wishlist = _validated_ids(data.get("wishlist", []), false)
 	cart = _validated_ids(data.get("cart", []), true)
@@ -204,7 +204,7 @@ func load_state() -> void:
 			if not owned.has(game_id) or recorded_ids.has(game_id):
 				continue
 			recorded_ids.append(game_id)
-			history.append({"id": game_id, "price": maxi(0, int(record.get("price", 0))), "month": clampi(int(record.get("month", 0)), 0, month_index)})
+			history.append({"id": game_id, "price": _saved_int(record.get("price", 0)), "month": _saved_int(record.get("month", 0), 0, month_index)})
 	installed = _owned_ids(data.get("installed", []))
 	favorites = _owned_ids(data.get("favorites", []))
 	ignored = _validated_ids(data.get("ignored", []), false)
@@ -219,9 +219,13 @@ func load_state() -> void:
 	if saved_activity is Array:
 		for entry: Variant in saved_activity:
 			if entry is Dictionary and owned.has(str(entry.get("id", ""))):
-				activity.append({"id": str(entry["id"]), "month": clampi(int(entry.get("month", 0)), 0, month_index), "minutes": maxi(0, int(entry.get("minutes", 0)))})
+				activity.append({"id": str(entry["id"]), "month": _saved_int(entry.get("month", 0), 0, month_index), "minutes": _saved_int(entry.get("minutes", 0))})
 
 	life = LifeData.clean(data.get("life", {}), owned, installed)
+
+static func _saved_int(value: Variant, fallback: int = 0, maximum: int = 2147483647) -> int:
+	if not (value is int or value is float) or not is_finite(float(value)): return fallback
+	return int(clampf(float(value), 0.0, float(maximum)))
 
 func _validated_ids(value: Variant, cart_only: bool) -> Array[String]:
 	var result: Array[String] = []
@@ -249,7 +253,7 @@ func _owned_numbers(value: Variant, maximum: int = 999999) -> Dictionary:
 		for key: Variant in value:
 			var game_id := str(key)
 			if owned.has(game_id) and (value[key] is float or value[key] is int):
-				result[game_id] = clampi(int(value[key]), 0, maximum)
+				result[game_id] = _saved_int(value[key], 0, maximum)
 	return result
 
 func toggle_list(game_id: String, list_name: String) -> bool:

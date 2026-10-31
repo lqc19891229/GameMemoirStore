@@ -2,7 +2,7 @@
 
 ## 主场景与共享数据
 
-`scenes/game_root.tscn` 是唯一主入口。GameRoot 只持有 GameSession 和 ComputerDesktop；启动后直接显示 3D 设备工作台，活动由持续存在的 GameSession 推进。
+`scenes/main/game_root.tscn` 是唯一主入口。GameRoot 只持有 GameSession 和 ComputerDesktop；启动后直接显示 3D 设备工作台，活动由持续存在的 GameSession 推进。
 
 ```mermaid
 flowchart TD
@@ -21,12 +21,12 @@ GameSession 持有唯一 `MemoirStoreState` 实例。平台通过 `session` 与 
 
 | 场景 | 脚本职责 |
 |---|---|
-| `game_root.tscn` | `game_root.gd`：注入共享会话、启动电脑桌面、连接游玩请求和屏幕通知 |
-| `life/computer_desktop.tscn` | `computer_desktop.gd`：Node3D 根场景，主视口直接旋转 / 缩放、检视 / 屏幕状态、射线输入映射、任务栏和应用管理 |
-| `life/app_window.tscn` | `app_window.gd`：窗口标题栏、拖动、铺满、关闭和最小化信号，挂载应用内容 |
-| `store.tscn` | `client.gd`：平台路由与操作；`client_pages.gd` 绑定页面场景；`client_ui.gd` 提供图片资源工具 |
-| `life/browser.tscn` | `browser.gd`：购物、库存与安装界面，交易交给会话执行 |
-| `life/game_player.tscn` | `game_player.gd`：四图轮播、活动状态、成就进度和直播操作 |
+| `main/game_root.tscn` | `game_root.gd`：注入共享会话、启动电脑桌面、连接游玩请求和屏幕通知 |
+| `computer/computer_desktop.tscn` | `computer_desktop.gd`：Node3D 根场景，主视口直接旋转 / 缩放、检视 / 屏幕状态、射线输入映射、任务栏和应用管理 |
+| `computer/ui/app_window.tscn` | `app_window.gd`：窗口标题栏、拖动、铺满、关闭和最小化信号，挂载应用内容 |
+| `apps/platform/store.tscn` | `client.gd`：平台路由与操作；`client_pages.gd` 绑定页面场景；`client_ui.gd` 提供图片资源工具 |
+| `apps/browser/browser.tscn` | `browser.gd`：购物、库存与安装界面，交易交给会话执行 |
+| `apps/game/game_player.tscn` | `game_player.gd`：四图轮播、活动状态、成就进度和直播操作 |
 
 ComputerDesktop 是原生 Node3D 场景，Workstation3D 直接渲染到主视口，HUD 单独放在 CanvasLayer。总览拖动旋转与滚轮缩放直接操作相机；仅短距离单击才拾取设备或进入屏幕。切换模式保留总览视角，“重置视角”恢复编辑器默认镜头。
 
@@ -57,13 +57,13 @@ GameSession 的 1 秒 Timer 统一推进 1 分钟模拟活动，并处理下载�
 
 每款游戏初版共用 10、60、180 点三个里程碑。直播每 5 分钟结算一次，基础 2 点，主机 / 麦克风可增加收入。攻略需至少游玩 10 分钟，制作耗时 20 分钟；每款只可发布一次，成就数量影响稿费，后续每 10 分钟 1 点阅读收益，最多 60 次。
 
-每种设备同时安装一件拥有的物品。3D 设备源场景位于 scenes/life/hardware/，工作台相机、灯光和位置可直接在 computer_desktop.tscn 的 Workstation3D 子树编辑，复用源场景为 workstation_3d.tscn；模型来自 assets/models/hardware/*.glb，制作源文件与脚本在 tools/models/。显示器使用独立 monitor 槽位；旧存档自动补入 starter_monitor，原有设备与钱包保留。外观目录为 data/hardware/_catalog.tres，显示器、机箱、键盘和鼠标各有独立模型。房间相关场景、贴图和展示操作已删除；房间专属商品停售。历史家具、装备位置、布置和展示记录继续通过版本 3 存档读写，库存中仅作为收藏记录。设备属性、价格和收益均为首版演示平衡值。CPU/GPU 型号暂作展示文本，不据此阻止启动游戏。
+每种设备同时安装一件拥有的物品。3D 设备源场景位于 scenes/computer/hardware/，工作台相机、灯光和位置可直接在 computer_desktop.tscn 的 Workstation3D 子树编辑，复用源场景为 workstation_3d.tscn；模型来自 assets/models/hardware/*.glb，制作源文件与脚本在 tools/models/。显示器使用独立 monitor 槽位；旧存档自动补入 starter_monitor，原有设备与钱包保留。外观目录为 data/hardware/_catalog.tres，显示器、机箱、键盘和鼠标各有独立模型。房间相关场景、贴图和展示操作已删除；房间专属商品停售。历史家具、装备位置、布置和展示记录继续通过版本 3 存档读写，库存中仅作为收藏记录。设备属性、价格和收益均为首版演示平衡值。CPU/GPU 型号暂作展示文本，不据此阻止启动游戏。
 
 ## 平台页面与游戏数据
 
 平台 `route.kind` 支持 home、search、product、queue、wishlist、cart、checkout、receipt、library、downloads、profile、community。community 作为兼容路由保留，显示“创作”页的直播和攻略内容。类型菜单直接来自当前资源目录。
 
-平台保存浏览历史与滚动位置。窗口最小化时保留页面；关闭后重新打开回到首页，但所有权、钱包与活动仍来自共享状态。单独运行 `store.tscn` 是开发预览模式，保留原客户端模拟窗口与独立下载计时，用于兼容检查。
+平台保存浏览历史与滚动位置。窗口最小化时保留页面；关闭后重新打开回到首页，但所有权、钱包与活动仍来自共享状态。单独运行 `apps/platform/store.tscn` 是开发预览模式，保留原客户端模拟窗口与独立下载计时，用于兼容检查。
 
 游戏基础资料继续由 Excel 生成 `data/games/*.tres` 和 `_catalog.tres`。`game.gd` 是单款游戏唯一 Resource 定义，`game_catalog.gd` 提供目录查询。封面字段 capsule 与有序 screenshots 由导入器根据 game_id 自动生成，分别驱动商店和游戏轮播；Excel 不再填写素材路径。enabled 空白的草稿不会导出。导入器不生成脚本。
 
