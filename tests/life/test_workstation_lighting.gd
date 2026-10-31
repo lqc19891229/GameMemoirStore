@@ -23,8 +23,8 @@ func run() -> void:
 	game.session.timer.stop()
 	await frames()
 	var world: Node3D = game.desktop.world
-	var room = world.get_node("Room")
-	var lighting = world.get_node("Lighting")
+	var room: MemoirPixelRoom = world.get_node("Room") as MemoirPixelRoom
+	var lighting: MemoirWorkstationLighting = world.get_node("Lighting") as MemoirWorkstationLighting
 	check(lighting.rgb_surface_count >= 4, "RGB controller discovers emissive hardware and desk surfaces")
 	check(lighting.fan_rotor_count == 6, "six independent case fan rotors are generated")
 	var desk_glow: OmniLight3D = world.get_node("TableGroup/DeskGlow")

@@ -1,3 +1,4 @@
+class_name MemoirWorkstationLighting
 extends Node
 ## Runtime RGB and lighting controller for the desktop showcase.
 const RGB_PALETTE := [

@@ -1,4 +1,5 @@
 @tool
+class_name MemoirPixelRoom
 extends Node3D
 ## Fixed 8 × 6 metre cutaway room. Geometry is authored in complete GLB assets.
 const WALLS := [Color("b6b99d"), Color("c9b899"), Color("829eaa")]
