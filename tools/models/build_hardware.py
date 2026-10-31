@@ -1,4 +1,4 @@
-"""Blender 3.6 LTS: blender --background --threads 1 --factory-startup --python tools/models/build_hardware.py
+"""Blender 3.6.23 LTS: blender --background --threads 1 --factory-startup --python tools/models/build_hardware.py
 
 Offline authoring workflow for the desktop showcase assets.
 Coordinates are Godot X-right, Y-up, Z-front, in metres.
@@ -36,7 +36,9 @@ def material(name, color, metallic=0.0, roughness=.55, emission=None, strength=0
         if hasattr(mat, "surface_render_method"):
             mat.surface_render_method = "BLENDED"
     if emission is not None:
-        socket = bsdf.inputs.get("Emission") or bsdf.inputs.get("Emission Color")
+        socket = bsdf.inputs.get("Emission")
+        if socket is None:
+            socket = bsdf.inputs.get("Emission Color")
         if socket is not None:
             socket.default_value = (*emission, 1.0)
         emission_strength = bsdf.inputs.get("Emission Strength")
@@ -97,8 +99,10 @@ def finish(obj, name, mat, bevel=0.0):
         modifier.segments = 2
         bpy.context.view_layer.objects.active = obj
         bpy.ops.object.modifier_apply(modifier=modifier.name)
-        normal = obj.modifiers.new("Weighted corner normals", "WEIGHTED_NORMAL")
-        bpy.ops.object.modifier_apply(modifier=normal.name)
+        if hasattr(obj.data, "use_auto_smooth"):
+            obj.data.use_auto_smooth = True
+            normal = obj.modifiers.new("Weighted corner normals", "WEIGHTED_NORMAL")
+            bpy.ops.object.modifier_apply(modifier=normal.name)
     return obj
 
 
@@ -337,8 +341,8 @@ def mouse(upgrade=False):
 
 def desk():
     # 4.8 x 2.3 m tabletop and original 0.78 m working height are unchanged.
-    box("Rounded oak desktop", (0, .73, 0), (4.8, .10, 2.30), oak, .035)
-    box("Front edge inlay", (0, .704, 1.137), (4.70, .035, .018), gold, .006)
+    box("Rounded oak desktop", (0, .73, 0), (4.8, .10, 2.26), oak, .035)
+    box("Front edge inlay", (0, .704, 1.12), (4.70, .035, .018), gold, .006)
     box("Rear cable channel", (0, .60, -.92), (4.25, .16, .12), dark, .012)
     for x in [-2.18, 2.18]:
         for z in [-.91, .91]:

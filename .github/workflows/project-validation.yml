@@ -39,8 +39,9 @@ jobs:
       - name: Install Blender and Pillow for same-repository PRs
         if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
         run: |
-          sudo apt-get update
-          sudo apt-get install -y blender
+          curl -fsSL https://download.blender.org/release/Blender3.6/blender-3.6.23-linux-x64.tar.xz -o /tmp/blender.tar.xz
+          tar -xf /tmp/blender.tar.xz -C /tmp
+          echo "/tmp/blender-3.6.23-linux-x64" >> "$GITHUB_PATH"
           python -m pip install Pillow
 
       - name: Rebuild desktop showcase models
