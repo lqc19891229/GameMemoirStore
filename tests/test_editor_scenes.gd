@@ -48,9 +48,9 @@ func run() -> void:
 	game.session.timer.stop()
 	game.desktop.refresh()
 	check(keyboard.position.is_equal_approx(original_position), "refresh preserves editor-authored 3D device placement")
-	game.desktop.select_device("keyboard", false)
+	game.desktop.set_screen_focused(true, false)
 	game.desktop.set_screen_focused(false, false)
-	check(keyboard.position.is_equal_approx(original_position), "inspection restores editor-authored 3D placement")
+	check(keyboard.position.is_equal_approx(original_position), "screen round trip preserves editor-authored 3D placement")
 	var client = load("res://scenes/apps/platform/store.tscn").instantiate()
 	client.get_node("%ClientHeader").custom_minimum_size.y = 120
 	var original_home: Node = client.get_node("%PageContent").get_child(0)

@@ -95,7 +95,7 @@ custom_minimum_size = Vector2(160, 36)
 text = "使用电脑  >"
 theme_type_variation = "BlueButton"
 
-[node name="DeviceInfo" type="VBoxContainer" parent="HUD/Interface"]
+[node name="OverviewHelp" type="VBoxContainer" parent="HUD/Interface"]
 unique_name_in_owner = true
 layout_mode = 1
 anchor_top = 1.0
@@ -108,18 +108,16 @@ offset_bottom = -8.0
 mouse_filter = 2
 theme_override_constants/separation = 4
 
-[node name="DeviceName" type="Label" parent="HUD/Interface/DeviceInfo"]
-unique_name_in_owner = true
+[node name="Title" type="Label" parent="HUD/Interface/OverviewHelp"]
 layout_mode = 2
 mouse_filter = 2
-text = "显示器  /  旧日 CRT 显示器"
+text = "工作台总览"
 theme_override_font_sizes/font_size = 14
 
-[node name="DeviceDescription" type="Label" parent="HUD/Interface/DeviceInfo"]
-unique_name_in_owner = true
+[node name="Controls" type="Label" parent="HUD/Interface/OverviewHelp"]
 layout_mode = 2
 mouse_filter = 2
-text = "拖动旋转 · 滚轮缩放 · 单击设备检视 / 屏幕操作"
+text = "拖动旋转 · 滚轮缩放 · 点击屏幕使用电脑 · 调整布置可移动和旋转设备"
 theme_override_font_sizes/font_size = 12
 
 [node name="LayoutPanel" type="PanelContainer" parent="HUD/Interface"]

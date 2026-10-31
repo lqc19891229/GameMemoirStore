@@ -1,16 +1,11 @@
 extends Node3D
 @onready var camera: Camera3D = %Camera
-@onready var equipment: Node3D = %Equipment
 @onready var layout: Node = %LayoutEditor
 var mode := "overview"
-var selected := "monitor"
 var overview_camera: Transform3D
-var placements: Dictionary = {}
 var devices: Dictionary = {}
 var motion: Tween
 var transitioning := false
-var inspect_distance := 2.5
-var inspect_target := Vector3.ZERO
 var overview_yaw := 0.0
 var overview_pitch := 0.25
 var overview_distance := 6.0
@@ -18,13 +13,11 @@ var overview_view: Transform3D
 @export var orbit_target := Vector3(0, 1.15, 0)
 @export var minimum_distance := 1.8
 @export var maximum_distance := 10.5
-var inspect_pitch := 0.35
 
 func _ready() -> void:
 	overview_camera = camera.transform
 	reset_overview()
 	devices = {"monitor": %Monitor, "computer": %Computer, "keyboard": %Keyboard, "mouse": %Mouse}
-	for role: String in devices: placements[role] = devices[role].transform
 	layout.setup(self)
 
 func set_screen_texture(texture: Texture2D) -> void:
@@ -34,16 +27,9 @@ func set_screen_texture(texture: Texture2D) -> void:
 	material.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
 	%Monitor.get_node("Screen").material_override = material
 
-func set_mode(value: String, role: String = "monitor", animate: bool = true) -> void:
+func set_mode(value: String, animate: bool = true) -> void:
 	mode = value
-	selected = role
 	if motion != null and motion.is_valid(): motion.kill()
-	for key: String in devices:
-		if devices[key].get_parent() != equipment: devices[key].reparent(equipment, false)
-		devices[key].transform = placements[key]
-		devices[key].visible = value != "inspect" or key == role
-	%Desk.visible = value != "inspect"
-	%Pedestal.visible = value == "inspect"
 	var destination := overview_view
 	if value == "screen":
 		var screen: MeshInstance3D = %Monitor.get_node("Screen")
@@ -55,19 +41,6 @@ func set_mode(value: String, role: String = "monitor", animate: bool = true) -> 
 		var front := screen.global_basis.z.normalized()
 		var global_view := Transform3D(Basis.IDENTITY, target + front * distance).looking_at(target, screen.global_basis.y.normalized())
 		destination = camera.get_parent().global_transform.affine_inverse() * global_view
-	elif value == "inspect":
-		var device: Node3D = devices[role]
-		device.reparent(%InspectionStage, false)
-		device.position = Vector3(0, 0.94, 0)
-		device.rotation = Vector3.ZERO
-		var bounds: Vector3 = device.appearance.bounds
-		inspect_target = device.position + Vector3(0, bounds.y / 2.0, 0)
-		inspect_distance = maxf(bounds.x, maxf(bounds.y, bounds.z)) * 2.8
-		inspect_pitch = 0.8 if role in ["keyboard", "mouse"] else 0.35
-		%Pedestal.scale = Vector3.ONE * 1.0
-		%Pedestal.scale.x = maxf(bounds.x, bounds.z) * 0.8
-		%Pedestal.scale.z = maxf(bounds.x, bounds.z) * 0.8
-		destination = _inspect_camera()
 	transitioning = animate
 	if animate:
 		motion = create_tween().set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN_OUT)
@@ -75,24 +48,6 @@ func set_mode(value: String, role: String = "monitor", animate: bool = true) -> 
 		motion.finished.connect(func() -> void: transitioning = false)
 	else:
 		camera.transform = destination
-
-func _inspect_camera() -> Transform3D:
-	var direction := Vector3(0.2 * cos(inspect_pitch), sin(inspect_pitch), cos(inspect_pitch)).normalized()
-	return Transform3D(Basis.IDENTITY, inspect_target + direction * inspect_distance).looking_at(inspect_target)
-
-func rotate_product(delta: Vector2) -> void:
-	if transitioning or mode != "inspect": return
-	var device: Node3D = devices[selected]
-	device.rotation.y += delta.x * 0.012
-	inspect_pitch = clampf(inspect_pitch + delta.y * 0.005, 0.12, 1.15)
-	camera.transform = _inspect_camera()
-
-func zoom_product(amount: float) -> void:
-	if transitioning or mode != "inspect": return
-	var bounds: Vector3 = devices[selected].appearance.bounds
-	var base := maxf(bounds.x, maxf(bounds.y, bounds.z))
-	inspect_distance = clampf(inspect_distance * amount, base * 1.5, base * 4.0)
-	camera.transform = _inspect_camera()
 
 func reset_overview() -> void:
 	if mode not in ["overview", "layout"] or transitioning: return

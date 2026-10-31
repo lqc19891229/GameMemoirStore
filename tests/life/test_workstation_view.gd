@@ -78,7 +78,7 @@ func run() -> void:
 	press.pressed = false
 	dispatch(press)
 	await frames()
-	check(world.mode == "overview" and not world.camera.transform.is_equal_approx(original_view), "drag starting on a device orbits without entering inspection")
+	check(world.mode == "overview" and not world.camera.transform.is_equal_approx(original_view), "drag starting on a device orbits the overview")
 	check(world.overview_pitch > 0.3, "vertical dragging changes elevation")
 	var wheel := InputEventMouseButton.new()
 	wheel.button_index = MOUSE_BUTTON_WHEEL_UP
@@ -87,9 +87,6 @@ func run() -> void:
 	dispatch(wheel)
 	check(world.overview_distance < original_distance, "wheel zooms directly in desktop overview")
 	var retained_view: Transform3D = world.camera.transform
-	desktop.select_device("keyboard", false)
-	desktop.set_screen_focused(false, false)
-	check(world.camera.transform.is_equal_approx(retained_view), "return from inspection preserves overview orbit and zoom")
 	desktop.set_screen_focused(true, false)
 	desktop.set_screen_focused(false, false)
 	check(world.camera.transform.is_equal_approx(retained_view), "return from screen preserves overview orbit and zoom")
@@ -140,30 +137,11 @@ func run() -> void:
 		if role == "monitor":
 			check(desktop.screen_focused, "clicking 3D display enters screen mode")
 		else:
-			check(world.mode == "inspect" and world.selected == role, "ray picks product: " + role)
-			check(not world.get_node("%Desk").visible and world.get_node("%Pedestal").visible, "inspection uses product stage")
-			check(desktop.windows.is_empty(), "hardware inspection never launches apps")
-			var product_yaw: float = world.devices[role].rotation.y
-			point = root.get_visible_rect().size / 2.0
-			press = InputEventMouseButton.new()
-			press.button_index = MOUSE_BUTTON_LEFT
-			press.position = point
-			press.pressed = true
-			dispatch(press)
-			move = InputEventMouseMotion.new()
-			move.position = point + Vector2(90,20)
-			move.relative = Vector2(90,20)
-			dispatch(move)
-			press.pressed = false
-			dispatch(press)
-			check(not is_equal_approx(world.devices[role].rotation.y, product_yaw), "drag rotates real geometry: " + role)
-			var distance: float = world.inspect_distance
-			wheel = InputEventMouseButton.new()
-			wheel.position = point
-			wheel.button_index = MOUSE_BUTTON_WHEEL_UP
-			wheel.pressed = true
-			dispatch(wheel)
-			check(world.inspect_distance < distance, "wheel zooms selected product")
+			check(world.pick_at(device_point(desktop, role)) == role, "ray picks equipment for layout: " + role)
+			check(world.mode == "overview" and not world.transitioning, "equipment click stays in overview: " + role)
+			check(world.camera.transform.is_equal_approx(original_view), "equipment click preserves camera: " + role)
+			check(world.get_node("%Desk").visible and world.devices.values().all(func(device: Node3D) -> bool: return device.visible), "all equipment remains visible: " + role)
+			check(desktop.windows.is_empty(), "equipment click does not launch apps: " + role)
 		await escape_key()
 		check(world.mode == "overview" and world.devices[role].transform.is_equal_approx(placement), "return restores placement: " + role)
 	game.session.state.wallet = 1000

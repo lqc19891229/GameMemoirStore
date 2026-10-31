@@ -8,7 +8,7 @@ ui/layout_gizmo.tscn：布置模式的选择框、移动轴和旋转手柄。
 ui/app_window.tscn：电脑内各应用共用的窗口壳。
 
 HUD 使用 CanvasLayer；DesktopViewport 仅生成显示器实时纹理。
-总览直接拖动旋转、滚轮缩放，单击设备检视，单击屏幕操作；Esc 返回并保留视角。
+总览直接拖动旋转、滚轮缩放，单击机箱或键鼠保持总览，单击屏幕操作电脑；Esc 返回并保留视角。
 商城、购物网页和游玩界面位于 scenes/apps/，跨应用按钮位于 scenes/shared/。
 
-TableGroup 下包含桌子和 Equipment。LayoutEditor 控制玩家布置的桌沿、吸附和碰撞校验；InspectionStage 用于独立检视，返回恢复已确认位置。
+TableGroup 下包含桌子和 Equipment。设备始终留在 Equipment 下，LayoutEditor 控制玩家布置的桌沿、吸附和碰撞校验。
