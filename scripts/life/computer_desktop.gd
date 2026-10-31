@@ -33,6 +33,15 @@ func _ready() -> void:
 	%ApplyLayout.pressed.connect(func() -> void: finish_layout(true))
 	%CancelLayout.pressed.connect(func() -> void: finish_layout(false))
 	%RestoreLayout.pressed.connect(world.layout.reset_layout)
+	%UndoLayout.pressed.connect(world.layout.undo)
+	%RedoLayout.pressed.connect(world.layout.redo)
+	%CopyFurniture.pressed.connect(world.layout.duplicate_selected)
+	%DeleteFurniture.pressed.connect(world.layout.delete_selected)
+	var styles := {"wall":["墙面 · 鼠尾草","墙面 · 奶油米","墙面 · 雾蓝"], "floor":["地板 · 原木","地板 · 浅灰木","地板 · 深胡桃"], "light":["灯光 · 午后暖阳","灯光 · 清晨冷光","灯光 · 夜间暖灯"]}
+	for key: String in styles:
+		var selector: OptionButton = get_node("%Style_" + key)
+		for label: String in styles[key]: selector.add_item(label)
+		selector.item_selected.connect(func(index: int) -> void: world.layout.set_style(key, index))
 	%MoveTool.pressed.connect(func() -> void: world.layout.set_tool("move"))
 	%RotateTool.pressed.connect(func() -> void: world.layout.set_tool("rotate"))
 	%SnapLayout.toggled.connect(func(enabled: bool) -> void: world.layout.snapping = enabled)
@@ -75,6 +84,7 @@ func _update_equipment() -> void:
 			world.devices[role].appearance = model
 			reposition = reposition or (screen_focused and role == "monitor")
 	world.layout.load_saved(session.state.life.get("workstation_layout", {}))
+	world.layout.load_style(session.state.life.get("room_style", {}))
 	if world.layout.active: world.layout.update()
 	if reposition: world.set_mode("screen", false)
 
@@ -89,12 +99,13 @@ func finish_layout(apply: bool) -> void:
 	_set_mode("overview", false)
 	if apply and session != null:
 		session.state.life["workstation_layout"] = world.layout.export_layout()
+		session.state.life["room_style"] = world.layout.committed_style.duplicate()
 		session.state.save_state()
 
 func _sync_layout() -> void:
 	if not world.layout.active: return
 	var layout = world.layout
-	%LayoutSelection.text = "选中：" + layout.NAMES[layout.selected]
+	%LayoutSelection.text = "选中：" + layout.name_for(layout.selected)
 	var node: Node3D = layout.nodes[layout.selected]
 	%LayoutPose.text = "X %.2f   Z %.2f\n旋转 %.0f°" % [node.position.x,node.position.z,rad_to_deg(node.rotation.y)]
 	%LayoutMessage.text = layout.message
@@ -102,6 +113,12 @@ func _sync_layout() -> void:
 	%ApplyLayout.disabled = not layout.valid
 	%MoveTool.set_pressed_no_signal(layout.tool == "move")
 	%RotateTool.set_pressed_no_signal(layout.tool == "rotate")
+	%CopyFurniture.disabled = not layout.templates.has(layout.Data.base_role(layout.selected))
+	%DeleteFurniture.disabled = not layout.Data.is_copy(layout.selected)
+	%UndoLayout.disabled = layout.undo_stack.is_empty()
+	%RedoLayout.disabled = layout.redo_stack.is_empty()
+	for key: String in world.get_node("Room").style:
+		(get_node("%Style_" + key) as OptionButton).select(world.get_node("Room").style[key])
 	for role: String in layout.NAMES: get_node("%Layout_" + role).set_pressed_no_signal(layout.selected == role)
 
 func set_screen_focused(value: bool, animate: bool = true) -> void:
@@ -132,7 +149,7 @@ func _sync_mode() -> void:
 	%FocusToggle.visible = world.mode == "overview"
 	%ManageDevices.visible = world.mode == "overview"
 	%OverviewHelp.visible = world.mode == "overview"
-	%ViewTitle.text = {"overview": "我的 3D 工作台", "screen": "屏幕操作", "layout":"调整布置"}[world.mode]
+	%ViewTitle.text = {"overview": "我的像素房间", "screen": "屏幕操作", "layout":"布置房间"}[world.mode]
 
 func _reframe_screen() -> void:
 	if not screen_focused: return
@@ -168,7 +185,17 @@ func _input(event: InputEvent) -> void:
 	if not event is InputEventKey or world.transitioning: return
 	if world.layout.active:
 		if event.pressed and not event.echo:
+			if event.ctrl_pressed and event.keycode in [KEY_Z, KEY_Y]:
+				if event.keycode == KEY_Y or event.shift_pressed: world.layout.redo()
+				else: world.layout.undo()
+				get_viewport().set_input_as_handled()
+				return
+			if event.ctrl_pressed and event.keycode == KEY_D:
+				world.layout.duplicate_selected()
+				get_viewport().set_input_as_handled()
+				return
 			match event.keycode:
+				KEY_DELETE: world.layout.delete_selected()
 				KEY_ESCAPE: finish_layout(false)
 				KEY_G: world.layout.set_tool("move")
 				KEY_R: world.layout.set_tool("rotate")

@@ -1,4 +1,4 @@
-[gd_scene load_steps=13 format=3]
+[gd_scene load_steps=14 format=3]
 [ext_resource type="Script" path="res://scripts/life/workstation_3d.gd" id="1"]
 [ext_resource type="PackedScene" path="res://assets/models/hardware/desk.glb" id="2"]
 [ext_resource type="PackedScene" path="res://scenes/computer/hardware/monitor.tscn" id="3"]
@@ -7,6 +7,10 @@
 [ext_resource type="PackedScene" path="res://scenes/computer/hardware/mouse.tscn" id="6"]
 [ext_resource type="Script" path="res://scripts/life/workstation_layout.gd" id="7"]
 [ext_resource type="PackedScene" path="res://scenes/computer/ui/layout_gizmo.tscn" id="8"]
+[ext_resource type="PackedScene" path="res://scenes/room/room.tscn" id="9"]
+[ext_resource type="Shader" path="res://assets/shaders/pixel_room.gdshader" id="10"]
+[sub_resource type="ShaderMaterial" id="Pixels"]
+shader = ExtResource("10")
 [sub_resource type="BoxShape3D" id="DeskPick"]
 size = Vector3(4.8,0.1,2.3)
 [sub_resource type="Environment" id="StudioEnvironment"]
@@ -14,12 +18,7 @@ background_mode = 1
 background_color = Color(0.07,0.12,0.13,1)
 ambient_light_source = 2
 ambient_light_color = Color(0.70,0.79,0.75,1)
-ambient_light_energy = 0.45
-[sub_resource type="StandardMaterial3D" id="FloorMaterial"]
-albedo_color = Color(0.12,0.18,0.18,1)
-roughness = 0.85
-[sub_resource type="PlaneMesh" id="Floor"]
-size = Vector2(20,20)
+ambient_light_energy = 0.35
 [node name="Workstation3D" type="Node3D"]
 script = ExtResource("1")
 [node name="Environment" type="WorldEnvironment" parent="."]
@@ -27,27 +26,26 @@ environment = SubResource("StudioEnvironment")
 [node name="KeyLight" type="DirectionalLight3D" parent="."]
 rotation_degrees = Vector3(-43,-30,0)
 light_color = Color(1,0.89,0.72,1)
-light_energy = 0.95
+light_energy = 0.75
 shadow_opacity = 0.75
 shadow_enabled = true
 directional_shadow_max_distance = 16.0
 [node name="FillLight" type="DirectionalLight3D" parent="."]
 rotation_degrees = Vector3(-25,140,0)
 light_color = Color(0.64,0.78,0.85,1)
-light_energy = 0.30
+light_energy = 0.20
 [node name="Camera" type="Camera3D" parent="."]
 unique_name_in_owner = true
-position = Vector3(2.6,2.8,5.5)
-rotation_degrees = Vector3(-15.2,25.3,0)
+position = Vector3(9,9.8,11)
+rotation_degrees = Vector3(-31.47,39.29,0)
 current = true
 fov = 38.0
 near = 0.03
 far = 40.0
-[node name="Floor" type="MeshInstance3D" parent="."]
-mesh = SubResource("Floor")
-material_override = SubResource("FloorMaterial")
+[node name="Room" parent="." instance=ExtResource("9")]
 [node name="TableGroup" type="Node3D" parent="."]
 unique_name_in_owner = true
+position = Vector3(-0.7,0,-0.8)
 [node name="Desk" parent="TableGroup" instance=ExtResource("2")]
 unique_name_in_owner = true
 [node name="DeskPickArea" type="Area3D" parent="TableGroup"]
@@ -77,3 +75,14 @@ unique_name_in_owner = true
 [node name="LayoutEditor" type="Node" parent="."]
 unique_name_in_owner = true
 script = ExtResource("7")
+
+[node name="PixelPass" type="CanvasLayer" parent="."]
+layer = 0
+[node name="Filter" type="ColorRect" parent="PixelPass"]
+material = SubResource("Pixels")
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2

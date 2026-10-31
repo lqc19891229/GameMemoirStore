@@ -17,3 +17,15 @@ blender --background --threads 1 --factory-startup --python tools/models/build_h
 Godot 布局入口：scenes/computer/computer_desktop.tscn，展开 Workstation3D；复用源场景为 workstation_3d.tscn。库存映射与屏幕尺寸在 data/hardware/，参见该目录 README.md。
 
 .gdignore 防止 Godot 自动导入 .blend 并要求本地 Blender；游戏只导入已提交的 GLB。
+
+## 像素房间素材
+
+`build_room.py` 是独立的离线房间模型源，使用 Python 3 标准库和 Pillow：
+
+```bash
+python tools/models/build_room.py
+```
+
+输出 `assets/models/room/` 的完整 room_shell、chair、bookcase、lamp、rug、plant GLB，包含纹理与最近邻采样器。几何按材质合并，固定随机种子可复现；不依赖 Blender。GLB 可导入 Blender 继续编辑。导入设置 `gltf/embedded_image_handling=3` 保留嵌入纹理，避免生成重复 PNG。游戏只加载已提交的模型，不运行制作脚本。
+
+房间采用 Godot 原生 Y 向上坐标，家具底部中心为原点。对应场景、拾取范围和默认位置在 `scenes/room/`。改模型后同步检查家具 bounds，改房间尺寸后同步 LayoutEditor 的 room_half_size。

@@ -109,9 +109,9 @@ func run() -> void:
 	check(clear(layout) and layout.valid,"table edge constraint and rotation remain non-overlapping")
 	desktop.finish_layout(false)
 	# Recover old externally authored overlapping saves, while retaining the table pose.
-	layout.load_saved({"desk":{"x":.4,"z":.3,"yaw":.2},"mouse":{"x":-.6,"z":.67,"yaw":0}})
+	layout.load_saved({"desk":{"x":-.4,"z":-.8,"yaw":.1},"mouse":{"x":-.6,"z":.67,"yaw":0}})
 	check(clear(layout),"overlapping loaded equipment recovers to default arrangement")
-	check(is_equal_approx(layout.nodes.desk.position.x,.4),"save recovery preserves table placement")
+	check(is_equal_approx(layout.nodes.desk.position.x,-.4),"save recovery preserves table placement")
 	check(world.devices.mouse.transform.is_equal_approx(original.mouse),"save recovery restores equipment rather than retaining penetration")
 	layout.load_saved({})
 	check(clear(layout),"empty legacy save remains usable")

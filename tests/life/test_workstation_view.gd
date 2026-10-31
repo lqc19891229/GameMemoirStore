@@ -60,7 +60,7 @@ func run() -> void:
 	var viewport: SubViewport = desktop.get_node("%DesktopViewport")
 	check(world is Node3D and world.camera is Camera3D, "workstation uses actual 3D scene and camera")
 	check(world.mode == "overview" and not desktop.screen_focused, "new game starts at 3D overview")
-	check(not game.has_node("PlayerRoom"), "room scene remains removed")
+	check(not game.has_node("PlayerRoom"), "room is integrated into desktop without a separate PlayerRoom")
 	check(desktop is Node3D and world.get_viewport() == root, "ComputerDesktop renders 3D directly in the main viewport")
 	var original_view: Transform3D = world.camera.transform
 	var original_distance: float = world.overview_distance

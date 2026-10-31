@@ -10,15 +10,18 @@ var overview_yaw := 0.0
 var overview_pitch := 0.25
 var overview_distance := 6.0
 var overview_view: Transform3D
-@export var orbit_target := Vector3(0, 1.15, 0)
+@export var orbit_target := Vector3(0, 1.1, 0)
 @export var minimum_distance := 1.8
-@export var maximum_distance := 10.5
+@export var maximum_distance := 22.0
 
 func _ready() -> void:
 	overview_camera = camera.transform
 	reset_overview()
 	devices = {"monitor": %Monitor, "computer": %Computer, "keyboard": %Keyboard, "mouse": %Mouse}
 	layout.setup(self)
+
+func _process(_delta: float) -> void:
+	$Room.update_cutaway(camera)
 
 func set_screen_texture(texture: Texture2D) -> void:
 	var material := StandardMaterial3D.new()
@@ -29,6 +32,7 @@ func set_screen_texture(texture: Texture2D) -> void:
 
 func set_mode(value: String, animate: bool = true) -> void:
 	mode = value
+	$PixelPass.visible = value != "screen"
 	if motion != null and motion.is_valid(): motion.kill()
 	var destination := overview_view
 	if value == "screen":

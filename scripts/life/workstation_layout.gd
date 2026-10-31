@@ -1,11 +1,11 @@
 extends Node
 signal changed
 const Data = preload("res://scripts/life/workstation_layout_data.gd")
-const NAMES := {"desk":"桌子（整套）", "monitor":"显示器", "computer":"机箱", "keyboard":"键盘", "mouse":"鼠标"}
+const NAMES := {"desk":"桌子（整套）", "monitor":"显示器", "computer":"机箱", "keyboard":"键盘", "mouse":"鼠标", "chair":"椅子", "bookcase":"书架", "lamp":"落地灯", "rug":"地毯", "plant":"盆栽"}
 @export var tabletop_half_size := Vector2(2.4, 1.15)
 @export var tabletop_height := 0.78
 @export var edge_margin := 0.025
-@export var desk_move_limit := 1.5
+@export var room_half_size := Vector2(4, 3)
 @export var grid_step := 0.05
 @export var angle_step := 15.0
 @export_range(0.005, 0.1, 0.005) var collision_margin := 0.01
@@ -30,6 +30,11 @@ var start_yaw := 0.0
 var start_angle := 0.0
 var start_axis := Vector3.ZERO
 var drag_height := 0.78
+var committed_style: Dictionary = {}
+var undo_stack: Array[Dictionary] = []
+var redo_stack: Array[Dictionary] = []
+var drag_before: Dictionary = {}
+var templates: Dictionary = {}
 
 func setup(owner_world: Node3D) -> void:
 	world = owner_world
@@ -37,6 +42,10 @@ func setup(owner_world: Node3D) -> void:
 	gizmo = world.get_node("%LayoutGizmo")
 	nodes = {"desk":group}
 	nodes.merge(world.devices)
+	for item: Node3D in world.get_node("Room/Furniture").get_children():
+		nodes[item.role] = item
+		templates[item.role] = load(item.scene_file_path)
+	committed_style = world.get_node("Room").style.duplicate()
 	authored = snapshot()
 	committed = authored.duplicate()
 
@@ -45,8 +54,75 @@ func snapshot() -> Dictionary:
 	for role: String in nodes: result[role] = nodes[role].transform
 	return result
 
+func name_for(role: String) -> String:
+	return NAMES.get(Data.base_role(role),role) + (" · " + role.get_slice("_",1) if Data.is_copy(role) else "")
+
+func _create_copy(role: String) -> void:
+	if nodes.has(role) or not Data.is_copy(role): return
+	var item: Node3D = templates[Data.base_role(role)].instantiate()
+	item.role = role
+	item.name = role
+	world.get_node("Room/Furniture").add_child(item)
+	nodes[role] = item
+	world.get_node("Room").apply_style(world.get_node("Room").style)
+
 func restore(poses: Dictionary) -> void:
-	for role: String in nodes: nodes[role].transform = poses[role]
+	for role: String in nodes.keys():
+		if Data.is_copy(role) and not poses.has(role):
+			nodes[role].free()
+			nodes.erase(role)
+	for role: String in poses:
+		_create_copy(role)
+		nodes[role].transform = poses[role]
+	if not nodes.has(selected): selected = "desk"
+
+func duplicate_selected() -> void:
+	if not active or not templates.has(Data.base_role(selected)): return
+	end_drag()
+	var before := _draft()
+	var source: Node3D = nodes[selected]
+	var role := ""
+	for index in range(1,9):
+		var candidate := Data.base_role(selected) + "_" + str(index)
+		if not nodes.has(candidate):
+			role = candidate
+			break
+	if role.is_empty():
+		message = "这类家具最多可复制 8 件"
+		changed.emit()
+		return
+	_create_copy(role)
+	var copy: Node3D = nodes[role]
+	copy.transform = source.transform
+	var found := false
+	# Search nearby floor cells; never spawn a copy inside another object.
+	for ring in range(1,17):
+		for step in range(16):
+			var angle := TAU * step / 16.0
+			copy.position = source.position + Vector3(cos(angle),0,sin(angle)) * ring * .25
+			if _blocker(role,footprint(role,collision_margin)).is_empty():
+				found = true
+				break
+		if found: break
+	if not found:
+		copy.free()
+		nodes.erase(role)
+		message = "附近没有足够空间，请先腾出位置"
+		changed.emit()
+		return
+	selected = role
+	_remember(before)
+	update()
+
+func delete_selected() -> void:
+	if not active or not Data.is_copy(selected): return
+	end_drag()
+	var before := _draft()
+	nodes[selected].free()
+	nodes.erase(selected)
+	selected = "desk"
+	_remember(before)
+	update()
 
 func load_saved(raw: Variant) -> void:
 	if active: return
@@ -54,6 +130,7 @@ func load_saved(raw: Variant) -> void:
 	if cleaned == saved and _layout_blocker().is_empty(): return
 	restore(authored)
 	for role: String in cleaned:
+		_create_copy(role)
 		nodes[role].position.x = cleaned[role].x
 		nodes[role].position.z = cleaned[role].z
 		nodes[role].rotation.y = cleaned[role].yaw
@@ -62,6 +139,9 @@ func load_saved(raw: Variant) -> void:
 	# table pose, but recover a usable equipment arrangement rather than loading penetration.
 	if not _layout_blocker().is_empty():
 		for role: String in world.devices: nodes[role].transform = authored[role]
+	# Imported legacy table poses may intersect new room furniture or walls.
+	# Recover the complete authored room rather than keeping a partially invalid save.
+	if not _layout_blocker().is_empty(): restore(authored)
 	saved = cleaned
 	committed = snapshot()
 
@@ -72,8 +152,54 @@ func export_layout() -> Dictionary:
 		result[role] = {"x":pose.origin.x, "z":pose.origin.z, "yaw":pose.basis.get_euler().y}
 	return result
 
+func load_style(raw: Variant) -> void:
+	if active: return
+	world.get_node("Room").apply_style(raw)
+	committed_style = world.get_node("Room").style.duplicate()
+
+func _draft() -> Dictionary:
+	return {"poses":snapshot(), "style":world.get_node("Room").style.duplicate()}
+
+func _restore_draft(draft: Dictionary) -> void:
+	restore(draft.poses)
+	world.get_node("Room").apply_style(draft.style)
+
+func _remember(before: Dictionary) -> void:
+	if before == _draft(): return
+	undo_stack.append(before)
+	if undo_stack.size() > 80: undo_stack.pop_front()
+	redo_stack.clear()
+	changed.emit()
+
+func undo() -> void:
+	if not active: return
+	end_drag()
+	if undo_stack.is_empty(): return
+	redo_stack.append(_draft())
+	_restore_draft(undo_stack.pop_back())
+	update()
+
+func redo() -> void:
+	if not active: return
+	end_drag()
+	if redo_stack.is_empty(): return
+	undo_stack.append(_draft())
+	_restore_draft(redo_stack.pop_back())
+	update()
+
+func set_style(key: String, value: int) -> void:
+	if not active or not committed_style.has(key): return
+	var before := _draft()
+	var next: Dictionary = world.get_node("Room").style.duplicate()
+	next[key] = value
+	world.get_node("Room").apply_style(next)
+	_remember(before)
+	update()
+
 func begin() -> void:
 	active = true
+	undo_stack.clear()
+	redo_stack.clear()
 	selected = "desk"
 	gesture = ""
 	restore(committed)
@@ -86,8 +212,11 @@ func finish(apply: bool) -> bool:
 	end_drag()
 	if apply:
 		committed = snapshot()
+		committed_style = world.get_node("Room").style.duplicate()
 		saved = export_layout()
-	else: restore(committed)
+	else:
+		restore(committed)
+		world.get_node("Room").apply_style(committed_style)
 	active = false
 	gizmo.hide()
 	return true
@@ -106,37 +235,48 @@ func set_tool(value: String) -> void:
 func reset_layout() -> void:
 	if not active: return
 	end_drag()
+	var before := _draft()
 	restore(authored)
+	world.get_node("Room").apply_style({})
+	_remember(before)
 	update()
 
 func footprint(role: String, padding: float = 0.0) -> PackedVector2Array:
 	return _footprint_at(role, nodes[role].transform, padding)
 
 func _footprint_at(role: String, pose: Transform3D, padding: float) -> PackedVector2Array:
-	var size: Vector3 = nodes[role].appearance.bounds + Vector3(padding * 2, 0, padding * 2)
+	var size: Vector3 = bounds_for(role) + Vector3(padding * 2, 0, padding * 2)
 	var result := PackedVector2Array()
 	for corner: Vector2 in [Vector2(-1,-1),Vector2(1,-1),Vector2(1,1),Vector2(-1,1)]:
 		var point: Vector3 = pose * Vector3(corner.x * size.x/2, 0, corner.y * size.z/2)
 		result.append(Vector2(point.x, point.z))
 	return result
 
+func is_floor(role: String) -> bool:
+	return not world.devices.has(role)
+
+func bounds_for(role: String) -> Vector3:
+	if role == "desk": return Vector3(tabletop_half_size.x*2, tabletop_height, tabletop_half_size.y*2)
+	if world.devices.has(role): return nodes[role].appearance.bounds
+	return nodes[role].bounds
+
+func is_blocking(role: String) -> bool:
+	return role == "desk" or world.devices.has(role) or nodes[role].blocking
+
 func clamp_pose(role: String) -> void:
 	var node: Node3D = nodes[role]
-	if role == "desk":
-		node.position.x = clampf(node.position.x, -desk_move_limit, desk_move_limit)
-		node.position.z = clampf(node.position.z, -desk_move_limit, desk_move_limit)
-		node.position.y = (authored[role] as Transform3D).origin.y
-		return
-	node.position.y = tabletop_height
+	node.position.y = (authored.get(Data.base_role(role), Transform3D.IDENTITY) as Transform3D).origin.y if is_floor(role) else tabletop_height
 	var corners := footprint(role, collision_margin)
 	var extent := Vector2.ZERO
 	for point in corners: extent = extent.max((point - Vector2(node.position.x,node.position.z)).abs())
-	var allowance := (tabletop_half_size - extent - Vector2.ONE * edge_margin).max(Vector2.ZERO)
+	var limits := room_half_size if is_floor(role) else tabletop_half_size
+	var allowance := (limits - extent - Vector2.ONE * edge_margin).max(Vector2.ZERO)
 	node.position.x = clampf(node.position.x, -allowance.x, allowance.x)
 	node.position.z = clampf(node.position.z, -allowance.y, allowance.y)
 
 func move_to(position_xz: Vector2) -> void:
 	if not active: return
+	var undo_before := _draft()
 	var before: Transform3D = nodes[selected].transform
 	var point := position_xz
 	if snapping: point = point.snapped(Vector2.ONE * grid_step)
@@ -144,26 +284,33 @@ func move_to(position_xz: Vector2) -> void:
 	nodes[selected].position.z = point.y
 	clamp_pose(selected)
 	_constrain_motion(before, nodes[selected].transform)
+	if gesture.is_empty(): _remember(undo_before)
 
 func rotate_to(yaw: float) -> void:
 	if not active: return
+	var undo_before := _draft()
 	var before: Transform3D = nodes[selected].transform
 	if snapping: yaw = snappedf(yaw, deg_to_rad(angle_step))
 	nodes[selected].rotation.y = wrapf(yaw, -PI, PI)
 	clamp_pose(selected)
 	_constrain_motion(before, nodes[selected].transform)
+	if gesture.is_empty(): _remember(undo_before)
 
 func _blocker(role: String, polygon: PackedVector2Array) -> String:
+	var floor_item := is_floor(role)
+	var limits := room_half_size if floor_item else tabletop_half_size
 	for point in polygon:
-		if absf(point.x) > tabletop_half_size.x - edge_margin + 0.002 or absf(point.y) > tabletop_half_size.y - edge_margin + 0.002:
-			return NAMES[role] + "到达桌沿"
-	for other: String in world.devices:
-		if other != role and Data.overlap(polygon, footprint(other, collision_margin)):
-			return NAMES[role] + "碰到" + NAMES[other]
+		if absf(point.x) > limits.x - edge_margin + 0.002 or absf(point.y) > limits.y - edge_margin + 0.002:
+			return name_for(role) + ("到达房间边界" if floor_item else "到达桌沿")
+	if not is_blocking(role): return ""
+	for other: String in nodes:
+		if other == role or is_floor(other) != floor_item or not is_blocking(other): continue
+		if Data.overlap(polygon, footprint(other, collision_margin)):
+			return name_for(role) + "碰到" + name_for(other)
 	return ""
 
 func _layout_blocker() -> String:
-	for role: String in world.devices:
+	for role: String in nodes:
 		var blocker := _blocker(role, footprint(role, collision_margin))
 		if not blocker.is_empty(): return blocker
 	return ""
@@ -177,9 +324,6 @@ func _sweep_blocker(role: String, before: Transform3D, after: Transform3D) -> St
 	return _blocker(role, hull)
 
 func _constrain_motion(before: Transform3D, target: Transform3D) -> void:
-	if selected == "desk":
-		update()
-		return
 	var node: Node3D = nodes[selected]
 	node.transform = before
 	var angle := absf(angle_difference(before.basis.get_euler().y, target.basis.get_euler().y))
@@ -210,7 +354,7 @@ func rotate_step(direction: float) -> void:
 	rotate_to(nodes[selected].rotation.y + deg_to_rad(angle_step) * direction)
 
 func _plane_point(pixel: Vector2) -> Variant:
-	var frame: Node3D = world if selected == "desk" else group
+	var frame: Node3D = world if is_floor(selected) else group
 	var height := drag_height
 	var plane := Plane(frame.global_basis.y.normalized(), frame.to_global(Vector3(0,height,0)))
 	var hit: Variant = plane.intersects_ray(world.camera.project_ray_origin(pixel), world.camera.project_ray_normal(pixel))
@@ -219,13 +363,14 @@ func _plane_point(pixel: Vector2) -> Variant:
 func begin_drag(pixel: Vector2, operation: String = "move", direction: String = "plane", from_handle: bool = false) -> void:
 	if not active: return
 	var node: Node3D = nodes[selected]
-	drag_height = node.position.y + (tabletop_height if selected == "desk" else node.appearance.bounds.y * .5)
+	drag_height = node.position.y + bounds_for(selected).y * .5
 	if from_handle:
 		var handles: Node3D = gizmo.get_node("MoveHandles" if operation == "move" else "RotateHandles")
-		var frame: Node3D = world if selected == "desk" else group
+		var frame: Node3D = world if is_floor(selected) else group
 		drag_height = frame.to_local(handles.to_global(Vector3(0,.05,0))).y
 	var hit: Variant = _plane_point(pixel)
 	if hit == null: return
+	drag_before = _draft()
 	gesture = operation
 	axis = direction
 	start_hit = hit
@@ -247,7 +392,9 @@ func drag_to(pixel: Vector2) -> void:
 		rotate_to(start_yaw - angle_difference(start_angle,current))
 
 func end_drag() -> void:
+	if not gesture.is_empty() and not drag_before.is_empty(): _remember(drag_before)
 	gesture = ""
+	drag_before = {}
 
 func pick_handle(pixel: Vector2) -> String:
 	var origin: Vector3 = world.camera.project_ray_origin(pixel)
@@ -259,8 +406,8 @@ func pick_handle(pixel: Vector2) -> String:
 func update(contact: String = "") -> void:
 	var blocker := _layout_blocker()
 	valid = blocker.is_empty()
-	message = "右键环绕 · 滚轮缩放 · 拖动物品或手柄调整"
-	if not valid: message = blocker + "，请恢复默认布置或调整设备"
+	message = "右键环绕 · 滚轮缩放 · 拖动物品布置房间"
+	if not valid: message = blocker + "，请调整位置或恢复默认布置"
 	elif not contact.is_empty(): message = "已阻挡：" + contact
 	_update_gizmo(not contact.is_empty())
 	changed.emit()
@@ -269,8 +416,10 @@ func _update_gizmo(contact: bool = false) -> void:
 	if not active or not gizmo.is_inside_tree(): return
 	gizmo.show()
 	var node: Node3D = nodes[selected]
-	var size: Vector3 = Vector3(tabletop_half_size.x*2,tabletop_height,tabletop_half_size.y*2) if selected == "desk" else node.appearance.bounds * node.scale.abs()
-	var center: Vector3 = node.to_global(Vector3(0,tabletop_height,0)) if selected == "desk" else node.to_global(Vector3(0,.02,0))
+	var size := bounds_for(selected) * node.scale.abs()
+	# Raise floor outlines above rugs so selected furniture remains readable.
+	var base_height := .06 if is_floor(selected) else .02
+	var center: Vector3 = node.to_global(Vector3(0,tabletop_height,0)) if selected == "desk" else node.to_global(Vector3(0,base_height,0))
 	gizmo.global_position = center
 	gizmo.global_rotation.y = node.global_rotation.y
 	var outline: MeshInstance3D = gizmo.get_node("Outline")
