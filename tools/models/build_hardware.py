@@ -84,6 +84,9 @@ current = None
 
 def finish(obj, name, mat, bevel=0.0):
     obj.name = name
+    bpy.context.view_layer.objects.active = obj
+    obj.select_set(True)
+    bpy.ops.object.transform_apply(location=True, rotation=False, scale=False)
     for collection in list(obj.users_collection):
         collection.objects.unlink(obj)
     current.objects.link(obj)
@@ -195,9 +198,9 @@ def case(upgrade=False):
         box("Graphics card shroud", (.155, .31, -.035), (.105, .12, .49), charcoal, .008)
         box("GPU accent", (.211, .31, -.035), (.006, .035, .38), cyan, .002)
         for z in [-.15, .08]:
-            fan("GPU cooling fan", (.216, .31, z), .045, dark, blue, axis="x")
+            fan("GPU cooling fan", (.206, .31, z), .045, dark, blue, axis="x")
         box("CPU block", (.208, .68, -.02), (.035, .17, .17), silver, .006)
-        fan("CPU cooler", (.229, .68, -.02), .062, dark, cyan, axis="x")
+        fan("CPU cooler", (.214, .68, -.02), .062, dark, cyan, axis="x")
         for z in [-.22, -.15, -.08]:
             box("RGB memory module", (.209, .69, z), (.014, .20, .025), silver, .002)
             box("Memory light bar", (.218, .69, z), (.005, .15, .008), magenta, .001)
