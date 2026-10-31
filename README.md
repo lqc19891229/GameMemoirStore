@@ -84,7 +84,7 @@ Godot 4.6 像素 3D 房间布置与游戏收藏经营原型。玩家从自己的
 | CPU / GPU | 型号文本，显示在商品页 |
 | enabled | 1=导出；0 或空白=草稿 |
 
-素材目录由 game_id 自动推导为 assets/art/<game_id>/，包含 <game_id>.png 封面和 <game_id>01.png 至 <game_id>04.png 四张展示图。导入器生成 data/games/<game_id>.tres、_catalog.tres、README 和校验清单，不生成或覆盖源脚本。详细规则见 tools/catalog/README.md。
+素材目录由 game_id 自动推导为 assets/art/&lt;game_id&gt;/，包含 &lt;game_id&gt;.png 封面和 &lt;game_id&gt;01.png 至 &lt;game_id&gt;04.png 四张展示图。导入器生成 data/games/&lt;game_id&gt;.tres、_catalog.tres、README 和校验清单，不生成或覆盖源脚本。详细规则见 tools/catalog/README.md。
 
 data/catalog.json 按相同 ID 补充英文名、标签、评价、安装大小、版本说明和演示折扣。新增游戏没有补充资料时使用默认值。已发布游戏应保留 ID 并通过 delist_ym 下架；enabled=0 或空白会从生成目录移除。
 

@@ -17,7 +17,7 @@ Windows 可双击项目根目录的 import_games.bat。脚本自动寻找 py -3�
 - schema.json：字段类型、默认值、必填规则、CPU/GPU 列名映射和备注列白名单。
 - import_games.py：读取 Excel、校验并生成资源。
 - .gdignore：使 Godot 忽略开发工具和 Excel 工作簿。
-- data/games/<game_id>.tres：每款游戏的正式 Resource。
+- data/games/&lt;game_id&gt;.tres：每款游戏的正式 Resource。
 - data/games/_catalog.tres：全部启用游戏的资源清单。
 - data/games/.catalog_manifest.json：生成文件和校验值，保护手工改动。
 
@@ -49,15 +49,15 @@ Windows 可双击项目根目录的 import_games.bat。脚本自动寻找 py -3�
 
 ## 素材目录约定
 
-每款游戏使用 assets/art/<game_id>/ 目录，包含五张 PNG：
+每款游戏使用 assets/art/&lt;game_id&gt;/ 目录，包含五张 PNG：
 
 | 文件 | 用途 | 建议尺寸 |
 |---|---|---|
-| <game_id>.png | 商店封面 | 640 × 256，5:2 |
-| <game_id>01.png | 展示图 1 | 640 × 360，16:9 |
-| <game_id>02.png | 展示图 2 | 640 × 360，16:9 |
-| <game_id>03.png | 展示图 3 | 640 × 360，16:9 |
-| <game_id>04.png | 展示图 4 | 640 × 360，16:9 |
+| &lt;game_id&gt;.png | 商店封面 | 640 × 256，5:2 |
+| &lt;game_id&gt;01.png | 展示图 1 | 640 × 360，16:9 |
+| &lt;game_id&gt;02.png | 展示图 2 | 640 × 360，16:9 |
+| &lt;game_id&gt;03.png | 展示图 3 | 640 × 360，16:9 |
+| &lt;game_id&gt;04.png | 展示图 4 | 640 × 360，16:9 |
 
 文件夹名、图片前缀与 game_id 的大小写必须一致。导入器按 01 至 04 的顺序生成 screenshots 引用；封面写入 capsule。五张素材缺少任意一张时默认停止导入，不会覆盖现有生成结果。尺寸为建议值，不强制缩放。
 
