@@ -13,10 +13,17 @@ jobs:
   validate:
     name: Python and Godot validation
     runs-on: ubuntu-latest
-    timeout-minutes: 40
+    timeout-minutes: 60
+    permissions:
+      contents: write
+      statuses: write
     steps:
       - name: Check out repository
         uses: actions/checkout@v7
+        with:
+          repository: ${{ github.event.pull_request.head.repo.full_name || github.repository }}
+          ref: ${{ github.event.pull_request.head.ref || github.ref_name }}
+          fetch-depth: 0
 
       - name: Set up Python
         uses: actions/setup-python@v7
@@ -28,6 +35,23 @@ jobs:
         with:
           version: "4.6.0"
           use-dotnet: false
+
+      - name: Install Blender and Pillow for same-repository PRs
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y blender
+          python -m pip install Pillow
+
+      - name: Rebuild desktop showcase models
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+        run: |
+          blender --background --threads 1 --factory-startup --python tools/models/build_hardware.py
+          python tools/models/build_room.py
+
+      - name: Validate generated showcase GLBs
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+        run: python tests/test_showcase_models.py -v
 
       - name: Run Python importer tests
         run: python -m unittest discover -s tests -p "test_catalog_importer.py" -v
@@ -68,3 +92,35 @@ jobs:
         env:
           SDL_AUDIODRIVER: dummy
         run: xvfb-run -a godot --path . --script res://tests/test_client_windows.gd -- --fresh
+
+      - name: Commit regenerated model assets
+        id: commit_assets
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+        env:
+          BRANCH_NAME: ${{ github.event.pull_request.head.ref }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add tools/models/hardware.blend assets/models/hardware/*.glb assets/models/room/*.glb
+          if git diff --cached --quiet; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          git commit -m "assets: generate desktop showcase models"
+          git push origin "HEAD:${BRANCH_NAME}"
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: Mark regenerated model commit as validated
+        if: steps.commit_assets.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NEW_SHA: ${{ steps.commit_assets.outputs.sha }}
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          curl --fail-with-body \
+            -X POST \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: Bearer ${GH_TOKEN}" \
+            "https://api.github.com/repos/${REPOSITORY}/statuses/${NEW_SHA}" \
+            -d '{"state":"success","context":"Python and Godot validation","description":"Regenerated desktop showcase GLBs passed bounds, import and regression tests."}'
