@@ -133,9 +133,10 @@ class ShowcaseModelTests(unittest.TestCase):
                 self.assertTrue(any(max(value) > .01 for value in emissive), f"{relative} has no emissive material")
 
     def test_glbs_have_no_external_dependencies(self):
-        for relative in EXPECTED:
+        for path in sorted(ASSETS.rglob("*.glb")):
+            relative = path.relative_to(ASSETS).as_posix()
             with self.subTest(asset=relative):
-                doc = read_glb(ASSETS / relative)
+                doc = read_glb(path)
                 for item in doc.get("buffers", []) + doc.get("images", []):
                     uri = item.get("uri", "")
                     self.assertFalse(uri and not uri.startswith("data:"), f"{relative} has external dependency: {uri}")
