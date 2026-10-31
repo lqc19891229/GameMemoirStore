@@ -1,6 +1,6 @@
 # GameMemoirStore 项目结构与维护审计
 
-检查基线：main 分支，commit `9cb2bfdc824ba4ea3331edac47d01b89dba81eea`，2026-10-31。
+检查基线：main 分支 commit `6342fa1ffa8afafcc62831016db76d13ea892194`；本报告同步现代样板间改造分支的结构。
 项目：Godot 4.6，GDScript，Compatibility 渲染器。
 
 ## 审计摘要
