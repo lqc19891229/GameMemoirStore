@@ -30,7 +30,7 @@ environment = SubResource("StudioEnvironment")
 [node name="KeyLight" type="DirectionalLight3D" parent="."]
 rotation_degrees = Vector3(-43, -30, 0)
 light_color = Color(1, 0.94, 0.84, 1)
-light_energy = 0.88
+light_energy = 0.75
 shadow_opacity = 0.68
 shadow_enabled = true
 directional_shadow_max_distance = 16.0

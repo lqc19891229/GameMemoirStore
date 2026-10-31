@@ -56,7 +56,7 @@ func apply_style(value: Variant) -> void:
 	var key := get_parent().get_node_or_null("KeyLight") as DirectionalLight3D
 	if key != null:
 		key.light_color = LIGHTS[style.light]
-		key.light_energy = [0.88, 0.92, 0.48][style.light]
+		key.light_energy = [0.75, 0.92, 0.48][style.light]
 	var fill := get_parent().get_node_or_null("FillLight") as DirectionalLight3D
 	if fill != null:
 		fill.light_color = FILL_LIGHTS[style.light]
