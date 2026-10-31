@@ -1,0 +1,111 @@
+name: Showcase model build
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "tools/models/**"
+      - "assets/models/**"
+      - "scenes/computer/hardware/**"
+      - "scenes/room/chair.tscn"
+      - "data/hardware/**"
+      - "tests/test_showcase_models.py"
+      - ".github/workflows/showcase-model-build.yml"
+
+permissions:
+  contents: write
+  statuses: write
+
+jobs:
+  build:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Check out pull request branch
+        uses: actions/checkout@v7
+        with:
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+          ref: ${{ github.event.pull_request.head.ref }}
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+
+      - name: Set up Godot 4.6
+        uses: chickensoft-games/setup-godot@v2
+        with:
+          version: "4.6.0"
+          use-dotnet: false
+
+      - name: Install Blender and Pillow
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y blender
+          python -m pip install Pillow
+
+      - name: Rebuild showcase model assets
+        run: |
+          blender --background --threads 1 --factory-startup --python tools/models/build_hardware.py
+          python tools/models/build_room.py
+
+      - name: Validate generated GLB assets
+        run: python tests/test_showcase_models.py -v
+
+      - name: Import generated assets in Godot
+        run: godot --headless --path . --editor --import
+
+      - name: Run workstation model regressions
+        shell: bash
+        run: |
+          set -euo pipefail
+          for test in \
+            tests/life/test_workstation_view.gd \
+            tests/life/test_workstation_layout.gd \
+            tests/life/test_workstation_collision.gd \
+            tests/life/test_pixel_room.gd
+          do
+            echo "Running $test"
+            godot --headless --path . --script "res://$test" -- --fresh
+          done
+
+      - name: Install virtual display
+        run: sudo apt-get install -y xvfb
+
+      - name: Run graphical window regression
+        env:
+          SDL_AUDIODRIVER: dummy
+        run: xvfb-run -a godot --path . --script res://tests/test_client_windows.gd -- --fresh
+
+      - name: Commit generated showcase assets
+        id: commit_assets
+        env:
+          BRANCH_NAME: ${{ github.event.pull_request.head.ref }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add tools/models/hardware.blend assets/models/hardware/*.glb assets/models/room/chair.glb
+          if git diff --cached --quiet; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          git commit -m "assets: generate desktop showcase models"
+          git push origin "HEAD:${BRANCH_NAME}"
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: Mark generated asset commit as validated
+        if: steps.commit_assets.outputs.changed == "true"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NEW_SHA: ${{ steps.commit_assets.outputs.sha }}
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          curl --fail-with-body \
+            -X POST \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: Bearer ${GH_TOKEN}" \
+            "https://api.github.com/repos/${REPOSITORY}/statuses/${NEW_SHA}" \
+            -d '{"state":"success","context":"Showcase model build / Godot validation","description":"Generated GLBs passed bounds, import and workstation regression tests."}'
