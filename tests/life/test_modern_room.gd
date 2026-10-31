@@ -54,7 +54,11 @@ func run() -> void:
 		if role == "chair":
 			check(item.get_node("Model").has_node("HeadrestCushion") and item.get_node("Model").has_node("LumbarSupport"), "chair includes headrest and lumbar support")
 		if role == "plant":
-			check(item.get_node("Model").find_children("Leaf", "MeshInstance3D", true, false).size() == 7, "plant uses seven individually shaped leaves")
+			var leaf_count := 0
+			for part: Node in item.get_node("Model").get_children():
+				if part.name == "Leaf":
+					leaf_count += 1
+			check(leaf_count == 7, "plant uses seven individually shaped leaves")
 		# Selection bounds must enclose the complete exported geometry, including rug stripes.
 		var enclosed := true
 		for mesh: MeshInstance3D in item.find_children("*", "MeshInstance3D", true, false):
