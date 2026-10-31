@@ -131,6 +131,19 @@ jobs:
       - name: Install virtual display
         run: sudo apt-get update && sudo apt-get install -y xvfb
 
+      - name: Capture modern room preview
+        env:
+          SDL_AUDIODRIVER: dummy
+        run: xvfb-run -a godot --path . --script res://tests/life/render_modern_room_preview.gd -- --fresh
+
+      - name: Upload modern room preview
+        uses: actions/upload-artifact@v4
+        with:
+          name: modern-room-preview
+          path: modern-room-preview.png
+          if-no-files-found: error
+          retention-days: 7
+
       - name: Run graphical window regression
         env:
           SDL_AUDIODRIVER: dummy
