@@ -6,7 +6,7 @@
 - 原始授权文件：`assets/fonts/OFL.txt`。
 - 旧演示游戏封面与平台图标：本工程早期的程序绘制像素素材，现保留给测试和客户端使用。
 - CounterSquad 封面和四张展示图：用户提供，保存在 `assets/art/CounterSquad/`。
-- 电脑工作台：本项目通过内置 ImageGen 生成的 9 张独立 PNG，位于 `assets/art/life/hardware/`；设备保留 alpha，提示词见该目录 `ASSET_PROMPTS.md`。
+- 3D 电脑工作台：项目内 Blender 脚本制作的 9 个 GLB，位于 `assets/models/hardware/`；源文件与脚本在 `tools/models/`，无第三方模型依赖。木纹是脚本制作的 64 像素材质，打包在模型内。原 2D 工作台设备 PNG 已替换移除。
 - 作品名称、制作组、评价、价格与本次演示日期为游戏内演示资料。
 
 本工程运行不依赖字体网站、上游项目或任何外部商店。

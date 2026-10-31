@@ -1,11 +1,9 @@
-[gd_resource type="Resource" script_class="MemoirDeviceVisual" load_steps=4 format=3]
-[ext_resource type="Script" path="res://scripts/life/device_visual.gd" id="1"]
-[ext_resource type="Texture2D" path="res://assets/art/life/hardware/keyboard_charcoal.png" id="2"]
-[sub_resource type="AtlasTexture" id="ArtRegion"]
-atlas = ExtResource("2")
-region = Rect2(5, 75, 2060, 620)
-
+[gd_resource type="Resource" script_class="MemoirDeviceModel" load_steps=3 format=3]
+[ext_resource type="Script" path="res://scripts/life/device_model.gd" id="1"]
+[ext_resource type="PackedScene" path="res://assets/models/hardware/keyboard_charcoal.glb" id="2"]
 [resource]
 script = ExtResource("1")
-texture = SubResource("ArtRegion")
-screen_rect = Rect2(0, 0, 0, 0)
+model = ExtResource("2")
+bounds = Vector3(1.25, 0.1, 0.48)
+screen_size = Vector2(0, 0)
+screen_position = Vector3(0, 0, 0)

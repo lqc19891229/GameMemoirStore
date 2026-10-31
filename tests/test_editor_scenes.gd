@@ -11,7 +11,7 @@ func _initialize() -> void:
 	run.call_deferred()
 func run() -> void:
 	var paths: Array[String] = ["res://scenes/game_root.tscn", "res://scenes/store.tscn"]
-	for dir in ["life", "client/pages", "client/components"]:
+	for dir in ["life", "life/hardware", "client/pages", "client/components"]:
 		for file in DirAccess.get_files_at("res://scenes/" + dir):
 			if file.ends_with(".tscn"): paths.append("res://scenes/" + dir + "/" + file)
 	for path in paths:
@@ -23,24 +23,28 @@ func run() -> void:
 			check(node.get_child_count() > 0, "visible layout exists before ready: " + path)
 		node.free()
 	var closeup = load("res://scenes/life/computer_desktop.tscn").instantiate()
-	check(closeup.get_node("Background") is TextureRect, "workspace has one independent backdrop texture")
-	check(closeup.get_child_count() == 3, "workspace separates background, equipment and interface")
-	check(closeup.get_node("Equipment").get_child_count() == 4, "workspace has four independent device slots")
+	check(closeup.get_node("WorldView/WorldViewport/Workstation3D") is Node3D, "workspace uses a genuine authored 3D scene")
+	check(closeup.get_child_count() == 3, "workspace separates 3D view, desktop viewport and interface")
+	check(closeup.get_node("WorldView/WorldViewport/Workstation3D/Equipment").get_child_count() == 4, "workspace has four independent 3D device slots")
 	for role in ["Monitor", "Computer", "Keyboard", "Mouse"]:
-		var device: Control = closeup.get_node("Equipment/" + role)
-		check(device.get_node("Art") is TextureRect and device.visual.texture != null, "device has authored image before ready: " + role)
+		var device: Node3D = closeup.get_node("WorldView/WorldViewport/Workstation3D/Equipment/" + role)
+		check(device.appearance.model is PackedScene and not device.find_children("*", "MeshInstance3D", true, false).is_empty(), "device has saved model geometry before ready: " + role)
 	closeup.free()
 	var game = load("res://scenes/game_root.tscn").instantiate()
 	check(game.get_child_count() == 2, "main scene only contains shared session and desktop")
 	check(not game.has_node("PlayerRoom") and not game.has_node("AchievementCabinet"), "room presentation has been removed")
 	check(game.get_node("ComputerDesktop").visible, "desktop is visible in the authored main scene")
-	check(game.has_node("ComputerDesktop/Equipment/Monitor/MonitorScreen/ScreenViewport/DesktopViewport/DesktopScreen/ApplicationArea"), "desktop shell exists before running")
-	var original_anchor: float = game.get_node("ComputerDesktop/Equipment/Keyboard").anchor_left + 0.02
-	game.get_node("ComputerDesktop/Equipment/Keyboard").anchor_left = original_anchor
+	check(game.has_node("ComputerDesktop/DesktopViewport/DesktopScreen/ApplicationArea"), "desktop shell exists before running")
+	var keyboard: Node3D = game.get_node("ComputerDesktop/WorldView/WorldViewport/Workstation3D/Equipment/Keyboard")
+	keyboard.position.x += 0.1
+	var original_position := keyboard.position
 	root.add_child(game)
 	game.session.timer.stop()
 	game.desktop.refresh()
-	check(is_equal_approx(game.get_node("ComputerDesktop/Equipment/Keyboard").anchor_left, original_anchor), "refresh preserves editor-authored device placement")
+	check(keyboard.position.is_equal_approx(original_position), "refresh preserves editor-authored 3D device placement")
+	game.desktop.select_device("keyboard", false)
+	game.desktop.set_screen_focused(false, false)
+	check(keyboard.position.is_equal_approx(original_position), "inspection restores editor-authored 3D placement")
 	var client = load("res://scenes/store.tscn").instantiate()
 	client.get_node("%ClientHeader").custom_minimum_size.y = 120
 	var original_home: Node = client.get_node("%PageContent").get_child(0)
@@ -50,9 +54,11 @@ func run() -> void:
 	client.refresh_client()
 	check(client.get_node("%PageContent").get_child(0) == original_home, "data refresh keeps static page nodes")
 	check(client.get_node("%ClientHeader").custom_minimum_size.y == 120, "runtime preserves inspector layout changes")
+	var constructors := RegEx.new()
+	constructors.compile("\\b(?:Button|Label|ColorRect)\\.new\\(")
 	for script in ["client.gd", "client_pages.gd", "client_ui.gd", "life/game_root.gd", "life/computer_desktop.gd"]:
 		var source := FileAccess.get_file_as_string("res://scripts/" + script)
-		check(not source.contains("func _draw") and not source.contains("Button.new()") and not source.contains("Label.new()") and not source.contains("ColorRect.new()"), "no procedural layout: " + script)
+		check(not source.contains("func _draw") and constructors.search(source) == null, "no procedural layout: " + script)
 	client.queue_free()
 	game.queue_free()
 	await process_frame
