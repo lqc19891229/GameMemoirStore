@@ -59,7 +59,6 @@ func load_saved(raw: Variant) -> void:
 		clamp_pose(role)
 	saved = cleaned
 	committed = snapshot()
-	_commit_placements()
 
 func export_layout() -> Dictionary:
 	var result: Dictionary = {}
@@ -67,9 +66,6 @@ func export_layout() -> Dictionary:
 		var pose: Transform3D = committed[role]
 		result[role] = {"x":pose.origin.x, "z":pose.origin.z, "yaw":pose.basis.get_euler().y}
 	return result
-
-func _commit_placements() -> void:
-	for role: String in world.devices: world.placements[role] = nodes[role].transform
 
 func begin() -> void:
 	active = true
@@ -86,7 +82,6 @@ func finish(apply: bool) -> bool:
 		committed = snapshot()
 		saved = export_layout()
 	else: restore(committed)
-	_commit_placements()
 	active = false
 	gizmo.hide()
 	return true

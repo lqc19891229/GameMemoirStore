@@ -17,7 +17,6 @@
 ## 场景与脚本
 
 - `scenes/computer/workstation_3d.tscn`：TableGroup 下包含 Desk、DeskPickArea 和 Equipment。设备的底部原点、模型资源不变。
-- InspectionStage：单件检视临时挂载设备，退出后重新挂回 Equipment，恢复玩家确认的位置和角度。
 - `scenes/computer/ui/layout_gizmo.tscn`：已保存的选择框、平移与旋转手柄及其拾取区域；不动态生成家具模型。
 - `scripts/life/workstation_layout.gd`：草稿、确认布局、手柄输入、吸附、边缘约束和占地碰撞检查。
 - `scripts/life/workstation_layout_data.gd`：存档字段校验与凸多边形重叠判定。
@@ -31,11 +30,11 @@
 
 旧存档没有此字段时使用编辑器默认布置；读取只接受已知物品和有限数值，再按当前场景约束位置。不自动保存拖动草稿：取消、后台自动保存或在编辑中退出，都不会把未确认的草稿写入存档。装备切换保留设备位置；若更大型号导致占地不合适，可在布置模式调整。
 
-正常运行会恢复玩家已保存的布置；`--fresh` 使用编辑器默认布置。总览、单件检视、屏幕操作不会重置已确认布局，商城、网页和运行中的应用继续共用原来的 GameSession。
+正常运行会恢复玩家已保存的布置；`--fresh` 使用编辑器默认布置。设备始终挂在 Equipment 下，总览与屏幕操作只切换镜头，不重置已确认布局。商城、网页和运行中的应用继续共用原来的 GameSession。
 
 ## 验证
 
-`tests/life/test_workstation_layout.gd` 覆盖真实输入拖动、轴向移动、旋转手柄、吸附开关、桌沿、重叠拦截、整套跟随、应用/取消、恢复默认、状态刷新、装备切换、检视往返、屏幕取景、保存读回和编辑中退出。
+`tests/life/test_workstation_layout.gd` 覆盖真实输入拖动、轴向移动、旋转手柄、吸附开关、桌沿、重叠拦截、整套跟随、应用/取消、恢复默认、状态刷新、装备切换、屏幕往返与取景、保存读回和编辑中退出。
 
 ```bash
 godot --headless --path . --script res://tests/life/test_workstation_layout.gd -- --fresh

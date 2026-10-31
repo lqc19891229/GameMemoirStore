@@ -22,7 +22,7 @@ GameSession 持有唯一 `MemoirStoreState` 实例。平台通过 `session` 与 
 | 场景 | 脚本职责 |
 |---|---|
 | `main/game_root.tscn` | `game_root.gd`：注入共享会话、启动电脑桌面、连接游玩请求和屏幕通知 |
-| `computer/computer_desktop.tscn` | `computer_desktop.gd`：Node3D 根场景，主视口直接旋转 / 缩放、检视 / 屏幕状态、射线输入映射、任务栏和应用管理 |
+| `computer/computer_desktop.tscn` | `computer_desktop.gd`：Node3D 根场景，总览旋转 / 缩放、布置 / 屏幕状态、射线输入映射、任务栏和应用管理 |
 | `computer/ui/app_window.tscn` | `app_window.gd`：窗口标题栏、拖动、铺满、关闭和最小化信号，挂载应用内容 |
 | `apps/platform/store.tscn` | `client.gd`：平台路由与操作；`client_pages.gd` 绑定页面场景；`client_ui.gd` 提供图片资源工具 |
 | `apps/browser/browser.tscn` | `browser.gd`：购物、库存与安装界面，交易交给会话执行 |
@@ -45,13 +45,13 @@ ComputerDesktop 是原生 Node3D 场景，Workstation3D 直接渲染到主视口
 
 ## 玩家工作台布局
 
-ComputerDesktop 的布置模式与屏幕操作互斥。TableGroup 承载桌子和设备，单独调整设备时保存桌面相对坐标；InspectionStage 临时展示检视中的设备，退出恢复最后确认布局。草稿只在内存中变化，只有有效布置被应用后，才写入 life.workstation_layout 并更新检视恢复位置。取消或编辑中退出不覆盖确认布局。旧版本 3 存档缺少此字段时使用场景默认值，详见 docs/WORKSTATION_LAYOUT.md。
+ComputerDesktop 的布置模式与屏幕操作互斥。TableGroup 承载桌子和设备，设备始终挂在 Equipment 下，单独调整设备时保存桌面相对坐标。草稿只在内存中变化，只有有效布置被应用后，才写入 life.workstation_layout。取消或编辑中退出不覆盖确认布局。旧版本 3 存档缺少此字段时使用场景默认值，详见 docs/WORKSTATION_LAYOUT.md。
 
 ## 活动与窗口寿命
 
 GameSession 的 1 秒 Timer 统一推进 1 分钟模拟活动，并处理下载。`life.active` 同时只允许一项主要活动：play 或 guide。直播是 play 的附加状态；制作攻略与游玩互斥。
 
-工作台总览、单品检视与屏幕操作之间只改变相机和展示状态，不销毁桌面视口。最小化、返回设备展示、关闭平台不会停止活动。关闭游戏窗口或点击结束游玩才调用 `stop_play()`，结束直播并只记录一次会话。重复关闭不重复增加游玩时间。进度在每分钟累计，结束时不会额外增加旧版的 45 分钟。
+工作台总览与屏幕操作之间只改变相机和 HUD 状态，不销毁桌面视口。最小化、返回工作台、关闭平台不会停止活动。关闭游戏窗口或点击结束游玩才调用 `stop_play()`，结束直播并只记录一次会话。重复关闭不重复增加游玩时间。进度在每分钟累计，结束时不会额外增加旧版的 45 分钟。
 
 活动随版本 3 存档保存。重新进入后，时钟继续推进；“继续游玩”打开运行窗口，显示已有进度。离线时间不结算。发行年月仍沿用商店的手动月份进度和每月 60 点预算补充。
 

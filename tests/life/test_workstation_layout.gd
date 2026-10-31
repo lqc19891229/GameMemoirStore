@@ -151,15 +151,13 @@ func run() -> void:
 	desktop.finish_layout(false)
 	check(same_poses(expected,layout.snapshot()), "cancel after apply restores committed layout rather than factory defaults")
 	check(desktop.windows.browser == app_window and browser.tab == "inventory", "editing preserves application instances")
-	for role: String in world.devices:
-		desktop.select_device(role,false)
-		check(world.devices[role].get_parent() == world.get_node("%InspectionStage"), "inspection stage is independent of moved table: "+role)
-		desktop.set_screen_focused(false,false)
-		check(same_poses(expected,layout.snapshot()), "inspection restores committed player arrangement: "+role)
 	desktop.set_screen_focused(true,false)
 	var uv: Variant = world.screen_uv(root.get_visible_rect().size/2)
 	check(uv != null and uv.distance_to(Vector2(.5,.5))<.002, "moved and rotated monitor still frames correctly")
 	desktop.set_screen_focused(false,false)
+	check(same_poses(expected,layout.snapshot()), "screen round trip preserves committed player arrangement")
+	for role: String in world.devices:
+		check(world.devices[role].get_parent() == world.get_node("%Equipment"), "equipment stays on the table: "+role)
 	state.wallet = 1000
 	state.persistence_enabled = false
 	game.session.buy_item("precise_mouse")
