@@ -41,23 +41,72 @@ def read_glb(path: Path) -> dict:
     raise ValueError(f"{path}: JSON chunk not found")
 
 
+def multiply(a: list[list[float]], b: list[list[float]]) -> list[list[float]]:
+    return [[sum(a[r][k] * b[k][c] for k in range(4)) for c in range(4)] for r in range(4)]
+
+
+def local_matrix(node: dict) -> list[list[float]]:
+    if "matrix" in node:
+        values = node["matrix"]
+        return [[values[c * 4 + r] for c in range(4)] for r in range(4)]
+    tx, ty, tz = node.get("translation", [0, 0, 0])
+    sx, sy, sz = node.get("scale", [1, 1, 1])
+    x, y, z, w = node.get("rotation", [0, 0, 0, 1])
+    rotation = [
+        [1 - 2 * (y*y + z*z), 2 * (x*y - z*w), 2 * (x*z + y*w)],
+        [2 * (x*y + z*w), 1 - 2 * (x*x + z*z), 2 * (y*z - x*w)],
+        [2 * (x*z - y*w), 2 * (y*z + x*w), 1 - 2 * (x*x + y*y)],
+    ]
+    result = [[0.0] * 4 for _ in range(4)]
+    for row in range(3):
+        result[row][0] = rotation[row][0] * sx
+        result[row][1] = rotation[row][1] * sy
+        result[row][2] = rotation[row][2] * sz
+    result[0][3], result[1][3], result[2][3] = tx, ty, tz
+    result[3][3] = 1.0
+    return result
+
+
 def bounds(doc: dict) -> tuple[list[float], list[float]]:
-    mins, maxs = [], []
-    for mesh in doc.get("meshes", []):
-        for primitive in mesh.get("primitives", []):
-            accessor_index = primitive.get("attributes", {}).get("POSITION")
-            if accessor_index is None:
-                continue
-            accessor = doc["accessors"][accessor_index]
-            if "min" in accessor and "max" in accessor:
-                mins.append(accessor["min"])
-                maxs.append(accessor["max"])
-    if not mins:
+    minima = [float("inf")] * 3
+    maxima = [float("-inf")] * 3
+    accessors = doc.get("accessors", [])
+    nodes = doc.get("nodes", [])
+
+    def visit(index: int, parent: list[list[float]]) -> None:
+        node = nodes[index]
+        world = multiply(parent, local_matrix(node))
+        mesh_index = node.get("mesh")
+        if mesh_index is not None:
+            for primitive in doc["meshes"][mesh_index].get("primitives", []):
+                position_index = primitive.get("attributes", {}).get("POSITION")
+                if position_index is None:
+                    continue
+                accessor = accessors[position_index]
+                if "min" not in accessor or "max" not in accessor:
+                    continue
+                for x in [accessor["min"][0], accessor["max"][0]]:
+                    for y in [accessor["min"][1], accessor["max"][1]]:
+                        for z in [accessor["min"][2], accessor["max"][2]]:
+                            point = [x, y, z, 1.0]
+                            transformed = [
+                                sum(world[row][col] * point[col] for col in range(4))
+                                for row in range(3)
+                            ]
+                            for axis in range(3):
+                                minima[axis] = min(minima[axis], transformed[axis])
+                                maxima[axis] = max(maxima[axis], transformed[axis])
+        for child in node.get("children", []):
+            visit(child, world)
+
+    scene_index = doc.get("scene", 0)
+    roots = doc.get("scenes", [{}])[scene_index].get("nodes", [])
+    identity = [[1.0 if row == col else 0.0 for col in range(4)] for row in range(4)]
+    for root in roots:
+        visit(root, identity)
+    if any(value == float("inf") for value in minima):
         raise ValueError("GLB has no POSITION bounds")
-    return (
-        [min(row[i] for row in mins) for i in range(3)],
-        [max(row[i] for row in maxs) for i in range(3)],
-    )
+    return minima, maxima
 
 
 class ShowcaseModelTests(unittest.TestCase):
