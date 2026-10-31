@@ -37,7 +37,7 @@
 | 布置与灯光文档 | 补充 RGB 七色、亮度、灯效、辅助灯、旧存档默认值和灯光测试说明 |
 | 项目审计统计 | 同步当前文件、目录、场景、模型、测试脚本和 README 数量 |
 | CI 权限 | 验证任务只保留 contents: read，关闭 checkout 凭据持久化，不再从 PR 自动向分支推送提交 |
-| 模型验证 | Blender / Pillow 重建和 GLB 检查覆盖 push、Pull Request 与手动触发；检查生成的 GLB 与已提交资产一致 |
+| 模型验证 | Blender / Pillow 重建和 GLB 检查覆盖 push、Pull Request 与手动触发；比较生成 GLB 与已提交资产；有差异时警告并上传模型构建产物 |
 
 本轮不修改玩家存档结构，不删除运行时场景、模型、脚本、存档兼容代码或测试素材。CTA3 图片的来源和授权仍需素材提供者确认，不能由代码审计推断。
 
@@ -105,7 +105,7 @@ Godot Headless：
 
 `test_client_windows.gd` 需要图形环境；Linux CI 使用 Xvfb 执行。所有 Godot 回归使用 `--fresh`，避免正常玩家存档被测试读写。
 
-GitHub Actions 在 push、Pull Request 和 workflow_dispatch 时执行模型重建、全部 GLB 结构检查、生成文件同步检查、Python 测试、Godot 资源导入、静态审计、Headless 回归和 Xvfb 图形测试。工作流只需要读取仓库，不会自动向分支提交生成文件。
+GitHub Actions 在 push、Pull Request 和 workflow_dispatch 时执行模型重建、全部 GLB 结构检查、生成文件差异提示与 artifact 上传、Python 测试、Godot 资源导入、静态审计、Headless 回归和 Xvfb 图形测试。Godot 回归前会恢复已提交的模型文件，确保运行测试针对仓库实际资源。工作流只需要读取仓库，不会自动向分支提交生成文件。
 
 ## 后续注意事项
 
