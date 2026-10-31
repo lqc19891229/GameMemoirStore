@@ -4,6 +4,6 @@
 [resource]
 script = ExtResource("1")
 model = ExtResource("2")
-bounds = Vector3(1.58, 1.365, 0.65)
+bounds = Vector3(1.58, 1.365, 0.71)
 screen_size = Vector2(1.28, 0.8)
 screen_position = Vector3(0, 0.84, 0.35)
