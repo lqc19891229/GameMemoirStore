@@ -1,137 +1,143 @@
 # 游戏回忆录 · 像素 3D 房间 v0.5
 
-Godot 4.6 像素 3D 房间布置与游戏收藏经营原型。游戏直接进入可布置的房间，点击显示器放大后，在屏幕内通过游戏平台购买和游玩作品，直播、制作攻略赚取游戏内点数，再通过购物网页购买并安装设备。
+Godot 4.6 像素 3D 房间布置与游戏收藏经营原型。玩家从自己的房间开始，通过电脑中的游戏平台购买、安装和游玩作品，也可以直播、制作攻略赚取游戏内点数，再通过购物网页升级电脑设备。
 
 ## 打开与运行
 
-1. 使用 Godot 4.6 导入根目录 `project.godot`。
-2. 等待首次导入完成，按 **F5** 进入像素 3D 房间。主场景为 `scenes/main/game_root.tscn`。
-3. 在房间总览直接左键 / 右键拖动旋转、滚轮缩放，点击“重置视角”恢复默认镜头。
-4. 点击显示器屏幕或“使用电脑”，镜头移动到屏幕前，再点击“游戏平台”或“购物与物品”；Esc /“返回房间”返回总览。
+1. 使用 Godot 4.6 导入仓库根目录的 project.godot。
+2. 等待首次资源导入完成，按 F5 运行。主场景为 scenes/main/game_root.tscn。
+3. 房间总览支持左键或右键拖动环绕、滚轮缩放，以及“重置视角”。
+4. 点击显示器屏幕或“使用电脑”，进入电脑界面；Esc 或“返回房间”回到 3D 总览。
 
-使用 GDScript 与 Compatibility 渲染器，无需 .NET 或插件。单独运行 `scenes/apps/platform/store.tscn` 可预览客户端；完整生活系统请从主场景运行。
+项目使用 GDScript 和 Compatibility 渲染器，不需要 .NET。完整生活系统应从主场景运行；单独运行 scenes/apps/platform/store.tscn 可预览游戏平台客户端。
 
-## 首次体验
+## 核心玩法
 
-- 在游戏平台中购买 CounterSquad，然后到“库”安装，约 5 秒后可以启动。
-- 游玩窗口循环播放四张独立展示图，自动积累游玩时间、玩家能力和成就挑战进度。
-- 点击“开始直播”，每 5 分钟模拟游玩结算收入；最小化窗口后仍继续运行。
-- 打开购物网页，购买显示器、外设、主机或麦克风；在“我的物品”点击“安装”。
-- 游玩满 10 分钟后，结束游戏，到平台“创作”页制作攻略。20 分钟模拟时间后获得稿费，之后还有有限的阅读收益。
-- 获得的成就保留在游戏和平台记录中。
-
-初始钱包 160 点。桌面、平台、网页共用同一个钱包和存档。
+- 在游戏平台购买作品，在“库”中安装后启动。
+- 游玩会累计时间、六项玩家能力、挑战进度和成就。
+- 直播每 5 分钟模拟时间结算一次收入；最小化窗口或返回房间不会中断活动。
+- 游玩满 10 分钟后可以制作攻略；制作耗时 20 分钟，发布后获得稿费和有限的阅读收益。
+- 购物网页提供显示器、主机、键鼠和麦克风；购买后在物品栏安装。
+- 初始钱包为 160 点。桌面、游戏平台和购物网页共用同一个 GameSession 与玩家存档。
 
 ## 时间、窗口与活动
 
-默认 **1 秒现实时间 = 1 分钟模拟活动时间**。`GameSession` 独立于窗口运行，统一推进下载、游玩、直播、攻略制作和阅读收益。发行月份沿用原型的手动“下个月”按钮，时间范围为 2003 年 9 月至 2004 年 2 月。
+默认 1 秒现实时间等于 1 分钟模拟活动时间。GameSession 独立于窗口运行，统一推进下载、游玩、直播、攻略制作和阅读收益。发行月份使用原型的手动“下个月”按钮，当前时间范围为 2003 年 9 月至 2004 年 2 月。
 
 | 操作 | 行为 |
 |---|---|
-| 点击显示器 / 使用电脑 | 3D 镜头平滑移动到屏幕前，系统以 1280 × 800 渲染 |
-| Esc / 返回房间 | 返回设备展示，应用实例和活动继续；弹窗优先处理 Esc |
-| 最小化应用 | 隐藏窗口，从任务栏再次打开 |
-| 关闭游戏平台 | 游戏与直播继续；重新打开仍保留所有权和进度 |
-| 关闭游戏窗口 / 结束游玩 | 结束当前游玩和直播，只结算一次游玩记录 |
-| 制作攻略 | 占用主要活动，期间不能另开一局游戏；可以购物或查看平台 |
-| 退出程序 | 保存当前活动与进度；下次进入后继续。离线时间不计收益 |
+| 点击显示器 / 使用电脑 | 镜头移动到屏幕前，桌面以 1280 × 800 渲染 |
+| Esc / 返回房间 | 回到设备展示；应用实例和活动继续 |
+| 最小化应用 | 隐藏窗口，可从任务栏恢复 |
+| 关闭游戏平台 | 游戏和直播继续；重新打开保留所有权与进度 |
+| 关闭游戏窗口 / 结束游玩 | 结束本次游玩和直播，只记录一次游玩记录 |
+| 制作攻略 | 与游玩互斥；期间仍可购物或查看平台 |
+| 退出程序 | 保存活动和进度；下次进入继续，离线时间不结算收益 |
 
-应用窗口标题栏支持拖动、最小化、恢复铺满和关闭。桌面“继续游玩”可打开存档中正在运行的游戏。
+## 像素 3D 房间与布置
 
-## 布置像素房间
+房间固定为 8 × 6 米的两面墙空间，默认斜俯视镜头。观察到墙外侧时，对应墙体、窗和装饰会自动隐藏。房间使用完整 GLB 模型、最近邻纹理和 400 像素高的画面采样；HUD 与显示器内的操作界面保持清晰。
 
-固定 8 × 6 米的两面墙房间，默认斜俯视镜头，可拖动环绕、滚轮缩放。背面观察时自动隐藏挡住视线的墙；墙、窗和装饰一起隐藏。房间使用完整 GLB 模型、最近邻木纹和 400 像素高的画面采样；HUD 与屏幕操作保持清晰。
+点击顶栏“布置房间”进入编辑模式，可选择桌子、显示器、机箱、键盘、鼠标、椅子、书架、落地灯、地毯和绿植。拖动物品或手柄移动，R 旋转，Q / E 每步旋转 15°，默认吸附为 5 cm / 15°。桌子移动时设备一起跟随；设备始终留在桌面，家具留在房间地面。
 
-顶栏点击“布置房间”，可选择桌子、显示器、机箱、键鼠、椅子、书架、落地灯、地毯和绿植。拖动物品或手柄移动，R 旋转，Q / E 调整 15°，默认吸附 5 cm / 15°。桌子带着设备一起移动；设备留在桌面上，家具留在房间内。扫掠碰撞限制拖动和旋转，地毯可铺在家具下方。
+移动使用扫掠占地检测，旋转检查中间路径，避免快速拖动或转动穿过其他物件。地毯允许铺在家具下方。椅子、书架、灯、地毯和绿植可复制，每类最多 8 个副本；Ctrl + D 复制，Delete 删除选中的副本，初始家具不能删除。Ctrl + Z 撤销，Ctrl + Shift + Z / Ctrl + Y 重做。
 
-椅子、书架、灯、地毯和绿植可复制，每类最多 8 个副本。Ctrl + D 复制并寻找附近空位，Delete 删除选中副本；初始家具保留。Ctrl + Z 撤销，Ctrl + Shift + Z / Ctrl + Y 重做。左侧可切换三套墙面、地板和灯光预设。
+墙面、地板和灯光各有三套预设。“应用布置”保存家具、设备、副本和房间外观；取消 / Esc 丢弃未确认的草稿。“恢复默认布置”只修改草稿，仍需应用才会保存。屏幕操作、更换设备型号和后台自动保存不会覆盖未确认的草稿。详细规则见 docs/WORKSTATION_LAYOUT.md。
 
-“应用布置”保存家具、设备、复制物件和房间外观；取消 / Esc 丢弃整个草稿。“恢复默认布置”先改变草稿，应用后才保存。屏幕操作、更换型号、后台自动保存不会覆盖未确认的草稿。旧存档继续兼容。详细结构与规则见 [房间与工作台布置说明](docs/WORKSTATION_LAYOUT.md)。
+## 玩家能力与收入
 
-## 玩家成长与收入
+当前代码实现六项能力：反应、操作、思考、探索、规划、协作。游戏类型决定能力权重，多人 / 合作标签会提高协作占比。游玩逐步提升相关能力；能力和已安装主机、外设共同影响挑战进度倍率。
 
-六项能力为反应、操作、思考、探索、规划、协作。游戏类型决定初版能力权重，多人 / 合作标签增加协作占比。游玩会逐步提高相关能力；能力和已安装主机、外设共同影响挑战进度倍率。
+每款游戏使用三个通用里程碑：10、60、180 点挑战进度。直播每 5 分钟基础获得 2 点，安装麦克风或进阶主机后增加收入。每款游戏可制作一篇攻略；已解锁成就影响稿费，发布后每 10 分钟获得 1 点阅读收益，最多 60 次。
 
-当前每款游戏使用三个通用里程碑模板：10、60、180 点挑战进度。直播每 5 分钟基础获得 2 点，安装麦克风或进阶主机后增加收入。每款游戏可制作一篇攻略，已解锁成就影响稿费；发布后每 10 分钟获得 1 点阅读收益，最多 60 次。
+显示器、机箱、键盘和鼠标是四个独立 3D 设备模型。安装设备会切换对应外观；精准键鼠套装同时更换键盘和鼠标。CPU / GPU 型号目前作为商品展示文本，不作为游戏启动门槛。
 
-显示器、机箱、键盘、鼠标是四个独立 3D 模型。总览中左键 / 右键拖动可水平环绕和调整俯仰，滚轮直接缩放。单击机箱、键盘或鼠标保持总览，点击显示器屏幕进入电脑操作；返回总览保留原有视角。在“调整布置”中可选中并移动、旋转设备。安装设备会切换对应模型，精准键鼠套装同时更换键盘与鼠标。
+## 模型、美术与编辑入口
 
-打开 `scenes/computer/computer_desktop.tscn` 即进入 Godot 3D 编辑器，可在 Workstation3D 下直接调整设备位置、旋转、大小、灯光和相机。界面按钮位于 HUD/Interface 的 CanvasLayer 中，显示器内系统仍为 2D 纹理。设备源文件为 `tools/models/hardware.blend`，房间素材由 `tools/models/build_room.py` 离线导出，游戏加载已导出的 GLB，不依赖本地 Blender，也不在运行时建模。
+- 电脑设备模型：assets/models/hardware/，共 9 个 GLB。
+- 房间外壳与家具模型：assets/models/room/，共 6 个 GLB。
+- 电脑模型源文件与重建脚本：tools/models/hardware.blend、build_hardware.py。
+- 房间模型生成脚本：tools/models/build_room.py，使用 Python 3 和 Pillow 离线生成。
+- 3D 工作台编辑入口：scenes/computer/computer_desktop.tscn，展开 Workstation3D。
+- 房间家具场景：scenes/room/；房间表现逻辑：scripts/room/。
+- 设备目录与碰撞尺寸：data/hardware/。
 
-商品与数值定义在 `scripts/life/life_data.gd`。网页继续销售显示器、主机、外设和麦克风；本阶段房间家具直接提供布置与复制功能，尚未接入家具购买目录。旧版家具物品保留在库存和存档中。硬件暂提供效率加成，尚未根据 Excel 的 CPU/GPU 型号设置运行门槛；每款游戏独立的成就条件、直播热度可后续扩展。
-
-## 模型与预览
-
-设备模型位于 `assets/models/hardware/`，包含两款显示器、两款机箱、两套键鼠和木质桌面。源模型、重建脚本及操作说明见 [tools/models/README.md](tools/models/README.md)。
+游戏运行只加载已导出的 GLB，不需要 Blender，也不会在运行时生成模型几何。
 
 ![像素 3D 房间实际运行画面](docs/previews/pixel_room.png)
 
+![房间布置模式实际运行画面](docs/previews/pixel_room_layout.png)
+
 ## 游戏资料管理
 
-编辑并保存 `tools/catalog/game_catalog.xlsx`。Windows 双击根目录 **`import_games.bat`**，或在根目录运行：
+在 tools/catalog/game_catalog.xlsx 编辑游戏基础资料。Windows 可双击项目根目录 import_games.bat；也可在仓库根目录运行：
 
-```bash
-python tools/catalog/import_games.py --project .
-```
+    python tools/catalog/import_games.py --project .
 
-导入需要 Python 3.10 或以上版本，无第三方依赖。游戏运行不需要 Python。当前工作簿包含 CounterSquad 和 CTA3，未启用的资料仍作为草稿保留。
+导入需要 Python 3.10 或以上版本，无第三方依赖；游戏运行不需要 Python。当前工作簿启用 CounterSquad 和 CTA3，未启用的行保留为草稿。
 
-| 表格字段 | 填写方式 |
+| 字段 | 规则 |
 |---|---|
-| game_id | 稳定 ID，保留大小写，例如 `CounterSquad` |
-| genres | 用 `/` 分隔，例如 `射击/动作/多人` |
-| announce_ym / store_release_ym / delist_ym | YYYYMM 整数，分别控制预告、上架、下架 |
+| game_id | 稳定 ID，保留大小写，例如 CounterSquad |
+| genres | 用 / 分隔，例如 射击/动作/多人 |
+| announce_ym / store_release_ym / delist_ym | YYYYMM 整数，分别控制预告、上架和下架 |
 | CPU / GPU | 型号文本，显示在商品页 |
-| enabled | 1=导出，0/空白=草稿；“游戏原型”列只作备注 |
+| enabled | 1=导出；0 或空白=草稿 |
 
-素材目录自动由 game_id 推导为 `assets/art/<game_id>/`，表格不再填写 capsule。目录包含 `<game_id>.png` 封面和 `<game_id>01.png`～`04.png` 展示图。Python 生成 `data/games/<game_id>.tres`、`_catalog.tres`、目录说明和校验清单，不覆盖源脚本。详细规则见 [导入说明](tools/catalog/README.md)。
+素材目录由 game_id 自动推导为 assets/art/<game_id>/，包含 <game_id>.png 封面和 <game_id>01.png 至 <game_id>04.png 四张展示图。导入器生成 data/games/<game_id>.tres、_catalog.tres、README 和校验清单，不生成或覆盖源脚本。详细规则见 tools/catalog/README.md。
 
-`data/catalog.json` 仍用于按相同 ID 补充英文名、标签、评价、安装大小和演示折扣。新增游戏没有补充资料时使用默认值。已发布游戏应保留 ID，以 `delist_ym` 下架；`enabled=0` 或空白会移出生成目录。
+data/catalog.json 按相同 ID 补充英文名、标签、评价、安装大小、版本说明和演示折扣。新增游戏没有补充资料时使用默认值。已发布游戏应保留 ID 并通过 delist_ym 下架；enabled=0 或空白会从生成目录移除。
 
-```bash
-python tools/catalog/import_games.py --project . --check
-```
+检查表格与生成结果：
 
-## 场景与职责
+    python tools/catalog/import_games.py --project . --validate-only
+    python tools/catalog/import_games.py --project . --check
+
+## 目录职责
 
 | 位置 | 用途 |
 |---|---|
-| `scenes/main/game_root.tscn` | 主入口，组合共享会话和 3D 工作台控制界面 |
-| `scenes/computer/` | 房间工作台宿主、hardware 设备、ui 系统桌面与应用窗口壳 |
-| `scenes/room/` | 房间外壳、椅子、书架、灯、地毯、绿植独立场景 |
-| `scenes/apps/browser/`、`scenes/apps/game/` | 购物网页、库存组件，以及游玩和直播界面 |
-| `scenes/shared/` | 多个应用共用的按钮组件 |
-| `scenes/apps/platform/` | store.tscn 客户端、pages 页面、components 列表、dialogs 弹窗 |
-| `scripts/life/` | 生活系统、统一时钟、设备、创作收入和成就逻辑 |
-| `scripts/client*.gd` | 平台导航、页面与通用界面控件 |
-| `scripts/store_state.gd` | 唯一玩家状态、游戏目录、交易和存档 |
-| `scripts/game.gd` | 单款游戏 Resource 定义 |
-| `data/games/` | Excel 导入生成的正式游戏目录 |
-| `tests/fixtures/` | 固定测试样本，不加入正式商店 |
+| scenes/main/ | 主入口，组合共享会话和电脑工作台 |
+| scenes/computer/ | 电脑工作台、四类设备、系统桌面、窗口壳与布置手柄 |
+| scenes/room/ | 房间外壳及椅子、书架、灯、地毯、绿植场景 |
+| scenes/apps/ | 平台、购物网页和游玩界面 |
+| scenes/shared/ | 跨应用共用组件 |
+| scripts/life/ | GameSession、桌面、窗口、活动、设备与布置逻辑 |
+| scripts/room/ | 房间外观、灯光和家具拾取逻辑 |
+| scripts/ | 平台导航、页面、游戏数据与玩家状态 |
+| data/games/ | Excel 导入生成的正式游戏目录 |
+| data/hardware/ | 设备模型映射、尺寸和屏幕校准 |
+| tests/fixtures/ | 固定测试样本，不加入正式商店 |
+| tools/ | Excel 导入器、资源审计和模型制作工具 |
+| docs/ | 场景结构、布置规则、检查报告与运行截图 |
 
-运行时可在 Godot 的 Remote 场景树查看窗口和页面节点。各文件夹有简短 `README.txt`；详细运行机制见 [客户端与场景结构](CLIENT_STRUCTURE.md)。
+## 存档与兼容
 
-## 存档与验证
+玩家存档位于 user://memoir_store_v01.json，当前格式版本为 3，兼容读取版本 1、2。旧版钱包、购买、愿望单、安装和游玩记录继续保留；历史家具、展示和布置字段继续参与存档校验，不会因为房间功能调整而丢失。没有生活数据的旧存档会获得默认生活资料。
 
-继续使用 `user://memoir_store_v01.json`，保存格式升级为版本 3，兼容读取版本 1、2。旧版钱包、购买、愿望单、安装与游玩记录保留；没有生活数据的旧存档会获得初始家具和设备。
+## 验证
 
-```bash
-python tools/project_audit.py
-python -m unittest discover -s tests -p "test_catalog_importer.py" -q
-godot --headless --path . --editor --import
-godot --headless --path . --script res://tests/test_catalog_resources.gd -- --fresh
-godot --headless --path . --script res://tests/test_catalog_integration.gd -- --fresh
-godot --headless --path . --script res://tests/test_client.gd -- --fresh
-godot --headless --path . --script res://tests/test_store.gd -- --fresh
-godot --headless --path . --script res://tests/life/test_life_flow.gd -- --fresh
-godot --headless --path . --script res://tests/test_editor_scenes.gd -- --fresh
-godot --headless --path . --script res://tests/life/test_workstation_view.gd -- --fresh
-godot --headless --path . --script res://tests/life/test_workstation_layout.gd -- --fresh
-godot --headless --path . --script res://tests/life/test_audit_regressions.gd -- --fresh
-# 以下检查需要图形环境：
-godot --path . --script res://tests/test_client_windows.gd -- --fresh
-```
+建议在提交前按顺序运行：
 
-`--fresh` 禁用正常存档读写；存档测试使用独立临时文件。购物与创作内容属于游戏世界，不连接现实直播、购物或游戏平台账号。素材与字体说明见 `ASSET_CREDITS.md`。
+    python tools/project_audit.py
+    python tools/catalog/import_games.py --project . --check
+    python -m unittest discover -s tests -p "test_catalog_importer.py" -v
+    godot --headless --path . --editor --import
 
-最近一次目录与运行检查见 [项目检查报告](docs/PROJECT_AUDIT.md)。
+Godot Headless 回归：
+
+    godot --headless --path . --script res://tests/test_catalog_resources.gd -- --fresh
+    godot --headless --path . --script res://tests/test_catalog_integration.gd -- --fresh
+    godot --headless --path . --script res://tests/test_client.gd -- --fresh
+    godot --headless --path . --script res://tests/test_store.gd -- --fresh
+    godot --headless --path . --script res://tests/test_editor_scenes.gd -- --fresh
+    godot --headless --path . --script res://tests/life/test_life_flow.gd -- --fresh
+    godot --headless --path . --script res://tests/life/test_workstation_view.gd -- --fresh
+    godot --headless --path . --script res://tests/life/test_workstation_layout.gd -- --fresh
+    godot --headless --path . --script res://tests/life/test_workstation_collision.gd -- --fresh
+    godot --headless --path . --script res://tests/life/test_pixel_room.gd -- --fresh
+    godot --headless --path . --script res://tests/life/test_audit_regressions.gd -- --fresh
+
+test_client_windows.gd 需要图形环境；Linux CI 使用 Xvfb 执行。--fresh 禁用正常玩家存档读写，测试使用独立数据。GitHub Actions 会在 push、Pull Request 和手动触发时执行项目检查。
+
+素材来源与授权见 ASSET_CREDITS.md；编辑入口见 EDITOR_WORKFLOW.md；完整结构见 CLIENT_STRUCTURE.md；当前维护审计见 docs/PROJECT_AUDIT.md。
