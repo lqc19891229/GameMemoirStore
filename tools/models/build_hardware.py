@@ -340,7 +340,7 @@ def mouse(upgrade=False):
 
 
 def desk():
-    # 4.8 x 2.3 m tabletop and original 0.78 m working height are unchanged.
+    # Original 4.8 x 2.3 m placement bounds and 0.78 m working height are unchanged; the visible top is slightly inset so its rounded edge stays inside those bounds.
     box("Rounded oak desktop", (0, .73, 0), (4.8, .10, 2.26), oak, .035)
     box("Front edge inlay", (0, .704, 1.12), (4.70, .035, .018), gold, .006)
     box("Rear cable channel", (0, .60, -.92), (4.25, .16, .12), dark, .012)
