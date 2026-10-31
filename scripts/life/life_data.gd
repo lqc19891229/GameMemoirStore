@@ -5,6 +5,8 @@ const ATTRIBUTES := ["反应", "操作", "思考", "探索", "规划", "协作"]
 # Legacy room items remain defined for lossless version-3 save loading.
 const ROOM_ONLY_SLOTS := ["desk", "cabinet", "decor"]
 const ITEMS := {
+	"starter_monitor": {"name": "旧日 CRT 显示器", "slot": "monitor", "price": 0, "description": "厚实的米色边框，熟悉的游戏时光。"},
+	"lcd_monitor": {"name": "轻薄液晶显示器", "slot": "monitor", "price": 75, "description": "更轻薄的银灰色显示器，独立更换外观与屏幕区域。"},
 	"starter_pc": {"name": "旧日主机", "slot": "computer", "price": 0, "speed": 1.0, "description": "陪你开始收藏的第一台电脑。"},
 	"starter_mouse": {"name": "有线键鼠", "slot": "peripheral", "price": 0, "speed": 1.0, "description": "可靠的入门外设。"},
 	"starter_desk": {"name": "旧木书桌", "slot": "desk", "price": 0, "description": "留下过许多游戏时光。"},
@@ -23,8 +25,8 @@ const MILESTONES := [
 ]
 
 static func defaults() -> Dictionary:
-	return {"items": ["starter_pc", "starter_mouse", "starter_desk", "starter_cabinet"],
-		"equipped": {"computer": "starter_pc", "peripheral": "starter_mouse", "desk": "starter_desk", "cabinet": "starter_cabinet", "audio": "", "decor": ""},
+	return {"items": ["starter_pc", "starter_monitor", "starter_mouse", "starter_desk", "starter_cabinet"],
+		"equipped": {"computer": "starter_pc", "monitor": "starter_monitor", "peripheral": "starter_mouse", "desk": "starter_desk", "cabinet": "starter_cabinet", "audio": "", "decor": ""},
 		"attributes": {"反应": 10.0, "操作": 10.0, "思考": 10.0, "探索": 10.0, "规划": 10.0, "协作": 10.0},
 		"progress": {}, "achievements": {}, "displayed": [], "guides": {}, "active": {},
 		"elapsed": 0, "stream_income": 0, "guide_income": 0, "followers": 0, "room_layout": 0}

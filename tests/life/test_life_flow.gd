@@ -59,6 +59,7 @@ func run() -> void:
 	playing.find_child("PlayStream", true, false).pressed.emit()
 	check(session.active().get("streaming", false), "game view can start a livestream")
 	game.desktop.minimize_app("game")
+	game.desktop.set_screen_focused(false, false)
 	var before: int = state.wallet
 	session.tick(10)
 	await frames()
@@ -156,7 +157,12 @@ func run() -> void:
 	var migrated = State.new()
 	migrated.save_path = state.save_path
 	migrated.load_state()
-	check(migrated.wallet == 81 and migrated.owned.has(id) and migrated.installed.has(id) and migrated.life["equipped"]["computer"] == "starter_pc", "version-2 saves gain starter equipment without losing purchases")
+	check(migrated.wallet == 81 and migrated.owned.has(id) and migrated.installed.has(id) and migrated.life["equipped"]["computer"] == "starter_pc" and migrated.life["equipped"]["monitor"] == "starter_monitor", "version-2 saves gain starter equipment and monitor without losing purchases")
+	var old_life: Dictionary = state.life.duplicate(true)
+	old_life["items"].erase("starter_monitor")
+	old_life["equipped"].erase("monitor")
+	var migrated_life := Data.clean(old_life, state.owned, state.installed)
+	check(migrated_life["items"].has("starter_monitor") and migrated_life["equipped"]["monitor"] == "starter_monitor" and migrated_life["equipped"]["peripheral"] == "precise_mouse", "older version-3 life saves gain a monitor and retain upgraded peripherals")
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(state.save_path))
 	state.persistence_enabled = false
 	session.stop_play()

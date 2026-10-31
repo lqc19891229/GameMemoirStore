@@ -1,0 +1,7 @@
+[gd_resource type="Resource" script_class="MemoirDeviceVisual" load_steps=3 format=3]
+[ext_resource type="Script" path="res://scripts/life/device_visual.gd" id="1"]
+[ext_resource type="Texture2D" path="res://assets/art/life/hardware/monitor_lcd.png" id="2"]
+[resource]
+script = ExtResource("1")
+texture = ExtResource("2")
+screen_rect = Rect2(0.11602209944751381, 0.1270718232044199, 0.7693370165745856, 0.5543278084714549)

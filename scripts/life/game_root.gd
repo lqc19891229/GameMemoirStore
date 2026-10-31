@@ -21,6 +21,7 @@ func _capture() -> void:
 		if arg.begins_with("--life-view="): view = arg.trim_prefix("--life-view=")
 	if output.is_empty(): return
 	session.timer.stop()
+	if view != "desktop": desktop.set_screen_focused(true, false)
 	if view in ["platform", "browser"]: desktop.open_app(view)
 	if view in ["game", "creation"] and not session.state.catalog.is_empty():
 		var id: String = session.state.catalog[0]["id"]
