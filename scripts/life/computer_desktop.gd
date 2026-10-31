@@ -37,11 +37,18 @@ func _ready() -> void:
 	%RedoLayout.pressed.connect(world.layout.redo)
 	%CopyFurniture.pressed.connect(world.layout.duplicate_selected)
 	%DeleteFurniture.pressed.connect(world.layout.delete_selected)
-	var styles := {"wall":["墙面 · 鼠尾草","墙面 · 奶油米","墙面 · 雾蓝"], "floor":["地板 · 原木","地板 · 浅灰木","地板 · 深胡桃"], "light":["灯光 · 午后暖阳","灯光 · 清晨冷光","灯光 · 夜间暖灯"]}
+	var styles := {
+		"wall":["墙面 · 鼠尾草","墙面 · 奶油米","墙面 · 雾蓝"],
+		"floor":["地板 · 原木","地板 · 浅灰木","地板 · 深胡桃"],
+		"light":["灯光 · 午后暖阳","灯光 · 清晨冷光","灯光 · 夜间暖灯"],
+		"rgb":["冰青","深蓝","紫罗兰","洋红","琥珀","薄荷","玫瑰"],
+		"effect":["常亮","呼吸","彩虹循环"]
+	}
 	for key: String in styles:
 		var selector: OptionButton = get_node("%Style_" + key)
 		for label: String in styles[key]: selector.add_item(label)
 		selector.item_selected.connect(func(index: int) -> void: world.layout.set_style(key, index))
+	%Style_brightness.value_changed.connect(func(value: float) -> void: world.layout.set_style("brightness", roundi(value)))
 	%MoveTool.pressed.connect(func() -> void: world.layout.set_tool("move"))
 	%RotateTool.pressed.connect(func() -> void: world.layout.set_tool("rotate"))
 	%SnapLayout.toggled.connect(func(enabled: bool) -> void: world.layout.snapping = enabled)
@@ -117,8 +124,10 @@ func _sync_layout() -> void:
 	%DeleteFurniture.disabled = not layout.Data.is_copy(layout.selected)
 	%UndoLayout.disabled = layout.undo_stack.is_empty()
 	%RedoLayout.disabled = layout.redo_stack.is_empty()
-	for key: String in world.get_node("Room").style:
-		(get_node("%Style_" + key) as OptionButton).select(world.get_node("Room").style[key])
+	var style: Dictionary = world.get_node("Room").style
+	for key: String in ["wall","floor","light","rgb","effect"]:
+		(get_node("%Style_" + key) as OptionButton).select(int(style.get(key, 0)))
+	(%Style_brightness as HSlider).set_value_no_signal(float(style.get("brightness", 70)))
 	for role: String in layout.NAMES: get_node("%Layout_" + role).set_pressed_no_signal(layout.selected == role)
 
 func set_screen_focused(value: bool, animate: bool = true) -> void:

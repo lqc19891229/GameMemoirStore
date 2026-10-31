@@ -164,13 +164,8 @@ def fan(name, center, radius, frame, glow, axis="z"):
     x, y, z = center
     torus(name + " illuminated ring", center, radius * .88, radius * .075, glow, axis)
     cylinder(name + " hub", center, radius * .20, .018, frame, axis, vertices=20)
-    if axis == "z":
-        for index in range(5):
-            angle = math.tau * index / 5
-            px = x + math.cos(angle) * radius * .48
-            py = y + math.sin(angle) * radius * .48
-            box(name + " blade", (px, py, z), (radius * .52, radius * .13, .012),
-                frame, .003, rotate_z=angle)
+    # Rotor blades are generated as independently rotating Godot nodes at runtime.
+    # Keeping the authored ring and hub here avoids baking static blades into the GLB.
 
 
 def case(upgrade=False):
