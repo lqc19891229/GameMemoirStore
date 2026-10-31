@@ -156,9 +156,9 @@ func _build_plant(model: Node3D) -> void:
 		var height: float = [0.70, 0.86, 0.92, 0.78, 0.96, 0.74, 0.84][index]
 		var radius := 0.12 + float(index % 3) * 0.065
 		var stem_center := Vector3(cos(angle) * radius * 0.45, 0.45 + height * 0.24, sin(angle) * radius * 0.45)
-		_cylinder(model, "Stem", 0.012, 0.016, height * 0.55, stem_center, stems, 10)
+		_cylinder(model, "Stem_%02d" % index, 0.012, 0.016, height * 0.55, stem_center, stems, 10)
 		var at := Vector3(cos(angle) * radius, 0.45 + height * 0.50, sin(angle) * radius)
 		var size := Vector3(0.18, height * 0.58, 0.09)
-		var leaf := _sphere(model, "Leaf", size, at, leaf_light if index % 3 == 0 else leaves)
+		var leaf := _sphere(model, "Leaf_%02d" % index, size, at, leaf_light if index % 3 == 0 else leaves)
 		leaf.rotation.z = -cos(angle) * 0.42
 		leaf.rotation.x = sin(angle) * 0.42
