@@ -23,8 +23,8 @@ func run() -> void:
 	game.session.timer.stop()
 	await frames()
 	var world: Node3D = game.desktop.world
-	var room: Node3D = world.get_node("Room")
-	var lighting: Node = world.get_node("Lighting")
+	var room = world.get_node("Room")
+	var lighting = world.get_node("Lighting")
 	check(lighting.rgb_surface_count >= 4, "RGB controller discovers emissive hardware and desk surfaces")
 	check(lighting.fan_rotor_count == 6, "six independent case fan rotors are generated")
 	check(world.get_node("%DeskGlow") is OmniLight3D, "desk underglow uses a real light")
@@ -35,7 +35,7 @@ func run() -> void:
 
 	var computer: Node3D = world.devices["computer"]
 	var upgrade: Node3D = computer.get_node("Models/UpgradeModel")
-	var first_rotor: Node3D = upgrade.get_node("FrontFanRotor")
+	var first_rotor: Node3D = upgrade.get_node("FrontFanRotor_0")
 	var before := first_rotor.transform
 	await frames(8)
 	check(not first_rotor.transform.is_equal_approx(before), "case fan blades rotate continuously")

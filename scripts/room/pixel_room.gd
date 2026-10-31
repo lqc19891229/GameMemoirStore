@@ -5,6 +5,7 @@ const WALLS := [Color("b6b99d"), Color("c9b899"), Color("829eaa")]
 const FLOORS := [Color.WHITE, Color("b4c4b5"), Color("aa8468")]
 const LIGHTS := [Color("ffe5bc"), Color("c4d8ed"), Color("ffb471")]
 const FILL_LIGHTS := [Color("c5d8d6"), Color("d7e6f0"), Color("a9a0a5")]
+signal style_changed(value: Dictionary)
 var style := {"wall":0,"floor":0,"light":0,"rgb":0,"brightness":70,"effect":0}
 
 static func clean_style(raw: Variant) -> Dictionary:
@@ -47,9 +48,7 @@ func apply_style(value: Variant) -> void:
 		fill.light_energy = [0.20,0.24,0.07][style.light]
 	for item: Node3D in $Furniture.get_children():
 		if item.has_node("LampGlow"): item.get_node("LampGlow").light_energy = [0.55,0.25,1.4][style.light]
-	var lighting := get_parent().get_node_or_null("Lighting")
-	if lighting != null and lighting.has_method("apply_style"):
-		lighting.apply_style(style)
+	style_changed.emit(style)
 
 func update_cutaway(camera: Camera3D) -> void:
 	# Looking from outside a wall hides that entire wall, window and trim together.

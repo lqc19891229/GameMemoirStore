@@ -96,8 +96,9 @@ func _build_fan_rotors() -> void:
 	var upgrade := computer.get_node_or_null("Models/UpgradeModel") as Node3D
 	if upgrade == null:
 		return
-	for y in [0.72, 0.50, 0.28]:
-		_add_rotor(upgrade, "FrontFanRotor", Vector3(0, y, 0.466), 0.073, false, 5.0)
+	for index in range(3):
+		var y: float = [0.72, 0.50, 0.28][index]
+		_add_rotor(upgrade, "FrontFanRotor_%d" % index, Vector3(0, y, 0.466), 0.073, false, 5.0)
 	_add_rotor(upgrade, "CpuFanRotor", Vector3(0.224, 0.68, -0.02), 0.062, true, 4.2)
 	for z in [-0.15, 0.08]:
 		_add_rotor(upgrade, "GpuFanRotor", Vector3(0.216, 0.31, z), 0.045, true, 4.8)

@@ -30,7 +30,7 @@ static func defaults() -> Dictionary:
 		"equipped": {"computer": "starter_pc", "monitor": "starter_monitor", "peripheral": "starter_mouse", "desk": "starter_desk", "cabinet": "starter_cabinet", "audio": "", "decor": ""},
 		"attributes": {"反应": 10.0, "操作": 10.0, "思考": 10.0, "探索": 10.0, "规划": 10.0, "协作": 10.0},
 		"progress": {}, "achievements": {}, "displayed": [], "guides": {}, "active": {},
-		"elapsed": 0, "stream_income": 0, "guide_income": 0, "followers": 0, "room_layout": 0, "workstation_layout": {}, "room_style": {"wall":0,"floor":0,"light":0}}
+		"elapsed": 0, "stream_income": 0, "guide_income": 0, "followers": 0, "room_layout": 0, "workstation_layout": {}, "room_style": {"wall":0,"floor":0,"light":0,"rgb":0,"brightness":70,"effect":0}}
 
 static func number(value: Variant, maximum: float = 9999999.0) -> float:
 	if not (value is float or value is int) or not is_finite(float(value)):
