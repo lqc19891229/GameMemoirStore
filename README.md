@@ -1,6 +1,6 @@
-# 游戏回忆录 · 像素 3D 房间 v0.5
+# 游戏回忆录 · 现代 3D 房间 v0.6
 
-Godot 4.6 像素 3D 房间布置与游戏收藏经营原型。玩家从自己的房间开始，通过电脑中的游戏平台购买、安装和游玩作品，也可以直播、制作攻略赚取游戏内点数，再通过购物网页升级电脑设备。
+Godot 4.6 现代轻写实 3D 房间布置与游戏收藏经营原型。玩家从自己的房间开始，通过电脑中的游戏平台购买、安装和游玩作品，也可以直播、制作攻略赚取游戏内点数，再通过购物网页升级电脑设备。
 
 ## 打开与运行
 
@@ -34,9 +34,9 @@ Godot 4.6 像素 3D 房间布置与游戏收藏经营原型。玩家从自己的
 | 制作攻略 | 与游玩互斥；期间仍可购物或查看平台 |
 | 退出程序 | 保存活动和进度；下次进入继续，离线时间不结算收益 |
 
-## 像素 3D 房间与布置
+## 现代 3D 房间与布置
 
-房间固定为 8 × 6 米的两面墙空间，默认斜俯视镜头。观察到墙外侧时，对应墙体、窗和装饰会自动隐藏。房间使用完整 GLB 模型、最近邻纹理和 400 像素高的画面采样；HUD 与显示器内的操作界面保持清晰。
+房间固定为 8 × 6 米的两面墙展示空间，采用暖白墙面、浅橡木地板、真实窗户与窗帘、现代房门、墙面装饰和开放式天花收边。默认斜俯视镜头；观察到墙外侧时，对应整组墙体、窗户、门和装饰会自动隐藏。房间以完整分辨率渲染，不再使用 PixelPass、低分辨率采样或颜色量化。
 
 点击顶栏“布置房间”进入编辑模式，可选择桌子、显示器、机箱、键盘、鼠标、椅子、书架、落地灯、地毯和绿植。拖动物品或手柄移动，R 旋转，Q / E 每步旋转 15°，默认吸附为 5 cm / 15°。桌子移动时设备一起跟随；设备始终留在桌面，家具留在房间地面。
 
@@ -55,18 +55,16 @@ Godot 4.6 像素 3D 房间布置与游戏收藏经营原型。玩家从自己的
 ## 模型、美术与编辑入口
 
 - 电脑设备模型：assets/models/hardware/，共 9 个 GLB。
-- 房间外壳与家具模型：assets/models/room/，共 6 个 GLB。
+- 现代房间外壳：scripts/room/modern_room_shell.gd；家具模型：scripts/room/room_furniture.gd，按场景生成现代材质与几何。
 - 电脑模型源文件与重建脚本：tools/models/hardware.blend、build_hardware.py。
-- 房间模型生成脚本：tools/models/build_room.py，使用 Python 3 和 Pillow 离线生成。
+- 历史房间 GLB 资源与生成脚本保留在 assets/models/room/ 和 tools/models/build_room.py，当前现代样板间不再引用这些旧像素模型。
 - 3D 工作台编辑入口：scenes/computer/computer_desktop.tscn，展开 Workstation3D。
 - 房间家具场景：scenes/room/；房间表现逻辑：scripts/room/。
 - 设备目录与碰撞尺寸：data/hardware/。
 
-游戏运行只加载已导出的 GLB，不需要 Blender，也不会在运行时生成模型几何。
+电脑设备继续使用已导出的 GLB；现代房间壳体、书架、椅子、落地灯、地毯、绿植和桌子由 Godot 场景脚本创建，不需要 Blender，也不会改变存档数据。
 
-![像素 3D 房间实际运行画面](docs/previews/pixel_room.png)
-
-![房间布置模式实际运行画面](docs/previews/pixel_room_layout.png)
+新的现代样板间截图将在视觉验收后更新；旧像素风截图仅保留作历史参考，不再代表当前目标风格。
 
 ## 游戏资料管理
 
@@ -103,7 +101,7 @@ data/catalog.json 按相同 ID 补充英文名、标签、评价、安装大小�
 | scenes/apps/ | 平台、购物网页和游玩界面 |
 | scenes/shared/ | 跨应用共用组件 |
 | scripts/life/ | GameSession、桌面、窗口、活动、设备与布置逻辑 |
-| scripts/room/ | 房间外观、灯光和家具拾取逻辑 |
+| scripts/room/ | 房间外观、现代房间几何和家具模型逻辑 |
 | scripts/ | 平台导航、页面、游戏数据与玩家状态 |
 | data/games/ | Excel 导入生成的正式游戏目录 |
 | data/hardware/ | 设备模型映射、尺寸和屏幕校准 |
@@ -137,7 +135,7 @@ Godot Headless 回归：
     godot --headless --path . --script res://tests/life/test_workstation_lighting.gd -- --fresh
     godot --headless --path . --script res://tests/life/test_workstation_layout.gd -- --fresh
     godot --headless --path . --script res://tests/life/test_workstation_collision.gd -- --fresh
-    godot --headless --path . --script res://tests/life/test_pixel_room.gd -- --fresh
+    godot --headless --path . --script res://tests/life/test_modern_room.gd -- --fresh
     godot --headless --path . --script res://tests/life/test_audit_regressions.gd -- --fresh
 
 test_client_windows.gd 需要图形环境；Linux CI 使用 Xvfb 执行。--fresh 禁用正常玩家存档读写，测试使用独立数据。GitHub Actions 会在 push、Pull Request 和手动触发时执行检查，包括模型重建、全部 GLB 结构检查、生成文件差异提示与模型构建产物上传、Godot Headless 回归和 Xvfb 图形测试。

@@ -35,7 +35,7 @@ func run() -> void:
 	for role in ["Monitor", "Computer", "Keyboard", "Mouse"]:
 		var device: Node3D = closeup.get_node("Workstation3D/TableGroup/Equipment/" + role)
 		check(device.appearance.model is PackedScene and not device.find_children("*", "MeshInstance3D", true, false).is_empty(), "device has saved model geometry before ready: " + role)
-	check(closeup.get_node("Workstation3D/Room/Shell").get_child_count() > 0, "complete room shell exists in editor before ready")
+	check(closeup.get_node("Workstation3D/Room/Shell").has_node("GeneratedGeometry"), "modern room geometry root exists before ready")
 	check(closeup.get_node("Workstation3D/Room/Furniture").get_child_count() == 5, "five authored furniture instances exist before ready")
 	closeup.free()
 	var game = load("res://scenes/main/game_root.tscn").instantiate()

@@ -1,11 +1,11 @@
 # GameMemoirStore 项目结构与维护审计
 
-检查基线：main 分支，commit `9cb2bfdc824ba4ea3331edac47d01b89dba81eea`，2026-10-31。
+检查基线：main 分支 commit `6342fa1ffa8afafcc62831016db76d13ea892194`；本报告同步现代样板间改造分支的结构。
 项目：Godot 4.6，GDScript，Compatibility 渲染器。
 
 ## 审计摘要
 
-当前仓库递归文件树包含 267 个文件、41 个目录和 47 个 Godot 场景；包含 15 个 GLB（9 个电脑硬件模型、6 个房间模型）、13 个 Godot 测试脚本、2 个 Python 测试脚本和 24 份 README。项目另有 35 个 GDScript、6 个 Python 源文件。
+当前仓库递归文件树包含 273 个文件、40 个目录和 49 个 Godot 场景；包含 15 个 GLB（9 个电脑硬件模型、6 个房间模型）、13 个 Godot 测试脚本、2 个 Python 测试脚本和 24 份 README。项目另有 37 个 GDScript、6 个 Python 源文件。
 
 本报告区分静态资源审计与实际运行验证。资源路径、UID、导入 sidecar 和 GLB 结构检查不能代替 Godot 场景运行；完整验证状态以对应提交的 GitHub Actions 工作流为准。
 
@@ -15,11 +15,11 @@
 |---|---|
 | scenes/main/ | game_root.tscn，主入口与共享会话 |
 | scenes/computer/ | 原生 3D 电脑工作台、设备、显示器系统、窗口壳和布置手柄 |
-| scenes/room/ | 房间外壳、椅子、书架、落地灯、地毯和绿植 |
+| scenes/room/ | 现代房间壳体、椅子、书架、落地灯、地毯和绿植 |
 | scenes/apps/ | 游戏平台、购物网页和游玩 / 直播界面 |
 | scenes/shared/ | 跨应用复用组件 |
 | scripts/life/ | GameSession、桌面、窗口、设备、活动、收入、布置与 RGB 灯光逻辑 |
-| scripts/room/ | 房间外观、空间灯光、墙体遮挡和家具拾取 |
+| scripts/room/ | 现代房间几何、外观、空间灯光、墙体遮挡和家具拾取 |
 | data/games/ | Excel 导入生成的正式游戏资源 |
 | data/hardware/ | 电脑设备模型映射、碰撞尺寸和屏幕校准 |
 | assets/models/hardware/ | 9 个电脑硬件 GLB |
@@ -27,7 +27,7 @@
 | tests/fixtures/ | 固定测试数据，不加入正式商店 |
 | tools/ | Excel 导入、资源审计和模型制作工具 |
 
-主场景为 `scenes/main/game_root.tscn`。GameSession 是唯一玩家状态和模拟活动时钟的所有者。ComputerDesktop 承载 Workstation3D、DesktopViewport 和 HUD。Workstation3D 内包含 Room、TableGroup、Equipment、LayoutEditor、Lighting、Camera、Lights 和 PixelPass。
+主场景为 `scenes/main/game_root.tscn`。GameSession 是唯一玩家状态和模拟活动时钟的所有者。ComputerDesktop 承载 Workstation3D、DesktopViewport 和 HUD。Workstation3D 内包含 Room、TableGroup、Equipment、LayoutEditor、Lighting、Camera、环境和灯光；旧像素后处理已移除。
 
 ## 本轮维护
 
@@ -100,7 +100,7 @@ Godot Headless：
     godot --headless --path . --script res://tests/life/test_workstation_lighting.gd -- --fresh
     godot --headless --path . --script res://tests/life/test_workstation_layout.gd -- --fresh
     godot --headless --path . --script res://tests/life/test_workstation_collision.gd -- --fresh
-    godot --headless --path . --script res://tests/life/test_pixel_room.gd -- --fresh
+    godot --headless --path . --script res://tests/life/test_modern_room.gd -- --fresh
     godot --headless --path . --script res://tests/life/test_audit_regressions.gd -- --fresh
 
 `test_client_windows.gd` 需要图形环境；Linux CI 使用 Xvfb 执行。所有 Godot 回归使用 `--fresh`，避免正常玩家存档被测试读写。
@@ -114,3 +114,10 @@ GitHub Actions 在 push、Pull Request 和 workflow_dispatch 时执行模型重�
 3. 增加硬件型号时，同步模型、设备场景、data/hardware/_catalog.tres 和 life_data.gd。
 4. 新增 Excel 字段时，同步工作簿、schema.json、import_games.py 和相关测试。
 5. 变更存档字段时，保留版本 1、2、3 的迁移与历史字段清理逻辑。
+
+
+## 现代样板间改造（进行中）
+
+本分支先建立一个可运行的现代轻写实样板间：完整分辨率渲染、暖白墙面、木质分板地面、窗户与窗帘、现代房门、墙面装饰、现代桌面、椅子、书架、落地灯、地毯和绿植。房间几何与家具视觉由 Godot 场景脚本创建，旧房间 GLB 保留但不再被运行时引用。
+
+本阶段不修改玩家存档字段、房间布局角色 ID、设备购买/安装流程或碰撞约束。验收以 `test_modern_room.gd`、工作台布局/碰撞/灯光/视角测试和 GitHub Actions 结果为准。样板间通过视觉检查后，再制作高精度独立 GLB 资产并扩展家具目录。
