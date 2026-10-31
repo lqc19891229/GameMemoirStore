@@ -121,7 +121,7 @@ jobs:
             tests/life/test_workstation_lighting.gd \
             tests/life/test_workstation_layout.gd \
             tests/life/test_workstation_collision.gd \
-            tests/life/test_pixel_room.gd \
+            tests/life/test_modern_room.gd \
             tests/life/test_audit_regressions.gd
           do
             echo "Running $test"

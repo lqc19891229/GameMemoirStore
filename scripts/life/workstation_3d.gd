@@ -19,7 +19,7 @@ func _ready() -> void:
 	reset_overview()
 	devices = {"monitor": %Monitor, "computer": %Computer, "keyboard": %Keyboard, "mouse": %Mouse}
 	layout.setup(self)
-	var room: MemoirPixelRoom = $Room as MemoirPixelRoom
+	var room: MemoirRoomView = $Room as MemoirRoomView
 	var lighting: MemoirWorkstationLighting = $Lighting as MemoirWorkstationLighting
 	room.style_changed.connect(lighting.apply_style)
 	lighting.apply_style(room.style)
@@ -31,12 +31,11 @@ func set_screen_texture(texture: Texture2D) -> void:
 	var material := StandardMaterial3D.new()
 	material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	material.albedo_texture = texture
-	material.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
+	material.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR
 	%Monitor.get_node("Screen").material_override = material
 
 func set_mode(value: String, animate: bool = true) -> void:
 	mode = value
-	$PixelPass.visible = value != "screen"
 	if motion != null and motion.is_valid(): motion.kill()
 	var destination := overview_view
 	if value == "screen":

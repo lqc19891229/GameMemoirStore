@@ -158,7 +158,7 @@ func _sync_mode() -> void:
 	%FocusToggle.visible = world.mode == "overview"
 	%ManageDevices.visible = world.mode == "overview"
 	%OverviewHelp.visible = world.mode == "overview"
-	%ViewTitle.text = {"overview": "我的像素房间", "screen": "屏幕操作", "layout":"布置房间"}[world.mode]
+	%ViewTitle.text = {"overview": "我的游戏房间", "screen": "屏幕操作", "layout":"布置房间"}[world.mode]
 
 func _reframe_screen() -> void:
 	if not screen_focused: return

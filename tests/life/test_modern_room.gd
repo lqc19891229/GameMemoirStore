@@ -41,7 +41,7 @@ func run() -> void:
 	check(layout.nodes.size() == 10, "room and equipment share one placement controller")
 	check(layout._layout_blocker().is_empty(), "authored room starts without intersections")
 	check(world.overview_pitch > .5 and world.overview_pitch < .8, "default camera shows an elevated room overview")
-	check(world.get_node("PixelPass").visible, "overview uses pixel rendering")
+	check(not world.has_node("PixelPass"), "room overview renders at full resolution without pixel post-process")
 	for role in ["chair","bookcase","lamp","rug","plant"]:
 		var item = layout.nodes[role]
 		check(item.get_node("Model").get_child_count() > 0, "saved complete model exists for " + role)
@@ -149,7 +149,7 @@ func run() -> void:
 	check(room.style.wall == 1 and room.style.light == 2 and room.style.rgb == 3 and room.style.effect == 1 and room.style.brightness == 85, "UI controls update room lighting settings")
 	var expected: Dictionary = layout.snapshot()
 	var state = game.session.state
-	state.save_path = "user://memoir_pixel_room_test.json"
+	state.save_path = "user://modern_room_test.json"
 	state.persistence_enabled = true
 	desktop.finish_layout(true)
 	check(state.life.workstation_layout.has("chair") and state.life.room_style.light == 2 and state.life.workstation_layout.has("lamp_1"), "apply saves room furniture and style into shared state")
@@ -169,12 +169,12 @@ func run() -> void:
 	world = desktop.world
 	check(same_poses(world.layout.snapshot(), expected) and world.get_node("Room").style.light == 2 and world.get_node("Room").style.rgb == 3 and world.get_node("Room").style.brightness == 85 and world.get_node("Room").style.effect == 1, "new session restores full room and RGB lighting")
 	desktop.set_screen_focused(true,false)
-	check(not world.get_node("PixelPass").visible, "computer UI remains clear without room pixel filtering")
+	check(not world.has_node("PixelPass"), "computer UI remains clear without room pixel filtering")
 	var browser = desktop.open_app("browser")
 	var platform = desktop.open_app("platform")
 	check(browser != null and platform != null, "shopping and platform apps remain available")
 	desktop.set_screen_focused(false,false)
-	check(world.get_node("PixelPass").visible and same_poses(world.layout.snapshot(), expected), "returning to room restores pixels and retains furniture")
+	check(not world.has_node("PixelPass") and same_poses(world.layout.snapshot(), expected), "returning to room retains furniture without pixel post-process")
 	world.camera.position = Vector3(-8,6,8)
 	world.get_node("Room").update_cutaway(world.camera)
 	check(not world.get_node("Room/Shell/Left_Wall").visible and world.get_node("Room/Shell/Back_Wall").visible, "outside wall hides without hiding other room parts")
@@ -191,5 +191,5 @@ func run() -> void:
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(state.save_path))
 	game.queue_free()
 	await frames()
-	print("PIXEL_ROOM_CHECKS: %d / %d passed" % [checks-failures,checks])
+	print("MODERN_ROOM_CHECKS: %d / %d passed" % [checks-failures,checks])
 	quit(1 if failures else 0)

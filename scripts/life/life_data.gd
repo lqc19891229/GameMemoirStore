@@ -55,7 +55,7 @@ static func clean(raw: Variant, owned: Array[String], installed: Array[String]) 
 		result[key] = int(number(raw.get(key, 0)))
 	result["room_layout"] = int(number(raw.get("room_layout", 0), 1))
 	result["workstation_layout"] = LayoutData.clean(raw.get("workstation_layout", {}))
-	result["room_style"] = preload("res://scripts/room/pixel_room.gd").clean_style(raw.get("room_style", {}))
+	result["room_style"] = preload("res://scripts/room/room_view.gd").clean_style(raw.get("room_style", {}))
 	for id: String in owned:
 		if raw.get("progress") is Dictionary: result["progress"][id] = number(raw["progress"].get(id, 0))
 		if raw.get("achievements") is Dictionary and raw["achievements"].get(id) is Array:
