@@ -140,6 +140,6 @@ Godot Headless 回归：
     godot --headless --path . --script res://tests/life/test_pixel_room.gd -- --fresh
     godot --headless --path . --script res://tests/life/test_audit_regressions.gd -- --fresh
 
-test_client_windows.gd 需要图形环境；Linux CI 使用 Xvfb 执行。--fresh 禁用正常玩家存档读写，测试使用独立数据。GitHub Actions 会在 push、Pull Request 和手动触发时执行检查，包括模型重建、全部 GLB 结构检查、生成文件同步检查、Godot Headless 回归和 Xvfb 图形测试。
+test_client_windows.gd 需要图形环境；Linux CI 使用 Xvfb 执行。--fresh 禁用正常玩家存档读写，测试使用独立数据。GitHub Actions 会在 push、Pull Request 和手动触发时执行检查，包括模型重建、全部 GLB 结构检查、生成文件差异提示与模型构建产物上传、Godot Headless 回归和 Xvfb 图形测试。
 
 素材来源与授权见 ASSET_CREDITS.md；编辑入口见 EDITOR_WORKFLOW.md；完整结构见 CLIENT_STRUCTURE.md；当前维护审计见 docs/PROJECT_AUDIT.md。
