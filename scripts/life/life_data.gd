@@ -1,6 +1,7 @@
 class_name MemoirLifeData
 extends RefCounted
 ## 初版生活系统的商品、属性与通用成就模板；与 Excel 游戏目录分开。
+const LayoutData = preload("res://scripts/life/workstation_layout_data.gd")
 const ATTRIBUTES := ["反应", "操作", "思考", "探索", "规划", "协作"]
 # Legacy room items remain defined for lossless version-3 save loading.
 const ROOM_ONLY_SLOTS := ["desk", "cabinet", "decor"]
@@ -29,7 +30,7 @@ static func defaults() -> Dictionary:
 		"equipped": {"computer": "starter_pc", "monitor": "starter_monitor", "peripheral": "starter_mouse", "desk": "starter_desk", "cabinet": "starter_cabinet", "audio": "", "decor": ""},
 		"attributes": {"反应": 10.0, "操作": 10.0, "思考": 10.0, "探索": 10.0, "规划": 10.0, "协作": 10.0},
 		"progress": {}, "achievements": {}, "displayed": [], "guides": {}, "active": {},
-		"elapsed": 0, "stream_income": 0, "guide_income": 0, "followers": 0, "room_layout": 0}
+		"elapsed": 0, "stream_income": 0, "guide_income": 0, "followers": 0, "room_layout": 0, "workstation_layout": {}}
 
 static func number(value: Variant, maximum: float = 9999999.0) -> float:
 	if not (value is float or value is int) or not is_finite(float(value)):
@@ -53,6 +54,7 @@ static func clean(raw: Variant, owned: Array[String], installed: Array[String]) 
 	for key: String in ["elapsed", "stream_income", "guide_income", "followers"]:
 		result[key] = int(number(raw.get(key, 0)))
 	result["room_layout"] = int(number(raw.get("room_layout", 0), 1))
+	result["workstation_layout"] = LayoutData.clean(raw.get("workstation_layout", {}))
 	for id: String in owned:
 		if raw.get("progress") is Dictionary: result["progress"][id] = number(raw["progress"].get(id, 0))
 		if raw.get("achievements") is Dictionary and raw["achievements"].get(id) is Array:

@@ -1,6 +1,7 @@
 extends Node3D
 @onready var camera: Camera3D = %Camera
 @onready var equipment: Node3D = %Equipment
+@onready var layout: Node = %LayoutEditor
 var mode := "overview"
 var selected := "monitor"
 var overview_camera: Transform3D
@@ -24,6 +25,7 @@ func _ready() -> void:
 	reset_overview()
 	devices = {"monitor": %Monitor, "computer": %Computer, "keyboard": %Keyboard, "mouse": %Mouse}
 	for role: String in devices: placements[role] = devices[role].transform
+	layout.setup(self)
 
 func set_screen_texture(texture: Texture2D) -> void:
 	var material := StandardMaterial3D.new()
@@ -37,6 +39,7 @@ func set_mode(value: String, role: String = "monitor", animate: bool = true) -> 
 	selected = role
 	if motion != null and motion.is_valid(): motion.kill()
 	for key: String in devices:
+		if devices[key].get_parent() != equipment: devices[key].reparent(equipment, false)
 		devices[key].transform = placements[key]
 		devices[key].visible = value != "inspect" or key == role
 	%Desk.visible = value != "inspect"
@@ -54,6 +57,7 @@ func set_mode(value: String, role: String = "monitor", animate: bool = true) -> 
 		destination = camera.get_parent().global_transform.affine_inverse() * global_view
 	elif value == "inspect":
 		var device: Node3D = devices[role]
+		device.reparent(%InspectionStage, false)
 		device.position = Vector3(0, 0.94, 0)
 		device.rotation = Vector3.ZERO
 		var bounds: Vector3 = device.appearance.bounds
@@ -91,7 +95,7 @@ func zoom_product(amount: float) -> void:
 	camera.transform = _inspect_camera()
 
 func reset_overview() -> void:
-	if mode != "overview" or transitioning: return
+	if mode not in ["overview", "layout"] or transitioning: return
 	overview_view = overview_camera
 	var offset := overview_camera.origin - orbit_target
 	overview_distance = offset.length()
@@ -105,13 +109,13 @@ func _update_overview_camera() -> void:
 	camera.transform = overview_view
 
 func orbit_overview(delta: Vector2) -> void:
-	if transitioning or mode != "overview": return
+	if transitioning or mode not in ["overview", "layout"]: return
 	overview_yaw = wrapf(overview_yaw - delta.x * 0.006, -PI, PI)
 	overview_pitch = clampf(overview_pitch + delta.y * 0.005, 0.12, 1.18)
 	_update_overview_camera()
 
 func zoom_overview(amount: float) -> void:
-	if transitioning or mode != "overview": return
+	if transitioning or mode not in ["overview", "layout"]: return
 	overview_distance = clampf(overview_distance * amount, minimum_distance, maximum_distance)
 	_update_overview_camera()
 
@@ -139,4 +143,5 @@ func pick_at(pixel: Vector2) -> String:
 	var query := PhysicsRayQueryParameters3D.create(origin, origin + camera.project_ray_normal(pixel) * 30.0, 1)
 	query.collide_with_areas = true
 	var result := get_world_3d().direct_space_state.intersect_ray(query)
-	return str(result.collider.get_parent().role) if not result.is_empty() else ""
+	if result.is_empty(): return ""
+	return str(result.collider.get_meta("layout_role", "")) if result.collider.has_meta("layout_role") else str(result.collider.get_parent().role)

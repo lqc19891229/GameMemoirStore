@@ -43,6 +43,10 @@ ComputerDesktop 是原生 Node3D 场景，Workstation3D 直接渲染到主视口
 
 `changed` 用于交易、装备、成就和活动变化；`tick_updated` 用于每个模拟分钟的文字与进度更新。跨场景操作使用信号或会话方法，网页只通过共享会话执行交易。
 
+## 玩家工作台布局
+
+ComputerDesktop 的布置模式与屏幕操作互斥。TableGroup 承载桌子和设备，单独调整设备时保存桌面相对坐标；InspectionStage 临时展示检视中的设备，退出恢复最后确认布局。草稿只在内存中变化，只有有效布置被应用后，才写入 life.workstation_layout 并更新检视恢复位置。取消或编辑中退出不覆盖确认布局。旧版本 3 存档缺少此字段时使用场景默认值，详见 docs/WORKSTATION_LAYOUT.md。
+
 ## 活动与窗口寿命
 
 GameSession 的 1 秒 Timer 统一推进 1 分钟模拟活动，并处理下载。`life.active` 同时只允许一项主要活动：play 或 guide。直播是 play 的附加状态；制作攻略与游玩互斥。

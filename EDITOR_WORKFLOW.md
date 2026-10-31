@@ -16,7 +16,7 @@
 
 ## 3D 编辑
 
-直接打开 `computer_desktop.tscn` 即可进入 3D 编辑器。Workstation3D 已启用“可编辑子节点”，其 Equipment 下的 Monitor、Computer、Keyboard、Mouse 是独立 Node3D 实例。直接移动、旋转和缩放；进入检视后返回总览会恢复编辑器保存的摆放。默认模型已经实例化在 Models 下，展开可查看真实网格。选中物体按 F 可聚焦。
+直接打开 `computer_desktop.tscn` 即可进入 3D 编辑器。Workstation3D 已启用“可编辑子节点”，其 TableGroup/Equipment 下的 Monitor、Computer、Keyboard、Mouse 是独立 Node3D 实例。直接移动、旋转和缩放；进入检视后返回总览会恢复编辑器保存的摆放。默认模型已经实例化在 Models 下，展开可查看真实网格。选中物体按 F 可聚焦。
 
 KeyLight、FillLight 和 Environment 控制灯光与背景。Camera 是默认总览相机。Pedestal 是单品展示台，默认隐藏；运行时检视设备会显示它。Desk 是加载 GLB 的木质桌面。
 
@@ -46,3 +46,9 @@ godot --headless --path . --script res://tests/life/test_workstation_view.gd -- 
 ```
 
 场景按功能分别放在 main/、computer/、apps/platform/、apps/browser/、apps/game/、shared/。购物库存行归属 browser/components，通用按钮位于 shared；不要在旧 life/、client/ 目录另建副本。
+
+## 玩家布置与默认布局
+
+TableGroup 承载桌子及 Equipment，移动桌子可让设备一起跟随。LayoutEditor 导出的桌面尺寸和高度用于玩家布置约束，调整桌子模型时应一起检查。InspectionStage 独立于桌子，单件检视返回后恢复确认布局。
+
+玩家通过“调整布置”保存的位置会覆盖默认摆放；使用 --fresh 可验证纯编辑器默认布局。手柄源场景为 scenes/computer/ui/layout_gizmo.tscn，布置面板在 ComputerDesktop/HUD/Interface/LayoutPanel。完整说明见 docs/WORKSTATION_LAYOUT.md。

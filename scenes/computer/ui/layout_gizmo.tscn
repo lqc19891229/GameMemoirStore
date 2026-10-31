@@ -1,0 +1,94 @@
+[gd_scene load_steps=14 format=3]
+[ext_resource type="Shader" path="res://assets/layout_outline.gdshader" id="1"]
+[sub_resource type="ShaderMaterial" id="OutlineMaterial"]
+resource_local_to_scene = true
+shader = ExtResource("1")
+[sub_resource type="QuadMesh" id="Outline"]
+size = Vector2(1,1)
+[sub_resource type="StandardMaterial3D" id="XColor"]
+shading_mode = 0
+albedo_color = Color(1,0.40,0.20,1)
+[sub_resource type="StandardMaterial3D" id="ZColor"]
+shading_mode = 0
+albedo_color = Color(0.20,0.72,1,1)
+[sub_resource type="StandardMaterial3D" id="HandleColor"]
+shading_mode = 0
+albedo_color = Color(1,0.84,0.25,1)
+[sub_resource type="BoxMesh" id="Axis"]
+size = Vector3(0.62,0.035,0.035)
+[sub_resource type="BoxMesh" id="Pad"]
+size = Vector3(0.18,0.04,0.18)
+[sub_resource type="BoxShape3D" id="AxisHit"]
+size = Vector3(0.65,0.05,0.10)
+[sub_resource type="BoxShape3D" id="PadHit"]
+size = Vector3(0.22,0.16,0.22)
+[sub_resource type="TorusMesh" id="Ring"]
+inner_radius = 0.48
+outer_radius = 0.52
+rings = 32
+ring_segments = 8
+[sub_resource type="SphereMesh" id="Knob"]
+radius = 0.08
+height = 0.16
+[sub_resource type="SphereShape3D" id="KnobHit"]
+radius = 0.13
+[node name="LayoutGizmo" type="Node3D"]
+visible = false
+[node name="Outline" type="MeshInstance3D" parent="."]
+rotation_degrees = Vector3(-90,0,0)
+mesh = SubResource("Outline")
+material_override = SubResource("OutlineMaterial")
+cast_shadow = 0
+[node name="MoveHandles" type="Node3D" parent="."]
+[node name="MoveX" type="Area3D" parent="MoveHandles"]
+position = Vector3(0.4,0.05,0)
+collision_layer = 2
+collision_mask = 0
+metadata/operation = "x"
+[node name="Mesh" type="MeshInstance3D" parent="MoveHandles/MoveX"]
+mesh = SubResource("Axis")
+material_override = SubResource("XColor")
+cast_shadow = 0
+[node name="Hit" type="CollisionShape3D" parent="MoveHandles/MoveX"]
+shape = SubResource("AxisHit")
+[node name="MoveZ" type="Area3D" parent="MoveHandles"]
+position = Vector3(0,0.05,0.4)
+rotation_degrees = Vector3(0,90,0)
+collision_layer = 2
+collision_mask = 0
+metadata/operation = "z"
+[node name="Mesh" type="MeshInstance3D" parent="MoveHandles/MoveZ"]
+mesh = SubResource("Axis")
+material_override = SubResource("ZColor")
+cast_shadow = 0
+[node name="Hit" type="CollisionShape3D" parent="MoveHandles/MoveZ"]
+shape = SubResource("AxisHit")
+[node name="MovePlane" type="Area3D" parent="MoveHandles"]
+position = Vector3(0,0.05,0)
+collision_layer = 2
+collision_mask = 0
+metadata/operation = "plane"
+[node name="Mesh" type="MeshInstance3D" parent="MoveHandles/MovePlane"]
+mesh = SubResource("Pad")
+material_override = SubResource("HandleColor")
+cast_shadow = 0
+[node name="Hit" type="CollisionShape3D" parent="MoveHandles/MovePlane"]
+shape = SubResource("PadHit")
+[node name="RotateHandles" type="Node3D" parent="."]
+visible = false
+[node name="Ring" type="MeshInstance3D" parent="RotateHandles"]
+position = Vector3(0,0.05,0)
+mesh = SubResource("Ring")
+material_override = SubResource("HandleColor")
+cast_shadow = 0
+[node name="Rotate" type="Area3D" parent="RotateHandles"]
+position = Vector3(-0.354,0.05,0.354)
+collision_layer = 2
+collision_mask = 0
+metadata/operation = "rotate"
+[node name="Mesh" type="MeshInstance3D" parent="RotateHandles/Rotate"]
+mesh = SubResource("Knob")
+material_override = SubResource("HandleColor")
+cast_shadow = 0
+[node name="Hit" type="CollisionShape3D" parent="RotateHandles/Rotate"]
+shape = SubResource("KnobHit")
