@@ -1,10 +1,9 @@
-电脑与应用场景
+3D 工作台与应用
 
-computer_desktop.tscn：默认展示四件独立设备，点击屏幕放大，Esc 返回；管理设备可进入库存。
-desktop_device.tscn：完整设备贴图与点击区域的通用模板，显示器额外嵌入实时屏幕。
-desktop_screen.tscn：显示器内部的桌面、快捷方式、任务栏和通知。
-app_window.tscn：可复用窗口壳，提供拖动、最小化、铺满和关闭。
-browser.tscn：购物网页和物品库存。
-game_player.tscn：游戏展示图轮播、游玩进度与直播操作。
+computer_desktop.tscn：Control 外壳，组合 3D 视口、HUD 和实时桌面视口。
+workstation_3d.tscn：真正的 3D 场景，包含灯光、相机、桌面、展示台和四件设备。空间布局在这里编辑。
+hardware/：显示器、机箱、键盘、鼠标的独立 3D 场景；Models 下已保存默认 / 升级 GLB 实例。
+desktop_screen.tscn：显示器内的系统、快捷方式、任务栏和通知。
+app_window.tscn：应用窗口壳；browser.tscn：购物与库存；game_player.tscn：游玩与直播。
 
-房间、家具及展示柜场景已移除。这些应用从 GameRoot 获取同一个 GameSession，不各自创建钱包或时钟。
+总览中点击设备检视，拖动旋转、滚轮缩放；点击屏幕操作电脑，Esc 返回。所有应用共用 GameSession。

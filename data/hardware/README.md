@@ -1,16 +1,19 @@
-# 工作台设备外观
+# 3D 设备与库存映射
 
-`computer_desktop.tscn` 的四个设备实例决定摆放位置和大小。每件设备使用一个 `MemoirDeviceVisual` 资源：
+`_catalog.tres` 的 monitors、computers、keyboards、mice 将库存 ID 对应到 MemoirDeviceModel 资源。精准键鼠套装同时映射键盘和鼠标，购买及加成沿用原套装。
 
-- `texture`：完整素材，保留宽高比；可使用 AtlasTexture 的 region 选取原图的有效区域，不改写 PNG。
-- `screen_rect`：显示器实际内框，Rect2 的位置与大小都是相对 texture 的 0～1 坐标；其他设备留空。
+资源字段：
 
-`_catalog.tres` 的 monitors、computers、keyboards、mice 分别将库存物品 ID 对应到外观资源。旧日键鼠和精准键鼠套装分别提供独立键盘、鼠标贴图；购买与加成继续沿用原套装。
+- model：已导出的 GLB PackedScene。
+- bounds：用于拾取和检视取景的包围尺寸，单位为米，模型底部原点 Y=0。
+- screen_size：显示器表面的宽和高，米；其他设备留空。
+- screen_position：显示器表面中心的局部位置。表面正面为 +Z，上方为 +Y。
 
 新增型号：
 
-1. 将 PNG 放入 assets/art/life/hardware/，创建 MemoirDeviceVisual 资源并指定贴图。显示器还需填写 Screen Rect。
-2. 在 scripts/life/life_data.gd 的 ITEMS 增加商品，显示器使用 monitor 槽位，机箱使用 computer，键鼠套装使用 peripheral。
-3. 在 _catalog.tres 对应字典中添加相同物品 ID。安装后外观自动更新，已有应用继续运行。
+1. 编辑 tools/models/hardware.blend 或提供其他 GLB，保持单位米、Y 向上、+Z 正面、底部原点。导出到 assets/models/hardware/。
+2. 在相应 scenes/life/hardware/*.tscn 的 Models 下添加该 GLB 实例，初始隐藏。现有默认 / 升级型号已保存在场景中，可直接在编辑器查看。
+3. 创建 MemoirDeviceModel 资源，指定 model 和 bounds；显示器需校准 screen_size 与 screen_position。
+4. 在 life_data.gd 的 ITEMS 增加商品，在 _catalog.tres 对应字典加入相同物品 ID。显示器为 monitor、机箱为 computer、键鼠为 peripheral 槽位。
 
-Monitor、Computer、Keyboard、Mouse 的实例锚点可在 2D 编辑器直接调整。默认场景有预览贴图，@tool 只同步素材和屏幕位置，不生成节点。屏幕始终保留完整渲染分辨率，放大和返回不切换会话。
+空间布局在 workstation_3d.tscn 的 Equipment 下编辑。刷新库存只切换模型；检视结束恢复编辑器保存的位置。GLB 独立于 Blender 源文件，运行游戏无需 Blender。

@@ -1,0 +1,33 @@
+[gd_scene load_steps=8 format=3]
+[ext_resource type="Script" path="res://scripts/life/desktop_device_3d.gd" id="1"]
+[ext_resource type="Resource" path="res://data/hardware/monitor_crt.tres" id="2"]
+[ext_resource type="PackedScene" path="res://assets/models/hardware/monitor_crt.glb" id="3"]
+[ext_resource type="PackedScene" path="res://assets/models/hardware/monitor_lcd.glb" id="4"]
+[sub_resource type="BoxShape3D" id="PickBounds"]
+resource_local_to_scene = true
+size = Vector3(1.62, 1.405, 0.6900000000000001)
+[sub_resource type="QuadMesh" id="DisplayQuad"]
+resource_local_to_scene = true
+size = Vector2(1.28, 0.8)
+[sub_resource type="StandardMaterial3D" id="ScreenGlass"]
+shading_mode = 0
+albedo_color = Color(0.035,0.11,0.12,1)
+[node name="Monitor" type="Node3D"]
+script = ExtResource("1")
+role = "monitor"
+appearance = ExtResource("2")
+[node name="Models" type="Node3D" parent="."]
+[node name="DefaultModel" parent="Models" instance=ExtResource("3")]
+[node name="UpgradeModel" parent="Models" instance=ExtResource("4")]
+visible = false
+[node name="PickArea" type="Area3D" parent="."]
+position = Vector3(0,0.6825,0)
+collision_layer = 1
+collision_mask = 0
+[node name="CollisionShape3D" type="CollisionShape3D" parent="PickArea"]
+shape = SubResource("PickBounds")
+[node name="Screen" type="MeshInstance3D" parent="."]
+position = Vector3(0, 0.84, 0.35)
+mesh = SubResource("DisplayQuad")
+material_override = SubResource("ScreenGlass")
+cast_shadow = 0

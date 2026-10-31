@@ -1,37 +1,37 @@
 extends Control
 const WindowScene = preload("res://scenes/life/app_window.tscn")
 const APPS := {"platform": ["游戏平台", "res://scenes/store.tscn"], "browser": ["回忆生活 · 购物网页", "res://scenes/life/browser.tscn"], "game": ["正在游玩", "res://scenes/life/game_player.tscn"]}
-@export var hardware_catalog: MemoirHardwareCatalog
 const Data = preload("res://scripts/life/life_data.gd")
+@export var hardware_catalog: MemoirHardwareCatalog
 var session: MemoirGameSession
 var area: Control
 var tasks: HBoxContainer
 var resume_button: Button
 var status: Label
 var windows: Dictionary = {}
-var screen_focused := false
-var transition: Tween
 var selected_role := "monitor"
-var devices: Dictionary = {}
 var modal_input_guard := false
+var dragging := false
+var orbiting := false
+var screen_mouse_down := false
+var last_screen_point := Vector2.ZERO
+@onready var world: Node3D = %Workstation3D
+var screen_focused: bool:
+	get: return is_instance_valid(world) and world.mode == "screen"
 
 func screen_node(key: String) -> Node:
 	return %DesktopScreen.get_node("%" + key)
 
 func _ready() -> void:
 	get_window().window_input.connect(_forward_modal_input)
-	devices = {"monitor": %Monitor, "computer": %Computer, "keyboard": %Keyboard, "mouse": %Mouse}
-	for role: String in devices:
-		var key := role
-		devices[role].get_node("HitArea").pressed.connect(func() -> void: select_device(key))
-	%FocusScreen.pressed.connect(func() -> void: set_screen_focused(true))
-	%FocusToggle.pressed.connect(func() -> void: set_screen_focused(not screen_focused))
+	world.set_screen_texture(%DesktopViewport.get_texture())
+	%WorldViewport.size_changed.connect(_reframe_screen)
+	%FocusToggle.pressed.connect(func() -> void: set_screen_focused(true))
+	%ReturnOverview.pressed.connect(func() -> void: set_screen_focused(false))
 	%ManageDevices.pressed.connect(func() -> void:
 		set_screen_focused(true)
 		open_app("browser", "inventory")
 	)
-	%Monitor.screen_geometry_changed.connect(_layout_view)
-	resized.connect(_layout_view)
 	area = screen_node("ApplicationArea")
 	tasks = screen_node("Tasks")
 	resume_button = screen_node("DesktopResume")
@@ -42,28 +42,23 @@ func _ready() -> void:
 	resume_button.pressed.connect(func() -> void: open_app("game"))
 	screen_node("TaskbarPlatform").pressed.connect(func() -> void: open_app("platform"))
 	screen_node("TaskbarBrowser").pressed.connect(func() -> void: open_app("browser"))
-	if session == null:
-		_layout_view()
-		return
+	_sync_mode()
+	if session == null: return
 	session.changed.connect(refresh)
 	session.tick_updated.connect(_update_status)
-	area.resized.connect(func() -> void:
-		for id: String in windows: windows[id].fit()
-	)
 	refresh()
-	_layout_view()
-
-func select_device(role: String) -> void:
-	selected_role = role
-	_update_device_info()
 
 func _update_equipment() -> void:
 	if session == null or hardware_catalog == null: return
-	for role: String in devices:
+	var reposition := false
+	for role: String in world.devices:
 		var slot := "peripheral" if role in ["keyboard", "mouse"] else role
 		var id: String = session.state.life["equipped"].get(slot, "")
-		var visual := hardware_catalog.visual_for(role, id)
-		if visual != null and devices[role].visual != visual: devices[role].visual = visual
+		var model := hardware_catalog.visual_for(role, id)
+		if model != null and world.devices[role].appearance != model:
+			world.devices[role].appearance = model
+			reposition = reposition or (screen_focused and role == "monitor") or (world.mode == "inspect" and role == selected_role)
+	if reposition: world.set_mode(world.mode, selected_role, false)
 	_update_device_info()
 
 func _update_device_info() -> void:
@@ -73,66 +68,114 @@ func _update_device_info() -> void:
 	var item: Dictionary = Data.ITEMS.get(id, {})
 	var label: String = {"monitor": "显示器", "computer": "机箱", "keyboard": "键盘", "mouse": "鼠标"}[selected_role]
 	%DeviceName.text = label + "  /  " + str(item.get("name", ""))
-	%DeviceDescription.text = str(item.get("description", ""))
+	var hint := "拖动旋转 · 滚轮缩放 · Esc 返回工作台" if world.mode == "inspect" else "点击设备检视 · 点击屏幕使用电脑 · 右键拖动环顾"
+	%DeviceDescription.text = str(item.get("description", "")) + "  ·  " + hint
 
-func _layout_view() -> void:
-	if not is_node_ready(): return
-	set_screen_focused(screen_focused, false)
+func select_device(role: String, animate: bool = true) -> void:
+	selected_role = role
+	_set_mode("inspect", animate)
 
 func set_screen_focused(value: bool, animate: bool = true) -> void:
-	screen_focused = value
-	if transition != null and transition.is_valid(): transition.kill()
-	var equipment: Control = %Equipment
-	var target_scale := Vector2.ONE
-	var target_position := Vector2.ZERO
-	if value:
-		var screen := Rect2(%Monitor.position + %MonitorScreen.position, %MonitorScreen.size)
-		if screen.size.x <= 0 or screen.size.y <= 0: return
-		var margin_y := maxf(56.0, size.y * 0.09)
-		var bounds := Rect2(Vector2(size.x * 0.04, margin_y), Vector2(size.x * 0.92, maxf(1.0, size.y - margin_y * 2.0)))
-		var factor := minf(bounds.size.x / screen.size.x, bounds.size.y / screen.size.y)
-		target_scale = Vector2.ONE * factor
-		target_position = bounds.get_center() - screen.get_center() * factor
-	%FocusScreen.visible = not value
-	%ScreenViewport.input_enabled = false
-	%FocusToggle.text = "查看设备 · Esc" if value else "使用电脑  >"
-	%ViewTitle.text = "屏幕操作" if value else "我的工作台"
-	%DeviceInfo.visible = not value
-	%ManageDevices.visible = not value
-	if animate:
-		transition = create_tween().set_parallel(true).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN_OUT)
-		transition.tween_property(equipment, "scale", target_scale, 0.28)
-		transition.tween_property(equipment, "position", target_position, 0.28)
-		transition.finished.connect(func() -> void:
-			%ScreenViewport.input_enabled = screen_focused
-			if screen_focused: %ScreenViewport.grab_focus()
-		)
+	_set_mode("screen" if value else "overview", animate)
+
+func _set_mode(value: String, animate: bool) -> void:
+	if screen_mouse_down:
+		var release := InputEventMouseButton.new()
+		release.button_index = MOUSE_BUTTON_LEFT
+		release.position = last_screen_point
+		%DesktopViewport.push_input(release, true)
+	screen_mouse_down = false
+	dragging = false
+	orbiting = false
+	if value != "screen":
+		for dialog: Window in %DesktopViewport.get_embedded_subwindows(): dialog.hide()
+	%WorldView.stretch_shrink = 2 if value == "overview" else 1
+	world.set_mode(value, selected_role, animate)
+	_sync_mode()
+
+func _sync_mode() -> void:
+	%ReturnOverview.visible = world.mode != "overview"
+	%FocusToggle.visible = not screen_focused
+	%ManageDevices.visible = not screen_focused
+	%DeviceInfo.visible = not screen_focused
+	%ViewTitle.text = {"overview": "我的 3D 工作台", "inspect": "设备检视", "screen": "屏幕操作"}[world.mode]
+	_update_device_info()
+
+func _view_point(point: Vector2) -> Vector2:
+	return (point - %WorldView.global_position) * Vector2(%WorldViewport.size) / %WorldView.size
+
+func _reframe_screen() -> void:
+	if not screen_focused: return
+	if world.transitioning:
+		if not world.motion.finished.is_connected(_reframe_screen): world.motion.finished.connect(_reframe_screen, CONNECT_ONE_SHOT)
 	else:
-		equipment.scale = target_scale
-		equipment.position = target_position
-		%ScreenViewport.input_enabled = value
-		if value: %ScreenViewport.grab_focus()
+		world.set_mode("screen", selected_role, false)
+
+func canvas_point_for_screen(logical: Vector2) -> Vector2:
+	var pixel: Vector2 = world.pixel_for_screen(logical / Vector2(%DesktopViewport.size))
+	return %WorldView.global_position + pixel * %WorldView.size / Vector2(%WorldViewport.size)
+
+func _push_screen_input(event: InputEvent, allow_outside: bool = false) -> bool:
+	var mapped := event.duplicate() as InputEvent
+	if event is InputEventMouse:
+		var uv: Variant = world.screen_uv(_view_point(event.position), not allow_outside)
+		if uv == null: return false
+		mapped.position = uv * Vector2(%DesktopViewport.size)
+		mapped.global_position = mapped.position
+		last_screen_point = mapped.position
+		if mapped is InputEventMouseMotion:
+			var previous: Variant = world.screen_uv(_view_point(event.position - event.relative), false)
+			if previous != null: mapped.relative = (uv - previous) * Vector2(%DesktopViewport.size)
+	%DesktopViewport.push_input(mapped, true)
+	return true
 
 func _input(event: InputEvent) -> void:
 	if modal_input_guard:
 		get_viewport().set_input_as_handled()
 		return
-	if not screen_focused or not event is InputEventKey or not event.pressed or event.echo or event.keycode != KEY_ESCAPE: return
-	# Embedded dialogs keep their own Escape behavior before leaving the screen.
-	if %DesktopViewport.get_embedded_subwindows().any(func(window: Window) -> bool: return window.visible): return
-	set_screen_focused(false)
-	get_viewport().set_input_as_handled()
+	if not event is InputEventKey or world.transitioning: return
+	if event.pressed and not event.echo and event.keycode == KEY_ESCAPE and world.mode != "overview":
+		if %DesktopViewport.get_embedded_subwindows().any(func(window: Window) -> bool: return window.visible): return
+		set_screen_focused(false)
+		get_viewport().set_input_as_handled()
+	elif screen_focused:
+		_push_screen_input(event)
+		get_viewport().set_input_as_handled()
+
+func _unhandled_input(event: InputEvent) -> void:
+	if world.transitioning:
+		if event is InputEventMouseButton and not event.pressed:
+			dragging = false
+			orbiting = false
+		return
+	if screen_focused:
+		if event is InputEventMouse:
+			var forwarded := _push_screen_input(event, screen_mouse_down or event is InputEventMouseMotion)
+			if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
+				screen_mouse_down = event.pressed and forwarded
+			if forwarded: get_viewport().set_input_as_handled()
+		return
+	if event is InputEventMouseButton:
+		if event.button_index == MOUSE_BUTTON_LEFT:
+			dragging = event.pressed
+			if event.pressed and world.mode == "overview":
+				var role: String = world.pick_at(_view_point(event.position))
+				if role == "monitor" and world.screen_uv(_view_point(event.position)) != null: set_screen_focused(true)
+				elif not role.is_empty(): select_device(role)
+		elif event.button_index == MOUSE_BUTTON_RIGHT: orbiting = event.pressed
+		elif event.pressed and world.mode == "inspect":
+			if event.button_index == MOUSE_BUTTON_WHEEL_UP: world.zoom_product(0.9)
+			if event.button_index == MOUSE_BUTTON_WHEEL_DOWN: world.zoom_product(1.1)
+	elif event is InputEventMouseMotion:
+		if dragging: world.rotate_product(event.relative)
+		if orbiting: world.orbit_overview(event.relative)
 
 func _forward_modal_input(event: InputEvent) -> void:
-	if not screen_focused or not %ScreenViewport.input_enabled: return
-	var viewport: SubViewport = %DesktopViewport
-	if not viewport.get_embedded_subwindows().any(func(window: Window) -> bool: return window.visible and window.exclusive): return
-	# Godot's exclusive child blocks the host Window before the container can forward
-	# input. Feed its owning viewport, which retains native dialog/menu dispatch.
+	if not screen_focused or world.transitioning: return
+	if not %DesktopViewport.get_embedded_subwindows().any(func(window: Window) -> bool: return window.visible and window.exclusive): return
 	modal_input_guard = true
-	var to_screen: Transform2D = %ScreenViewport.get_global_transform_with_canvas().affine_inverse() * get_viewport().get_final_transform().affine_inverse()
-	viewport.push_input(event.xformed_by(to_screen), true)
-	# Closing a dialog must not also activate the control behind it or leave focus mode.
+	var local_event: InputEvent = event.xformed_by(get_viewport().get_final_transform().affine_inverse())
+	_push_screen_input(local_event, true)
 	set_deferred("modal_input_guard", false)
 
 func open_app(id: String, tab: String = "") -> Control:

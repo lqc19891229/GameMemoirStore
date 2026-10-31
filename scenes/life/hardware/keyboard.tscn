@@ -1,0 +1,22 @@
+[gd_scene load_steps=6 format=3]
+[ext_resource type="Script" path="res://scripts/life/desktop_device_3d.gd" id="1"]
+[ext_resource type="Resource" path="res://data/hardware/keyboard_beige.tres" id="2"]
+[ext_resource type="PackedScene" path="res://assets/models/hardware/keyboard_beige.glb" id="3"]
+[ext_resource type="PackedScene" path="res://assets/models/hardware/keyboard_charcoal.glb" id="4"]
+[sub_resource type="BoxShape3D" id="PickBounds"]
+resource_local_to_scene = true
+size = Vector3(1.29, 0.14, 0.52)
+[node name="Keyboard" type="Node3D"]
+script = ExtResource("1")
+role = "keyboard"
+appearance = ExtResource("2")
+[node name="Models" type="Node3D" parent="."]
+[node name="DefaultModel" parent="Models" instance=ExtResource("3")]
+[node name="UpgradeModel" parent="Models" instance=ExtResource("4")]
+visible = false
+[node name="PickArea" type="Area3D" parent="."]
+position = Vector3(0,0.05,0)
+collision_layer = 1
+collision_mask = 0
+[node name="CollisionShape3D" type="CollisionShape3D" parent="PickArea"]
+shape = SubResource("PickBounds")

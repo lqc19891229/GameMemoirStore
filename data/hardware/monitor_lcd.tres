@@ -1,7 +1,9 @@
-[gd_resource type="Resource" script_class="MemoirDeviceVisual" load_steps=3 format=3]
-[ext_resource type="Script" path="res://scripts/life/device_visual.gd" id="1"]
-[ext_resource type="Texture2D" path="res://assets/art/life/hardware/monitor_lcd.png" id="2"]
+[gd_resource type="Resource" script_class="MemoirDeviceModel" load_steps=3 format=3]
+[ext_resource type="Script" path="res://scripts/life/device_model.gd" id="1"]
+[ext_resource type="PackedScene" path="res://assets/models/hardware/monitor_lcd.glb" id="2"]
 [resource]
 script = ExtResource("1")
-texture = ExtResource("2")
-screen_rect = Rect2(0.11602209944751381, 0.1270718232044199, 0.7693370165745856, 0.5543278084714549)
+model = ExtResource("2")
+bounds = Vector3(1.6, 1.35, 0.44)
+screen_size = Vector2(1.42, 0.8875)
+screen_position = Vector3(0, 0.84, 0.1)
