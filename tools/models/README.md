@@ -1,31 +1,35 @@
-# 电脑设备模型制作
+# 模型制作与导出
 
-hardware.blend 是可编辑的 Blender 模型库。每个型号位于独立 Collection，默认只显示 case_beige；切换 Collection 可编辑其他设备。模型以 Blender 原生几何和材质制作，不是贴图平面。屏幕内的系统界面由 Godot 接入。
+本目录保存电脑硬件模型源文件、导出脚本和房间模型生成脚本。游戏运行只加载 assets/models/ 中已经提交的 GLB，不会执行制作脚本，也不需要在玩家电脑上安装 Blender 或 Python。
 
-制作脚本 build_hardware.py 已在 Blender 3.6.23 LTS 验证；固定随机种子，可重复重建整套模型。
+## 电脑硬件模型
 
-```bash
-blender --background --threads 1 --factory-startup --python tools/models/build_hardware.py
-```
+hardware.blend 是可编辑的 Blender 模型库。每个型号位于独立 Collection，模型由 Blender 原生几何和材质制作，不是贴图平面；显示器内的操作系统由 Godot 实时纹理提供。
 
-脚本覆盖本目录 hardware.blend 与 assets/models/hardware/*.glb。修改源模型后请自行导出，或先修改脚本再重建，避免覆盖手工改动。运行游戏不执行脚本，不需要 Blender。
+制作脚本 build_hardware.py 已在 Blender 3.6.23 LTS 验证。固定随机种子，可重复重建 9 个硬件 GLB：
 
-九个模型为：case_beige、case_charcoal、monitor_crt、monitor_lcd、keyboard_beige、keyboard_charcoal、mouse_beige、mouse_charcoal、desk。
+    blender --background --threads 1 --factory-startup --python tools/models/build_hardware.py
 
-设备底部原点 Y=0，Godot 单位为米，正面 +Z。建模函数使用 Godot 坐标，再转换到 Blender；glTF 导出恢复为 Y 向上。模型按材质合并网格，键帽、散热口和按钮为真实几何；木纹使用打包的 64 像素材质。文件在 Godot 中作为现成场景加载，家具几何不在运行时生成。
+脚本会覆盖 hardware.blend 和 assets/models/hardware/*.glb。修改源模型后再执行；手工调整过的源文件或导出模型应先备份。
 
-Godot 布局入口：scenes/computer/computer_desktop.tscn，展开 Workstation3D；复用源场景为 workstation_3d.tscn。库存映射与屏幕尺寸在 data/hardware/，参见该目录 README.md。
+9 个模型：case_beige、case_charcoal、monitor_crt、monitor_lcd、keyboard_beige、keyboard_charcoal、mouse_beige、mouse_charcoal、desk。
 
-.gdignore 防止 Godot 自动导入 .blend 并要求本地 Blender；游戏只导入已提交的 GLB。
+设备底部原点 Y=0，Godot 单位为米，正面 +Z。模型按材质合并网格；键帽、散热口和按钮为真实几何；木纹使用打包在 GLB 内的 64 像素材质。设备库存映射、bounds 和屏幕尺寸位于 data/hardware/。
 
-## 像素房间素材
+Godot 编辑入口为 scenes/computer/computer_desktop.tscn，展开 Workstation3D；复用源场景为 workstation_3d.tscn。新增型号时还需同步检查 scenes/computer/hardware/、data/hardware/ 和 scripts/life/life_data.gd。
 
-`build_room.py` 是独立的离线房间模型源，使用 Python 3 标准库和 Pillow：
+## 像素房间模型
 
-```bash
-python tools/models/build_room.py
-```
+build_room.py 是独立的离线房间模型生成器，使用 Python 3 和 Pillow。运行：
 
-输出 `assets/models/room/` 的完整 room_shell、chair、bookcase、lamp、rug、plant GLB，包含纹理与最近邻采样器。几何按材质合并，固定随机种子可复现；不依赖 Blender。GLB 可导入 Blender 继续编辑。导入设置 `gltf/embedded_image_handling=3` 保留嵌入纹理，避免生成重复 PNG。游戏只加载已提交的模型，不运行制作脚本。
+    python tools/models/build_room.py
 
-房间采用 Godot 原生 Y 向上坐标，家具底部中心为原点。对应场景、拾取范围和默认位置在 `scenes/room/`。改模型后同步检查家具 bounds，改房间尺寸后同步 LayoutEditor 的 room_half_size。
+脚本输出 assets/models/room/ 下的 6 个完整 GLB：room_shell、chair、bookcase、lamp、rug、plant。纹理嵌入 GLB，并使用最近邻采样器；不依赖 Blender。需要安装 Pillow 才能重建房间模型。
+
+房间使用 Godot 原生 Y 向上坐标，家具底部中心为原点。对应场景位于 scenes/room/，拾取范围和默认位置由各场景与 scripts/life/workstation_layout.gd 管理。修改模型后应同步检查 room_furniture.bounds；修改房间或桌面几何后应同步检查 LayoutEditor 的 room_half_size、tabletop_half_size 和 tabletop_height。
+
+## 导入设置与保留规则
+
+Godot 通过各 GLB 旁边的 .import 文件保存导入设置。这些文件应与 GLB 一起提交，不要加入 .gitignore。工具源目录中的 .gdignore 防止 Godot 自动导入 .blend 和 Excel 等开发文件。
+
+模型生成脚本只用于离线制作；正常运行只依赖已提交的 GLB 和场景。详细编辑入口见根目录 EDITOR_WORKFLOW.md。

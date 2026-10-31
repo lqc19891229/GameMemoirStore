@@ -1,14 +1,10 @@
-生活系统检查
+生活系统、房间与工作台回归
 
-test_life_flow.gd：验证共享钱包、窗口寿命、直播与攻略收入、设备安装、历史家具数据及存档迁移。
-运行：godot --headless --path . --script res://tests/life/test_life_flow.gd -- --fresh
-测试使用独立临时存档，不修改正常玩家进度。
-*.gd.uid：Godot 脚本稳定标识。
+test_life_flow.gd：共享钱包、窗口寿命、直播和攻略收入、设备安装、历史家具数据及存档迁移。
+test_workstation_view.gd：原生 3D 主视口、总览旋转缩放、设备点击、3D 射线拾取、屏幕镜头切换、设备安装、屏幕 UV 输入、任务栏与弹窗。
+test_workstation_layout.gd：真实鼠标输入、布置手柄、吸附、桌沿、碰撞、设备跟随、应用/取消、存档恢复和编辑中退出。
+test_workstation_collision.gd：模型边界、快速拖动防穿透、旋转过程碰撞、接触后移开、变换后的桌面和旧布局恢复。
+test_pixel_room.gd：家具模型边界、房间与桌面碰撞、地毯、复制/删除/撤销、配色 UI、灯具副本、取消、磁盘读回、墙体遮挡和旧存档校验。
+test_audit_regressions.gd：独立网页预览、屏幕投影、显示器背面输入、截图预览和异常存档数值。
 
-test_workstation_view.gd：通过实际输入事件检查原生 3D 主视口、总览旋转缩放与重置、点击 / 拖动区分、设备单击保持总览、真实 3D 射线拾取、屏幕镜头切换、设备安装、屏幕 UV 输入、任务栏与弹窗；覆盖两款显示器和四种窗口尺寸。
-
-test_audit_regressions.gd：检查独立网页预览、变换后的屏幕投影、显示器背面输入、当前目录截图预览，以及异常存档数值。
-
-test_workstation_layout.gd：布置模式的真实鼠标输入、手柄、吸附、桌沿、碰撞、应用/取消、设备跟随、存档恢复和编辑中退出。
-
-test_workstation_collision.gd：模型边界完整覆盖、快速拖动防穿透、旋转过程碰撞、接触后移开、变换后桌面与旧布局恢复。
+测试使用 --fresh 和独立临时存档，不修改正常玩家进度。*.gd.uid 是 Godot 脚本稳定标识。各脚本的完整命令见根目录 README.md。

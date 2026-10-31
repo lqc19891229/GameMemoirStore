@@ -1,0 +1,70 @@
+name: Project validation
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Python and Godot validation
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+
+      - name: Set up Godot 4.6
+        uses: chickensoft-games/setup-godot@v2
+        with:
+          version: "4.6.0"
+          use-dotnet: false
+
+      - name: Run Python importer tests
+        run: python -m unittest discover -s tests -p "test_catalog_importer.py" -v
+
+      - name: Import Godot resources
+        run: godot --headless --path . --editor --import
+
+      - name: Audit repository resources
+        run: |
+          python tools/project_audit.py
+          python tools/catalog/import_games.py --project . --check
+
+      - name: Run Godot headless regressions
+        shell: bash
+        run: |
+          set -euo pipefail
+          for test in \
+            tests/test_catalog_resources.gd \
+            tests/test_catalog_integration.gd \
+            tests/test_client.gd \
+            tests/test_store.gd \
+            tests/test_editor_scenes.gd \
+            tests/life/test_life_flow.gd \
+            tests/life/test_workstation_view.gd \
+            tests/life/test_workstation_layout.gd \
+            tests/life/test_workstation_collision.gd \
+            tests/life/test_pixel_room.gd \
+            tests/life/test_audit_regressions.gd
+          do
+            echo "Running $test"
+            godot --headless --path . --script "res://$test" -- --fresh
+          done
+
+      - name: Install virtual display
+        run: sudo apt-get update && sudo apt-get install -y xvfb
+
+      - name: Run graphical window regression
+        env:
+          SDL_AUDIODRIVER: dummy
+        run: xvfb-run -a godot --path . --script res://tests/test_client_windows.gd -- --fresh
