@@ -44,7 +44,7 @@ func _collect_rgb_surfaces() -> void:
 		var device := devices[role] as Node
 		if device != null:
 			roots.append(device)
-	var desk := _world.get_node_or_null("%Desk") as Node
+	var desk := _world.get_node_or_null("TableGroup/Desk") as Node
 	if desk != null:
 		roots.append(desk)
 	for root: Node in roots:
@@ -72,11 +72,11 @@ func _is_rgb_material(material: StandardMaterial3D) -> bool:
 	return (color.b > color.g * 1.2 and color.r < color.g * 0.5) or (color.r > color.g * 1.8 and color.b > color.g * 1.8)
 
 func _register_lights() -> void:
-	_register_light(NodePath("%DeskGlow"), "desk")
-	_register_light(NodePath("%Monitor/Backlight"), "monitor")
-	_register_light(NodePath("%Computer/CaseGlow"), "case")
-	_register_light(NodePath("%Keyboard/KeyboardGlow"), "keyboard")
-	_register_light(NodePath("%Mouse/MouseGlow"), "mouse")
+	_register_light(NodePath("TableGroup/DeskGlow"), "desk")
+	_register_light(NodePath("TableGroup/Equipment/Monitor/Backlight"), "monitor")
+	_register_light(NodePath("TableGroup/Equipment/Computer/CaseGlow"), "case")
+	_register_light(NodePath("TableGroup/Equipment/Keyboard/KeyboardGlow"), "keyboard")
+	_register_light(NodePath("TableGroup/Equipment/Mouse/MouseGlow"), "mouse")
 
 func _register_light(path: NodePath, role: String) -> void:
 	var light := _world.get_node_or_null(path) as OmniLight3D

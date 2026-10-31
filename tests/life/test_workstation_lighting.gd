@@ -27,13 +27,16 @@ func run() -> void:
 	var lighting = world.get_node("Lighting")
 	check(lighting.rgb_surface_count >= 4, "RGB controller discovers emissive hardware and desk surfaces")
 	check(lighting.fan_rotor_count == 6, "six independent case fan rotors are generated")
-	check(world.get_node("%DeskGlow") is OmniLight3D, "desk underglow uses a real light")
-	check(world.get_node("%Monitor/Backlight") is OmniLight3D, "monitor backlight is present")
-	check(world.get_node("%Keyboard/KeyboardGlow") is OmniLight3D, "keyboard accent light is present")
-	check(world.get_node("%Mouse/MouseGlow") is OmniLight3D, "mouse accent light is present")
-	check(world.get_node("%Computer/CaseGlow") is OmniLight3D, "case side light is present")
-
+	var desk_glow: OmniLight3D = world.get_node("TableGroup/DeskGlow")
+	var monitor: Node3D = world.devices["monitor"]
 	var computer: Node3D = world.devices["computer"]
+	var keyboard: Node3D = world.devices["keyboard"]
+	var mouse: Node3D = world.devices["mouse"]
+	check(desk_glow is OmniLight3D, "desk underglow uses a real light")
+	check(monitor.get_node("Backlight") is OmniLight3D, "monitor backlight is present")
+	check(keyboard.get_node("KeyboardGlow") is OmniLight3D, "keyboard accent light is present")
+	check(mouse.get_node("MouseGlow") is OmniLight3D, "mouse accent light is present")
+	check(computer.get_node("CaseGlow") is OmniLight3D, "case side light is present")
 	var upgrade: Node3D = computer.get_node("Models/UpgradeModel")
 	var first_rotor: Node3D = upgrade.get_node("FrontFanRotor_0")
 	var before := first_rotor.transform
@@ -42,7 +45,6 @@ func run() -> void:
 
 	room.apply_style({"rgb":3,"brightness":85,"effect":0})
 	check(lighting.current_rgb_color.is_equal_approx(Color("e66ac5")), "selected RGB palette changes the shared color")
-	var desk_glow: OmniLight3D = world.get_node("%DeskGlow")
 	check(desk_glow.light_color.is_equal_approx(Color("e66ac5")) and desk_glow.light_energy > 0.0, "desk underglow follows RGB color and brightness")
 	room.apply_style({"rgb":1,"brightness":0,"effect":0})
 	check(is_zero_approx(desk_glow.light_energy), "zero brightness turns actual RGB lights off")
@@ -58,9 +60,9 @@ func run() -> void:
 	game.session.buy_item("precise_mouse")
 	game.session.equip_item("precise_mouse")
 	await frames()
-	check(upgrade.visible and world.get_node("%Computer/CaseGlow").visible, "premium case activates internal RGB light")
-	check(world.get_node("%Keyboard/Models/UpgradeModel").visible and world.get_node("%Keyboard/KeyboardGlow").visible, "premium keyboard activates backlight")
-	check(world.get_node("%Mouse/Models/UpgradeModel").visible and world.get_node("%Mouse/MouseGlow").visible, "premium mouse activates accent light")
+	check(upgrade.visible and computer.get_node("CaseGlow").visible, "premium case activates internal RGB light")
+	check(keyboard.get_node("Models/UpgradeModel").visible and keyboard.get_node("KeyboardGlow").visible, "premium keyboard activates backlight")
+	check(mouse.get_node("Models/UpgradeModel").visible and mouse.get_node("MouseGlow").visible, "premium mouse activates accent light")
 
 	game.queue_free()
 	await frames()
