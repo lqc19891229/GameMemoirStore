@@ -368,9 +368,9 @@ def chair():
         x = math.cos(angle) * .19
         z = -.02 + math.sin(angle) * .19
         box("Five star base spoke", (x, .105, z), (.075, .075, .43), dark, .014, rotate_y=angle)
-        wheel_x = math.cos(angle) * .36
-        wheel_z = -.02 + math.sin(angle) * .36
-        sphere("Caster housing", (wheel_x, .065, wheel_z), (.065, .065, .065), rubber, 16, 10)
+        wheel_x = math.cos(angle) * .34
+        wheel_z = -.02 + math.sin(angle) * .34
+        sphere("Caster housing", (wheel_x, .065, wheel_z), (.055, .055, .055), rubber, 16, 10)
         cylinder("Caster axle", (wheel_x, .065, wheel_z), .025, .07, silver, axis="x", vertices=12)
 
     box("Seat shell", (0, .56, -.02), (.82, .18, .72), dark, .045)
