@@ -19,7 +19,7 @@ background_mode = 1
 background_color = Color(0.72, 0.76, 0.77, 1)
 ambient_light_source = 2
 ambient_light_color = Color(0.82, 0.83, 0.81, 1)
-ambient_light_energy = 0.52
+ambient_light_energy = 0.34
 
 [node name="Workstation3D" type="Node3D"]
 script = ExtResource("1")
@@ -31,19 +31,19 @@ environment = SubResource("StudioEnvironment")
 rotation_degrees = Vector3(-43, -30, 0)
 light_color = Color(1, 0.94, 0.84, 1)
 light_energy = 0.75
-shadow_opacity = 0.68
+shadow_opacity = 0.78
 shadow_enabled = true
 directional_shadow_max_distance = 16.0
 
 [node name="FillLight" type="DirectionalLight3D" parent="."]
 rotation_degrees = Vector3(-25, 140, 0)
 light_color = Color(0.82, 0.88, 0.9, 1)
-light_energy = 0.3
+light_energy = 0.18
 
 [node name="CeilingLight" type="OmniLight3D" parent="."]
 position = Vector3(0, 2.78, -0.2)
 light_color = Color(1, 0.88, 0.73, 1)
-light_energy = 0.3
+light_energy = 0.12
 omni_range = 5.5
 
 [node name="Camera" type="Camera3D" parent="."]

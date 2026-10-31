@@ -82,6 +82,9 @@ func _build_chair(model: Node3D) -> void:
 	_sphere(model, "SeatCushion", Vector3(0.80, 0.14, 0.64), Vector3(0, 0.84, 0), cushion)
 	_box(model, "BackShell", Vector3(0.84, 0.64, 0.14), Vector3(0, 1.17, -0.27), frame)
 	_sphere(model, "BackCushion", Vector3(0.77, 0.56, 0.12), Vector3(0, 1.18, -0.27), fabric)
+	_sphere(model, "LumbarSupport", Vector3(0.70, 0.16, 0.13), Vector3(0, 1.03, -0.34), cushion)
+	_sphere(model, "HeadrestShell", Vector3(0.56, 0.22, 0.16), Vector3(0, 1.47, -0.31), frame)
+	_sphere(model, "HeadrestCushion", Vector3(0.50, 0.18, 0.14), Vector3(0, 1.48, -0.31), fabric)
 	for x in [-0.43, 0.43]:
 		_box(model, "ArmSupport", Vector3(0.065, 0.28, 0.07), Vector3(x, 0.88, -0.02), frame)
 		_sphere(model, "ArmRest", Vector3(0.10, 0.065, 0.54), Vector3(x, 1.04, 0.0), cushion)
@@ -127,9 +130,9 @@ func _build_lamp(model: Node3D) -> void:
 	_sphere(model, "LampDiffuser", Vector3(0.18, 0.10, 0.18), Vector3(0, 1.62, 0), diffuser)
 
 func _build_rug(model: Node3D) -> void:
-	var fabric := _material(Color("a8afa7"), 0.98)
-	var border := _material(Color("ded6c8"), 0.96)
-	var pattern := _material(Color("87988c"), 0.98)
+	var fabric := _material(Color("9ca69c"), 0.98)
+	var border := _material(Color("c6bdae"), 0.96)
+	var pattern := _material(Color("718477"), 0.98)
 	_box(model, "RugSurface", Vector3(3.58, 0.024, 2.18), Vector3(0, 0.014, 0), fabric)
 	_box(model, "RugBorder", Vector3(3.42, 0.006, 0.045), Vector3(0, 0.028, -1.04), border)
 	_box(model, "RugBorder", Vector3(3.42, 0.006, 0.045), Vector3(0, 0.028, 1.04), border)
@@ -144,6 +147,7 @@ func _build_plant(model: Node3D) -> void:
 	var soil := _material(Color("453d32"), 1.0)
 	var leaves := _material(Color("55775b"), 0.94)
 	var leaf_light := _material(Color("829b70"), 0.92)
+	var stems := _material(Color("3f6348"), 0.98)
 	_cylinder(model, "Pot", 0.25, 0.19, 0.40, Vector3(0, 0.20, 0), pot)
 	_cylinder(model, "PotRim", 0.27, 0.25, 0.045, Vector3(0, 0.40, 0), rim)
 	_cylinder(model, "Soil", 0.225, 0.225, 0.025, Vector3(0, 0.425, 0), soil)
@@ -151,6 +155,10 @@ func _build_plant(model: Node3D) -> void:
 		var angle := TAU * float(index) / 7.0
 		var height: float = [0.70, 0.86, 0.92, 0.78, 0.96, 0.74, 0.84][index]
 		var radius := 0.12 + float(index % 3) * 0.065
-		var at := Vector3(cos(angle) * radius, 0.45 + height * 0.53, sin(angle) * radius)
-		var size := Vector3(0.25, height * 0.48, 0.19)
-		_sphere(model, "Leaf", size, at, leaf_light if index % 3 == 0 else leaves)
+		var stem_center := Vector3(cos(angle) * radius * 0.45, 0.45 + height * 0.24, sin(angle) * radius * 0.45)
+		_cylinder(model, "Stem", 0.012, 0.016, height * 0.55, stem_center, stems, 10)
+		var at := Vector3(cos(angle) * radius, 0.45 + height * 0.50, sin(angle) * radius)
+		var size := Vector3(0.18, height * 0.58, 0.09)
+		var leaf := _sphere(model, "Leaf", size, at, leaf_light if index % 3 == 0 else leaves)
+		leaf.rotation.z = -cos(angle) * 0.42
+		leaf.rotation.x = sin(angle) * 0.42

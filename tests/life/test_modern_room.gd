@@ -38,6 +38,12 @@ func run() -> void:
 	var layout = world.layout
 	var room = world.get_node("Room")
 	var original: Dictionary = layout.snapshot()
+	var window_sky: MeshInstance3D = room.get_node("Shell/Left_Wall/WindowSky")
+	var sky_mesh := window_sky.mesh as BoxMesh
+	check(window_sky.position.y - sky_mesh.size.y * 0.5 >= 1.26 and window_sky.position.y + sky_mesh.size.y * 0.5 <= 2.72, "exterior sky stays inside the real window opening")
+	check(window_sky.position.z - sky_mesh.size.z * 0.5 >= -2.0 and window_sky.position.z + sky_mesh.size.z * 0.5 <= 0.36, "exterior background stays inside the window width")
+	var environment: Environment = world.get_node("Environment").environment
+	check(environment.ambient_light_energy <= 0.4, "room ambient light preserves material contrast")
 	check(layout.nodes.size() == 10, "room and equipment share one placement controller")
 	check(layout._layout_blocker().is_empty(), "authored room starts without intersections")
 	check(world.overview_pitch > .5 and world.overview_pitch < .8, "default camera shows an elevated room overview")
@@ -45,6 +51,10 @@ func run() -> void:
 	for role in ["chair","bookcase","lamp","rug","plant"]:
 		var item = layout.nodes[role]
 		check(item.get_node("Model").get_child_count() > 0, "saved complete model exists for " + role)
+		if role == "chair":
+			check(item.get_node("Model").has_node("HeadrestCushion") and item.get_node("Model").has_node("LumbarSupport"), "chair includes headrest and lumbar support")
+		if role == "plant":
+			check(item.get_node("Model").find_children("Leaf", "MeshInstance3D", true, false).size() == 7, "plant uses seven individually shaped leaves")
 		# Selection bounds must enclose the complete exported geometry, including rug stripes.
 		var enclosed := true
 		for mesh: MeshInstance3D in item.find_children("*", "MeshInstance3D", true, false):
