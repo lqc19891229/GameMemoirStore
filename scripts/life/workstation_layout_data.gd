@@ -2,11 +2,13 @@ class_name MemoirWorkstationLayoutData
 extends RefCounted
 ## Only horizontal poses are persisted; height and scale remain authored in scenes.
 const MAX_POSITION := 20.0
-const ROLES := ["desk", "monitor", "computer", "keyboard", "mouse"]
+const ROLES := ["desk", "monitor", "computer", "keyboard", "mouse", "chair", "bookcase", "lamp", "rug", "plant"]
 static func clean(raw: Variant) -> Dictionary:
 	var result: Dictionary = {}
 	if not raw is Dictionary: return result
-	for role: String in ROLES:
+	for raw_role: Variant in raw:
+		if not raw_role is String or not valid_role(raw_role): continue
+		var role: String = raw_role
 		var pose: Variant = raw.get(role)
 		if not pose is Dictionary: continue
 		var valid := true
@@ -16,6 +18,16 @@ static func clean(raw: Variant) -> Dictionary:
 		if not valid: continue
 		result[role] = {"x": clampf(float(pose.x), -MAX_POSITION, MAX_POSITION), "z": clampf(float(pose.z), -MAX_POSITION, MAX_POSITION), "yaw": wrapf(float(pose.yaw), -PI, PI)}
 	return result
+
+static func base_role(role: String) -> String:
+	return role.get_slice("_", 0)
+
+static func is_copy(role: String) -> bool:
+	var parts := role.split("_")
+	return parts.size() == 2 and parts[0] in ["chair","bookcase","lamp","rug","plant"] and parts[1] in ["1","2","3","4","5","6","7","8"]
+
+static func valid_role(role: String) -> bool:
+	return role in ROLES or is_copy(role)
 
 static func overlap(a: PackedVector2Array, b: PackedVector2Array) -> bool:
 	# Separating axes for convex footprints; a tiny tolerance permits touching edges.

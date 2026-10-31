@@ -35,10 +35,12 @@ func run() -> void:
 	for role in ["Monitor", "Computer", "Keyboard", "Mouse"]:
 		var device: Node3D = closeup.get_node("Workstation3D/TableGroup/Equipment/" + role)
 		check(device.appearance.model is PackedScene and not device.find_children("*", "MeshInstance3D", true, false).is_empty(), "device has saved model geometry before ready: " + role)
+	check(closeup.get_node("Workstation3D/Room/Shell").get_child_count() > 0, "complete room shell exists in editor before ready")
+	check(closeup.get_node("Workstation3D/Room/Furniture").get_child_count() == 5, "five authored furniture instances exist before ready")
 	closeup.free()
 	var game = load("res://scenes/main/game_root.tscn").instantiate()
 	check(game.get_child_count() == 2, "main scene only contains shared session and desktop")
-	check(not game.has_node("PlayerRoom") and not game.has_node("AchievementCabinet"), "room presentation has been removed")
+	check(not game.has_node("PlayerRoom") and not game.has_node("AchievementCabinet"), "legacy room and cabinet screens are not duplicated")
 	check(game.get_node("ComputerDesktop").visible, "desktop is visible in the authored main scene")
 	check(game.has_node("ComputerDesktop/DesktopViewport/DesktopScreen/ApplicationArea"), "desktop shell exists before running")
 	var keyboard: Node3D = game.get_node("ComputerDesktop/Workstation3D/TableGroup/Equipment/Keyboard")
