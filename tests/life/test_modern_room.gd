@@ -52,7 +52,8 @@ func run() -> void:
 		var item = layout.nodes[role]
 		check(item.get_node("Model").get_child_count() > 0, "saved complete model exists for " + role)
 		if role == "chair":
-			check(item.get_node("Model").has_node("HeadrestCushion") and item.get_node("Model").has_node("LumbarSupport"), "chair includes headrest and lumbar support")
+			check(item.get_node("Model").has_node("ChairGLB"), "chair scene uses the detailed imported GLB")
+			check(item.get_node("Model").find_children("*", "MeshInstance3D", true, false).size() >= 5, "chair GLB contains layered material geometry")
 		if role == "plant":
 			var leaf_count := 0
 			for part: Node in item.get_node("Model").get_children():
