@@ -48,6 +48,8 @@ func run() -> void:
 	check(layout._layout_blocker().is_empty(), "authored room starts without intersections")
 	check(world.overview_pitch > .5 and world.overview_pitch < .8, "default camera shows an elevated room overview")
 	check(not world.has_node("PixelPass"), "room overview renders at full resolution without pixel post-process")
+	var shelf: Node3D = layout.nodes["bookcase"].get_node("Model")
+	check(shelf.has_node("TopCap") and shelf.has_node("ShelfLip") and shelf.has_node("CeramicVase") and shelf.has_node("DisplayFrame"), "modern bookcase has layered construction and decor")
 	for role in ["chair","bookcase","lamp","rug","plant"]:
 		var item = layout.nodes[role]
 		check(item.get_node("Model").get_child_count() > 0, "saved complete model exists for " + role)

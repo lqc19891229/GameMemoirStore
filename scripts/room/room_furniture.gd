@@ -98,27 +98,53 @@ func _build_chair(model: Node3D) -> void:
 			_sphere(model, "Caster", Vector3(0.13, 0.13, 0.13), Vector3(x, 0.055, z), rubber)
 
 func _build_bookcase(model: Node3D) -> void:
-	var wood := _material(Color("a9825c"), 0.64)
-	var dark := _material(Color("674d39"), 0.72)
+	# Keep every visible part within the original 1.46 x 2.57 x 0.58 m
+	# picking volume so legacy placements remain valid.
+	var oak := _material(Color("ae8764"), 0.66)
+	var edge := _material(Color("86674d"), 0.62)
+	var dark := _material(Color("564b42"), 0.81)
+	var brass := _material(Color("ac956f"), 0.48, 0.65)
+	var ceramic := _material(Color("d8d0be"), 0.89)
+	var sage := _material(Color("788d7c"), 0.86)
+	var picture := _material(Color("c6b39e"), 0.91)
 	var book_colors := [
-		_material(Color("71858a"), 0.9),
-		_material(Color("a96f5c"), 0.9),
-		_material(Color("d3c5aa"), 0.92),
-		_material(Color("7c8973"), 0.9),
-		_material(Color("555f68"), 0.9),
+		_material(Color("74868d"), 0.90),
+		_material(Color("af7c6c"), 0.92),
+		_material(Color("d6c7ac"), 0.93),
+		_material(Color("768374"), 0.89),
+		_material(Color("535d65"), 0.90)
 	]
-	_box(model, "BackPanel", Vector3(1.34, 2.5, 0.055), Vector3(0, 1.27, -0.25), dark)
-	for x in [-0.69, 0.69]:
-		_box(model, "SidePanel", Vector3(0.08, 2.55, 0.58), Vector3(x, 1.275, 0), wood)
-	for y in [0.07, 0.70, 1.33, 1.96, 2.50]:
-		_box(model, "Shelf", Vector3(1.38, 0.075, 0.56), Vector3(0, y, 0), wood)
-	for row in range(4):
-		var base_y := 0.11 + float(row) * 0.63
-		for index in range(6):
-			var height: float = [0.34, 0.42, 0.38, 0.46, 0.32, 0.40][index]
-			var width := 0.115 + float(index % 2) * 0.018
-			var x := -0.54 + float(index) * 0.19
-			_box(model, "Book", Vector3(width, height, 0.30), Vector3(x, base_y + height * 0.5, 0.045), book_colors[index % book_colors.size()], (float(index % 3) - 1.0) * 0.025)
+	_box(model, "BackPanel", Vector3(1.34, 2.43, 0.035), Vector3(0, 1.295, -0.259), dark)
+	for x in [-0.685, 0.685]:
+		_box(model, "SidePanel", Vector3(0.09, 2.48, 0.56), Vector3(x, 1.31, 0), oak)
+		_box(model, "FrontEdge", Vector3(0.018, 2.43, 0.018), Vector3(x, 1.31, 0.278), edge)
+	_box(model, "TopCap", Vector3(1.46, 0.06, 0.58), Vector3(0, 2.54, 0), oak)
+	_box(model, "BottomPlinth", Vector3(1.40, 0.11, 0.53), Vector3(0, 0.095, 0), edge)
+	for y in [0.23, 0.81, 1.39, 1.97]:
+		_box(model, "Shelf", Vector3(1.34, 0.055, 0.53), Vector3(0, y, 0), oak)
+		_box(model, "ShelfLip", Vector3(1.31, 0.018, 0.018), Vector3(0, y + 0.03, 0.265), edge)
+
+	# Book spines vary in height and width; add fine spine bands instead of
+	# repeating a single row of uniform boxes.
+	for row in range(3):
+		var bottom: float = [0.26, 0.84, 1.42][row]
+		for index in range(7):
+			var height: float = [0.31, 0.38, 0.35, 0.41, 0.34, 0.37, 0.32][(index + row) % 7]
+			var width: float = [0.09, 0.11, 0.085, 0.10][(index + row) % 4]
+			var x: float = -0.55 + float(index) * 0.167
+			var color: Material = book_colors[(index + row * 2) % book_colors.size()]
+			_box(model, "Book_%d_%d" % [row, index], Vector3(width, height, 0.28), Vector3(x, bottom + height * 0.5, 0.015), color)
+			if index % 2 == 0:
+				_box(model, "SpineBand_%d_%d" % [row, index], Vector3(width + 0.001, 0.012, 0.008), Vector3(x, bottom + height * 0.72, 0.159), brass)
+
+	# Top shelf displays one framed picture, a vase and a small stack of books.
+	_box(model, "DisplayFrame", Vector3(0.36, 0.31, 0.038), Vector3(-0.40, 2.23, 0.04), edge)
+	_box(model, "DisplayPrint", Vector3(0.30, 0.25, 0.007), Vector3(-0.40, 2.23, 0.064), picture)
+	_box(model, "DisplayArt", Vector3(0.17, 0.14, 0.008), Vector3(-0.40, 2.22, 0.070), sage)
+	_cylinder(model, "CeramicVase", 0.085, 0.11, 0.28, Vector3(0.10, 2.137, 0.025), ceramic, 28)
+	_cylinder(model, "VaseNeck", 0.047, 0.062, 0.085, Vector3(0.10, 2.31, 0.025), ceramic, 24)
+	for index in range(3):
+		_box(model, "DisplayBook_%d" % index, Vector3(0.28, 0.035, 0.19), Vector3(0.42, 2.035 + float(index) * 0.039, 0.02), book_colors[index + 1])
 
 func _build_lamp(model: Node3D) -> void:
 	var ceramic := _material(Color("e7dfd1"), 0.34)
