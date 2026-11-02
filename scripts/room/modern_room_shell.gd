@@ -93,9 +93,13 @@ func _build() -> void:
 	_build_back_wall(wall, trim, wood, dark_wood, metal, canvas, art_blue, art_sage, art_ochre)
 	_build_ceiling_trim(trim, metal)
 	_build_notch_walls(wall, trim)
+	_build_custom_exterior(wall, trim)
 	_build_partitions(wall, trim)
 
 func _build_floor() -> void:
+	if blueprint.shape == "custom":
+		_build_grid_floor()
+		return
 	var width: float = blueprint.width
 	var depth: float = blueprint.depth
 	var cutout: bool = blueprint.shape == "l"
@@ -229,3 +233,58 @@ func _build_notch_walls(wall: Material, trim: Material) -> void:
 	_box(group, "NotchSide", Vector3(.12, 3.2, notch_d), Vector3(cut_x + .06, 1.6, cut_z + notch_d * .5), wall, "wall")
 	_box(group, "NotchBackTrim", Vector3(notch_w, .07, .16), Vector3(cut_x + notch_w * .5, 3.19, cut_z + .06), trim)
 	_box(group, "NotchSideTrim", Vector3(.16, .07, notch_d), Vector3(cut_x + .06, 3.19, cut_z + notch_d * .5), trim)
+
+func _build_grid_floor() -> void:
+	# Generate contiguous runs of retained cells; no geometry remains below a hole.
+	var size: Vector2i = Blueprint.cell_count(blueprint)
+	var material := _material(Color("b99572"), .68)
+	var removed: Dictionary = {}
+	for cell: Dictionary in blueprint.removed_cells:
+		removed[Vector2i(cell.ix, cell.iz)] = true
+	var index := 0
+	var tones := [.96, 1.02, .99, 1.04]
+	for iz in range(size.y):
+		var ix := 0
+		while ix < size.x:
+			if removed.has(Vector2i(ix, iz)):
+				ix += 1
+				continue
+			var begin := ix
+			while ix < size.x and not removed.has(Vector2i(ix, iz)):
+				ix += 1
+			var length := float(ix - begin) * Blueprint.FLOOR_GRID
+			var center_x := -float(blueprint.width) * .5 + (float(ix + begin) * .5) * Blueprint.FLOOR_GRID
+			var center_z := -float(blueprint.depth) * .5 + (float(iz) + .5) * Blueprint.FLOOR_GRID
+			_box(self, "Floor" if index == 0 else "FloorSegment_%03d" % index,
+				Vector3(length + .008, .2, Blueprint.FLOOR_GRID + .008),
+				Vector3(center_x, -.1, center_z), material, "floor")
+			var tone: float = tones[iz % tones.size()]
+			var plank := _material(Color("b99572") * tone, .61)
+			_box(self, "FloorBoard_%02d_%02d" % [iz,begin],
+				Vector3(length, .014, Blueprint.FLOOR_GRID - .014),
+				Vector3(center_x, .006, center_z), plank, "floor", tone)
+			index += 1
+
+func _build_custom_exterior(wall: Material, trim: Material) -> void:
+	if blueprint.shape != "custom": return
+	var group := _group(self, "Custom_Exterior")
+	var size: Vector2i = Blueprint.cell_count(blueprint)
+	var removed: Dictionary = {}
+	for cell: Dictionary in blueprint.removed_cells:
+		removed[Vector2i(cell.ix, cell.iz)] = true
+	var counter := 0
+	for cell: Dictionary in blueprint.removed_cells:
+		var at := Vector2i(cell.ix, cell.iz)
+		var center: Vector2 = Blueprint.cell_center(blueprint, cell)
+		for edge: Vector2i in [Vector2i.LEFT, Vector2i.RIGHT, Vector2i.UP, Vector2i.DOWN]:
+			var neighbor := at + edge
+			if neighbor.x < 0 or neighbor.y < 0 or neighbor.x >= size.x or neighbor.y >= size.y: continue
+			if removed.has(neighbor): continue
+			var longitudinal: bool = edge.x != 0
+			var position := Vector3(center.x + float(edge.x) * Blueprint.FLOOR_GRID * .5,
+				1.6, center.y + float(edge.y) * Blueprint.FLOOR_GRID * .5)
+			var span := Vector3(.12,3.2,Blueprint.FLOOR_GRID) if longitudinal else Vector3(Blueprint.FLOOR_GRID,3.2,.12)
+			_box(group, "ReturnWall_%03d" % counter, span, position, wall, "wall")
+			var cap := Vector3(span.x,.06,span.z)
+			_box(group, "ReturnTrim_%03d" % counter, cap, position + Vector3(0,1.59,0), trim)
+			counter += 1
