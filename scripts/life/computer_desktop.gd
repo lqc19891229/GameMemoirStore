@@ -171,12 +171,12 @@ func _ready() -> void:
 	%CopyFurniture.pressed.connect(world.layout.duplicate_selected)
 	%DeleteFurniture.pressed.connect(world.layout.store_selected)
 	_build_furniture_catalog()
-	furniture_cards = RoomCards.new()
-	add_child(furniture_cards)
-	furniture_cards.setup(self)
 	room_ui = RoomMinimalUI.new()
 	add_child(room_ui)
 	room_ui.setup(self)
+	furniture_cards = RoomCards.new()
+	add_child(furniture_cards)
+	furniture_cards.setup(self)
 	var styles := {
 		"wall":["墙面 · 鼠尾草","墙面 · 奶油米","墙面 · 雾蓝"],
 		"floor":["地板 · 原木","地板 · 浅灰木","地板 · 深胡桃"],
