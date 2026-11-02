@@ -69,6 +69,9 @@ func run() -> void:
 			for point: Vector3 in [box.position,box.end]:
 				enclosed = enclosed and absf(point.x) <= item.bounds.x/2+.001 and absf(point.z) <= item.bounds.z/2+.001 and point.y <= item.bounds.y+.001
 		check(enclosed, "furniture collision bounds enclose geometry: " + role)
+	# Furniture copies now consume one purchased, unplaced inventory instance.
+	check(game.session.buy_item("room_plant").begins_with("已购买"), "room shop sells plants")
+	check(game.session.buy_item("room_lamp").begins_with("已购买"), "room shop sells lamps")
 	desktop.begin_layout()
 	layout.select("chair")
 	await frames()

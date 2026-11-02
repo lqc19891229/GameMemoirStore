@@ -38,7 +38,7 @@ static func next_uid(inventory: Array) -> String:
 	while used.has("item_" + str(number)): number += 1
 	return "item_" + str(number)
 
-static func clean(raw: Variant, legacy_owned: Array, legacy_layout: Dictionary) -> Array:
+static func clean(raw: Variant, legacy_owned: Array, legacy_layout: Dictionary, raw_placements: Variant = {}) -> Array:
 	var result: Array = []
 	var seen: Dictionary = {}
 	if raw is Array:
@@ -63,6 +63,7 @@ static func clean(raw: Variant, legacy_owned: Array, legacy_layout: Dictionary) 
 	# Pre-v4 saves contain free room copies. Preserve their identities and ownership.
 	for role: String in legacy_layout:
 		if not _is_furniture_copy(role): continue
+		if raw_placements is Dictionary and raw_placements.has(role): continue
 		var uid := "legacy_" + role
 		if seen.has(uid): continue
 		result.append({"uid": uid, "item_id": ROOM_DEFAULTS[role.get_slice("_", 0)]})

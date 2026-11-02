@@ -57,7 +57,7 @@ static func clean(raw: Variant, owned: Array[String], installed: Array[String]) 
 	result["room_layout"] = int(number(raw.get("room_layout", 0), 1))
 	result["workstation_layout"] = LayoutData.clean(raw.get("workstation_layout", {}))
 	result["room_style"] = preload("res://scripts/room/room_view.gd").clean_style(raw.get("room_style", {}))
-	result["inventory"] = InventoryData.clean(raw.get("inventory", null), result["items"], result["workstation_layout"])
+	result["inventory"] = InventoryData.clean(raw.get("inventory", null), result["items"], result["workstation_layout"], raw.get("placements", {}))
 	result["placements"] = InventoryData.clean_placements(raw.get("placements", null), result["inventory"], result["workstation_layout"])
 	# Older saves have a single bundled keyboard/mouse slot.
 	if raw.get("equipped") is Dictionary:
@@ -66,7 +66,7 @@ static func clean(raw: Variant, owned: Array[String], installed: Array[String]) 
 			if previous.has(slot):
 				var id := str(previous[slot])
 				var item = InventoryData.Catalog.lookup(id)
-				if item != null and item.slot == slot and InventoryData.owns(result["inventory"], id):
+				if item != null and (item.slot == slot or item.slot == "peripheral") and InventoryData.owns(result["inventory"], id):
 					result["equipped"][slot] = id
 			else:
 				result["equipped"][slot] = result["equipped"]["peripheral"]

@@ -8,3 +8,4 @@ test_pixel_room.gd：家具模型边界、房间与桌面碰撞、地毯、复�
 test_audit_regressions.gd：独立网页预览、屏幕投影、显示器背面输入、截图预览和异常存档数值。
 
 测试使用 --fresh 和独立临时存档，不修改正常玩家进度。*.gd.uid 是 Godot 脚本稳定标识。各脚本的完整命令见根目录 README.md。
+test_item_system.gd：物品目录、桌面/地面约束、实例库存、家具多份购买与历史数据迁移。
