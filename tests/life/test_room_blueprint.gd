@@ -74,6 +74,7 @@ func run() -> void:
 	restored.save_path = state.save_path
 	restored.load_state()
 	check(restored.life.room_blueprint == room.blueprint, "blueprint survives JSON save and load")
+	var expected_blueprint: Dictionary = room.blueprint.duplicate()
 	game.queue_free()
 	await frames()
 	var resumed = load("res://scenes/main/game_root.tscn").instantiate()
@@ -82,7 +83,7 @@ func run() -> void:
 	resumed.session.timer.stop()
 	await frames()
 	var resumed_room = resumed.desktop.world.get_node("Room")
-	check(resumed_room.blueprint == room.blueprint, "new session reconstructs saved room geometry")
+	check(resumed_room.blueprint == expected_blueprint, "new session reconstructs saved room geometry")
 	check(is_equal_approx(resumed_room.get_node("Shell/Floor").mesh.size.x, 10.24), "new session rebuilds floor dimensions")
 	check(resumed.desktop.world.layout.valid, "loaded furniture remains inside resized room")
 	resumed.queue_free()
