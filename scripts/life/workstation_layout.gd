@@ -1319,6 +1319,7 @@ func _constrain_motion(before: Transform3D, target: Transform3D) -> void:
 			else: high = middle
 		node.transform = previous.interpolate_with(next, low)
 		break
+	if not blocker.is_empty(): wall_magnet_active = false
 	update(blocker)
 
 func rotate_step(direction: float) -> void:
@@ -1363,11 +1364,13 @@ func drag_to(pixel: Vector2) -> void:
 		rotate_to(start_yaw - angle_difference(start_angle,current))
 
 func end_drag() -> void:
-	if not gesture.is_empty() and not drag_before.is_empty(): _remember(drag_before)
+	var was_dragging := not gesture.is_empty()
+	if was_dragging and not drag_before.is_empty(): _remember(drag_before)
 	gesture = ""
 	drag_before = {}
 	snap_bypass = false
 	wall_magnet_active = false
+	if was_dragging and active: update()
 
 func pick_handle(pixel: Vector2) -> String:
 	var origin: Vector3 = world.camera.project_ray_origin(pixel)
@@ -1403,7 +1406,7 @@ func _update_gizmo(contact: bool = false) -> void:
 	gizmo.global_rotation.y = node.global_rotation.y
 	var outline: MeshInstance3D = gizmo.get_node("Outline")
 	outline.scale = Vector3(size.x + .06,size.z + .06,1)
-	outline.material_override.set_shader_parameter("line_color",Color("ff756a") if not valid else (Color("ffc563") if contact else Color("61d9ff")))
+	outline.material_override.set_shader_parameter("line_color",Color("ff756a") if not valid else Color("ffc563") if contact else Color("82c6a3") if wall_magnet_active else Color("61d9ff"))
 	var handle_height := 0.0 if selected == "desk" else size.y + .08
 	gizmo.get_node("MoveHandles").position.y = handle_height
 	gizmo.get_node("RotateHandles").position.y = handle_height
