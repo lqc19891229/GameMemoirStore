@@ -361,7 +361,8 @@ func set_blueprint_shape(shape: String) -> bool:
 func _apply_blueprint_change(next: Dictionary) -> bool:
 	if next == blueprint: return false
 	# Do not drop internal walls when altering the outer boundary.
-	if next.partitions.size() != blueprint.partitions.size() or (next.shape == "custom" and blueprint.shape == "custom" and next.removed_cells.size() != blueprint.removed_cells.size()):
+	if next.partitions.size() != blueprint.partitions.size() or (next.shape == "custom" and blueprint.shape == "custom" and next.removed_cells.size() != blueprint.removed_cells.size())
+		or next.floor_finishes.size() != blueprint.floor_finishes.size() or next.edge_finishes.size() != blueprint.edge_finishes.size():
 		message = "调整失败：外轮廓将移除已有内墙或地板单元，请先调整结构"
 		changed.emit()
 		return false
@@ -392,6 +393,7 @@ func floor_cell_blocker(cell: Dictionary, removing: bool = true) -> String:
 	if not BlueprintData.valid_cell(blueprint, cell): return "超出房间范围"
 	if removing:
 		if BlueprintData.has_cell(blueprint, cell): return "此处已经移除地板"
+		if BlueprintData.floor_finish(blueprint, cell) != 0: return "请先将此地板恢复默认材质"
 		if not BlueprintData.editable_cell(blueprint, cell): return "门窗所在的后墙和左墙必须保留地板"
 		if blueprint.removed_cells.size() >= BlueprintData.MAX_REMOVED: return "可移除地板已达到上限"
 		var shape := BlueprintData.cell_polygon(blueprint, cell, collision_margin)
@@ -423,6 +425,77 @@ func paint_floor_cell(at: Vector2, removing: bool = true) -> bool:
 	var next := blueprint.duplicate(true)
 	if removing: next.removed_cells.append(cell)
 	else: next.removed_cells.erase(cell)
+	next = BlueprintData.clean(next)
+	if next.edge_finishes.size() != blueprint.edge_finishes.size():
+		message = "绘制失败：此操作会移除已装修的外墙，请先恢复外墙"
+		changed.emit()
+		return false
+	blueprint = next
+	world.get_node("Room").apply_blueprint(blueprint)
+	_remember(before)
+	update()
+	return true
+
+func paint_floor_finish(at: Vector2, finish: int) -> bool:
+	if not active or blueprint.shape != "custom": return false
+	if finish < 0 or finish >= BlueprintData.FINISH_COUNT: return false
+	var cell: Dictionary = BlueprintData.cell_at(blueprint, at)
+	if not BlueprintData.valid_cell(blueprint, cell) or BlueprintData.has_cell(blueprint, cell): return false
+	if BlueprintData.floor_finish(blueprint, cell) == finish: return false
+	var before := _draft()
+	var next := blueprint.duplicate(true)
+	var retained := []
+	for entry: Dictionary in next.floor_finishes:
+		if entry.ix != cell.ix or entry.iz != cell.iz:
+			retained.append(entry)
+	if finish > 0:
+		retained.append({"ix":cell.ix, "iz":cell.iz, "finish":finish})
+	next.floor_finishes = retained
+	blueprint = BlueprintData.clean(next)
+	world.get_node("Room").apply_blueprint(blueprint)
+	_remember(before)
+	update()
+	return true
+
+func paint_exterior_edge(at: Vector2, kind: String, finish: int) -> bool:
+	if not active or blueprint.shape != "custom": return false
+	if kind not in ["wall", "window", "door"] or finish < 0 or finish >= BlueprintData.FINISH_COUNT: return false
+	var edge: Dictionary = BlueprintData.nearest_edge(blueprint, at)
+	if edge.is_empty(): return false
+	var existing: Dictionary = BlueprintData.edge_edit(blueprint, edge)
+	if existing.kind == kind and int(existing.finish) == finish: return false
+	var before := _draft()
+	var next := blueprint.duplicate(true)
+	var retained := []
+	for entry: Dictionary in next.edge_finishes:
+		if not BlueprintData.same_edge(entry, edge): retained.append(entry)
+	if kind != "wall" or finish > 0:
+		retained.append({"ix":edge.ix, "iz":edge.iz, "dx":edge.dx, "dz":edge.dz,
+			"kind":kind, "finish":finish})
+	next.edge_finishes = retained
+	blueprint = BlueprintData.clean(next)
+	world.get_node("Room").apply_blueprint(blueprint)
+	_remember(before)
+	update()
+	return true
+
+func paint_partition_finish(at: Vector2, finish: int) -> bool:
+	if not active or finish < 0 or finish >= BlueprintData.FINISH_COUNT: return false
+	var nearest := -1
+	var distance := .36
+	for index in range(blueprint.partitions.size()):
+		var part: Dictionary = blueprint.partitions[index]
+		var metric := Vector2(float(part.x), float(part.z)).distance_to(at)
+		if metric < distance:
+			distance = metric
+			nearest = index
+	if nearest < 0: return false
+	if int(blueprint.partitions[nearest].get("finish", 0)) == finish: return false
+	var before := _draft()
+	var next := blueprint.duplicate(true)
+	var part: Dictionary = next.partitions[nearest]
+	if finish == 0: part.erase("finish")
+	else: part["finish"] = finish
 	blueprint = BlueprintData.clean(next)
 	world.get_node("Room").apply_blueprint(blueprint)
 	_remember(before)
