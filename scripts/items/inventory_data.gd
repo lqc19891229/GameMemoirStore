@@ -6,6 +6,15 @@ const STARTER_IDS := ["starter_pc", "starter_monitor", "starter_mouse", "starter
 const ROOM_DEFAULTS := {"chair": "room_chair", "bookcase": "room_bookcase", "lamp": "room_lamp", "rug": "room_rug", "plant": "room_plant", "sofa":"room_sofa", "stool":"room_stool"}
 const STARTER_FURNITURE_ROLES := ["chair","bookcase","lamp","rug","plant"]
 
+## ROOM_DEFAULTS is a migration map for authored furniture, not the live catalog.
+## New SKUs register a distinct stable subcategory/placement role in the item catalog.
+static func furniture_item_id(role: String) -> String:
+	var item: MemoirItemDefinition = Catalog.item_for_placement_role(role)
+	return item.item_id if item != null else ""
+
+static func is_room_furniture_role(role: String) -> bool:
+	return Catalog.item_for_placement_role(role) != null
+
 static func initial() -> Array:
 	var result: Array = []
 	for id: String in STARTER_IDS:
@@ -67,13 +76,15 @@ static func clean(raw: Variant, legacy_owned: Array, legacy_layout: Dictionary, 
 		if raw_placements is Dictionary and raw_placements.has(role): continue
 		var uid := "legacy_" + role
 		if seen.has(uid): continue
-		result.append({"uid": uid, "item_id": ROOM_DEFAULTS[role.get_slice("_", 0)]})
+		result.append({"uid": uid, "item_id": furniture_item_id(role.substr(0, role.rfind("_")))})
 		seen[uid] = true
 	return result
 
 static func _is_furniture_copy(role: String) -> bool:
 	var parts := role.split("_")
-	return parts.size() == 2 and ROOM_DEFAULTS.has(parts[0]) and parts[1].is_valid_int() and int(parts[1]) >= 1 and int(parts[1]) <= 8
+	if parts.size() < 2 or not parts[-1].is_valid_int(): return false
+	var prefix := role.substr(0, role.rfind("_"))
+	return is_room_furniture_role(prefix) and int(parts[-1]) >= 1 and int(parts[-1]) <= 8
 
 static func clean_placements(raw: Variant, inventory: Array, layout: Dictionary) -> Dictionary:
 	# Missing field means a pre-v4 save with authored furniture.
@@ -83,12 +94,12 @@ static func clean_placements(raw: Variant, inventory: Array, layout: Dictionary)
 	for uid: String in result.values(): used[uid] = true
 	if raw is Dictionary:
 		for role: String in raw:
-			if not ROOM_DEFAULTS.has(role) and not _is_furniture_copy(role): continue
+			if not is_room_furniture_role(role) and not _is_furniture_copy(role): continue
 			if role != role.get_slice("_", 0) and not layout.has(role): continue
 			var uid := str(raw[role])
 			if used.has(uid): continue
 			for entry: Dictionary in inventory:
-				if entry.uid == uid and entry.item_id == ROOM_DEFAULTS[role.get_slice("_", 0)]:
+				if entry.uid == uid and entry.item_id == furniture_item_id(role.substr(0, role.rfind("_")) if _is_furniture_copy(role) else role):
 					result[role] = uid
 					used[uid] = true
 					break

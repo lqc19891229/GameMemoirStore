@@ -2,7 +2,8 @@ class_name MemoirWorkstationLayoutData
 extends RefCounted
 ## Only horizontal poses are persisted; height and scale remain authored in scenes.
 const MAX_POSITION := 20.0
-const ROLES := ["desk", "monitor", "computer", "keyboard", "mouse", "chair", "bookcase", "lamp", "rug", "plant", "sofa", "stool"]
+const Catalog: MemoirItemCatalog = preload("res://data/items/_catalog.tres")
+const ROLES := ["desk", "monitor", "computer", "keyboard", "mouse"]
 static func clean(raw: Variant) -> Dictionary:
 	var result: Dictionary = {}
 	if not raw is Dictionary: return result
@@ -20,14 +21,18 @@ static func clean(raw: Variant) -> Dictionary:
 	return result
 
 static func base_role(role: String) -> String:
-	return role.get_slice("_", 0)
+	if is_copy(role): return role.substr(0, role.rfind("_"))
+	return role
 
 static func is_copy(role: String) -> bool:
-	var parts := role.split("_")
-	return parts.size() == 2 and parts[0] in ["chair","bookcase","lamp","rug","plant","sofa","stool"] and parts[1] in ["1","2","3","4","5","6","7","8"]
+	var index := role.rfind("_")
+	if index < 1: return false
+	var suffix := role.substr(index+1)
+	if not suffix.is_valid_int() or int(suffix) < 1 or int(suffix) > 8: return false
+	return Catalog.item_for_placement_role(role.substr(0,index)) != null
 
 static func valid_role(role: String) -> bool:
-	return role in ROLES or is_copy(role)
+	return role in ROLES or Catalog.item_for_placement_role(role) != null or is_copy(role)
 
 static func overlap(a: PackedVector2Array, b: PackedVector2Array) -> bool:
 	# Separating axes for convex footprints; a tiny tolerance permits touching edges.
