@@ -2,7 +2,7 @@ class_name MemoirWorkstationLayoutData
 extends RefCounted
 ## Only horizontal poses are persisted; height and scale remain authored in scenes.
 const MAX_POSITION := 20.0
-const ROLES := ["desk", "monitor", "computer", "keyboard", "mouse", "chair", "bookcase", "lamp", "rug", "plant"]
+const ROLES := ["desk", "monitor", "computer", "keyboard", "mouse", "chair", "bookcase", "lamp", "rug", "plant", "sofa", "stool"]
 static func clean(raw: Variant) -> Dictionary:
 	var result: Dictionary = {}
 	if not raw is Dictionary: return result
@@ -24,7 +24,7 @@ static func base_role(role: String) -> String:
 
 static func is_copy(role: String) -> bool:
 	var parts := role.split("_")
-	return parts.size() == 2 and parts[0] in ["chair","bookcase","lamp","rug","plant"] and parts[1] in ["1","2","3","4","5","6","7","8"]
+	return parts.size() == 2 and parts[0] in ["chair","bookcase","lamp","rug","plant","sofa","stool"] and parts[1] in ["1","2","3","4","5","6","7","8"]
 
 static func valid_role(role: String) -> bool:
 	return role in ROLES or is_copy(role)

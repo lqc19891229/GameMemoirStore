@@ -6,7 +6,7 @@ const ItemCatalog: MemoirItemCatalog = preload("res://data/items/_catalog.tres")
 const BlueprintData = preload("res://scripts/room/room_blueprint_data.gd")
 const FURNITURE_COLOR_LABELS := ["原色", "奶油白", "鼠尾草绿", "雾蓝", "暖粉", "浅橡木"]
 const FURNITURE_COLOR_HEX := ["", "eae1d4", "a4bdac", "9fbed3", "d9b3b5", "d6b184"]
-const NAMES := {"desk":"桌子（整套）", "monitor":"显示器", "computer":"机箱", "keyboard":"键盘", "mouse":"鼠标", "chair":"椅子", "bookcase":"书架", "lamp":"落地灯", "rug":"地毯", "plant":"盆栽"}
+const NAMES := {"desk":"桌子（整套）", "monitor":"显示器", "computer":"机箱", "keyboard":"键盘", "mouse":"鼠标", "chair":"椅子", "bookcase":"书架", "lamp":"落地灯", "rug":"地毯", "plant":"盆栽", "sofa":"双人沙发", "stool":"软垫矮凳"}
 @export var tabletop_half_size := Vector2(2.4, 1.15)
 @export var tabletop_height := 0.78
 @export var edge_margin := 0.025
@@ -70,6 +70,9 @@ func setup(owner_world: Node3D) -> void:
 	for item: Node3D in world.get_node("Room/Furniture").get_children():
 		nodes[item.role] = item
 		templates[item.role] = load(item.scene_file_path)
+	for item in ItemCatalog.items:
+		if item.category == "furniture" and InventoryData.ROOM_DEFAULTS.get(item.subcategory, "") == item.item_id and item.furniture_scene != null:
+			if not templates.has(item.subcategory): templates[item.subcategory] = item.furniture_scene
 	committed_style = world.get_node("Room").style.duplicate()
 	blueprint = world.get_node("Room").blueprint.duplicate()
 	committed_blueprint = blueprint.duplicate(true)
@@ -188,7 +191,7 @@ func start_place(item_id: String, uid: String) -> bool:
 	placed_instances[role] = uid
 	selected = role
 	placing_role = role
-	nodes[role].transform = authored[base_role]
+	nodes[role].transform = authored.get(base_role, Transform3D.IDENTITY)
 	update()
 	return true
 
@@ -226,7 +229,7 @@ func cancel_placement() -> void:
 	update()
 
 func _create_copy(role: String) -> void:
-	if nodes.has(role) or not Data.is_copy(role): return
+	if nodes.has(role) or not Data.valid_role(role) or not templates.has(Data.base_role(role)): return
 	var item: Node3D = templates[Data.base_role(role)].instantiate()
 	item.role = role
 	item.name = role
@@ -236,7 +239,7 @@ func _create_copy(role: String) -> void:
 
 func restore(poses: Dictionary) -> void:
 	for role: String in nodes.keys():
-		if Data.is_copy(role) and not poses.has(role):
+		if not authored.has(role) and not poses.has(role):
 			nodes[role].free()
 			nodes.erase(role)
 	for role: String in poses:

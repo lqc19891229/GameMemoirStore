@@ -72,6 +72,10 @@ func _build_visual() -> void:
 			_build_rug(model)
 		"plant":
 			_build_plant(model)
+		"sofa":
+			_build_sofa(model)
+		"stool":
+			_build_stool(model)
 
 func _build_chair(model: Node3D) -> void:
 	var fabric := _material(Color("666f73"), 0.94)
@@ -188,3 +192,40 @@ func _build_plant(model: Node3D) -> void:
 		var leaf := _sphere(model, "Leaf_%02d" % index, size, at, leaf_light if index % 3 == 0 else leaves)
 		leaf.rotation.z = -cos(angle) * 0.42
 		leaf.rotation.x = sin(angle) * 0.42
+
+func _build_sofa(model: Node3D) -> void:
+	## Compact fabric sofa with a timber base and independently shaded cushions.
+	## All geometry stays within the authored 1.98 x 1.06 x .88 collision box.
+	var frame := _material(Color("66544b"), .67)
+	var legs := _material(Color("343b3b"), .47, .28)
+	var upholstery := _material(Color("b7b1a7"), .93)
+	var cushions := [_material(Color("d4cbbd"), .96),_material(Color("b2c3b7"), .94)]
+	var accent := _material(Color("8a9b8e"), .92)
+	_box(model, "SofaFrame", Vector3(1.88,.21,.77), Vector3(0,.24,.03), frame)
+	for x in [-.79,.79]:
+		for z in [-.31,.31]:
+			_cylinder(model, "SofaLeg",.042,.052,.16,Vector3(x,.08,z),legs,12)
+	_box(model, "SofaBack", Vector3(1.86,.55,.20), Vector3(0,.68,-.31),upholstery)
+	for x in [-.78,.78]:
+		_box(model, "SofaArm", Vector3(.20,.48,.80),Vector3(x,.50,0),upholstery)
+	for i in range(2):
+		var x := -.39 if i == 0 else .39
+		_box(model,"SeatCushion_%d" % i,Vector3(.73,.18,.64),Vector3(x,.43,.04),cushions[i])
+		_box(model,"BackCushion_%d" % i,Vector3(.73,.44,.15),Vector3(x,.65,-.19),cushions[i])
+	_box(model,"ThrowPillow",Vector3(.28,.28,.13),Vector3(.53,.68,.10),accent,-.22)
+
+func _build_stool(model: Node3D) -> void:
+	## Small walnut/linen accent stool with a decorative ceramic bowl.
+	## Its visible model fits within .68 x .66 x .68 metres.
+	var walnut := _material(Color("826046"),.58)
+	var brass := _material(Color("af976e"),.34,.60)
+	var textile := _material(Color("d2cab9"),.94)
+	var ceramic := _material(Color("d7dbd0"),.67)
+	for x in [-.23,.23]:
+		for z in [-.23,.23]:
+			_box(model,"StoolLeg",Vector3(.055,.44,.055),Vector3(x,.22,z),walnut)
+			_box(model,"LegCap",Vector3(.057,.075,.057),Vector3(x,.065,z),brass)
+	_box(model,"StoolApron",Vector3(.60,.09,.60),Vector3(0,.45,0),walnut)
+	_box(model,"StoolCushion",Vector3(.66,.10,.66),Vector3(0,.535,0),textile)
+	_cylinder(model,"AccentTray",.13,.15,.028,Vector3(0,.605,0),ceramic,24)
+	_cylinder(model,"AccentTrayInset",.095,.095,.008,Vector3(0,.621,0),brass,24)

@@ -370,6 +370,14 @@ text = "地毯"
 unique_name_in_owner = true
 layout_mode = 2
 text = "绿植"
+[node name="Place_sofa" type="Button" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content/FurnitureInventory"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "双人沙发"
+[node name="Place_stool" type="Button" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content/FurnitureInventory"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "软垫矮凳"
 [node name="FurniturePaletteLabel" type="Label" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content/FurnitureInventory"]
 layout_mode = 2
 text = "选中家具 · 独立改色"
@@ -425,6 +433,36 @@ layout_mode = 2
 size_flags_horizontal = 3
 text = "同类等距 Z"
 tooltip_text = "三件以上同类地面家具之间按 Z 方向等距摆放，保持两端不动"
+
+[node name="MaterialLibraryTitle" type="Label" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content"]
+layout_mode = 2
+text = "材质纹理与光影氛围"
+theme_override_font_sizes/font_size = 16
+[node name="MaterialLibraryHint" type="Label" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content"]
+layout_mode = 2
+autowrap_mode = 3
+text = "墙面和地板纹理可与现有颜色组合。氛围改变室内日照、环境色和窗外景色，均随房间保存。"
+[node name="Style_wall_pattern" type="OptionButton" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+tooltip_text = "纯色粉刷 / 亚麻纤维 / 错缝砖纹"
+[node name="Style_floor_pattern" type="OptionButton" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+tooltip_text = "基础地板 / 橡木纹理 / 石材地砖"
+[node name="Style_atmosphere" type="OptionButton" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+tooltip_text = "晴昼 / 日落 / 夜晚 / 雨天"
+
+[node name="Layout_sofa" type="Button" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "选中双人沙发"
+[node name="Layout_stool" type="Button" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "选中软垫矮凳"
 
 [node name="BlueprintPanel" type="VBoxContainer" parent="HUD/Interface/LayoutPanel/Margin/Scroll"]
 unique_name_in_owner = true

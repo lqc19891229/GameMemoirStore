@@ -3,19 +3,20 @@ extends RefCounted
 ## Stable per-object IDs allow multiple identical pieces of furniture.
 const Catalog: MemoirItemCatalog = preload("res://data/items/_catalog.tres")
 const STARTER_IDS := ["starter_pc", "starter_monitor", "starter_mouse", "starter_desk", "starter_cabinet"]
-const ROOM_DEFAULTS := {"chair": "room_chair", "bookcase": "room_bookcase", "lamp": "room_lamp", "rug": "room_rug", "plant": "room_plant"}
+const ROOM_DEFAULTS := {"chair": "room_chair", "bookcase": "room_bookcase", "lamp": "room_lamp", "rug": "room_rug", "plant": "room_plant", "sofa":"room_sofa", "stool":"room_stool"}
+const STARTER_FURNITURE_ROLES := ["chair","bookcase","lamp","rug","plant"]
 
 static func initial() -> Array:
 	var result: Array = []
 	for id: String in STARTER_IDS:
 		result.append({"uid": "legacy_" + id, "item_id": id})
-	for role: String in ROOM_DEFAULTS:
+	for role: String in STARTER_FURNITURE_ROLES:
 		result.append({"uid": "starter_" + role, "item_id": ROOM_DEFAULTS[role]})
 	return result
 
 static func initial_placements() -> Dictionary:
 	var result: Dictionary = {}
-	for role: String in ROOM_DEFAULTS:
+	for role: String in STARTER_FURNITURE_ROLES:
 		result[role] = "starter_" + role
 	return result
 

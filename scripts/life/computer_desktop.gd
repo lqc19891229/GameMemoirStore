@@ -168,7 +168,10 @@ func _ready() -> void:
 		"floor":["地板 · 原木","地板 · 浅灰木","地板 · 深胡桃"],
 		"light":["灯光 · 午后暖阳","灯光 · 清晨冷光","灯光 · 夜间暖灯"],
 		"rgb":["冰青","深蓝","紫罗兰","洋红","琥珀","薄荷","玫瑰"],
-		"effect":["常亮","呼吸","彩虹循环"]
+		"effect":["常亮","呼吸","彩虹循环"],
+		"wall_pattern":["纯色粉刷","细纹亚麻","错缝砖纹"],
+		"floor_pattern":["基础地板","橡木纹理","石材地砖"],
+		"atmosphere":["晴昼","日落","夜晚","雨天"]
 	}
 	for key: String in styles:
 		var selector: OptionButton = get_node("%Style_" + key)
@@ -720,7 +723,7 @@ func _sync_layout() -> void:
 	%UndoLayout.disabled = layout.undo_stack.is_empty()
 	%RedoLayout.disabled = layout.redo_stack.is_empty()
 	var style: Dictionary = world.get_node("Room").style
-	for key: String in ["wall","floor","light","rgb","effect"]:
+	for key: String in ["wall","floor","light","rgb","effect","wall_pattern","floor_pattern","atmosphere"]:
 		(get_node("%Style_" + key) as OptionButton).select(int(style.get(key, 0)))
 	(%Style_brightness as HSlider).set_value_no_signal(float(style.get("brightness", 70)))
 	for role: String in layout.NAMES: get_node("%Layout_" + role).set_pressed_no_signal(layout.selected == role)

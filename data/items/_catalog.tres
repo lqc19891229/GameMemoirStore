@@ -7,6 +7,8 @@
 [ext_resource type="PackedScene" path="res://scenes/room/lamp.tscn" id="s_lamp"]
 [ext_resource type="PackedScene" path="res://scenes/room/rug.tscn" id="s_rug"]
 [ext_resource type="PackedScene" path="res://scenes/room/plant.tscn" id="s_plant"]
+[ext_resource type="PackedScene" path="res://scenes/room/sofa.tscn" id="s_sofa"]
+[ext_resource type="PackedScene" path="res://scenes/room/stool.tscn" id="s_stool"]
 
 [sub_resource type="Resource" id="item_0"]
 script = ExtResource("2")
@@ -317,6 +319,40 @@ income = 0
 capacity = 0
 retired = false
 
+[sub_resource type="Resource" id="item_19"]
+script = ExtResource("2")
+item_id = "room_sofa"
+name = "奶油双人沙发"
+category = "furniture"
+subcategory = "sofa"
+slot = ""
+price = 110
+description = "柔软坐垫和双层靠背，为游戏房间增添休息区。"
+placement_surface = "floor"
+visual_id = ""
+speed = 1
+income = 0
+capacity = 0
+retired = false
+furniture_scene = ExtResource("s_sofa")
+
+[sub_resource type="Resource" id="item_20"]
+script = ExtResource("2")
+item_id = "room_stool"
+name = "胡桃木软垫矮凳"
+category = "furniture"
+subcategory = "stool"
+slot = ""
+price = 42
+description = "小巧的软垫边凳与托盘，适合书架或休息角。"
+placement_surface = "floor"
+visual_id = ""
+speed = 1
+income = 0
+capacity = 0
+retired = false
+furniture_scene = ExtResource("s_stool")
+
 [resource]
 script = ExtResource("1")
-items = Array[ExtResource("2")]([SubResource("item_0"), SubResource("item_1"), SubResource("item_2"), SubResource("item_3"), SubResource("item_4"), SubResource("item_5"), SubResource("item_6"), SubResource("item_7"), SubResource("item_8"), SubResource("item_9"), SubResource("item_10"), SubResource("item_11"), SubResource("item_12"), SubResource("item_13"), SubResource("item_14"), SubResource("item_15"), SubResource("item_16"), SubResource("item_17"), SubResource("item_18")])
+items = Array[ExtResource("2")]([SubResource("item_0"), SubResource("item_1"), SubResource("item_2"), SubResource("item_3"), SubResource("item_4"), SubResource("item_5"), SubResource("item_6"), SubResource("item_7"), SubResource("item_8"), SubResource("item_9"), SubResource("item_10"), SubResource("item_11"), SubResource("item_12"), SubResource("item_13"), SubResource("item_14"), SubResource("item_15"), SubResource("item_16"), SubResource("item_17"), SubResource("item_18"), SubResource("item_19"), SubResource("item_20")])
