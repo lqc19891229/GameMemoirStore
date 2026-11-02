@@ -98,7 +98,7 @@ func _build() -> void:
 func _build_floor() -> void:
 	var width: float = blueprint.width
 	var depth: float = blueprint.depth
-	var cutout := blueprint.shape == "l"
+	var cutout: bool = blueprint.shape == "l"
 	var notch_w: float = blueprint.notch_width if cutout else 0.0
 	var notch_d: float = blueprint.notch_depth if cutout else 0.0
 	var cut_z: float = depth * .5 - notch_d
@@ -114,7 +114,7 @@ func _build_floor() -> void:
 		var tone: float = tones[row % tones.size()]
 		var plank := _material(Color("b99572") * tone, .61)
 		var z: float = -depth * .5 + .25 + float(row) * .5
-		var wing := cutout and z >= cut_z
+		var wing: bool = cutout and z >= cut_z
 		var plank_width := width - notch_w if wing else width
 		var plank_x := -notch_w * .5 if wing else 0.0
 		_box(self, "FloorBoard_%02d" % row, Vector3(plank_width, .014, .486), Vector3(plank_x, .006, z), plank, "floor", tone)
