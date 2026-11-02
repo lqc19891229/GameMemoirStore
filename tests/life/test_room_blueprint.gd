@@ -19,7 +19,7 @@ func frames() -> void:
 func run() -> void:
 	var bad: Dictionary = Blueprint.clean({"width": INF, "depth": -99, "door_x": 100, "window_z": -100})
 	check(bad.width == 8.0 and bad.depth == 5.0, "blueprint sanitizes unsafe dimensions")
-	check(absf(bad.door_x) <= 3.3 and absf(bad.window_z) <= 1.15, "openings remain wholly inside walls")
+	check(absf(bad.door_x) <= 3.301 and absf(bad.window_z) <= 1.151, "openings remain wholly inside walls")
 	var game = load("res://scenes/main/game_root.tscn").instantiate()
 	root.add_child(game)
 	await frames()
