@@ -1350,6 +1350,9 @@ func begin_drag(pixel: Vector2, operation: String = "move", direction: String = 
 	start_yaw = nodes[selected].rotation.y
 	start_axis = (nodes[selected].basis.x if axis == "x" else nodes[selected].basis.z).normalized()
 	start_angle = atan2(hit.z - start_position.z, hit.x - start_position.x)
+	# Show the contextual gesture cue immediately on pointer-down, not only
+	# after the first mouse motion event.
+	update()
 
 func drag_to(pixel: Vector2) -> void:
 	if gesture.is_empty(): return

@@ -277,12 +277,18 @@ func _sync_feedback(active: bool) -> void:
 	var object: Node3D = layout.nodes[layout.selected]
 	var camera: Camera3D = host.world.camera
 	var target: Vector3 = object.global_position + Vector3.UP * maxf(0.25, layout.bounds_for(layout.selected).y + .18)
-	if camera.is_position_behind(target):
-		feedback.hide()
-		return
 	var view: Vector2 = host.get_viewport().get_visible_rect().size
 	var pixel: Vector2 = camera.unproject_position(target)
-	feedback.position = Vector2(clampf(pixel.x + 12.0, 12.0, maxf(12.0,view.x - 310.0)),clampf(pixel.y - 64.0, 127.0, maxf(127.0, view.y - 86.0)))
+	var in_view: bool = not camera.is_position_behind(target) and Rect2(Vector2.ZERO,view).has_point(pixel)
+	if not in_view:
+		# During an invalid out-of-bounds preview the ghost can be outside the
+		# camera entirely. Keep the error notice anchored in view.
+		if layout.valid and layout.placing_role.is_empty():
+			feedback.hide()
+			return
+		feedback.position = Vector2(maxf(12.0,(view.x-340.0)*0.5),128.0)
+	else:
+		feedback.position = Vector2(clampf(pixel.x + 12.0, 12.0, maxf(12.0,view.x - 310.0)),clampf(pixel.y - 64.0, 127.0, maxf(127.0, view.y - 86.0)))
 	feedback_text.text = message
 	feedback_text.add_theme_color_override("font_color",Color("bd4a45") if not layout.valid or message.begins_with("已阻挡") else Color("29694d") if layout.wall_magnet_active else Color("394f40"))
 	feedback.show()
