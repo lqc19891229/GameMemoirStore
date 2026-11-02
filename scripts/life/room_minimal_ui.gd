@@ -120,7 +120,7 @@ func _build_dock(canvas: Control) -> void:
 	var body := VBoxContainer.new()
 	body.add_theme_constant_override("separation", 5)
 	margin.add_child(body)
-	var inventory: VBoxContainer = host.get_node("%FurnitureInventory")
+	var inventory: VBoxContainer = host.get_node("HUD/Interface/LayoutPanel/Margin/Scroll/Content/FurnitureInventory")
 	inventory.reparent(body)
 	inventory.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	# A compact single-line filter row replaces stacked filters.
