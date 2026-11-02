@@ -118,6 +118,7 @@ jobs:
             tests/test_editor_scenes.gd \
             tests/life/test_life_flow.gd \
             tests/life/test_item_system.gd \
+            tests/life/test_room_placement.gd \
             tests/life/test_workstation_view.gd \
             tests/life/test_workstation_lighting.gd \
             tests/life/test_workstation_layout.gd \

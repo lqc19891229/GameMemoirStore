@@ -1,6 +1,7 @@
 extends Node3D
 const WindowScene = preload("res://scenes/computer/ui/app_window.tscn")
 const ItemCatalog: MemoirItemCatalog = preload("res://data/items/_catalog.tres")
+const InventoryData = preload("res://scripts/items/inventory_data.gd")
 const APPS := {"platform": ["游戏平台", "res://scenes/apps/platform/store.tscn"], "browser": ["回忆生活 · 购物网页", "res://scenes/apps/browser/browser.tscn"], "game": ["正在游玩", "res://scenes/apps/game/game_player.tscn"]}
 @export var hardware_catalog: MemoirHardwareCatalog
 var session: MemoirGameSession
@@ -17,6 +18,8 @@ var camera_dragged := false
 const DRAG_THRESHOLD := 6.0
 var screen_mouse_down := false
 var last_screen_point := Vector2.ZERO
+var furniture_buttons: Dictionary = {}
+var furniture_palette: OptionButton
 @onready var world: Node3D = %Workstation3D
 var screen_focused: bool:
 	get: return is_instance_valid(world) and world.mode == "screen"
@@ -37,7 +40,8 @@ func _ready() -> void:
 	%UndoLayout.pressed.connect(world.layout.undo)
 	%RedoLayout.pressed.connect(world.layout.redo)
 	%CopyFurniture.pressed.connect(world.layout.duplicate_selected)
-	%DeleteFurniture.pressed.connect(world.layout.delete_selected)
+	%DeleteFurniture.pressed.connect(world.layout.store_selected)
+	_build_furniture_catalog()
 	var styles := {
 		"wall":["墙面 · 鼠尾草","墙面 · 奶油米","墙面 · 雾蓝"],
 		"floor":["地板 · 原木","地板 · 浅灰木","地板 · 深胡桃"],
@@ -93,8 +97,9 @@ func _update_equipment() -> void:
 		if model != null and world.devices[role].appearance != model:
 			world.devices[role].appearance = model
 			reposition = reposition or (screen_focused and role == "monitor")
-	world.layout.load_saved(session.state.life.get("workstation_layout", {}))
 	world.layout.load_placements(session.state.life.get("placements", {}), session.state.life.get("inventory", []))
+	world.layout.load_saved(session.state.life.get("workstation_layout", {}))
+	world.layout.load_colors(session.state.life.get("furniture_colors", {}))
 	world.layout.load_style(session.state.life.get("room_style", {}))
 	if world.layout.active: world.layout.update()
 	if reposition: world.set_mode("screen", false)
@@ -111,17 +116,34 @@ func finish_layout(apply: bool) -> void:
 	if apply and session != null:
 		session.state.life["workstation_layout"] = world.layout.export_layout()
 		session.state.life["placements"] = world.layout.committed_placements.duplicate()
+		session.state.life["furniture_colors"] = world.layout.committed_colors.duplicate()
 		session.state.life["room_style"] = world.layout.committed_style.duplicate()
 		session.state.save_state()
 
-func _start_purchased_furniture_placement(item_id: String, _uid: String) -> void:
-	var item: MemoirItemDefinition = ItemCatalog.lookup(item_id)
-	if item == null or item.category != "furniture" or item.placement_surface != "floor": return
+func _start_purchased_furniture_placement(item_id: String, uid: String) -> void:
 	if world.layout.active: return
 	set_screen_focused(false, false)
 	begin_layout()
-	world.layout.select(item.subcategory)
-	world.layout.duplicate_selected()
+	if not world.layout.start_place(item_id, uid): finish_layout(false)
+
+func _build_furniture_catalog() -> void:
+	for role: String in InventoryData.ROOM_DEFAULTS:
+		var item_id: String = InventoryData.ROOM_DEFAULTS[role]
+		var item: MemoirItemDefinition = ItemCatalog.lookup(item_id)
+		var button: Button = get_node("%Place_" + role)
+		button.text = item.name if item != null else role
+		var selected_id := item_id
+		button.pressed.connect(func() -> void: _start_inventory_placement(selected_id))
+		furniture_buttons[item_id] = button
+	furniture_palette = %FurniturePalette
+	for label: String in world.layout.FURNITURE_COLOR_LABELS:
+		furniture_palette.add_item(label)
+	furniture_palette.item_selected.connect(func(index: int) -> void: world.layout.set_furniture_color(index))
+
+func _start_inventory_placement(item_id: String) -> void:
+	var uid := InventoryData.unused_uid(world.layout.available_inventory, world.layout.placed_instances, item_id)
+	if uid.is_empty(): return
+	world.layout.start_place(item_id, uid)
 
 func _sync_layout() -> void:
 	if not world.layout.active: return
@@ -131,11 +153,21 @@ func _sync_layout() -> void:
 	%LayoutPose.text = "X %.2f   Z %.2f\n旋转 %.0f°" % [node.position.x,node.position.z,rad_to_deg(node.rotation.y)]
 	%LayoutMessage.text = layout.message
 	%LayoutMessage.modulate = Color.WHITE if layout.valid else Color("ff756a")
-	%ApplyLayout.disabled = not layout.valid
+	%ApplyLayout.disabled = not layout.valid or not layout.placing_role.is_empty()
 	%MoveTool.set_pressed_no_signal(layout.tool == "move")
 	%RotateTool.set_pressed_no_signal(layout.tool == "rotate")
-	%CopyFurniture.disabled = not layout.templates.has(layout.Data.base_role(layout.selected))
-	%DeleteFurniture.disabled = not layout.Data.is_copy(layout.selected)
+	%CopyFurniture.disabled = not layout.templates.has(layout.Data.base_role(layout.selected)) or not layout.placing_role.is_empty()
+	%DeleteFurniture.disabled = not InventoryData.ROOM_DEFAULTS.has(layout.Data.base_role(layout.selected)) or not layout.placing_role.is_empty()
+	for item_id: String in furniture_buttons:
+		var unused := InventoryData.unused_uid(layout.available_inventory, layout.placed_instances, item_id)
+		furniture_buttons[item_id].disabled = unused.is_empty() or not layout.placing_role.is_empty()
+		var item: MemoirItemDefinition = ItemCatalog.lookup(item_id)
+		var count := InventoryData.count(layout.available_inventory, item_id)
+		furniture_buttons[item_id].text = "%s · 空闲 %d/%d" % [item.name, _count_unused(item_id), count]
+	if furniture_palette != null:
+		var colorable := InventoryData.ROOM_DEFAULTS.has(layout.Data.base_role(layout.selected))
+		furniture_palette.disabled = not colorable
+		furniture_palette.select(layout.color_for(layout.selected) if colorable else 0)
 	%UndoLayout.disabled = layout.undo_stack.is_empty()
 	%RedoLayout.disabled = layout.redo_stack.is_empty()
 	var style: Dictionary = world.get_node("Room").style
@@ -143,6 +175,13 @@ func _sync_layout() -> void:
 		(get_node("%Style_" + key) as OptionButton).select(int(style.get(key, 0)))
 	(%Style_brightness as HSlider).set_value_no_signal(float(style.get("brightness", 70)))
 	for role: String in layout.NAMES: get_node("%Layout_" + role).set_pressed_no_signal(layout.selected == role)
+
+func _count_unused(item_id: String) -> int:
+	var total := 0
+	for entry: Dictionary in world.layout.available_inventory:
+		if entry.item_id == item_id and not world.layout.placed_instances.values().has(entry.uid):
+			total += 1
+	return total
 
 func set_screen_focused(value: bool, animate: bool = true) -> void:
 	if world.layout.active: return
@@ -219,7 +258,9 @@ func _input(event: InputEvent) -> void:
 				return
 			match event.keycode:
 				KEY_DELETE: world.layout.delete_selected()
-				KEY_ESCAPE: finish_layout(false)
+				KEY_ESCAPE:
+					if not world.layout.placing_role.is_empty(): world.layout.cancel_placement()
+					else: finish_layout(false)
 				KEY_G: world.layout.set_tool("move")
 				KEY_R: world.layout.set_tool("rotate")
 				KEY_Q: world.layout.rotate_step(-1)
@@ -275,6 +316,16 @@ func _unhandled_input(event: InputEvent) -> void:
 func _layout_input(event: InputEvent) -> void:
 	var layout = world.layout
 	if event is InputEventMouseButton:
+		if not layout.placing_role.is_empty():
+			if event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
+				layout.preview_at(event.position)
+				layout.confirm_placement()
+			elif event.button_index == MOUSE_BUTTON_RIGHT and event.pressed:
+				layout.cancel_placement()
+			elif event.pressed and event.button_index in [MOUSE_BUTTON_WHEEL_UP, MOUSE_BUTTON_WHEEL_DOWN]:
+				world.zoom_overview(0.9 if event.button_index == MOUSE_BUTTON_WHEEL_UP else 1.1)
+			get_viewport().set_input_as_handled()
+			return
 		if event.button_index == MOUSE_BUTTON_LEFT:
 			if not event.pressed: layout.end_drag()
 			else:
@@ -292,7 +343,10 @@ func _layout_input(event: InputEvent) -> void:
 		else: return
 		get_viewport().set_input_as_handled()
 	elif event is InputEventMouseMotion:
-		if orbiting: world.orbit_overview(event.relative)
+		if not layout.placing_role.is_empty():
+			layout.preview_at(event.position)
+			get_viewport().set_input_as_handled()
+		elif orbiting: world.orbit_overview(event.relative)
 		else: layout.drag_to(event.position)
 		if orbiting or not layout.gesture.is_empty(): get_viewport().set_input_as_handled()
 

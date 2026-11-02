@@ -75,7 +75,9 @@ static func _is_furniture_copy(role: String) -> bool:
 	return parts.size() == 2 and ROOM_DEFAULTS.has(parts[0]) and parts[1].is_valid_int() and int(parts[1]) >= 1 and int(parts[1]) <= 8
 
 static func clean_placements(raw: Variant, inventory: Array, layout: Dictionary) -> Dictionary:
-	var result := initial_placements()
+	# Missing field means a pre-v4 save with authored furniture.
+	# An explicit empty Dictionary means the player stored every original piece.
+	var result: Dictionary = initial_placements() if not raw is Dictionary else {}
 	var used: Dictionary = {}
 	for uid: String in result.values(): used[uid] = true
 	if raw is Dictionary:

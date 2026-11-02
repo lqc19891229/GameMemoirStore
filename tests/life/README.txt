@@ -9,3 +9,5 @@ test_audit_regressions.gd：独立网页预览、屏幕投影、显示器背面�
 
 测试使用 --fresh 和独立临时存档，不修改正常玩家进度。*.gd.uid 是 Godot 脚本稳定标识。各脚本的完整命令见根目录 README.md。
 test_item_system.gd：物品目录、桌面/地面约束、实例库存、家具多份购买与历史数据迁移。
+
+test_room_placement.gd：房间家具目录、原始家具收回、实时摆放预览、取消/确认、单件改色、存档往返及桌面设备约束。
