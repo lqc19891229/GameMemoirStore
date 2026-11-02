@@ -4,7 +4,8 @@ extends Node3D
 ## Room appearance presets and cutaway visibility for the modern 3D sample room.
 
 const Blueprint = preload("res://scripts/room/room_blueprint_data.gd")
-var blueprint: Dictionary = Blueprint.DEFAULT.duplicate()
+var blueprint: Dictionary = Blueprint.DEFAULT.duplicate(true)
+var partitions_editing := false
 
 const WALLS := [Color("f1eee8"), Color("e5e1da"), Color("dce6df")]
 const FLOORS := [Color("b99572"), Color("967153"), Color("a8ada8")]
@@ -49,7 +50,14 @@ func apply_blueprint(value: Variant) -> void:
 	if not is_inside_tree(): return
 	$Shell.rebuild(blueprint)
 	_prepare_materials()
+	set_partition_editing(partitions_editing)
 	apply_style(style)
+
+func set_partition_editing(enabled: bool) -> void:
+	partitions_editing = enabled
+	var partitions := $Shell.get_node_or_null("Partitions") as Node3D
+	if partitions != null:
+		partitions.scale.y = .23 if enabled else 1.0
 
 func apply_style(value: Variant) -> void:
 	style = clean_style(value)
