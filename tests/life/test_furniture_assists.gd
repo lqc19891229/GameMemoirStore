@@ -56,8 +56,12 @@ func run() -> void:
 	check(layout.inner_wall_clearance("lamp") >= -1.0, "wall distance helper handles existing furniture pose")
 	check("最近内墙" in desktop.get_node("%FurnitureAssistHint").text or "附近无内墙" in desktop.get_node("%FurnitureAssistHint").text, "live layout panel exposes real wall distance")
 
-	# Construct three same-category lamps as an editor-only fixture; all are
-	# discarded when the in-progress layout is canceled.
+	# Construct three same-category lamps in a cleared editor-only corner.
+	# Stow unrelated loose furnishings so test feasibility is independent
+	# of the shipped room's decorative starting positions.
+	for unused_role: String in ["chair","bookcase","rug","plant"]:
+		layout.placed_instances.erase(unused_role)
+	layout._apply_furniture_appearance()
 	for role: String in ["lamp_1","lamp_2"]:
 		layout._create_copy(role)
 		layout.placed_instances[role] = "editor_fixture_" + role
@@ -75,7 +79,7 @@ func run() -> void:
 				found = true
 				break
 		if found: break
-	check(found, "a collision-free row exists for three fixture lamps")
+	check(found, "a collision-free row exists for three fixture lamps: " + layout._layout_blocker())
 	if not found:
 		layout._restore_draft(initial)
 		desktop.finish_layout(false)
