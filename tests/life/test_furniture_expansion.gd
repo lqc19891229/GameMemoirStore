@@ -36,7 +36,7 @@ func run() -> void:
 		var node: Node3D = item.furniture_scene.instantiate()
 		root.add_child(node)
 		await process_frame
-		check(node.has_node("Model") and node.get_node("Model").get_child_count() >= 4, "authored procedural 3D model has layered parts: "+item.item_id)
+		check(node.has_node("Model") and node.get_node("Model").find_children("*","MeshInstance3D",true,false).size() >= 4, "authored procedural 3D model has layered parts: "+item.item_id)
 		var mesh_nodes: Array = node.get_node("Model").find_children("*","MeshInstance3D",true,false)
 		var within_bounds := not mesh_nodes.is_empty()
 		for mesh: MeshInstance3D in mesh_nodes:
@@ -74,13 +74,24 @@ func run() -> void:
 		Vector2(-3.4,-.25),Vector2(3.4,2.4),Vector2(2.2,.65),Vector2(-3.35,.55)
 	]
 	var finished: Array[String] = []
-	desktop.begin_layout()
+	# Inventory is snapshotted when entering layout mode: purchase the whole
+	# batch through the regular shop before starting the editing session.
 	for base: String in chosen:
 		var item_id: String = "room_"+base
 		check(game.session.buy_item(item_id).begins_with("已购买"), "shop purchase succeeds for new SKU: "+item_id)
+	desktop.begin_layout()
+	for base: String in chosen:
+		var item_id: String = "room_"+base
 		var uid: String = Inventory.unused_uid(state.life.inventory,layout.placed_instances,item_id)
 		check(not uid.is_empty(), "purchase yields a free owned instance: "+item_id)
-		check(layout.start_place(item_id,uid), "a new furniture item can enter placement: "+item_id)
+		var started: bool = layout.start_place(item_id,uid)
+		check(started, "a new furniture item can enter placement: "+item_id)
+		if not started:
+			desktop.finish_layout(false)
+			game.queue_free()
+			await frames()
+			quit(1)
+			return
 		var role: String = layout.placing_role
 		check(layout.nodes.has(role) and layout.nodes[role].has_node("Model"), "newly bought item spawns its distinct mesh")
 		var found := false

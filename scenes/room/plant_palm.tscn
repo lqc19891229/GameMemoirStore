@@ -3,12 +3,12 @@
 [ext_resource type="Script" path="res://scripts/room/catalog_furniture.gd" id="1"]
 
 [sub_resource type="BoxShape3D" id="Pick"]
-size = Vector3(1.13, 1.8, 1.13)
+size = Vector3(1.48, 1.8, 1.48)
 
 [node name="plant_palm" type="Node3D"]
 script = ExtResource("1")
 role = "plant_palm"
-bounds = Vector3(1.13, 1.8, 1.13)
+bounds = Vector3(1.48, 1.8, 1.48)
 blocking = true
 family = "decor"
 variant = 1
