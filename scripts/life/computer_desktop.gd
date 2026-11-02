@@ -25,6 +25,9 @@ var blueprint_mode := false
 var wall_drag_button := 0
 var last_wall_cell := Vector2(INF, INF)
 var dragging_aperture := false
+var dragging_custom_edge := false
+var wall_stroke_good: Array[Vector2] = []
+var wall_stroke_bad: Array[Vector2] = []
 const BLUEPRINT_KEYS := {"BlueprintWidth":"width", "BlueprintDepth":"depth", "BlueprintDoorX":"door_x", "BlueprintWindowZ":"window_z", "BlueprintNotchWidth":"notch_width", "BlueprintNotchDepth":"notch_depth"}
 @onready var world: Node3D = %Workstation3D
 var screen_focused: bool:
@@ -56,11 +59,13 @@ func _ready() -> void:
 	%BlueprintFloorTool.add_item("功能分区画笔")
 	%BlueprintFloorTool.add_item("自动识别整区填充")
 	%BlueprintFloorTool.add_item("拖动原有门窗位置")
+	%BlueprintFloorTool.add_item("移动自定义外墙门窗")
 	%BlueprintQuickWall.pressed.connect(func() -> void: _select_blueprint_tool(0))
 	%BlueprintQuickFloor.pressed.connect(func() -> void: _select_blueprint_tool(1))
 	%BlueprintQuickZone.pressed.connect(func() -> void: _select_blueprint_tool(6))
 	%BlueprintQuickRegion.pressed.connect(func() -> void: _select_blueprint_tool(7))
 	%BlueprintQuickOpening.pressed.connect(func() -> void: _select_blueprint_tool(8))
+	%BlueprintQuickEdgeMove.pressed.connect(func() -> void: _select_blueprint_tool(9))
 	%BlueprintGridToggle.toggled.connect(func(enabled: bool) -> void:
 		world.get_node("BlueprintOverlay").set_grid_visible(enabled)
 	)
@@ -112,6 +117,10 @@ func _ready() -> void:
 		if dragging_aperture:
 			world.layout.end_aperture_drag()
 			dragging_aperture = false
+		if dragging_custom_edge:
+			world.layout.end_custom_edge_drag()
+			dragging_custom_edge = false
+		_reset_wall_stroke()
 		wall_drag_button = 0
 		world.get_node("BlueprintOverlay").clear_region()
 		_hide_wall_preview()
@@ -254,6 +263,10 @@ func _start_inventory_placement(item_id: String) -> void:
 
 func set_blueprint_mode(enabled: bool) -> void:
 	if enabled and not world.layout.active: return
+	if dragging_custom_edge:
+		world.layout.end_custom_edge_drag()
+		dragging_custom_edge = false
+	_reset_wall_stroke()
 	if dragging_aperture:
 		world.layout.end_aperture_drag()
 		dragging_aperture = false
@@ -326,15 +339,19 @@ func _sync_scheme_controls() -> void:
 func _select_blueprint_tool(index: int) -> void:
 	if not blueprint_mode: return
 	%BlueprintFloorTool.select(index)
+	if dragging_custom_edge:
+		world.layout.end_custom_edge_drag()
+		dragging_custom_edge = false
+	_reset_wall_stroke()
 	wall_drag_button = 0
 	world.get_node("BlueprintOverlay").clear_region()
 	_hide_wall_preview()
 	_sync_quick_tools()
 
 func _sync_quick_tools() -> void:
-	for key: String in {"BlueprintQuickWall":0,"BlueprintQuickFloor":1,"BlueprintQuickZone":6,"BlueprintQuickRegion":7,"BlueprintQuickOpening":8}:
+	for key: String in {"BlueprintQuickWall":0,"BlueprintQuickFloor":1,"BlueprintQuickZone":6,"BlueprintQuickRegion":7,"BlueprintQuickOpening":8,"BlueprintQuickEdgeMove":9}:
 		var button: Button = get_node("%" + key)
-		button.set_pressed_no_signal(%BlueprintFloorTool.selected == int({"BlueprintQuickWall":0,"BlueprintQuickFloor":1,"BlueprintQuickZone":6,"BlueprintQuickRegion":7,"BlueprintQuickOpening":8}[key]))
+		button.set_pressed_no_signal(%BlueprintFloorTool.selected == int({"BlueprintQuickWall":0,"BlueprintQuickFloor":1,"BlueprintQuickZone":6,"BlueprintQuickRegion":7,"BlueprintQuickOpening":8,"BlueprintQuickEdgeMove":9}[key]))
 
 func _aperture_key() -> String:
 	return "window_z" if %BlueprintApertureTarget.selected == 1 else "door_x"
@@ -381,6 +398,74 @@ func _aperture_input(event: InputEvent) -> void:
 		_aperture_hover(event.position)
 		get_viewport().set_input_as_handled()
 
+func _reset_wall_stroke() -> void:
+	wall_stroke_good.clear()
+	wall_stroke_bad.clear()
+	if is_instance_valid(world): world.get_node("BlueprintOverlay").clear_wall_stroke()
+
+func _stroke_wall_step(at: Vector2, button: int) -> bool:
+	var allowed: bool = _wall_action(at, button)
+	if allowed: wall_stroke_good.append(at)
+	else: wall_stroke_bad.append(at)
+	world.get_node("BlueprintOverlay").show_wall_stroke(wall_stroke_good,wall_stroke_bad,_wall_axis())
+	%BlueprintStrokeInfo.text = "本次绘制：有效 %d 段 / 阻挡 %d 段" % [wall_stroke_good.size(),wall_stroke_bad.size()]
+	return allowed
+
+func _continue_wall_stroke(target: Vector2, button: int) -> void:
+	var start: Vector2 = last_wall_cell
+	var axis: String = _wall_axis()
+	if not is_finite(start.x) or not is_finite(start.y): return
+	var end := Vector2(target.x,start.y) if axis == "x" else Vector2(start.x,target.y)
+	var distance: float = end.x-start.x if axis == "x" else end.y-start.y
+	var steps: int = mini(48,roundi(absf(distance)/BlueprintData.WALL_GRID))
+	if steps <= 0: return
+	var signum: float = signf(distance)
+	for index in range(1,steps+1):
+		var at := start + (Vector2(signum*BlueprintData.WALL_GRID*index,0) if axis == "x" else Vector2(0,signum*BlueprintData.WALL_GRID*index))
+		_stroke_wall_step(at,button)
+	last_wall_cell = start + (Vector2(signum*BlueprintData.WALL_GRID*steps,0) if axis == "x" else Vector2(0,signum*BlueprintData.WALL_GRID*steps))
+
+func _edge_move_input(event: InputEvent) -> void:
+	if event is InputEventMouseButton:
+		if event.button_index == MOUSE_BUTTON_LEFT:
+			if event.pressed:
+				var hit: Variant = _floor_hit(event.position)
+				if hit != null:
+					dragging_custom_edge = world.layout.begin_custom_edge_drag(hit)
+			elif dragging_custom_edge:
+				world.layout.end_custom_edge_drag()
+				dragging_custom_edge = false
+			get_viewport().set_input_as_handled()
+		elif event.button_index == MOUSE_BUTTON_RIGHT and event.pressed:
+			if dragging_custom_edge:
+				world.layout.end_custom_edge_drag(true)
+				dragging_custom_edge = false
+			get_viewport().set_input_as_handled()
+		elif event.pressed and event.button_index in [MOUSE_BUTTON_WHEEL_UP,MOUSE_BUTTON_WHEEL_DOWN]:
+			world.zoom_overview(.9 if event.button_index == MOUSE_BUTTON_WHEEL_UP else 1.1)
+			get_viewport().set_input_as_handled()
+	elif event is InputEventMouseMotion:
+		var hit: Variant = _floor_hit(event.position)
+		var ghost: MeshInstance3D = world.get_node("WallPreview")
+		if hit == null:
+			ghost.hide()
+			return
+		var edge: Dictionary = BlueprintData.nearest_edge(world.layout.blueprint,hit,.36)
+		if not edge.is_empty():
+			var point: Vector2 = BlueprintData.edge_center(world.layout.blueprint,edge)
+			ghost.position = Vector3(point.x,.105,point.y)
+			(ghost.mesh as BoxMesh).size = Vector3(.16,.11,.48) if edge.dx != 0 else Vector3(.48,.11,.16)
+			var reason: String = world.layout.edge_drag_blocker(hit) if dragging_custom_edge else ""
+			var current: Dictionary = BlueprintData.edge_edit(world.layout.blueprint,edge)
+			var selectable: bool = str(current.kind) in ["door","window"]
+			(ghost.material_override as StandardMaterial3D).albedo_color = Color("ef7775",.70) if not reason.is_empty() else Color("67daac",.70) if dragging_custom_edge or selectable else Color("f5ca78",.45)
+			ghost.show()
+		else:
+			ghost.hide()
+		if dragging_custom_edge:
+			world.layout.drag_custom_edge_to(hit)
+		get_viewport().set_input_as_handled()
+
 func _wall_axis() -> String:
 	return "z" if %WallAxis.selected == 1 else "x"
 
@@ -402,12 +487,11 @@ func _blueprint_floor_hit(pixel: Vector2) -> Variant:
 	if hit == null: return null
 	return hit.snapped(Vector2.ONE * BlueprintData.WALL_GRID)
 
-func _wall_action(at: Vector2, button: int) -> void:
+func _wall_action(at: Vector2, button: int) -> bool:
 	var remove: bool = button == MOUSE_BUTTON_RIGHT or %WallRemoveMode.button_pressed
 	if remove:
-		world.layout.remove_partition(at)
-	else:
-		world.layout.add_partition(at, _wall_axis(), _wall_kind())
+		return world.layout.remove_partition(at)
+	return world.layout.add_partition(at, _wall_axis(), _wall_kind())
 
 func _floor_action(at: Vector2, button: int) -> void:
 	var removing: bool = %BlueprintFloorTool.selected == 1
@@ -532,6 +616,9 @@ func _wall_hover(pixel: Vector2) -> void:
 	ghost.show()
 
 func _blueprint_input(event: InputEvent) -> void:
+	if %BlueprintFloorTool.selected == 9:
+		_edge_move_input(event)
+		return
 	if %BlueprintFloorTool.selected == 8:
 		_aperture_input(event)
 		return
@@ -540,12 +627,17 @@ func _blueprint_input(event: InputEvent) -> void:
 			world.zoom_overview(.9 if event.button_index == MOUSE_BUTTON_WHEEL_UP else 1.1)
 			get_viewport().set_input_as_handled()
 		elif event.button_index in [MOUSE_BUTTON_LEFT, MOUSE_BUTTON_RIGHT]:
+			if not event.pressed and %BlueprintFloorTool.selected == 0:
+				%BlueprintStrokeInfo.text = "完成：有效 %d 段 / 阻挡 %d 段" % [wall_stroke_good.size(),wall_stroke_bad.size()]
+				_reset_wall_stroke()
 			wall_drag_button = event.button_index if event.pressed and %BlueprintFloorTool.selected != 7 else 0
 			last_wall_cell = Vector2(INF,INF)
 			if event.pressed:
+				if %BlueprintFloorTool.selected == 0: _reset_wall_stroke()
 				var at: Variant = _blueprint_floor_hit(event.position) if %BlueprintFloorTool.selected == 0 else _floor_hit(event.position)
 				if at != null:
-					_brush_action(at,event.button_index)
+					if %BlueprintFloorTool.selected == 0: _stroke_wall_step(at,event.button_index)
+					else: _brush_action(at,event.button_index)
 					last_wall_cell = _brush_key(at)
 			get_viewport().set_input_as_handled()
 	elif event is InputEventMouseMotion:
@@ -557,8 +649,10 @@ func _blueprint_input(event: InputEvent) -> void:
 			if at != null:
 				var key := _brush_key(at)
 				if key != last_wall_cell:
-					_brush_action(at,wall_drag_button)
-					last_wall_cell = key
+					if %BlueprintFloorTool.selected == 0: _continue_wall_stroke(at,wall_drag_button)
+					else:
+						_brush_action(at,wall_drag_button)
+						last_wall_cell = key
 		get_viewport().set_input_as_handled()
 
 func _sync_layout() -> void:
@@ -567,6 +661,10 @@ func _sync_layout() -> void:
 	%LayoutSelection.text = "选中：" + layout.name_for(layout.selected)
 	var node: Node3D = layout.nodes[layout.selected]
 	%LayoutPose.text = "X %.2f   Z %.2f\n旋转 %.0f°" % [node.position.x,node.position.z,rad_to_deg(node.rotation.y)]
+	var dims: Vector3 = layout.bounds_for(layout.selected) * node.scale.abs()
+	var placement: String = "位置有效" if layout.valid else "碰撞：%s" % layout.message
+	%LayoutSize.text = "占地 %.2f × %.2f 米 · 高 %.2f 米\n%s" % [dims.x,dims.z,dims.y,placement]
+	%LayoutSize.modulate = Color("ff9688") if not layout.valid else Color("b9e9d5")
 	%LayoutMessage.text = layout.message
 	_sync_blueprint_ui()
 	if blueprint_mode: layout.gizmo.hide()
@@ -775,6 +873,10 @@ func _layout_input(event: InputEvent) -> void:
 		if orbiting or not layout.gesture.is_empty(): get_viewport().set_input_as_handled()
 
 func _clear_gesture() -> void:
+	if dragging_custom_edge:
+		world.layout.end_custom_edge_drag()
+		dragging_custom_edge = false
+	_reset_wall_stroke()
 	if dragging_aperture:
 		world.layout.end_aperture_drag()
 		dragging_aperture = false
