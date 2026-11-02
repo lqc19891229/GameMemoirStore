@@ -181,7 +181,9 @@ func _build_dock(canvas: Control) -> void:
 
 func _resize_layout() -> void:
 	if not is_instance_valid(host) or not is_instance_valid(dock): return
-	var area: Vector2 = host.get_viewport().get_visible_rect().size
+	_apply_layout_size(host.get_viewport().get_visible_rect().size)
+
+func _apply_layout_size(area: Vector2) -> void:
 	if area == _last_dimensions: return
 	_last_dimensions = area
 	var compact := area.x < 890.0
