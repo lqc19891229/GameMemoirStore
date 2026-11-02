@@ -1,0 +1,22 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/room/catalog_furniture.gd" id="1"]
+
+[sub_resource type="BoxShape3D" id="Pick"]
+size = Vector3(1.48, 1.8, 1.48)
+
+[node name="plant_palm" type="Node3D"]
+script = ExtResource("1")
+role = "plant_palm"
+bounds = Vector3(1.48, 1.8, 1.48)
+blocking = true
+family = "decor"
+variant = 1
+
+[node name="PickArea" type="Area3D" parent="."]
+position = Vector3(0, 0.9, 0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Hit" type="CollisionShape3D" parent="PickArea"]
+shape = SubResource("Pick")

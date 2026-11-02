@@ -347,8 +347,17 @@ func _filter_furniture_catalog() -> void:
 
 func _start_inventory_placement(item_id: String) -> void:
 	var uid := InventoryData.unused_uid(world.layout.available_inventory, world.layout.placed_instances, item_id)
-	if uid.is_empty(): return
-	world.layout.start_place(item_id, uid)
+	if not uid.is_empty():
+		world.layout.start_place(item_id, uid)
+		return
+	# Once all owned copies are placed, the catalog doubles as a furniture selector.
+	# Avoid forcing players to find a small object by clicking the 3D scene.
+	var item: MemoirItemDefinition = ItemCatalog.lookup(item_id)
+	if item == null: return
+	for role: String in world.layout.placed_instances:
+		if world.layout.Data.base_role(role) == item.subcategory:
+			world.layout.select(role)
+			return
 
 func set_blueprint_mode(enabled: bool) -> void:
 	if enabled and not world.layout.active: return
@@ -789,7 +798,12 @@ func _sync_layout() -> void:
 	%DeleteFurniture.disabled = not InventoryData.is_room_furniture_role(layout.Data.base_role(layout.selected)) or not layout.placing_role.is_empty()
 	for item_id: String in furniture_buttons:
 		var unused := InventoryData.unused_uid(layout.available_inventory, layout.placed_instances, item_id)
-		furniture_buttons[item_id].disabled = unused.is_empty() or not layout.placing_role.is_empty()
+		var existing := false
+		for role: String in layout.placed_instances:
+			if layout.Data.base_role(role) == ItemCatalog.lookup(item_id).subcategory:
+				existing = true
+				break
+		furniture_buttons[item_id].disabled = (unused.is_empty() and not existing) or not layout.placing_role.is_empty()
 		var item: MemoirItemDefinition = ItemCatalog.lookup(item_id)
 		var count := InventoryData.count(layout.available_inventory, item_id)
 		furniture_buttons[item_id].text = "%s · 空闲 %d/%d" % [item.name, _count_unused(item_id), count]

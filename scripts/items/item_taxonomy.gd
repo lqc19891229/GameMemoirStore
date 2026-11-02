@@ -11,7 +11,7 @@ const GROUPS := [
 	{"id":"hardware","name":"电子设备"},
 ]
 const TYPES := {
-	"computer_desk":"电脑桌", "side_table":"边桌", "coffee_table":"茶几",
+	"computer_desk":"电脑桌", "side_table":"边桌", "coffee_table":"茶几", "writing_desk":"写字桌", "lounge_chair":"休闲椅", "bench":"长凳",
 	"office_chair":"电脑椅", "sofa":"沙发", "stool":"矮凳",
 	"bookcase":"书架", "shelf":"置物架", "cabinet":"展示柜",
 	"floor_lamp":"落地灯", "desk_lamp":"台灯", "ambient_light":"氛围灯",

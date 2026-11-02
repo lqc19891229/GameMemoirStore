@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="MemoirItemCatalog" load_steps=27 format=3]
+[gd_resource type="Resource" script_class="MemoirItemCatalog" load_steps=67 format=3]
 
 [ext_resource type="Script" path="res://scripts/items/item_catalog.gd" id="1"]
 [ext_resource type="Script" path="res://scripts/items/item_definition.gd" id="2"]
@@ -9,6 +9,26 @@
 [ext_resource type="PackedScene" path="res://scenes/room/plant.tscn" id="s_plant"]
 [ext_resource type="PackedScene" path="res://scenes/room/sofa.tscn" id="s_sofa"]
 [ext_resource type="PackedScene" path="res://scenes/room/stool.tscn" id="s_stool"]
+[ext_resource type="PackedScene" path="res://scenes/room/side_table_oak.tscn" id="exp_side_table_oak"]
+[ext_resource type="PackedScene" path="res://scenes/room/side_table_steel.tscn" id="exp_side_table_steel"]
+[ext_resource type="PackedScene" path="res://scenes/room/coffee_table_round.tscn" id="exp_coffee_table_round"]
+[ext_resource type="PackedScene" path="res://scenes/room/coffee_table_glass.tscn" id="exp_coffee_table_glass"]
+[ext_resource type="PackedScene" path="res://scenes/room/writing_table.tscn" id="exp_writing_table"]
+[ext_resource type="PackedScene" path="res://scenes/room/lounge_chair.tscn" id="exp_lounge_chair"]
+[ext_resource type="PackedScene" path="res://scenes/room/chair_mesh.tscn" id="exp_chair_mesh"]
+[ext_resource type="PackedScene" path="res://scenes/room/sofa_modular.tscn" id="exp_sofa_modular"]
+[ext_resource type="PackedScene" path="res://scenes/room/bench_cushion.tscn" id="exp_bench_cushion"]
+[ext_resource type="PackedScene" path="res://scenes/room/shelf_low.tscn" id="exp_shelf_low"]
+[ext_resource type="PackedScene" path="res://scenes/room/shelf_ladder.tscn" id="exp_shelf_ladder"]
+[ext_resource type="PackedScene" path="res://scenes/room/media_console.tscn" id="exp_media_console"]
+[ext_resource type="PackedScene" path="res://scenes/room/display_cabinet.tscn" id="exp_display_cabinet"]
+[ext_resource type="PackedScene" path="res://scenes/room/lamp_tripod.tscn" id="exp_lamp_tripod"]
+[ext_resource type="PackedScene" path="res://scenes/room/lamp_arc.tscn" id="exp_lamp_arc"]
+[ext_resource type="PackedScene" path="res://scenes/room/lamp_cylinder.tscn" id="exp_lamp_cylinder"]
+[ext_resource type="PackedScene" path="res://scenes/room/plant_cactus.tscn" id="exp_plant_cactus"]
+[ext_resource type="PackedScene" path="res://scenes/room/plant_palm.tscn" id="exp_plant_palm"]
+[ext_resource type="PackedScene" path="res://scenes/room/rug_geometric.tscn" id="exp_rug_geometric"]
+[ext_resource type="PackedScene" path="res://scenes/room/rug_round.tscn" id="exp_rug_round"]
 
 [sub_resource type="Resource" id="item_0"]
 script = ExtResource("2")
@@ -367,6 +387,386 @@ capacity = 0
 retired = false
 furniture_scene = ExtResource("s_stool")
 
+[sub_resource type="Resource" id="item_21"]
+script = ExtResource("2")
+item_id = "room_side_table_oak"
+catalog_group = "tables"
+catalog_type = "side_table"
+name = "橡木床边桌"
+category = "furniture"
+subcategory = "side_table_oak"
+slot = ""
+price = 62
+description = "小型橡木边桌，带开放下层搁板。"
+placement_surface = "floor"
+visual_id = ""
+speed = 1
+income = 0
+capacity = 0
+retired = false
+furniture_scene = ExtResource("exp_side_table_oak")
+
+[sub_resource type="Resource" id="item_22"]
+script = ExtResource("2")
+item_id = "room_side_table_steel"
+catalog_group = "tables"
+catalog_type = "side_table"
+name = "工业金属边桌"
+category = "furniture"
+subcategory = "side_table_steel"
+slot = ""
+price = 68
+description = "金属框架与原木拼接的轻巧边桌。"
+placement_surface = "floor"
+visual_id = ""
+speed = 1
+income = 0
+capacity = 0
+retired = false
+furniture_scene = ExtResource("exp_side_table_steel")
+
+[sub_resource type="Resource" id="item_23"]
+script = ExtResource("2")
+item_id = "room_coffee_table_round"
+catalog_group = "tables"
+catalog_type = "coffee_table"
+name = "圆形木茶几"
+category = "furniture"
+subcategory = "coffee_table_round"
+slot = ""
+price = 87
+description = "温润圆角台面搭配中央木质支柱。"
+placement_surface = "floor"
+visual_id = ""
+speed = 1
+income = 0
+capacity = 0
+retired = false
+furniture_scene = ExtResource("exp_coffee_table_round")
+
+[sub_resource type="Resource" id="item_24"]
+script = ExtResource("2")
+item_id = "room_coffee_table_glass"
+catalog_group = "tables"
+catalog_type = "coffee_table"
+name = "玻璃方茶几"
+category = "furniture"
+subcategory = "coffee_table_glass"
+slot = ""
+price = 105
+description = "透明玻璃面与古铜金属边框。"
+placement_surface = "floor"
+visual_id = ""
+speed = 1
+income = 0
+capacity = 0
+retired = false
+furniture_scene = ExtResource("exp_coffee_table_glass")
+
+[sub_resource type="Resource" id="item_25"]
+script = ExtResource("2")
+item_id = "room_writing_table"
+catalog_group = "tables"
+catalog_type = "writing_desk"
+name = "胡桃木写字桌"
+category = "furniture"
+subcategory = "writing_table"
+slot = ""
+price = 135
+description = "独立摆放的装饰写字桌；电脑设备仍须安装于主电脑桌。"
+placement_surface = "floor"
+visual_id = ""
+speed = 1
+income = 0
+capacity = 0
+retired = false
+furniture_scene = ExtResource("exp_writing_table")
+
+[sub_resource type="Resource" id="item_26"]
+script = ExtResource("2")
+item_id = "room_lounge_chair"
+catalog_group = "seating"
+catalog_type = "lounge_chair"
+name = "苔绿休闲单椅"
+category = "furniture"
+subcategory = "lounge_chair"
+slot = ""
+price = 88
+description = "带宽扶手和软垫靠背的舒适单椅。"
+placement_surface = "floor"
+visual_id = ""
+speed = 1
+income = 0
+capacity = 0
+retired = false
+furniture_scene = ExtResource("exp_lounge_chair")
+
+[sub_resource type="Resource" id="item_27"]
+script = ExtResource("2")
+item_id = "room_chair_mesh"
+catalog_group = "seating"
+catalog_type = "office_chair"
+name = "透气网布办公椅"
+category = "furniture"
+subcategory = "chair_mesh"
+slot = ""
+price = 95
+description = "轻质网布靠背、旋转支柱与五爪底座。"
+placement_surface = "floor"
+visual_id = ""
+speed = 1
+income = 0
+capacity = 0
+retired = false
+furniture_scene = ExtResource("exp_chair_mesh")
+
+[sub_resource type="Resource" id="item_28"]
+script = ExtResource("2")
+item_id = "room_sofa_modular"
+catalog_group = "seating"
+catalog_type = "sofa"
+name = "拼接三人沙发"
+category = "furniture"
+subcategory = "sofa_modular"
+slot = ""
+price = 158
+description = "三块独立坐垫与低靠背的宽体沙发。"
+placement_surface = "floor"
+visual_id = ""
+speed = 1
+income = 0
+capacity = 0
+retired = false
+furniture_scene = ExtResource("exp_sofa_modular")
+
+[sub_resource type="Resource" id="item_29"]
+script = ExtResource("2")
+item_id = "room_bench_cushion"
+catalog_group = "seating"
+catalog_type = "bench"
+name = "原木长软凳"
+category = "furniture"
+subcategory = "bench_cushion"
+slot = ""
+price = 75
+description = "适合休息角或陈列区的软垫长凳。"
+placement_surface = "floor"
+visual_id = ""
+speed = 1
+income = 0
+capacity = 0
+retired = false
+furniture_scene = ExtResource("exp_bench_cushion")
+
+[sub_resource type="Resource" id="item_30"]
+script = ExtResource("2")
+item_id = "room_shelf_low"
+catalog_group = "storage"
+catalog_type = "shelf"
+name = "矮开放书架"
+category = "furniture"
+subcategory = "shelf_low"
+slot = ""
+price = 89
+description = "三层低矮书架，内置陈列书籍。"
+placement_surface = "floor"
+visual_id = ""
+speed = 1
+income = 0
+capacity = 0
+retired = false
+furniture_scene = ExtResource("exp_shelf_low")
+
+[sub_resource type="Resource" id="item_31"]
+script = ExtResource("2")
+item_id = "room_shelf_ladder"
+catalog_group = "storage"
+catalog_type = "shelf"
+name = "金属梯形展示架"
+category = "furniture"
+subcategory = "shelf_ladder"
+slot = ""
+price = 112
+description = "细金属框与阶梯式橡木层板。"
+placement_surface = "floor"
+visual_id = ""
+speed = 1
+income = 0
+capacity = 0
+retired = false
+furniture_scene = ExtResource("exp_shelf_ladder")
+
+[sub_resource type="Resource" id="item_32"]
+script = ExtResource("2")
+item_id = "room_media_console"
+catalog_group = "storage"
+catalog_type = "cabinet"
+name = "奶油木电视柜"
+category = "furniture"
+subcategory = "media_console"
+slot = ""
+price = 145
+description = "多扇储物柜门与低矮金属支脚。"
+placement_surface = "floor"
+visual_id = ""
+speed = 1
+income = 0
+capacity = 0
+retired = false
+furniture_scene = ExtResource("exp_media_console")
+
+[sub_resource type="Resource" id="item_33"]
+script = ExtResource("2")
+item_id = "room_display_cabinet"
+catalog_group = "storage"
+catalog_type = "cabinet"
+name = "玻璃奖杯展示柜"
+category = "furniture"
+subcategory = "display_cabinet"
+slot = ""
+price = 165
+description = "透明柜门与多层可视展示空间。"
+placement_surface = "floor"
+visual_id = ""
+speed = 1
+income = 0
+capacity = 0
+retired = false
+furniture_scene = ExtResource("exp_display_cabinet")
+
+[sub_resource type="Resource" id="item_34"]
+script = ExtResource("2")
+item_id = "room_lamp_tripod"
+catalog_group = "lighting"
+catalog_type = "floor_lamp"
+name = "三脚暖光落地灯"
+category = "furniture"
+subcategory = "lamp_tripod"
+slot = ""
+price = 66
+description = "三脚支架与亚麻灯罩，带真实局部光源。"
+placement_surface = "floor"
+visual_id = ""
+speed = 1
+income = 0
+capacity = 0
+retired = false
+furniture_scene = ExtResource("exp_lamp_tripod")
+
+[sub_resource type="Resource" id="item_35"]
+script = ExtResource("2")
+item_id = "room_lamp_arc"
+catalog_group = "lighting"
+catalog_type = "floor_lamp"
+name = "现代弧形落地灯"
+category = "furniture"
+subcategory = "lamp_arc"
+slot = ""
+price = 92
+description = "悬臂灯头适合沙发和阅读角。"
+placement_surface = "floor"
+visual_id = ""
+speed = 1
+income = 0
+capacity = 0
+retired = false
+furniture_scene = ExtResource("exp_lamp_arc")
+
+[sub_resource type="Resource" id="item_36"]
+script = ExtResource("2")
+item_id = "room_lamp_cylinder"
+catalog_group = "lighting"
+catalog_type = "ambient_light"
+name = "柱形氛围灯"
+category = "furniture"
+subcategory = "lamp_cylinder"
+slot = ""
+price = 78
+description = "现代磨砂灯罩与柔和的独立发光层。"
+placement_surface = "floor"
+visual_id = ""
+speed = 1
+income = 0
+capacity = 0
+retired = false
+furniture_scene = ExtResource("exp_lamp_cylinder")
+
+[sub_resource type="Resource" id="item_37"]
+script = ExtResource("2")
+item_id = "room_plant_cactus"
+catalog_group = "decor"
+catalog_type = "plant"
+name = "沙漠仙人掌盆栽"
+category = "furniture"
+subcategory = "plant_cactus"
+slot = ""
+price = 32
+description = "陶盆内的仙人掌与两根侧枝。"
+placement_surface = "floor"
+visual_id = ""
+speed = 1
+income = 0
+capacity = 0
+retired = false
+furniture_scene = ExtResource("exp_plant_cactus")
+
+[sub_resource type="Resource" id="item_38"]
+script = ExtResource("2")
+item_id = "room_plant_palm"
+catalog_group = "decor"
+catalog_type = "plant"
+name = "室内高株棕榈"
+category = "furniture"
+subcategory = "plant_palm"
+slot = ""
+price = 54
+description = "高株盆栽与七组舒展的棕榈叶。"
+placement_surface = "floor"
+visual_id = ""
+speed = 1
+income = 0
+capacity = 0
+retired = false
+furniture_scene = ExtResource("exp_plant_palm")
+
+[sub_resource type="Resource" id="item_39"]
+script = ExtResource("2")
+item_id = "room_rug_geometric"
+catalog_group = "decor"
+catalog_type = "rug"
+name = "织纹几何地毯"
+category = "furniture"
+subcategory = "rug_geometric"
+slot = ""
+price = 56
+description = "低绒羊毛织纹和多道条纹装饰。"
+placement_surface = "floor"
+visual_id = ""
+speed = 1
+income = 0
+capacity = 0
+retired = false
+furniture_scene = ExtResource("exp_rug_geometric")
+
+[sub_resource type="Resource" id="item_40"]
+script = ExtResource("2")
+item_id = "room_rug_round"
+catalog_group = "decor"
+catalog_type = "rug"
+name = "鼠尾草圆地毯"
+category = "furniture"
+subcategory = "rug_round"
+slot = ""
+price = 52
+description = "圆形薄绒地毯配同心花纹。"
+placement_surface = "floor"
+visual_id = ""
+speed = 1
+income = 0
+capacity = 0
+retired = false
+furniture_scene = ExtResource("exp_rug_round")
+
 [resource]
 script = ExtResource("1")
-items = Array[ExtResource("2")]([SubResource("item_0"), SubResource("item_1"), SubResource("item_2"), SubResource("item_3"), SubResource("item_4"), SubResource("item_5"), SubResource("item_6"), SubResource("item_7"), SubResource("item_8"), SubResource("item_9"), SubResource("item_10"), SubResource("item_11"), SubResource("item_12"), SubResource("item_13"), SubResource("item_14"), SubResource("item_15"), SubResource("item_16"), SubResource("item_17"), SubResource("item_18"), SubResource("item_19"), SubResource("item_20")])
+items = Array[ExtResource("2")]([SubResource("item_0"), SubResource("item_1"), SubResource("item_2"), SubResource("item_3"), SubResource("item_4"), SubResource("item_5"), SubResource("item_6"), SubResource("item_7"), SubResource("item_8"), SubResource("item_9"), SubResource("item_10"), SubResource("item_11"), SubResource("item_12"), SubResource("item_13"), SubResource("item_14"), SubResource("item_15"), SubResource("item_16"), SubResource("item_17"), SubResource("item_18"), SubResource("item_19"), SubResource("item_20"), SubResource("item_21"), SubResource("item_22"), SubResource("item_23"), SubResource("item_24"), SubResource("item_25"), SubResource("item_26"), SubResource("item_27"), SubResource("item_28"), SubResource("item_29"), SubResource("item_30"), SubResource("item_31"), SubResource("item_32"), SubResource("item_33"), SubResource("item_34"), SubResource("item_35"), SubResource("item_36"), SubResource("item_37"), SubResource("item_38"), SubResource("item_39"), SubResource("item_40")])
