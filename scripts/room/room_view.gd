@@ -3,6 +3,9 @@ class_name MemoirRoomView
 extends Node3D
 ## Room appearance presets and cutaway visibility for the modern 3D sample room.
 
+const Blueprint = preload("res://scripts/room/room_blueprint_data.gd")
+var blueprint: Dictionary = Blueprint.DEFAULT.duplicate()
+
 const WALLS := [Color("f1eee8"), Color("e5e1da"), Color("dce6df")]
 const FLOORS := [Color("b99572"), Color("967153"), Color("a8ada8")]
 const LIGHTS := [Color("fff0dc"), Color("e5efff"), Color("ffd1a1")]
@@ -29,6 +32,10 @@ static func clean_style(raw: Variant) -> Dictionary:
 	return result
 
 func _ready() -> void:
+	_prepare_materials()
+	apply_style(style)
+
+func _prepare_materials() -> void:
 	for mesh: MeshInstance3D in $Shell.find_children("*", "MeshInstance3D", true, false):
 		var role := str(mesh.get_meta("surface_role", ""))
 		if role not in ["wall", "floor"]:
@@ -36,6 +43,12 @@ func _ready() -> void:
 		var material := mesh.get_active_material(0)
 		if material != null:
 			mesh.material_override = material.duplicate()
+
+func apply_blueprint(value: Variant) -> void:
+	blueprint = Blueprint.clean(value)
+	if not is_inside_tree(): return
+	$Shell.rebuild(blueprint)
+	_prepare_materials()
 	apply_style(style)
 
 func apply_style(value: Variant) -> void:
@@ -74,7 +87,7 @@ func update_cutaway(camera: Camera3D) -> void:
 	# Hide a complete wall group so its window, door, trim and decoration disappear together.
 	var left := $Shell.get_node_or_null("Left_Wall") as Node3D
 	if left != null:
-		left.visible = camera.global_position.x > -3.8
+		left.visible = camera.global_position.x > -float(blueprint.width) * .5 + .2
 	var back := $Shell.get_node_or_null("Back_Wall") as Node3D
 	if back != null:
-		back.visible = camera.global_position.z > -2.8
+		back.visible = camera.global_position.z > -float(blueprint.depth) * .5 + .2
