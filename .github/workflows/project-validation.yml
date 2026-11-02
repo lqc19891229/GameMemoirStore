@@ -122,6 +122,7 @@ jobs:
             tests/life/test_room_blueprint.gd \
             tests/life/test_room_partitions.gd \
             tests/life/test_room_footprint.gd \
+            tests/life/test_room_grid_outline.gd \
             tests/life/test_workstation_view.gd \
             tests/life/test_workstation_lighting.gd \
             tests/life/test_workstation_layout.gd \

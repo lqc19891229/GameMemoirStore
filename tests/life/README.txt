@@ -17,3 +17,5 @@ test_room_blueprint.gd：矩形房间长宽与门窗编辑、几何重建、边�
 test_room_partitions.gd：网格内墙/门洞建造、墙体碰撞、无效存档过滤、撤销/删除、蓝图尺寸约束、取消/应用和新会话重建。
 
 test_room_footprint.gd：L 型户型地板裁切、外墙、家具越界、内墙承托、撤销/重做、应用/取消、JSON 存档与旧档兼容。
+
+test_room_grid_outline.gd：自由网格轮廓、地板挖除与恢复、连通性、墙体/家具约束、撤销重做和存档重建。
