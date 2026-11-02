@@ -377,6 +377,11 @@ text = "选中家具 · 独立改色"
 unique_name_in_owner = true
 layout_mode = 2
 
+[node name="WallSnapToggle" type="CheckButton" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "智能靠外墙吸附（安全距离）"
+
 [node name="BlueprintPanel" type="VBoxContainer" parent="HUD/Interface/LayoutPanel/Margin/Scroll"]
 unique_name_in_owner = true
 visible = false
@@ -543,6 +548,12 @@ layout_mode = 2
 unique_name_in_owner = true
 layout_mode = 2
 
+[node name="BlueprintOpeningWidthLabel" type="Label" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel"]
+layout_mode = 2
+text = "连续门窗宽度（自定义外墙）"
+[node name="BlueprintOpeningWidth" type="OptionButton" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel"]
+unique_name_in_owner = true
+layout_mode = 2
 [node name="BlueprintZonesTitle" type="Label" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel"]
 layout_mode = 2
 text = "功能分区 · 游戏区 / 工作区 / 休息区"
@@ -638,7 +649,7 @@ text = "0.5 米网格 · 左键点击/拖动绘制 · 右键拆除 · 内墙和�
 [node name="BlueprintStrokeInfo" type="Label" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel"]
 unique_name_in_owner = true
 layout_mode = 2
-text = "沿墙方向拖动连续建造 · 绿色成功 / 红色阻挡"
+text = "沿墙拖动连续建造 · 绿色成功 / 红色阻挡 · 松开后一次撤销"
 autowrap_mode = 3
 [node name="WallAxis" type="OptionButton" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel"]
 unique_name_in_owner = true

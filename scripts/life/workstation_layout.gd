@@ -41,6 +41,9 @@ var committed_blueprint: Dictionary = BlueprintData.DEFAULT.duplicate(true)
 var aperture_drag_before: Dictionary = {}
 var edge_drag_before: Dictionary = {}
 var edge_drag_source: Dictionary = {}
+var wall_stroke_before: Dictionary = {}
+var wall_snap := false
+const WALL_SNAP_RADIUS := .32
 var undo_stack: Array[Dictionary] = []
 var redo_stack: Array[Dictionary] = []
 var drag_before: Dictionary = {}
@@ -674,6 +677,48 @@ func paint_floor_finish(at: Vector2, finish: int) -> bool:
 	update()
 	return true
 
+func exterior_span_blocker(at: Vector2, count: int, kind: String, finish: int) -> String:
+	if not active or blueprint.shape != "custom": return "需要自定义房间"
+	if kind not in ["wall","door","window"] or finish < 0 or finish >= BlueprintData.FINISH_COUNT: return "门窗类型或材质无效"
+	var edge: Dictionary = BlueprintData.nearest_edge(blueprint,at)
+	if edge.is_empty(): return "未选择外墙段"
+	var span: Array = BlueprintData.edge_span(blueprint,edge,count)
+	if span.size() != count: return "外墙不足 %.1f 米连续长度" % (float(count)*BlueprintData.FLOOR_GRID)
+	for item: Dictionary in span:
+		var previous: Dictionary = BlueprintData.edge_edit(blueprint,item)
+		if int(previous.finish) > 0 or str(previous.kind) != "wall":
+			if str(previous.kind) != kind or int(previous.finish) != finish:
+				return "目标墙段已有独立门窗或配色"
+	return ""
+
+func paint_exterior_span(at: Vector2, count: int, kind: String, finish: int) -> bool:
+	var reason := exterior_span_blocker(at,count,kind,finish)
+	if not reason.is_empty():
+		message = "绘制失败：" + reason
+		changed.emit()
+		return false
+	var edge: Dictionary = BlueprintData.nearest_edge(blueprint,at)
+	var span: Array = BlueprintData.edge_span(blueprint,edge,count)
+	var next := blueprint.duplicate(true)
+	var changes := 0
+	for item: Dictionary in span:
+		var previous: Dictionary = BlueprintData.edge_edit(blueprint,item)
+		if previous.kind == kind and int(previous.finish) == finish: continue
+		changes += 1
+		if kind != "wall" or finish > 0:
+			next.edge_finishes.append({"ix":item.ix,"iz":item.iz,"dx":item.dx,"dz":item.dz,
+				"kind":kind,"finish":finish})
+	if changes == 0: return false
+	var before := _draft()
+	next = BlueprintData.clean(next)
+	if next.edge_finishes.size() != blueprint.edge_finishes.size()+changes:
+		return false
+	blueprint = next
+	world.get_node("Room").apply_blueprint(blueprint)
+	_remember(before)
+	update()
+	return true
+
 func paint_exterior_edge(at: Vector2, kind: String, finish: int) -> bool:
 	if not active or blueprint.shape != "custom": return false
 	if kind not in ["wall", "window", "door"] or finish < 0 or finish >= BlueprintData.FINISH_COUNT: return false
@@ -719,6 +764,72 @@ func paint_partition_finish(at: Vector2, finish: int) -> bool:
 	update()
 	return true
 
+func begin_wall_stroke() -> void:
+	if not active or not wall_stroke_before.is_empty(): return
+	end_drag()
+	wall_stroke_before = _draft()
+
+func end_wall_stroke(cancel: bool = false) -> void:
+	if wall_stroke_before.is_empty(): return
+	var before: Dictionary = wall_stroke_before
+	wall_stroke_before = {}
+	if cancel: _restore_draft(before)
+	else: _remember(before)
+	update()
+
+func set_wall_snap(enabled: bool) -> void:
+	wall_snap = enabled
+	update()
+
+func wall_clearance(role: String = "") -> float:
+	if role.is_empty(): role = selected
+	if not nodes.has(role) or not is_floor(role): return -1.0
+	var footprint2: PackedVector2Array = footprint(role)
+	var left := INF
+	var right := -INF
+	var back := INF
+	var front := -INF
+	for point: Vector2 in footprint2:
+		left = minf(left,point.x)
+		right = maxf(right,point.x)
+		back = minf(back,point.y)
+		front = maxf(front,point.y)
+	var limits: Vector2 = BlueprintData.half_size(blueprint)
+	return maxf(0.0,minf(minf(left+limits.x,limits.x-right),minf(back+limits.y,limits.y-front)))
+
+func _wall_snap_point(role: String, target: Vector2) -> Vector2:
+	if not wall_snap or not is_floor(role): return target
+	var node: Node3D = nodes[role]
+	var pose: Transform3D = node.transform
+	pose.origin.x = target.x
+	pose.origin.z = target.y
+	var shape: PackedVector2Array = _footprint_at(role,pose,0.0)
+	var mins := Vector2(INF,INF)
+	var maxs := Vector2(-INF,-INF)
+	for point: Vector2 in shape:
+		mins = mins.min(point)
+		maxs = maxs.max(point)
+	var half: Vector2 = BlueprintData.half_size(blueprint)
+	var candidates: Array[Vector2] = []
+	for axis in range(2):
+		for direction in [-1.0,1.0]:
+			var delta: float
+			if axis == 0:
+				delta = (-half.x + edge_margin + collision_margin + .015 - mins.x) if direction < 0 else half.x - edge_margin - collision_margin - .015 - maxs.x
+			else:
+				delta = (-half.y + edge_margin + collision_margin + .015 - mins.y) if direction < 0 else half.y - edge_margin - collision_margin - .015 - maxs.y
+			if absf(delta) > WALL_SNAP_RADIUS: continue
+			var candidate := target + (Vector2(delta,0) if axis == 0 else Vector2(0,delta))
+			candidates.append(candidate)
+	if candidates.is_empty(): return target
+	candidates.sort_custom(func(a: Vector2,b: Vector2) -> bool: return a.distance_to(target) < b.distance_to(target))
+	for candidate: Vector2 in candidates:
+		pose.origin.x = candidate.x
+		pose.origin.z = candidate.y
+		if _blocker(role,_footprint_at(role,pose,collision_margin)).is_empty():
+			return candidate
+	return target
+
 func add_partition(at: Vector2, axis: String, kind: String = "wall") -> bool:
 	if not active or not placing_role.is_empty(): return false
 	var part: Dictionary = BlueprintData.clean_partition({
@@ -736,7 +847,7 @@ func add_partition(at: Vector2, axis: String, kind: String = "wall") -> bool:
 	next.partitions.append(part)
 	blueprint = BlueprintData.clean(next)
 	world.get_node("Room").apply_blueprint(blueprint)
-	_remember(before)
+	if wall_stroke_before.is_empty(): _remember(before)
 	update()
 	return true
 
@@ -771,7 +882,7 @@ func remove_partition(at: Vector2) -> bool:
 	var before := _draft()
 	blueprint.partitions.remove_at(nearest)
 	world.get_node("Room").apply_blueprint(blueprint)
-	_remember(before)
+	if wall_stroke_before.is_empty(): _remember(before)
 	update()
 	return true
 
@@ -802,6 +913,7 @@ func _remember(before: Dictionary) -> void:
 
 func undo() -> void:
 	if not active: return
+	end_wall_stroke()
 	end_aperture_drag()
 	end_custom_edge_drag()
 	end_drag()
@@ -812,6 +924,7 @@ func undo() -> void:
 
 func redo() -> void:
 	if not active: return
+	end_wall_stroke()
 	end_aperture_drag()
 	end_custom_edge_drag()
 	end_drag()
@@ -848,6 +961,7 @@ func begin() -> void:
 
 func finish(apply: bool) -> bool:
 	if not active: return false
+	end_wall_stroke(not apply)
 	end_aperture_drag(not apply)
 	end_custom_edge_drag(not apply)
 	if apply: update()
@@ -946,6 +1060,7 @@ func move_to(position_xz: Vector2) -> void:
 	var before: Transform3D = nodes[selected].transform
 	var point := position_xz
 	if snapping: point = point.snapped(Vector2.ONE * grid_step)
+	point = _wall_snap_point(selected,point)
 	nodes[selected].position.x = point.x
 	nodes[selected].position.z = point.y
 	clamp_pose(selected)
