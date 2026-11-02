@@ -43,7 +43,10 @@ var edge_drag_before: Dictionary = {}
 var edge_drag_source: Dictionary = {}
 var wall_stroke_before: Dictionary = {}
 var wall_snap := false
+var inner_wall_snap := false
 const WALL_SNAP_RADIUS := .32
+const ALIGN_RADIUS := .65
+const WALL_SAFE_GAP := .045
 var undo_stack: Array[Dictionary] = []
 var redo_stack: Array[Dictionary] = []
 var drag_before: Dictionary = {}
@@ -192,6 +195,7 @@ func start_place(item_id: String, uid: String) -> bool:
 func preview_placement(position_xz: Vector2) -> void:
 	if not active or placing_role.is_empty(): return
 	var position := position_xz.snapped(Vector2.ONE * grid_step) if snapping else position_xz
+	position = _wall_snap_point(placing_role,position)
 	nodes[placing_role].position.x = position.x
 	nodes[placing_role].position.z = position.y
 	update()
@@ -781,6 +785,31 @@ func set_wall_snap(enabled: bool) -> void:
 	wall_snap = enabled
 	update()
 
+func set_inner_wall_snap(enabled: bool) -> void:
+	inner_wall_snap = enabled
+	update()
+
+func inner_wall_clearance(role: String = "") -> float:
+	if role.is_empty(): role = selected
+	if not nodes.has(role) or not is_floor(role): return -1.0
+	var shape: PackedVector2Array = footprint(role)
+	var mins := Vector2(INF,INF)
+	var maxs := Vector2(-INF,-INF)
+	for point: Vector2 in shape:
+		mins = mins.min(point)
+		maxs = maxs.max(point)
+	var closest := INF
+	for part: Dictionary in blueprint.partitions:
+		if str(part.kind) == "door": continue
+		var e: Vector2 = BlueprintData.extents(part)
+		if part.axis == "x":
+			if maxs.x < float(part.x)-e.x or mins.x > float(part.x)+e.x: continue
+			closest = minf(closest,maxf(0.0,maxf(float(part.z)-e.y-maxs.y,mins.y-float(part.z)-e.y)))
+		else:
+			if maxs.y < float(part.z)-e.y or mins.y > float(part.z)+e.y: continue
+			closest = minf(closest,maxf(0.0,maxf(float(part.x)-e.x-maxs.x,mins.x-float(part.x)-e.x)))
+	return closest if is_finite(closest) else -1.0
+
 func wall_clearance(role: String = "") -> float:
 	if role.is_empty(): role = selected
 	if not nodes.has(role) or not is_floor(role): return -1.0
@@ -798,7 +827,7 @@ func wall_clearance(role: String = "") -> float:
 	return maxf(0.0,minf(minf(left+limits.x,limits.x-right),minf(back+limits.y,limits.y-front)))
 
 func _wall_snap_point(role: String, target: Vector2) -> Vector2:
-	if not wall_snap or not is_floor(role): return target
+	if not is_floor(role) or (not wall_snap and not inner_wall_snap): return target
 	var node: Node3D = nodes[role]
 	var pose: Transform3D = node.transform
 	pose.origin.x = target.x
@@ -809,18 +838,34 @@ func _wall_snap_point(role: String, target: Vector2) -> Vector2:
 	for point: Vector2 in shape:
 		mins = mins.min(point)
 		maxs = maxs.max(point)
-	var half: Vector2 = BlueprintData.half_size(blueprint)
 	var candidates: Array[Vector2] = []
-	for axis in range(2):
-		for direction in [-1.0,1.0]:
-			var delta: float
-			if axis == 0:
-				delta = (-half.x + edge_margin + collision_margin + .015 - mins.x) if direction < 0 else half.x - edge_margin - collision_margin - .015 - maxs.x
-			else:
-				delta = (-half.y + edge_margin + collision_margin + .015 - mins.y) if direction < 0 else half.y - edge_margin - collision_margin - .015 - maxs.y
-			if absf(delta) > WALL_SNAP_RADIUS: continue
-			var candidate := target + (Vector2(delta,0) if axis == 0 else Vector2(0,delta))
-			candidates.append(candidate)
+	if wall_snap:
+		var half: Vector2 = BlueprintData.half_size(blueprint)
+		for axis_id in range(2):
+			for direction in [-1.0,1.0]:
+				var delta: float
+				if axis_id == 0:
+					delta = (-half.x + edge_margin + collision_margin + .015 - mins.x) if direction < 0 else half.x - edge_margin - collision_margin - .015 - maxs.x
+				else:
+					delta = (-half.y + edge_margin + collision_margin + .015 - mins.y) if direction < 0 else half.y - edge_margin - collision_margin - .015 - maxs.y
+				if absf(delta) <= WALL_SNAP_RADIUS:
+					candidates.append(target + (Vector2(delta,0) if axis_id == 0 else Vector2(0,delta)))
+	if inner_wall_snap:
+		for part: Dictionary in blueprint.partitions:
+			if str(part.kind) == "door": continue
+			var extents: Vector2 = BlueprintData.extents(part)
+			for direction in [-1.0,1.0]:
+				var displacement: float
+				var candidate: Vector2
+				if part.axis == "x":
+					if maxs.x < float(part.x)-extents.x or mins.x > float(part.x)+extents.x: continue
+					displacement = (float(part.z)-extents.y-WALL_SAFE_GAP-maxs.y) if direction < 0 else (float(part.z)+extents.y+WALL_SAFE_GAP-mins.y)
+					candidate = target + Vector2(0,displacement)
+				else:
+					if maxs.y < float(part.z)-extents.y or mins.y > float(part.z)+extents.y: continue
+					displacement = (float(part.x)-extents.x-WALL_SAFE_GAP-maxs.x) if direction < 0 else (float(part.x)+extents.x+WALL_SAFE_GAP-mins.x)
+					candidate = target + Vector2(displacement,0)
+				if absf(displacement) <= WALL_SNAP_RADIUS: candidates.append(candidate)
 	if candidates.is_empty(): return target
 	candidates.sort_custom(func(a: Vector2,b: Vector2) -> bool: return a.distance_to(target) < b.distance_to(target))
 	for candidate: Vector2 in candidates:
@@ -829,6 +874,95 @@ func _wall_snap_point(role: String, target: Vector2) -> Vector2:
 		if _blocker(role,_footprint_at(role,pose,collision_margin)).is_empty():
 			return candidate
 	return target
+
+func _matching_furniture(role: String) -> Array[String]:
+	var peers: Array[String] = []
+	if not nodes.has(role) or not is_floor(role) or not placed_instances.has(role): return peers
+	var category: String = Data.base_role(role)
+	for other: String in nodes:
+		if is_floor(other) and placed_instances.has(other) and Data.base_role(other) == category:
+			peers.append(other)
+	return peers
+
+func nearest_alignment(role: String, dimension: String) -> Dictionary:
+	if dimension not in ["x","z"] or not nodes.has(role) or not is_floor(role): return {}
+	var node: Node3D = nodes[role]
+	var current := Vector2(node.position.x,node.position.z)
+	var best := {}
+	var nearest := ALIGN_RADIUS
+	for other: String in nodes:
+		if other == role or not is_floor(other): continue
+		if InventoryData.ROOM_DEFAULTS.has(Data.base_role(other)) and not placed_instances.has(other): continue
+		var peer: Node3D = nodes[other]
+		var shift: float = peer.position.x-current.x if dimension == "x" else peer.position.z-current.y
+		if absf(shift) < .002 or absf(shift) >= nearest: continue
+		var candidate := current + (Vector2(shift,0) if dimension == "x" else Vector2(0,shift))
+		var pose: Transform3D = node.transform
+		pose.origin.x = candidate.x
+		pose.origin.z = candidate.y
+		if not _blocker(role,_footprint_at(role,pose,collision_margin)).is_empty(): continue
+		if not _sweep_blocker(role,node.transform,pose).is_empty(): continue
+		best = {"target":candidate,"peer":other,"axis":dimension,"delta":absf(shift)}
+		nearest = absf(shift)
+	return best
+
+func align_selected(dimension: String) -> bool:
+	if not active or not placing_role.is_empty(): return false
+	var guide: Dictionary = nearest_alignment(selected,dimension)
+	if guide.is_empty():
+		message = "附近没有可安全对齐的家具"
+		changed.emit()
+		return false
+	var before: Dictionary = _draft()
+	var node: Node3D = nodes[selected]
+	var target: Vector2 = guide.target
+	node.position.x = target.x
+	node.position.z = target.y
+	_remember(before)
+	update()
+	return true
+
+func distribute_matching_furniture(dimension: String) -> bool:
+	if not active or not placing_role.is_empty() or dimension not in ["x","z"]: return false
+	var roles: Array[String] = _matching_furniture(selected)
+	if roles.size() < 3:
+		message = "至少需要 3 件已摆放的同类家具"
+		changed.emit()
+		return false
+	roles.sort_custom(func(a: String,b: String) -> bool:
+		return float(nodes[a].position.x if dimension == "x" else nodes[a].position.z) < float(nodes[b].position.x if dimension == "x" else nodes[b].position.z))
+	var start_value: float = nodes[roles[0]].position.x if dimension == "x" else nodes[roles[0]].position.z
+	var end_value: float = nodes[roles[-1]].position.x if dimension == "x" else nodes[roles[-1]].position.z
+	if end_value-start_value < .05: return false
+	var before: Dictionary = _draft()
+	var changes := 0
+	for index in range(1,roles.size()-1):
+		var role: String = roles[index]
+		var node: Node3D = nodes[role]
+		var goal: float = lerpf(start_value,end_value,float(index)/float(roles.size()-1))
+		var target_pose: Transform3D = node.transform
+		if dimension == "x": target_pose.origin.x = goal
+		else: target_pose.origin.z = goal
+		if target_pose.origin.distance_to(node.position) <= .002: continue
+		if not _sweep_blocker(role,node.transform,target_pose).is_empty():
+			_restore_draft(before)
+			update()
+			message = "等距排列被墙体或其他家具阻挡"
+			changed.emit()
+			return false
+		node.transform = target_pose
+		changes += 1
+	if changes == 0: return false
+	var collision: String = _layout_blocker()
+	if not collision.is_empty():
+		_restore_draft(before)
+		update()
+		message = "等距排列失败：" + collision
+		changed.emit()
+		return false
+	_remember(before)
+	update()
+	return true
 
 func add_partition(at: Vector2, axis: String, kind: String = "wall") -> bool:
 	if not active or not placing_role.is_empty(): return false
