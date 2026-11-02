@@ -22,6 +22,8 @@ var _catalog_scroller: ScrollContainer
 var _filter_row: HBoxContainer
 var _filter_parent: VBoxContainer
 var _inspector: PanelContainer
+var feedback: PanelContainer
+var feedback_text: Label
 
 const CORE_INSPECTOR := {
 	"furniture": ["LayoutSelection","Tools","Copies","FurniturePaletteLabel","FurniturePalette","LayoutMessage"],
@@ -58,6 +60,7 @@ func setup(owner_node: Node3D) -> void:
 	blueprint_content = host.get_node("%BlueprintPanel")
 	_build_bar(canvas)
 	_build_dock(canvas)
+	_build_feedback(canvas)
 	host.get_viewport().size_changed.connect(_resize_layout)
 	_resize_layout()
 	sync()
@@ -236,6 +239,54 @@ func _apply_layout_size(area: Vector2) -> void:
 	if host.furniture_cards != null:
 		host.furniture_cards.request_visible.call_deferred()
 
+func _build_feedback(canvas: Control) -> void:
+	# Never intercept clicks: this is a visual-only status tied to the 3D object.
+	feedback = PanelContainer.new()
+	feedback.name = "PlacementFeedback"
+	feedback.visible = false
+	feedback.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	feedback.custom_minimum_size = Vector2(242,40)
+	var surface := StyleBoxFlat.new()
+	surface.bg_color = Color("f7f8f3",0.94)
+	surface.border_color = Color("bac9b9",0.74)
+	surface.set_border_width_all(1)
+	surface.set_corner_radius_all(12)
+	surface.content_margin_left = 13.0
+	surface.content_margin_right = 13.0
+	surface.content_margin_top = 9.0
+	surface.content_margin_bottom = 9.0
+	feedback.add_theme_stylebox_override("panel",surface)
+	canvas.add_child(feedback)
+	feedback_text = Label.new()
+	feedback_text.name = "Status"
+	feedback_text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	feedback_text.add_theme_font_size_override("font_size",12)
+	feedback_text.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	feedback.add_child(feedback_text)
+
+func _sync_feedback(active: bool) -> void:
+	if not active or host.blueprint_mode or mode != "furniture":
+		feedback.hide()
+		return
+	var layout = host.world.layout
+	var message: String = str(layout.message)
+	var relevant: bool = not layout.placing_role.is_empty() or not layout.gesture.is_empty() or not layout.valid or message.begins_with("已阻挡") or layout.wall_magnet_active
+	if not relevant or not layout.nodes.has(layout.selected):
+		feedback.hide()
+		return
+	var object: Node3D = layout.nodes[layout.selected]
+	var camera: Camera3D = host.world.camera
+	var target: Vector3 = object.global_position + Vector3.UP * maxf(0.25, layout.bounds_for(layout.selected).y + .18)
+	if camera.is_position_behind(target):
+		feedback.hide()
+		return
+	var view: Vector2 = host.get_viewport().get_visible_rect().size
+	var pixel: Vector2 = camera.unproject_position(target)
+	feedback.position = Vector2(clampf(pixel.x + 12.0, 12.0, maxf(12.0,view.x - 310.0)),clampf(pixel.y - 64.0, 127.0, maxf(127.0, view.y - 86.0)))
+	feedback_text.text = message
+	feedback_text.add_theme_color_override("font_color",Color("bd4a45") if not layout.valid or message.begins_with("已阻挡") else Color("29694d") if layout.wall_magnet_active else Color("394f40"))
+	feedback.show()
+
 func choose_mode(next_mode: String) -> void:
 	if not mode_buttons.has(next_mode): return
 	mode = next_mode
@@ -259,6 +310,7 @@ func sync() -> void:
 		last_selected = selected
 	was_active = active
 	bar.visible = active
+	_sync_feedback(active)
 	var show_dock: bool = active and mode == "furniture" and catalog_open and not host.blueprint_mode
 	if show_dock != _last_dock_visible:
 		dock.visible = show_dock
