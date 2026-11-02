@@ -58,6 +58,9 @@ func set_partition_editing(enabled: bool) -> void:
 	var partitions := $Shell.get_node_or_null("Partitions") as Node3D
 	if partitions != null:
 		partitions.scale.y = .23 if enabled else 1.0
+	var returns := $Shell.get_node_or_null("Notch_Walls") as Node3D
+	if returns != null:
+		returns.scale.y = .23 if enabled else 1.0
 
 func apply_style(value: Variant) -> void:
 	style = clean_style(value)
@@ -99,3 +102,9 @@ func update_cutaway(camera: Camera3D) -> void:
 	var back := $Shell.get_node_or_null("Back_Wall") as Node3D
 	if back != null:
 		back.visible = camera.global_position.z > -float(blueprint.depth) * .5 + .2
+	var returns := $Shell.get_node_or_null("Notch_Walls") as Node3D
+	if returns != null:
+		var cutoff_x: float = float(blueprint.width) * .5 - float(blueprint.notch_width)
+		var cutoff_z: float = float(blueprint.depth) * .5 - float(blueprint.notch_depth)
+		# Match the original cutaway camera: do not obscure furniture from outside.
+		returns.visible = partitions_editing or (camera.global_position.x < cutoff_x and camera.global_position.z < cutoff_z)
