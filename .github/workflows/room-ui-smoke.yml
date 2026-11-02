@@ -8,6 +8,8 @@ on:
       - "tests/life/test_furniture_direct_interaction.gd"
       - "assets/room_minimal_theme.tres"
       - "tests/life/test_room_minimal_ui.gd"
+      - "assets/models/room/catalog/*.glb"
+      - "tests/life/test_furniture_pbr.gd"
       - "tests/life/test_workstation_view.gd"
       - ".github/workflows/room-ui-smoke.yml"
   workflow_dispatch:
@@ -31,6 +33,7 @@ jobs:
           for test in \
             tests/life/test_room_minimal_ui.gd \
             tests/life/test_furniture_catalog.gd \
+            tests/life/test_furniture_pbr.gd \
             tests/life/test_furniture_showcase.gd \
             tests/life/test_workstation_layout.gd \
             tests/life/test_furniture_direct_interaction.gd \
