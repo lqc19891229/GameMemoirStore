@@ -361,8 +361,10 @@ func set_blueprint_shape(shape: String) -> bool:
 func _apply_blueprint_change(next: Dictionary) -> bool:
 	if next == blueprint: return false
 	# Do not drop internal walls when altering the outer boundary.
-	if next.partitions.size() != blueprint.partitions.size() or (next.shape == "custom" and blueprint.shape == "custom" and next.removed_cells.size() != blueprint.removed_cells.size())
-		or next.floor_finishes.size() != blueprint.floor_finishes.size() or next.edge_finishes.size() != blueprint.edge_finishes.size():
+	if (next.partitions.size() != blueprint.partitions.size()
+		or (next.shape == "custom" and blueprint.shape == "custom" and next.removed_cells.size() != blueprint.removed_cells.size())
+		or next.floor_finishes.size() != blueprint.floor_finishes.size()
+		or next.edge_finishes.size() != blueprint.edge_finishes.size()):
 		message = "调整失败：外轮廓将移除已有内墙或地板单元，请先调整结构"
 		changed.emit()
 		return false
