@@ -79,7 +79,7 @@ func run() -> void:
 	stored.save_path = state.save_path
 	stored.load_state()
 	check(stored.life.room_blueprint.partitions == state.life.room_blueprint.partitions, "wall segments round trip through JSON")
-	var expected := stored.life.room_blueprint.duplicate(true)
+	var expected: Dictionary = stored.life.room_blueprint.duplicate(true)
 	state.persistence_enabled = false
 	game.queue_free()
 	await frames()
