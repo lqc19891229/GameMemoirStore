@@ -160,6 +160,18 @@ func _build_left_wall(wall: Material, trim: Material, wood: Material, metal: Mat
 	var distant := _material(Color("a8b8b5"), 1.0)
 	var near_building := _material(Color("899d9b"), .96)
 	_box(left, "WindowSky", Vector3(.04, 1.34, 2.18), Vector3(x - .94, 1.99, window_z), sky)
+	# Exterior rain strips share the window group so cutaway hides them too.
+	# Streaks are deliberately outside the real pane, not inside the room.
+	var streaks := _group(left, "RainStreaks")
+	streaks.visible = false
+	var water := _material(Color(.75,.85,.95,.42), .18)
+	water.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	for index in range(14):
+		var offset: float = -1.03 + float(index) * .158
+		var y: float = 1.43 + float(index % 4) * .27
+		_box(streaks,"Rain_%02d" % index,Vector3(.008,.27 + float(index % 3)*.05,.009),
+			Vector3(x-.45,y,window_z+offset),water)
+
 	_box(left, "DistantBuilding", Vector3(.08, .58, .62), Vector3(x - .66, 1.58, window_z - .68), distant)
 	_box(left, "DistantBuilding", Vector3(.08, .90, .48), Vector3(x - .66, 1.73, window_z + .08), near_building)
 	_box(left, "DistantBuilding", Vector3(.08, .48, .58), Vector3(x - .66, 1.52, window_z + .92), distant)
