@@ -56,7 +56,8 @@ func run() -> void:
 	check(group_sizes.get("tables",0) == 5 and group_sizes.get("seating",0) == 7, "tables and seating have varied models")
 	check(group_sizes.get("storage",0) == 5 and group_sizes.get("lighting",0) == 4 and group_sizes.get("decor",0) == 6, "storage, lighting and decoration include new SKUs")
 	check(Data.is_copy("side_table_oak_1") and Data.base_role("side_table_oak_1") == "side_table_oak", "multiword placement role can be copied safely")
-	check(not Data.is_copy("side_table_oak_9") and not Data.valid_role("unknown_furniture"), "unknown or over-limit furniture copies are rejected")
+	check(not Data.is_copy("side_table_oak_9") and not Data.valid_role("unknown_furniture"), "unknown and unused historical numbered roles remain rejected")
+	check(Data.valid_role("side_table_oak__instance__item_999") and Data.base_role("side_table_oak__instance__item_999") == "side_table_oak", "unlimited new UID-based room roles are valid")
 
 	var game = load("res://scenes/main/game_root.tscn").instantiate()
 	root.add_child(game)
@@ -113,17 +114,19 @@ func run() -> void:
 			return
 		check(layout.confirm_placement(), "new furniture is confirmed into the room: "+role)
 		finished.append(role)
-	check(finished.has("side_table_oak") and finished.has("side_table_oak_1"), "multiple purchases create separately movable copies even with underscore roles")
-	check(Data.is_copy("side_table_oak_1"), "new multiword copy is included in save schema")
+	var first_role: String = finished[0]
+	var last_role: String = finished[3]
+	check(first_role != last_role and Data.base_role(first_role) == "side_table_oak" and Data.base_role(last_role) == "side_table_oak", "same SKU creates multiple unique instance roles")
+	check(Data.is_instance_role(last_role) and Data.is_copy("side_table_oak_1"), "new UID roles and old numbered saves both remain recognized")
 	check(layout.valid and layout._layout_blocker().is_empty(), "all new furniture respects existing room collision checks")
-	layout.select("side_table_oak_1")
+	layout.select(last_role)
 	layout.set_furniture_color(2)
-	check(layout.color_for("side_table_oak_1") == 2, "new inventory copies support independent recoloring")
-	var stored_uid: String = layout.placed_instances["side_table_oak_1"]
-	check(not stored_uid.is_empty() and stored_uid != layout.placed_instances["side_table_oak"], "each new SKU instance has its own persistent UID")
+	check(layout.color_for(last_role) == 2, "new instances support independent recoloring")
+	var stored_uid: String = layout.placed_instances[last_role]
+	check(not stored_uid.is_empty() and stored_uid != layout.placed_instances[first_role], "each new SKU instance has its own persistent UID")
 	check(desktop.furniture_buttons["room_side_table_oak"].disabled == false, "when all stock is placed, the catalog entry still selects the existing furniture")
 	desktop._start_inventory_placement("room_side_table_oak")
-	check(layout.selected in ["side_table_oak","side_table_oak_1"], "catalog selects a placed object when there is no unused stock")
+	check(layout.selected in [first_role,last_role], "catalog selects a placed instance when there is no unused stock")
 
 	state.save_path = "user://memoir_furniture_expansion_p14_test.json"
 	state.persistence_enabled = true
@@ -131,8 +134,8 @@ func run() -> void:
 	var stored = State.new()
 	stored.save_path = state.save_path
 	stored.load_state()
-	check(stored.life.placements.has("side_table_oak_1") and stored.life.placements["side_table_oak_1"] == stored_uid, "multiword furniture copy persists after JSON round trip")
-	check(stored.life.workstation_layout.has("side_table_oak_1"), "new copy transform persists after JSON round trip")
+	check(stored.life.placements.get(last_role,"") == stored_uid, "UID-based multiword role survives JSON round trip")
+	check(stored.life.workstation_layout.has(last_role), "UID-based instance transform persists after JSON round trip")
 	state.persistence_enabled = false
 	game.queue_free()
 	await frames()

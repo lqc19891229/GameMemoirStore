@@ -133,6 +133,7 @@ jobs:
             tests/life/test_room_visual_polish.gd \
             tests/life/test_furniture_catalog.gd \
             tests/life/test_furniture_expansion.gd \
+            tests/life/test_furniture_instances.gd \
             tests/life/test_furniture_showcase.gd \
             tests/life/test_workstation_view.gd \
             tests/life/test_workstation_lighting.gd \
