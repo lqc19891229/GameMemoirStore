@@ -160,14 +160,14 @@ func _start_inventory_placement(item_id: String) -> void:
 	world.layout.start_place(item_id, uid)
 
 func set_blueprint_mode(enabled: bool) -> void:
-	if not world.layout.active: return
+	if enabled and not world.layout.active: return
 	if enabled and not world.layout.placing_role.is_empty(): world.layout.cancel_placement()
 	blueprint_mode = enabled
 	%BlueprintToggle.set_pressed_no_signal(enabled)
 	%Content.visible = not enabled
 	%BlueprintPanel.visible = enabled
 	world.set_blueprint_camera(enabled)
-	world.layout.update()
+	if world.layout.active: world.layout.update()
 	if enabled: world.layout.gizmo.hide()
 	_sync_blueprint_ui()
 
@@ -176,13 +176,13 @@ func _sync_blueprint_ui() -> void:
 	for name: String in BLUEPRINT_KEYS:
 		var key: String = BLUEPRINT_KEYS[name]
 		var slider: HSlider = get_node("%" + name)
-		slider.set_value_no_signal(float(blueprint[key]))
 		if key == "door_x":
 			slider.min_value = -float(blueprint.width) / 2.0 + .7
 			slider.max_value = float(blueprint.width) / 2.0 - .7
 		elif key == "window_z":
 			slider.min_value = -float(blueprint.depth) / 2.0 + 1.35
 			slider.max_value = float(blueprint.depth) / 2.0 - 1.35
+		slider.set_value_no_signal(float(blueprint[key]))
 		var label_key := {"width":"BlueprintWidthLabel", "depth":"BlueprintDepthLabel", "door_x":"BlueprintDoorLabel", "window_z":"BlueprintWindowLabel"}[key]
 		var label: Label = get_node("%" + label_key)
 		var display := {"width":"房间宽度", "depth":"房间深度", "door_x":"后墙门位置", "window_z":"左墙窗位置"}[key]
