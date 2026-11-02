@@ -121,6 +121,9 @@ func _build_bar(canvas: Control) -> void:
 func _build_dock(canvas: Control) -> void:
 	dock = PanelContainer.new()
 	dock.name = "RoomCatalogDock"
+	# The first room interaction is often screen mode, not edit mode.
+	# Initialize hidden to avoid swallowing pointer events over the monitor taskbar.
+	dock.visible = false
 	dock.anchor_left = 0.0
 	dock.anchor_top = 1.0
 	dock.anchor_right = 1.0

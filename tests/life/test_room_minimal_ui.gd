@@ -25,6 +25,7 @@ func run() -> void:
 	var ui = desktop.room_ui
 	check(ui != null, "room UI controller is present")
 	check(ui.bar != null and not ui.bar.visible, "minimal mode bar is hidden in overview")
+	check(not ui.dock.is_visible_in_tree(), "catalog dock starts hidden so the 3D monitor taskbar remains clickable before room editing")
 	check(desktop.get_node("HUD/Interface").theme == load("res://assets/room_minimal_theme.tres"), "room HUD uses dedicated sans-serif theme")
 	check(desktop.get_node("%DesktopScreen").theme != desktop.get_node("HUD/Interface").theme, "PC screen retains independent UI styling")
 	desktop.begin_layout()
