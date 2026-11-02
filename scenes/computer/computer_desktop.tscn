@@ -270,10 +270,6 @@ unique_name_in_owner = true
 layout_mode = 2
 text = "占地 0.00 × 0.00 米 · 高 0.00 米"
 autowrap_mode = 2
-[node name="WallSnapToggle" type="CheckButton" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content"]
-unique_name_in_owner = true
-layout_mode = 2
-text = "智能靠外墙吸附（安全距离）"
 [node name="LayoutMessage" type="Label" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content"]
 unique_name_in_owner = true
 layout_mode = 2
@@ -380,6 +376,11 @@ text = "选中家具 · 独立改色"
 [node name="FurniturePalette" type="OptionButton" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content/FurnitureInventory"]
 unique_name_in_owner = true
 layout_mode = 2
+
+[node name="WallSnapToggle" type="CheckButton" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "智能靠外墙吸附（安全距离）"
 
 [node name="BlueprintPanel" type="VBoxContainer" parent="HUD/Interface/LayoutPanel/Margin/Scroll"]
 unique_name_in_owner = true
