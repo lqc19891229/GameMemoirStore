@@ -4,6 +4,7 @@ extends RefCounted
 const LayoutData = preload("res://scripts/life/workstation_layout_data.gd")
 const BlueprintData = preload("res://scripts/room/room_blueprint_data.gd")
 const InventoryData = preload("res://scripts/items/inventory_data.gd")
+const Finishes = preload("res://scripts/items/furniture_finishes.gd")
 const ATTRIBUTES := ["反应", "操作", "思考", "探索", "规划", "协作"]
 # Legacy room items remain defined for lossless version-3 save loading.
 const ROOM_ONLY_SLOTS := ["desk", "cabinet", "decor"]
@@ -67,7 +68,7 @@ static func clean(raw: Variant, owned: Array[String], installed: Array[String]) 
 		for raw_uid: Variant in raw["furniture_colors"]:
 			var uid := str(raw_uid)
 			var value: Variant = raw["furniture_colors"][raw_uid]
-			if known_uids.has(uid) and (value is int or value is float) and is_finite(float(value)) and int(value) > 0 and int(value) < 6:
+			if known_uids.has(uid) and (value is int or value is float) and is_finite(float(value)) and int(value) > 0 and int(value) < Finishes.LABELS.size():
 				result["furniture_colors"][uid] = int(value)
 	# Older saves have a single bundled keyboard/mouse slot.
 	if raw.get("equipped") is Dictionary:

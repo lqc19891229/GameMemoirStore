@@ -2,6 +2,8 @@ extends Control
 const Catalog: MemoirItemCatalog = preload("res://data/items/_catalog.tres")
 const InventoryData = preload("res://scripts/items/inventory_data.gd")
 const Taxonomy = preload("res://scripts/items/item_taxonomy.gd")
+const Finishes = preload("res://scripts/items/furniture_finishes.gd")
+const ThumbnailCache = preload("res://scripts/life/furniture_thumbnail_cache.gd")
 var session: MemoirGameSession
 var tab := "shop"
 var box: VBoxContainer
@@ -11,11 +13,18 @@ var wallet_label: Label
 var purchase_buttons: Dictionary = {}
 var catalog_group_ids: Array[String] = [""]
 var catalog_type_ids: Array[String] = [""]
+var thumbnail_cache
 
 func _ready() -> void:
 	box = %Rows
 	message = %Message
 	wallet_label = %Wallet
+	thumbnail_cache = ThumbnailCache.new()
+	thumbnail_cache.name = "FurnitureThumbnailCache"
+	add_child(thumbnail_cache)
+	for label: String in Finishes.LABELS:
+		%ShopPreviewFinish.add_item(label)
+	%ShopPreviewFinish.item_selected.connect(func(_index: int) -> void: refresh())
 	%ShopCatalogGroup.add_item("全部分类")
 	for entry: Dictionary in Taxonomy.GROUPS:
 		%ShopCatalogGroup.add_item(str(entry.name))
@@ -72,6 +81,7 @@ func refresh() -> void:
 		box.remove_child(child)
 		child.queue_free()
 	purchase_buttons.clear()
+	thumbnail_cache.forget_requests()
 	_tick()
 	var inventory: Array = session.state.life["inventory"]
 	var placements: Dictionary = session.state.life["placements"]
@@ -85,6 +95,20 @@ func refresh() -> void:
 		box.add_child(row)
 		row.get_node("%Title").text = item.name + (" ×%d" % count if tab == "inventory" and count > 1 else "")
 		row.get_node("%Description").text = item.description
+		var category_name := Taxonomy.group_name(Taxonomy.group_for(item))
+		var type_name := Taxonomy.type_name(Taxonomy.type_for(item))
+		var meta: Label = row.get_node("%FurnitureMeta")
+		var preview_frame: Control = row.get_node("%ThumbnailBackdrop")
+		preview_frame.visible = item.category == "furniture" and item.furniture_scene != null and not item.retired
+		if preview_frame.visible:
+			var model: Node3D = item.furniture_scene.instantiate()
+			var bounds: Vector3 = model.get("bounds")
+			model.free()
+			meta.text = "%s / %s · %.2f × %.2f × %.2f m" % [category_name, type_name, bounds.x, bounds.y, bounds.z]
+			row.get_node("%ThumbnailPlaceholder").text = type_name
+			thumbnail_cache.request(item, row.get_node("%Thumbnail"), %ShopPreviewFinish.selected)
+		else:
+			meta.text = "%s / %s" % [category_name, type_name]
 		var button: Button = row.get_node("%Action")
 		var key := id
 		row.get_node("%Price").visible = tab == "shop"
