@@ -370,6 +370,14 @@ text = "地毯"
 unique_name_in_owner = true
 layout_mode = 2
 text = "绿植"
+[node name="Place_sofa" type="Button" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content/FurnitureInventory"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "双人沙发"
+[node name="Place_stool" type="Button" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content/FurnitureInventory"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "软垫矮凳"
 [node name="FurniturePaletteLabel" type="Label" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content/FurnitureInventory"]
 layout_mode = 2
 text = "选中家具 · 独立改色"
