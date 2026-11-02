@@ -2,6 +2,7 @@ class_name MemoirInventoryData
 extends RefCounted
 ## Stable per-object IDs allow multiple identical pieces of furniture.
 const Catalog: MemoirItemCatalog = preload("res://data/items/_catalog.tres")
+const LayoutData = preload("res://scripts/life/workstation_layout_data.gd")
 const STARTER_IDS := ["starter_pc", "starter_monitor", "starter_mouse", "starter_desk", "starter_cabinet"]
 const ROOM_DEFAULTS := {"chair": "room_chair", "bookcase": "room_bookcase", "lamp": "room_lamp", "rug": "room_rug", "plant": "room_plant", "sofa":"room_sofa", "stool":"room_stool"}
 const STARTER_FURNITURE_ROLES := ["chair","bookcase","lamp","rug","plant"]
@@ -72,19 +73,16 @@ static func clean(raw: Variant, legacy_owned: Array, legacy_layout: Dictionary, 
 			seen[uid] = true
 	# Pre-v4 saves contain free room copies. Preserve their identities and ownership.
 	for role: String in legacy_layout:
-		if not _is_furniture_copy(role): continue
+		if not LayoutData.is_legacy_copy(role): continue
 		if raw_placements is Dictionary and raw_placements.has(role): continue
 		var uid := "legacy_" + role
 		if seen.has(uid): continue
-		result.append({"uid": uid, "item_id": furniture_item_id(role.substr(0, role.rfind("_")))})
+		result.append({"uid": uid, "item_id": furniture_item_id(LayoutData.base_role(role))})
 		seen[uid] = true
 	return result
 
 static func _is_furniture_copy(role: String) -> bool:
-	var parts := role.split("_")
-	if parts.size() < 2 or not parts[-1].is_valid_int(): return false
-	var prefix := role.substr(0, role.rfind("_"))
-	return is_room_furniture_role(prefix) and int(parts[-1]) >= 1 and int(parts[-1]) <= 8
+	return LayoutData.is_copy(role)
 
 static func clean_placements(raw: Variant, inventory: Array, layout: Dictionary) -> Dictionary:
 	# Missing field means a pre-v4 save with authored furniture.
@@ -95,16 +93,19 @@ static func clean_placements(raw: Variant, inventory: Array, layout: Dictionary)
 	if raw is Dictionary:
 		for role: String in raw:
 			if not is_room_furniture_role(role) and not _is_furniture_copy(role): continue
-			if role != role.get_slice("_", 0) and not layout.has(role): continue
+			# Every dynamic instance must have a corresponding saved transform.
+			if _is_furniture_copy(role) and not layout.has(role): continue
 			var uid := str(raw[role])
 			if used.has(uid): continue
+			if LayoutData.is_instance_role(role) and LayoutData.instance_uid(role) != uid: continue
 			for entry: Dictionary in inventory:
-				if entry.uid == uid and entry.item_id == furniture_item_id(role.substr(0, role.rfind("_")) if _is_furniture_copy(role) else role):
+				if entry.uid == uid and entry.item_id == furniture_item_id(LayoutData.base_role(role)):
 					result[role] = uid
 					used[uid] = true
 					break
 	for role: String in layout:
-		if _is_furniture_copy(role) and not result.has(role):
+		# Only old pre-v4 numbered copies can be recovered without a UID map.
+		if LayoutData.is_legacy_copy(role) and not result.has(role):
 			var uid := "legacy_" + role
 			for entry: Dictionary in inventory:
 				if entry.uid == uid:

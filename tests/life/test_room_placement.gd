@@ -1,6 +1,7 @@
 extends SceneTree
 const State = preload("res://scripts/store_state.gd")
 const Inventory = preload("res://scripts/items/inventory_data.gd")
+const LayoutData = preload("res://scripts/life/workstation_layout_data.gd")
 var checks := 0
 var failures := 0
 
@@ -63,9 +64,10 @@ func run() -> void:
 	desktop.begin_layout()
 	var second_uid: String = Inventory.unused_uid(state.life.inventory, layout.placed_instances, "room_chair")
 	check(not second_uid.is_empty() and layout.start_place("room_chair", second_uid), "a second owned chair can be previewed")
-	check(layout.placing_role == "chair_1", "additional furniture receives a distinct room role")
+	var second_role: String = LayoutData.instance_role("chair",second_uid)
+	check(layout.placing_role == second_role, "additional furniture is keyed by its purchased UID")
 	layout.cancel_placement()
-	check(layout.placing_role.is_empty() and not layout.nodes.has("chair_1") and not layout.placed_instances.values().has(second_uid), "preview cancellation fully restores room and inventory")
+	check(layout.placing_role.is_empty() and not layout.nodes.has(second_role) and not layout.placed_instances.values().has(second_uid), "preview cancellation fully restores room and inventory")
 	desktop.finish_layout(false)
 	# Storing an authored piece must survive a save/load round trip.
 	desktop.begin_layout()
