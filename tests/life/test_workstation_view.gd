@@ -175,32 +175,7 @@ func run() -> void:
 			await click_screen(desktop, window.content.popup.get_ok_button())
 			check(not window.content.popup.visible, "3D pointer input reaches dialog button")
 			desktop.minimize_app("platform")
-			var taskbar: Button = desktop.screen_node("TaskbarPlatform")
-			var taskbar_pos: Vector2 = taskbar.get_global_rect().get_center()
-			var canvas_pos: Vector2 = desktop.canvas_point_for_screen(taskbar_pos)
-			print("TASKBAR_DIAG: taskbar_pos=", taskbar_pos, " world_uv=", world.screen_uv(canvas_pos), " visible=", taskbar.is_visible_in_tree(), " disabled=", taskbar.disabled, " connected=", taskbar.pressed.is_connected(Callable(desktop,"open_app")), " siblings=", desktop.screen_node("Tasks").get_child_count())
-			await click_screen(desktop, taskbar)
-			var hover: Control = viewport.gui_get_hovered_control()
-			print("TASKBAR_DIAG: clicked_visible=", window.visible, " hovered=", hover.get_path() if hover != null else "none")
-			if not window.visible:
-				var direct_motion := InputEventMouseMotion.new()
-				direct_motion.position = taskbar_pos
-				direct_motion.global_position = taskbar_pos
-				viewport.push_input(direct_motion, true)
-				var direct_press := InputEventMouseButton.new()
-				direct_press.position = taskbar_pos
-				direct_press.global_position = taskbar_pos
-				direct_press.button_index = MOUSE_BUTTON_LEFT
-				direct_press.pressed = true
-				viewport.push_input(direct_press, true)
-				direct_press.pressed = false
-				viewport.push_input(direct_press, true)
-				await frames()
-				hover = viewport.gui_get_hovered_control()
-				print("TASKBAR_DIAG: direct_viewport_clicked=", window.visible, " hovered=", hover.get_path() if hover != null else "none")
-			if not window.visible:
-				taskbar.pressed.emit()
-				print("TASKBAR_DIAG: direct_signal_visible=", window.visible)
+			await click_screen(desktop, desktop.screen_node("TaskbarPlatform"))
 			check(window.visible, "screen taskbar restores minimized app")
 			desktop.close_app("platform")
 			await frames()
