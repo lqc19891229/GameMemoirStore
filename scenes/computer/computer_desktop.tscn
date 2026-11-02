@@ -382,6 +382,50 @@ unique_name_in_owner = true
 layout_mode = 2
 text = "智能靠外墙吸附（安全距离）"
 
+[node name="FurnitureAssistsTitle" type="Label" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content"]
+layout_mode = 2
+text = "家具高级摆放辅助"
+theme_override_font_sizes/font_size = 16
+[node name="InnerWallSnapToggle" type="CheckButton" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "靠内墙吸附（独立开关）"
+[node name="FurnitureAssistHint" type="Label" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+autowrap_mode = 3
+text = "显示内墙距离与同类家具中心间距"
+[node name="FurnitureAlignmentTools" type="HBoxContainer" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content"]
+layout_mode = 2
+theme_override_constants/separation = 5
+[node name="AlignFurnitureX" type="Button" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content/FurnitureAlignmentTools"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "对齐 X"
+tooltip_text = "把选中地面家具的 X 坐标与附近另一件家具对齐，不穿过碰撞物"
+[node name="AlignFurnitureZ" type="Button" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content/FurnitureAlignmentTools"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "对齐 Z"
+tooltip_text = "把选中地面家具的 Z 坐标与附近另一件家具对齐，不穿过碰撞物"
+[node name="FurnitureDistributeTools" type="HBoxContainer" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content"]
+layout_mode = 2
+theme_override_constants/separation = 5
+[node name="DistributeFurnitureX" type="Button" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content/FurnitureDistributeTools"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "同类等距 X"
+tooltip_text = "三件以上同类地面家具之间按 X 方向等距摆放，保持两端不动"
+[node name="DistributeFurnitureZ" type="Button" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content/FurnitureDistributeTools"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "同类等距 Z"
+tooltip_text = "三件以上同类地面家具之间按 Z 方向等距摆放，保持两端不动"
+
 [node name="BlueprintPanel" type="VBoxContainer" parent="HUD/Interface/LayoutPanel/Margin/Scroll"]
 unique_name_in_owner = true
 visible = false

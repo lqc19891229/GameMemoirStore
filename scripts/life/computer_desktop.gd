@@ -116,6 +116,11 @@ func _ready() -> void:
 	for n in range(1,5):
 		%BlueprintOpeningWidth.add_item("%.1f 米 / %d 段" % [float(n)*BlueprintData.FLOOR_GRID,n])
 	%WallSnapToggle.toggled.connect(world.layout.set_wall_snap)
+	%InnerWallSnapToggle.toggled.connect(world.layout.set_inner_wall_snap)
+	%AlignFurnitureX.pressed.connect(func() -> void: world.layout.align_selected("x"))
+	%AlignFurnitureZ.pressed.connect(func() -> void: world.layout.align_selected("z"))
+	%DistributeFurnitureX.pressed.connect(func() -> void: world.layout.distribute_matching_furniture("x"))
+	%DistributeFurnitureZ.pressed.connect(func() -> void: world.layout.distribute_matching_furniture("z"))
 	%BlueprintFloorTool.item_selected.connect(func(_index: int) -> void:
 		if dragging_aperture:
 			world.layout.end_aperture_drag()
@@ -686,6 +691,13 @@ func _sync_layout() -> void:
 	var wall_distance: float = layout.wall_clearance(layout.selected)
 	%LayoutSize.text = "占地 %.2f × %.2f 米 · 高 %.2f 米\n%s%s" % [dims.x,dims.z,dims.y,placement, "\n距外墙约 %.2f 米" % wall_distance if wall_distance >= 0.0 else ""]
 	%LayoutSize.modulate = Color("ff9688") if not layout.valid else Color("b9e9d5")
+	var inner_distance: float = layout.inner_wall_clearance(layout.selected)
+	%FurnitureAssistHint.text = ("最近内墙约 %.2f 米 · " % inner_distance if inner_distance >= 0.0 else "附近无内墙 · ") + layout.furniture_spacing_summary(layout.selected)
+	var floor_furniture: bool = layout.is_floor(layout.selected) and layout.placed_instances.has(layout.selected)
+	%InnerWallSnapToggle.disabled = not floor_furniture
+	for axis: String in ["X","Z"]:
+		get_node("%AlignFurniture"+axis).disabled = not floor_furniture or layout.nearest_alignment(layout.selected,axis.to_lower()).is_empty()
+		get_node("%DistributeFurniture"+axis).disabled = not floor_furniture or layout._matching_furniture(layout.selected).size() < 3
 	%LayoutMessage.text = layout.message
 	_sync_blueprint_ui()
 	if blueprint_mode: layout.gizmo.hide()
