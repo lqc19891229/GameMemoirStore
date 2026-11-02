@@ -1,0 +1,36 @@
+name: Room UI smoke checks
+on:
+  pull_request:
+    paths:
+      - "scripts/life/room_*"
+      - "scripts/life/computer_desktop.gd"
+      - "assets/room_minimal_theme.tres"
+      - "tests/life/test_room_minimal_ui.gd"
+      - ".github/workflows/room-ui-smoke.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  room-ui:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: chickensoft-games/setup-godot@v2
+        with:
+          version: 4.6.0
+          use-dotnet: false
+      - name: Import all GLB and Godot resources
+        run: godot --headless --path . --editor --import
+      - name: Run compact room UI and core 3D interaction regressions
+        run: |
+          set -euo pipefail
+          for test in \
+            tests/life/test_room_minimal_ui.gd \
+            tests/life/test_furniture_catalog.gd \
+            tests/life/test_furniture_showcase.gd \
+            tests/life/test_workstation_layout.gd
+          do
+            echo "Running $test"
+            timeout 45s godot --headless --path . --script "res://$test" -- --fresh
+          done
