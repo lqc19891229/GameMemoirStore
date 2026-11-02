@@ -303,7 +303,8 @@ func _build_custom_exterior(wall: Material, trim: Material) -> void:
 			var header := span
 			header.y = .88
 			_finish_box(section, "DoorHead", header, Vector3(center.x, 2.76, center.y), wall, finish, "wall")
-			for direction in [-1.0,1.0]:
+			for direction in [-1,1]:
+				if Blueprint.same_opening_neighbor(blueprint,edge,direction): continue
 				var offset: float = float(direction) * (Blueprint.FLOOR_GRID * .5 - .025)
 				var post_at := Vector3(center.x, 1.16, center.y)
 				var post_size := Vector3(.05,2.32,.14) if not longitudinal else Vector3(.14,2.32,.05)
@@ -317,7 +318,8 @@ func _build_custom_exterior(wall: Material, trim: Material) -> void:
 			var upper := span
 			upper.y = .85
 			_finish_box(section, "WindowUpper", upper, Vector3(center.x,2.775,center.y), wall, finish, "wall")
-			var glass_size := Vector3(.026,1.30,Blueprint.FLOOR_GRID-.08) if longitudinal else Vector3(Blueprint.FLOOR_GRID-.08,1.30,.026)
+			var glass_length: float = Blueprint.FLOOR_GRID if Blueprint.same_opening_neighbor(blueprint,edge,-1) or Blueprint.same_opening_neighbor(blueprint,edge,1) else Blueprint.FLOOR_GRID-.08
+			var glass_size := Vector3(.026,1.30,glass_length) if longitudinal else Vector3(glass_length,1.30,.026)
 			_box(section, "WindowGlass", glass_size, Vector3(center.x,1.70,center.y), clear_glass)
 			var sill := Vector3(.2,.06,Blueprint.FLOOR_GRID+.03) if longitudinal else Vector3(Blueprint.FLOOR_GRID+.03,.06,.2)
 			_box(section, "WindowSill", sill, Vector3(center.x,1.06,center.y), trim)
