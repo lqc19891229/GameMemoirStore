@@ -14,6 +14,8 @@ const FLOOR_FINISHES := [Color("b99572"), Color("e0d7c6"), Color("9aa69e"), Colo
 const FLOORS := [Color("b99572"), Color("967153"), Color("a8ada8")]
 const LIGHTS := [Color("fff0dc"), Color("e5efff"), Color("ffd1a1")]
 const FILL_LIGHTS := [Color("d9e4df"), Color("d9e8f4"), Color("a8a09a")]
+const ZONE_LIGHT_COLORS := [Color("9bcbd8"), Color("ffe3b9"), Color("d5b7ea")]
+const ZONE_LIGHT_ENERGY := [0.34,0.28,0.22]
 
 signal style_changed(value: Dictionary)
 
@@ -100,7 +102,29 @@ func apply_style(value: Variant) -> void:
 	for item: Node3D in $Furniture.get_children():
 		if item.has_node("LampGlow"):
 			item.get_node("LampGlow").light_energy = [0.36, 0.18, 0.85][style.light]
+	_refresh_zone_lights()
 	style_changed.emit(style)
+
+func _refresh_zone_lights() -> void:
+	var existing := get_node_or_null("ZoneLights")
+	if existing != null: existing.free()
+	if blueprint.shape != "custom" or blueprint.zone_cells.is_empty(): return
+	var group := Node3D.new()
+	group.name = "ZoneLights"
+	add_child(group)
+	var centroids: Dictionary = Blueprint.zone_centroids(blueprint)
+	for zone: int in centroids:
+		var config: Dictionary = Blueprint.zone_style(blueprint, zone)
+		var light_id: int = int(config.light)
+		var point: Vector2 = centroids[zone]
+		var lamp := OmniLight3D.new()
+		lamp.name = "Zone_%d" % zone
+		lamp.position = Vector3(point.x, 2.2, point.y)
+		lamp.light_color = ZONE_LIGHT_COLORS[light_id]
+		lamp.light_energy = ZONE_LIGHT_ENERGY[light_id]
+		lamp.omni_range = 3.0
+		lamp.shadow_enabled = false
+		group.add_child(lamp)
 
 func update_cutaway(camera: Camera3D) -> void:
 	# Hide a complete wall group so its window, door, trim and decoration disappear together.

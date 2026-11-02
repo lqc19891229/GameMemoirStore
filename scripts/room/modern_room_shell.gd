@@ -212,7 +212,7 @@ func _build_partitions(wall: Material, trim: Material) -> void:
 		piece.position = Vector3(float(part.x), 0, float(part.z))
 		var along_x: bool = part.axis == "x"
 		var horizontal: Vector3 = Vector3(1.0, 0, .14) if along_x else Vector3(.14, 0, 1.0)
-		var finish: int = int(part.get("finish", 0))
+		var finish: int = Blueprint.effective_wall_finish(blueprint, Vector2(float(part.x),float(part.z)), int(part.get("finish",0)))
 		if part.kind == "door":
 			# Structural posts and lintel leave a real passable opening.
 			for sign in [-1.0, 1.0]:
@@ -256,21 +256,25 @@ func _build_grid_floor() -> void:
 				ix += 1
 				continue
 			var begin := ix
-			var finish: int = Blueprint.floor_finish(blueprint, {"ix":begin,"iz":iz})
-			while ix < size.x and not removed.has(Vector2i(ix, iz)) and Blueprint.floor_finish(blueprint, {"ix":ix,"iz":iz}) == finish:
+			var first_cell := {"ix":begin,"iz":iz}
+			var zone: int = Blueprint.zone_at(blueprint, first_cell)
+			var finish: int = Blueprint.effective_floor_finish(blueprint, first_cell)
+			while ix < size.x and not removed.has(Vector2i(ix, iz)) and Blueprint.effective_floor_finish(blueprint, {"ix":ix,"iz":iz}) == finish and Blueprint.zone_at(blueprint, {"ix":ix,"iz":iz}) == zone:
 				ix += 1
 			var length := float(ix - begin) * Blueprint.FLOOR_GRID
 			var center_x := -float(blueprint.width) * .5 + (float(ix + begin) * .5) * Blueprint.FLOOR_GRID
 			var center_z := -float(blueprint.depth) * .5 + (float(iz) + .5) * Blueprint.FLOOR_GRID
-			_finish_box(self, "Floor" if index == 0 else "FloorSegment_%03d" % index,
+			var floor_mesh := _finish_box(self, "Floor" if index == 0 else "FloorSegment_%03d" % index,
 				Vector3(length + .008, .2, Blueprint.FLOOR_GRID + .008),
 				Vector3(center_x, -.1, center_z), material, finish, "floor")
+			if zone > 0: floor_mesh.set_meta("zone_id", zone)
 			var tone: float = tones[iz % tones.size()]
 			var plank := _material(Color("b99572") * tone, .61)
 			var board := _finish_box(self, "FloorBoard_%02d_%02d" % [iz,begin],
 				Vector3(length, .014, Blueprint.FLOOR_GRID - .014),
 				Vector3(center_x, .006, center_z), plank, finish, "floor")
 			board.set_meta("tone", tone)
+			if zone > 0: board.set_meta("zone_id", zone)
 			index += 1
 
 func _build_custom_exterior(wall: Material, trim: Material) -> void:
@@ -283,7 +287,9 @@ func _build_custom_exterior(wall: Material, trim: Material) -> void:
 		var edge: Dictionary = edges[counter]
 		var config: Dictionary = Blueprint.edge_edit(blueprint, edge)
 		var kind: String = str(config.kind)
-		var finish: int = int(config.finish)
+		var adjacent_cell := {"ix":int(edge.ix)+int(edge.dx),"iz":int(edge.iz)+int(edge.dz)}
+		var adjacent_position: Vector2 = Blueprint.cell_center(blueprint,adjacent_cell)
+		var finish: int = Blueprint.effective_wall_finish(blueprint, adjacent_position, int(config.finish))
 		var center: Vector2 = Blueprint.edge_center(blueprint, edge)
 		var longitudinal: bool = edge.dx != 0
 		var span := Vector3(.12,3.2,Blueprint.FLOOR_GRID) if longitudinal else Vector3(Blueprint.FLOOR_GRID,3.2,.12)
