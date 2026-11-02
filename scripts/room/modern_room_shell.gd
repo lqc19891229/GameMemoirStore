@@ -64,6 +64,16 @@ func _sphere(parent: Node, node_name: String, size: Vector3, at: Vector3, materi
 	parent.add_child(instance)
 	return instance
 
+const Blueprint = preload("res://scripts/room/room_blueprint_data.gd")
+var blueprint: Dictionary = Blueprint.DEFAULT.duplicate()
+
+func rebuild(config: Dictionary) -> void:
+	blueprint = Blueprint.clean(config)
+	if not is_inside_tree(): return
+	for child: Node in get_children():
+		if child.name != "GeneratedGeometry": child.free()
+	_build()
+
 func _build() -> void:
 	var wall := _material(Color("f1eee8"), 0.94)
 	var trim := _material(Color("e1ddd4"), 0.72)
@@ -84,84 +94,89 @@ func _build() -> void:
 	_build_ceiling_trim(trim, metal)
 
 func _build_floor() -> void:
+	var width: float = blueprint.width
+	var depth: float = blueprint.depth
 	var base := _material(Color("b99572"), 0.68)
-	_box(self, "Floor", Vector3(8.24, 0.2, 6.24), Vector3(0, -0.1, 0), base, "floor")
+	_box(self, "Floor", Vector3(width + 0.24, 0.2, depth + 0.24), Vector3(0, -0.1, 0), base, "floor")
 	var tones := [0.96, 1.02, 0.99, 1.04]
-	for row in range(12):
+	for row in range(roundi(depth / 0.5)):
 		var tone: float = tones[row % tones.size()]
 		var plank := _material(Color("b99572") * tone, 0.61)
-		var z := -2.75 + float(row) * 0.5
-		_box(self, "FloorBoard_%02d" % row, Vector3(8.0, 0.014, 0.486), Vector3(0, 0.006, z), plank, "floor", tone)
+		var z := -depth / 2.0 + .25 + float(row) * .5
+		_box(self, "FloorBoard_%02d" % row, Vector3(width, .014, .486), Vector3(0, .006, z), plank, "floor", tone)
 
 func _build_left_wall(wall: Material, trim: Material, wood: Material, metal: Material, linen: Material, glass: Material) -> void:
 	var left := _group(self, "Left_Wall")
-	# A real window opening is formed by four wall sections rather than a picture painted over a wall.
-	_box(left, "WallSurface_Lower", Vector3(0.12, 1.26, 6.24), Vector3(-4.06, 0.63, 0), wall, "wall")
-	_box(left, "WallSurface_Upper", Vector3(0.12, 0.48, 6.24), Vector3(-4.06, 2.96, 0), wall, "wall")
-	_box(left, "WallSurface_WindowLeft", Vector3(0.12, 1.44, 1.12), Vector3(-4.06, 2.0, -2.56), wall, "wall")
-	_box(left, "WallSurface_WindowRight", Vector3(0.12, 1.44, 2.76), Vector3(-4.06, 2.0, 1.74), wall, "wall")
-
-	# Window glazing, sill and slim painted frame.
-	_box(left, "WindowGlass", Vector3(0.025, 1.43, 2.25), Vector3(-3.99, 1.99, -0.8), glass)
-	_box(left, "WindowSill", Vector3(0.20, 0.065, 2.48), Vector3(-3.88, 1.245, -0.8), wood)
-	for z in [-1.96, 0.36]:
-		_box(left, "WindowFrame", Vector3(0.10, 1.55, 0.075), Vector3(-3.91, 1.99, z), trim)
+	var half_x: float = blueprint.width * 0.5
+	var half_z: float = blueprint.depth * 0.5
+	var window_z: float = blueprint.window_z
+	var x := -half_x - .06
+	var left_end := window_z - 1.18
+	var right_start := window_z + 1.16
+	var lower_z := -half_z - .12
+	var upper_z := half_z + .12
+	_box(left, "WallSurface_Lower", Vector3(.12, 1.26, blueprint.depth + .24), Vector3(x, .63, 0), wall, "wall")
+	_box(left, "WallSurface_Upper", Vector3(.12, .48, blueprint.depth + .24), Vector3(x, 2.96, 0), wall, "wall")
+	_box(left, "WallSurface_WindowLeft", Vector3(.12, 1.44, left_end - lower_z), Vector3(x, 2.0, (lower_z + left_end) * .5), wall, "wall")
+	_box(left, "WallSurface_WindowRight", Vector3(.12, 1.44, upper_z - right_start), Vector3(x, 2.0, (right_start + upper_z) * .5), wall, "wall")
+	_box(left, "WindowGlass", Vector3(.025, 1.43, 2.25), Vector3(x + .07, 1.99, window_z), glass)
+	_box(left, "WindowSill", Vector3(.2, .065, 2.48), Vector3(x + .18, 1.245, window_z), wood)
+	for z in [window_z - 1.16, window_z + 1.16]:
+		_box(left, "WindowFrame", Vector3(.10, 1.55, .075), Vector3(x + .15, 1.99, z), trim)
 	for y in [1.22, 2.76]:
-		_box(left, "WindowFrame", Vector3(0.10, 0.075, 2.43), Vector3(-3.91, y, -0.8), trim)
-	_box(left, "WindowMullion", Vector3(0.055, 1.43, 0.045), Vector3(-3.925, 1.99, -0.8), trim)
-	_box(left, "WindowMullion", Vector3(0.055, 0.045, 2.25), Vector3(-3.925, 1.99, -0.8), trim)
-
-	# Soft linen curtains with narrow folds and a dark metal rail.
-	var rail := _cylinder(left, "CurtainRail", 0.025, 0.025, 2.72, Vector3(-3.82, 2.84, -0.8), metal, 20)
+		_box(left, "WindowFrame", Vector3(.10, .075, 2.43), Vector3(x + .15, y, window_z), trim)
+	_box(left, "WindowMullion", Vector3(.055, 1.43, .045), Vector3(x + .135, 1.99, window_z), trim)
+	_box(left, "WindowMullion", Vector3(.055, .045, 2.25), Vector3(x + .135, 1.99, window_z), trim)
+	var rail := _cylinder(left, "CurtainRail", .025, .025, 2.72, Vector3(x + .24, 2.84, window_z), metal, 20)
 	rail.rotation.x = PI / 2.0
-	for panel_center in [-1.72, 0.12]:
-		_box(left, "CurtainPanel", Vector3(0.075, 1.62, 0.42), Vector3(-3.83, 1.98, panel_center), linen)
+	for panel_center in [window_z - .92, window_z + .92]:
+		_box(left, "CurtainPanel", Vector3(.075, 1.62, .42), Vector3(x + .23, 1.98, panel_center), linen)
 		for fold in range(5):
-			var fold_z: float = float(panel_center) - 0.16 + float(fold) * 0.08
-			_box(left, "CurtainFold", Vector3(0.018, 1.55, 0.025), Vector3(-3.785, 1.98, fold_z), trim)
-
-	# Outside view: a quiet, softly coloured neighbourhood rather than pixel skyline artwork.
+			_box(left, "CurtainFold", Vector3(.018, 1.55, .025), Vector3(x + .275, 1.98, float(panel_center) - .16 + float(fold) * .08), trim)
 	var sky := _material(Color("c6d7d8"), 1.0)
 	var distant := _material(Color("a8b8b5"), 1.0)
-	var near_building := _material(Color("899d9b"), 0.96)
-	_box(left, "WindowSky", Vector3(0.04, 1.34, 2.18), Vector3(-5.0, 1.99, -0.8), sky)
-	_box(left, "DistantBuilding", Vector3(0.08, 0.58, 0.62), Vector3(-4.72, 1.58, -1.48), distant)
-	_box(left, "DistantBuilding", Vector3(0.08, 0.90, 0.48), Vector3(-4.72, 1.73, -0.72), near_building)
-	_box(left, "DistantBuilding", Vector3(0.08, 0.48, 0.58), Vector3(-4.72, 1.52, 0.12), distant)
-
-	# Warm painted skirting and a small timber cap at the window.
-	_box(left, "Left_Skirting", Vector3(0.10, 0.16, 6.05), Vector3(-3.94, 0.08, 0), trim)
-	_box(left, "Left_CapTrim", Vector3(0.16, 0.055, 6.12), Vector3(-4.0, 3.19, 0), trim)
+	var near_building := _material(Color("899d9b"), .96)
+	_box(left, "WindowSky", Vector3(.04, 1.34, 2.18), Vector3(x - .94, 1.99, window_z), sky)
+	_box(left, "DistantBuilding", Vector3(.08, .58, .62), Vector3(x - .66, 1.58, window_z - .68), distant)
+	_box(left, "DistantBuilding", Vector3(.08, .90, .48), Vector3(x - .66, 1.73, window_z + .08), near_building)
+	_box(left, "DistantBuilding", Vector3(.08, .48, .58), Vector3(x - .66, 1.52, window_z + .92), distant)
+	_box(left, "Left_Skirting", Vector3(.10, .16, blueprint.depth + .05), Vector3(x + .12, .08, 0), trim)
+	_box(left, "Left_CapTrim", Vector3(.16, .055, blueprint.depth + .12), Vector3(x + .06, 3.19, 0), trim)
 
 func _build_back_wall(wall: Material, trim: Material, wood: Material, dark_wood: Material, metal: Material, canvas: Material, art_blue: Material, art_sage: Material, art_ochre: Material) -> void:
 	var back := _group(self, "Back_Wall")
-	# Door opening at the left; remaining wall is split around the opening.
-	_box(back, "WallSurface_DoorLeft", Vector3(0.88, 3.2, 0.12), Vector3(-3.68, 1.6, -3.06), wall, "wall")
-	_box(back, "WallSurface_DoorRight", Vector3(6.38, 3.2, 0.12), Vector3(0.94, 1.6, -3.06), wall, "wall")
-	_box(back, "WallSurface_DoorLintel", Vector3(1.0, 0.95, 0.12), Vector3(-2.75, 2.725, -3.06), wall, "wall")
-
-	# Contemporary flush door and restrained hardware.
-	_box(back, "DoorLeaf", Vector3(0.92, 2.18, 0.055), Vector3(-2.75, 1.09, -2.975), dark_wood)
-	_box(back, "DoorInset", Vector3(0.72, 1.75, 0.018), Vector3(-2.75, 1.16, -2.94), wood)
-	_box(back, "DoorFrame", Vector3(0.075, 2.28, 0.09), Vector3(-3.255, 1.14, -2.91), trim)
-	_box(back, "DoorFrame", Vector3(0.075, 2.28, 0.09), Vector3(-2.245, 1.14, -2.91), trim)
-	_box(back, "DoorHeader", Vector3(1.08, 0.08, 0.09), Vector3(-2.75, 2.30, -2.91), trim)
-	_sphere(back, "DoorHandle", Vector3(0.075, 0.075, 0.075), Vector3(-2.38, 1.05, -2.88), metal)
-
-	# Wall art: framed, muted geometric composition; deliberately not pixel art.
-	_box(back, "WallArtFrame", Vector3(1.58, 1.08, 0.07), Vector3(0.95, 2.08, -2.955), dark_wood)
-	_box(back, "WallArtCanvas", Vector3(1.47, 0.97, 0.025), Vector3(0.95, 2.08, -2.91), canvas)
-	_box(back, "WallArtBlue", Vector3(0.48, 0.72, 0.025), Vector3(0.63, 2.08, -2.885), art_blue)
-	_box(back, "WallArtSage", Vector3(0.48, 0.30, 0.026), Vector3(1.12, 1.86, -2.882), art_sage)
-	_box(back, "WallArtOchre", Vector3(0.28, 0.28, 0.028), Vector3(1.28, 2.35, -2.88), art_ochre)
-
-	# A small horizontal trim line gives the wall a finished architectural edge.
-	_box(back, "Back_Skirting", Vector3(8.0, 0.16, 0.10), Vector3(0, 0.08, -2.94), trim)
-	_box(back, "Back_CapTrim", Vector3(8.16, 0.055, 0.16), Vector3(0, 3.19, -3.0), trim)
+	var half_x: float = blueprint.width * .5
+	var z: float = -blueprint.depth * .5 - .06
+	var door_x: float = blueprint.door_x
+	var left_edge := -half_x - .12
+	var right_edge := half_x + .12
+	var door_left := door_x - .5
+	var door_right := door_x + .5
+	_box(back, "WallSurface_DoorLeft", Vector3(door_left - left_edge, 3.2, .12), Vector3((left_edge + door_left) * .5, 1.6, z), wall, "wall")
+	_box(back, "WallSurface_DoorRight", Vector3(right_edge - door_right, 3.2, .12), Vector3((right_edge + door_right) * .5, 1.6, z), wall, "wall")
+	_box(back, "WallSurface_DoorLintel", Vector3(1.0, .95, .12), Vector3(door_x, 2.725, z), wall, "wall")
+	_box(back, "DoorLeaf", Vector3(.92, 2.18, .055), Vector3(door_x, 1.09, z + .085), dark_wood)
+	_box(back, "DoorInset", Vector3(.72, 1.75, .018), Vector3(door_x, 1.16, z + .12), wood)
+	for dx in [-.505, .505]:
+		_box(back, "DoorFrame", Vector3(.075, 2.28, .09), Vector3(door_x + dx, 1.14, z + .15), trim)
+	_box(back, "DoorHeader", Vector3(1.08, .08, .09), Vector3(door_x, 2.30, z + .15), trim)
+	_sphere(back, "DoorHandle", Vector3(.075, .075, .075), Vector3(door_x + .37, 1.05, z + .18), metal)
+	# Keep wall art on the longer uninterrupted section away from the doorway.
+	var art_x: float = (door_right + right_edge) * .5 if right_edge - door_right >= door_left - left_edge else (left_edge + door_left) * .5
+	var art_available: float = maxf(right_edge - door_right, door_left - left_edge)
+	if art_available > 1.8:
+		_box(back, "WallArtFrame", Vector3(1.58, 1.08, .07), Vector3(art_x, 2.08, z + .105), dark_wood)
+		_box(back, "WallArtCanvas", Vector3(1.47, .97, .025), Vector3(art_x, 2.08, z + .15), canvas)
+		_box(back, "WallArtBlue", Vector3(.48, .72, .025), Vector3(art_x - .32, 2.08, z + .175), art_blue)
+		_box(back, "WallArtSage", Vector3(.48, .30, .026), Vector3(art_x + .17, 1.86, z + .178), art_sage)
+		_box(back, "WallArtOchre", Vector3(.28, .28, .028), Vector3(art_x + .33, 2.35, z + .18), art_ochre)
+	_box(back, "Back_Skirting", Vector3(blueprint.width, .16, .10), Vector3(0, .08, z + .12), trim)
+	_box(back, "Back_CapTrim", Vector3(blueprint.width + .16, .055, .16), Vector3(0, 3.19, z + .06), trim)
 
 func _build_ceiling_trim(trim: Material, metal: Material) -> void:
 	var ceiling := _group(self, "CeilingDetails")
-	# Open-top cutaway architecture keeps the room readable while implying a finished ceiling line.
-	_box(ceiling, "Left_CeilingCove", Vector3(0.20, 0.11, 6.2), Vector3(-3.99, 3.16, 0), trim)
-	_box(ceiling, "Back_CeilingCove", Vector3(8.2, 0.11, 0.20), Vector3(0, 3.16, -2.99), trim)
-	_cylinder(ceiling, "RecessedSpotTrim", 0.12, 0.12, 0.035, Vector3(0.1, 3.08, -2.72), metal, 32)
+	var half_x: float = blueprint.width * .5
+	var half_z: float = blueprint.depth * .5
+	_box(ceiling, "Left_CeilingCove", Vector3(.20, .11, blueprint.depth + .2), Vector3(-half_x + .01, 3.16, 0), trim)
+	_box(ceiling, "Back_CeilingCove", Vector3(blueprint.width + .2, .11, .20), Vector3(0, 3.16, -half_z + .01), trim)
+	_cylinder(ceiling, "RecessedSpotTrim", .12, .12, .035, Vector3(.1, 3.08, -half_z + .28), metal, 32)
