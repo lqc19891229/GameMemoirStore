@@ -253,7 +253,7 @@ func sync() -> void:
 			catalog_open = false
 		last_selected = selected
 	was_active = active
-		bar.visible = active
+	bar.visible = active
 	var show_dock: bool = active and mode == "furniture" and catalog_open and not host.blueprint_mode
 	if show_dock != _last_dock_visible:
 		dock.visible = show_dock
