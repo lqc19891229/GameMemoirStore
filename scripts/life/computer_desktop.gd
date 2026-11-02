@@ -53,6 +53,19 @@ func _ready() -> void:
 	%BlueprintFloorTool.add_item("自定义外墙装修 / 门窗")
 	%BlueprintFloorTool.add_item("内墙独立改色")
 	%BlueprintFloorTool.add_item("功能分区画笔")
+	%BlueprintFloorTool.add_item("自动识别整区填充")
+	for slot in range(BlueprintData.MAX_SCHEMES):
+		%BlueprintSchemeSlot.add_item("方案 %d" % (slot+1))
+	%BlueprintSchemeSave.pressed.connect(func() -> void:
+		if blueprint_mode: world.layout.save_decor_scheme(%BlueprintSchemeSlot.selected)
+	)
+	%BlueprintSchemeLoad.pressed.connect(func() -> void:
+		if blueprint_mode: world.layout.load_decor_scheme(%BlueprintSchemeSlot.selected)
+	)
+	%BlueprintSchemeClear.pressed.connect(func() -> void:
+		if blueprint_mode: world.layout.clear_decor_scheme(%BlueprintSchemeSlot.selected)
+	)
+	%BlueprintSchemeSlot.item_selected.connect(func(_index: int) -> void: _sync_scheme_controls())
 	for label: String in BlueprintData.ZONE_NAMES:
 		%BlueprintZoneSelect.add_item(label)
 		%BlueprintZonePreset.add_item(label + " · 默认预设")
@@ -259,6 +272,7 @@ func _sync_blueprint_ui() -> void:
 		var display: String = {"width":"房间宽度", "depth":"房间深度", "door_x":"后墙门位置", "window_z":"左墙窗位置", "notch_width":"缺口宽度", "notch_depth":"缺口深度"}[key]
 		label.text = "%s：%.2f 米" % [display, float(blueprint[key])]
 	_sync_zone_controls()
+	_sync_scheme_controls()
 	%BlueprintStatus.text = world.layout.message if world.layout.message.begins_with("调整失败") or world.layout.message.begins_with("建造失败") or world.layout.message.begins_with("绘制失败") else "%s · %.1f × %.1f 米 · 内墙 %d 段 · 缺口 %d 格" % ["自由轮廓" if blueprint.shape == "custom" else "L 型" if blueprint.shape == "l" else "矩形", blueprint.width, blueprint.depth, blueprint.partitions.size(), blueprint.removed_cells.size()]
 
 func _sync_zone_controls() -> void:
@@ -273,6 +287,14 @@ func _sync_zone_controls() -> void:
 	for entry: Dictionary in current.zone_cells:
 		if int(entry.zone) == selected: count += 1
 	%BlueprintZoneCount.text = "%s · %d 格 · %.2f 平方米" % [BlueprintData.ZONE_NAMES[selected-1],count,float(count)*BlueprintData.FLOOR_GRID*BlueprintData.FLOOR_GRID]
+
+func _sync_scheme_controls() -> void:
+	var slot: int = maxi(0,%BlueprintSchemeSlot.selected)
+	var stored: Dictionary = BlueprintData.scheme_for_slot(world.layout.blueprint,slot)
+	var exists := not stored.is_empty()
+	%BlueprintSchemeInfo.text = "方案 %d：%s" % [slot+1, "已保存（%d 格分区）" % stored.zone_cells.size() if exists else "空槽位"]
+	%BlueprintSchemeLoad.disabled = not exists
+	%BlueprintSchemeClear.disabled = not exists
 
 func _wall_axis() -> String:
 	return "z" if %WallAxis.selected == 1 else "x"
@@ -350,6 +372,8 @@ func _paint_action(at: Vector2, button: int) -> void:
 			world.layout.paint_partition_finish(at, 0 if erase else %BlueprintWallFinish.selected)
 		6:
 			world.layout.paint_zone_cell(at, 0 if erase else %BlueprintZoneSelect.selected+1)
+		7:
+			world.layout.fill_room_region(at,0 if erase else %BlueprintZoneSelect.selected+1)
 
 func _paint_hover(pixel: Vector2) -> void:
 	var ghost: MeshInstance3D = world.get_node("WallPreview")
@@ -361,10 +385,13 @@ func _paint_hover(pixel: Vector2) -> void:
 	var good := false
 	var center := Vector2.ZERO
 	var size := Vector3(BlueprintData.FLOOR_GRID,.07,BlueprintData.FLOOR_GRID)
-	if tool == 3 or tool == 6:
+	if tool == 3 or tool == 6 or tool == 7:
 		var cell: Dictionary = BlueprintData.cell_at(world.layout.blueprint, at)
 		good = world.layout.blueprint.shape == "custom" and BlueprintData.valid_cell(world.layout.blueprint,cell) and not BlueprintData.has_cell(world.layout.blueprint,cell)
 		if good: center = BlueprintData.cell_center(world.layout.blueprint,cell)
+		if tool == 7:
+			var region: Array = BlueprintData.room_region_at(world.layout.blueprint,at)
+			%BlueprintRegionInfo.text = "连通区域：%d 格 / %.2f 平方米（门洞可连通）" % [region.size(),float(region.size())*.25]
 	elif tool == 4:
 		var edge: Dictionary = BlueprintData.nearest_edge(world.layout.blueprint,at)
 		good = not edge.is_empty()
@@ -399,7 +426,7 @@ func _brush_action(at: Vector2, button: int) -> void:
 	match %BlueprintFloorTool.selected:
 		0: _wall_action(at,button)
 		1,2: _floor_action(at,button)
-		3,4,5,6: _paint_action(at,button)
+		3,4,5,6,7: _paint_action(at,button)
 
 func _wall_hover(pixel: Vector2) -> void:
 	var ghost: MeshInstance3D = world.get_node("WallPreview")
@@ -422,7 +449,7 @@ func _blueprint_input(event: InputEvent) -> void:
 			world.zoom_overview(.9 if event.button_index == MOUSE_BUTTON_WHEEL_UP else 1.1)
 			get_viewport().set_input_as_handled()
 		elif event.button_index in [MOUSE_BUTTON_LEFT, MOUSE_BUTTON_RIGHT]:
-			wall_drag_button = event.button_index if event.pressed else 0
+			wall_drag_button = event.button_index if event.pressed and %BlueprintFloorTool.selected != 7 else 0
 			last_wall_cell = Vector2(INF,INF)
 			if event.pressed:
 				var at: Variant = _blueprint_floor_hit(event.position) if %BlueprintFloorTool.selected == 0 else _floor_hit(event.position)

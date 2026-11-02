@@ -1,7 +1,7 @@
 class_name MemoirRoomBlueprintData
 extends RefCounted
 ## Rectangular, L and grid-painted orthogonal footprints with validated interior walls.
-const DEFAULT := {"width": 8.0, "depth": 6.0, "door_x": -2.75, "window_z": -0.8, "partitions": [], "shape":"rectangle", "notch_width":1.5, "notch_depth":1.5, "removed_cells":[], "floor_finishes":[], "edge_finishes":[], "zone_cells":[], "zone_styles":[{"floor":2,"wall":3,"light":1},{"floor":1,"wall":1,"light":0},{"floor":3,"wall":2,"light":2}]}
+const DEFAULT := {"width": 8.0, "depth": 6.0, "door_x": -2.75, "window_z": -0.8, "partitions": [], "shape":"rectangle", "notch_width":1.5, "notch_depth":1.5, "removed_cells":[], "floor_finishes":[], "edge_finishes":[], "zone_cells":[], "zone_styles":[{"floor":2,"wall":3,"light":1},{"floor":1,"wall":1,"light":0},{"floor":3,"wall":2,"light":2}], "saved_schemes":[]}
 const MIN_WIDTH := 6.0
 const MAX_WIDTH := 12.0
 const MIN_DEPTH := 5.0
@@ -17,6 +17,7 @@ const MAX_EDGE_EDITS := 256
 const ZONE_NAMES := ["游戏区","工作区","休息区"]
 const ZONE_PRESETS := [{"floor":2,"wall":3,"light":1},{"floor":1,"wall":1,"light":0},{"floor":3,"wall":2,"light":2}]
 const MAX_ZONE_CELLS := 480
+const MAX_SCHEMES := 3
 
 static func clean(raw: Variant) -> Dictionary:
 	var result: Dictionary = DEFAULT.duplicate(true)
@@ -97,6 +98,19 @@ static func clean(raw: Variant) -> Dictionary:
 				if entry.is_empty() or not valid_cell(result, entry) or has_cell(result, entry): continue
 				if zone_at(result, entry) != 0: continue
 				result.zone_cells.append(entry)
+	if result.shape == "custom":
+		var schemes: Variant = raw.get("saved_schemes", [])
+		if schemes is Array:
+			for raw_scheme: Variant in schemes:
+				if result.saved_schemes.size() >= MAX_SCHEMES: break
+				var scheme: Dictionary = clean_scheme(result, raw_scheme)
+				if scheme.is_empty(): continue
+				var duplicate := false
+				for entry: Dictionary in result.saved_schemes:
+					if entry.slot == scheme.slot:
+						duplicate = true
+						break
+				if not duplicate: result.saved_schemes.append(scheme)
 	return result
 
 static func clean_partition(raw: Variant) -> Dictionary:
@@ -379,3 +393,93 @@ static func zone_centroids(value: Dictionary) -> Dictionary:
 	for zone: int in sums:
 		result[zone] = sums[zone].sum / float(sums[zone].count)
 	return result
+
+## Connected space detection: a solid 1m partition blocks crossings between
+## 0.5m floor cells. Door segments keep the path open, so adjoining spaces
+## with open doorways are intentionally classified as connected.
+static func floor_cell_exists(value: Dictionary, cell: Dictionary) -> bool:
+	if not valid_cell(value, cell): return false
+	if value.shape == "custom": return not has_cell(value, cell)
+	if value.shape == "l":
+		return not cutout_overlap(value, cell_polygon(value, cell))
+	return true
+
+static func wall_between(value: Dictionary, a: Dictionary, b: Dictionary) -> bool:
+	var one := Vector2i(int(a.ix),int(a.iz))
+	var two := Vector2i(int(b.ix),int(b.iz))
+	var move := two - one
+	if absi(move.x) + absi(move.y) != 1: return true
+	var center_a: Vector2 = cell_center(value, a)
+	var center_b: Vector2 = cell_center(value, b)
+	var midpoint := (center_a + center_b) * .5
+	var orientation := "z" if move.x != 0 else "x"
+	for part: Dictionary in value.partitions:
+		if part.kind == "door" or part.axis != orientation: continue
+		if orientation == "z":
+			if absf(float(part.x) - midpoint.x) < .001 and absf(float(part.z) - midpoint.y) < .499:
+				return true
+		elif absf(float(part.z) - midpoint.y) < .001 and absf(float(part.x) - midpoint.x) < .499:
+			return true
+	return false
+
+static func room_region_at(value: Dictionary, at: Vector2) -> Array:
+	var start: Dictionary = cell_at(value, at)
+	if not floor_cell_exists(value, start): return []
+	var size := cell_count(value)
+	var pending: Array[Vector2i] = [Vector2i(int(start.ix),int(start.iz))]
+	var seen := {pending[0]:true}
+	var cursor := 0
+	var result := []
+	while cursor < pending.size():
+		var current: Vector2i = pending[cursor]
+		cursor += 1
+		var a := {"ix":current.x,"iz":current.y}
+		result.append(a)
+		for step: Vector2i in [Vector2i.LEFT,Vector2i.RIGHT,Vector2i.UP,Vector2i.DOWN]:
+			var adjacent := current + step
+			if adjacent.x < 0 or adjacent.y < 0 or adjacent.x >= size.x or adjacent.y >= size.y: continue
+			if seen.has(adjacent): continue
+			var b := {"ix":adjacent.x,"iz":adjacent.y}
+			if not floor_cell_exists(value,b) or wall_between(value,a,b): continue
+			seen[adjacent] = true
+			pending.append(adjacent)
+	return result
+
+static func room_regions(value: Dictionary) -> Array:
+	var found := []
+	var visited := {}
+	var size := cell_count(value)
+	for iz in range(size.y):
+		for ix in range(size.x):
+			var key := Vector2i(ix,iz)
+			if visited.has(key): continue
+			var cell := {"ix":ix,"iz":iz}
+			if not floor_cell_exists(value,cell): continue
+			var region: Array = room_region_at(value,cell_center(value,cell))
+			if region.is_empty(): continue
+			for member: Dictionary in region:
+				visited[Vector2i(int(member.ix),int(member.iz))] = true
+			found.append(region)
+	return found
+
+## Saved designs capture zone maps and area palettes, not room geometry.
+## They cannot move furniture, erase walls or change an existing door.
+static func clean_scheme(room: Dictionary, raw: Variant) -> Dictionary:
+	if not raw is Dictionary: return {}
+	var slot: Variant = raw.get("slot",null)
+	if not (slot is int or slot is float) or not is_finite(float(slot)): return {}
+	if float(slot) != floorf(float(slot)) or int(slot) < 0 or int(slot) >= MAX_SCHEMES: return {}
+	var valid: Dictionary = room.duplicate(true)
+	valid.erase("saved_schemes")
+	valid["zone_cells"] = raw.get("zone_cells",[])
+	valid["zone_styles"] = raw.get("zone_styles",[])
+	valid["floor_finishes"] = raw.get("floor_finishes",[])
+	var checked: Dictionary = clean(valid)
+	return {"slot":int(slot),"zone_cells":checked.zone_cells.duplicate(true),
+		"zone_styles":checked.zone_styles.duplicate(true),
+		"floor_finishes":checked.floor_finishes.duplicate(true)}
+
+static func scheme_for_slot(value: Dictionary, slot: int) -> Dictionary:
+	for scheme: Dictionary in value.get("saved_schemes",[]):
+		if int(scheme.slot) == slot: return scheme
+	return {}

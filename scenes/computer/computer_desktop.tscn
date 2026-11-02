@@ -532,6 +532,46 @@ unique_name_in_owner = true
 layout_mode = 2
 text = "应用到选中功能区"
 
+[node name="BlueprintRegionTitle" type="Label" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel"]
+layout_mode = 2
+text = "自动房间识别 · 一键填充分区"
+theme_override_font_sizes/font_size = 16
+[node name="BlueprintRegionHint" type="Label" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel"]
+layout_mode = 2
+autowrap_mode = 3
+text = "选“自动识别整区填充”，左键填入当前功能区，右键清除。实体内墙阻断识别，门洞使两个空间连通。开放式空间会被视作一个区域。"
+[node name="BlueprintRegionInfo" type="Label" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "连通区域：移动鼠标到房间查看"
+[node name="BlueprintSchemesTitle" type="Label" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel"]
+layout_mode = 2
+text = "区域装修方案 · 三个存档槽位"
+theme_override_font_sizes/font_size = 16
+[node name="BlueprintSchemesHint" type="Label" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel"]
+layout_mode = 2
+autowrap_mode = 3
+text = "保存/加载全部功能分区、区域材质与逐格地板配色；不会改动房间墙体、门窗或家具。应用布置后方案才会写入存档。"
+[node name="BlueprintSchemeSlot" type="OptionButton" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel"]
+unique_name_in_owner = true
+layout_mode = 2
+[node name="BlueprintSchemeInfo" type="Label" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "方案 1：空槽位"
+[node name="BlueprintSchemeSave" type="Button" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "保存当前区域装修"
+[node name="BlueprintSchemeLoad" type="Button" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "加载选中装修方案"
+[node name="BlueprintSchemeClear" type="Button" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "删除选中方案"
+
 [node name="BlueprintWallsTitle" type="Label" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel"]
 layout_mode = 2
 text = "内墙绘制"
