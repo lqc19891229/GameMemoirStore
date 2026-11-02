@@ -386,6 +386,51 @@ theme_override_font_sizes/font_size = 18
 layout_mode = 2
 autowrap_mode = 3
 text = "矩形、L 型或自由地板网格。外墙修改不会穿过已有家具或内墙；支持撤销、取消与保存。"
+[node name="BlueprintQuickToolsTitle" type="Label" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel"]
+layout_mode = 2
+text = "建造快捷工具"
+theme_override_font_sizes/font_size = 16
+[node name="BlueprintQuickTools" type="HBoxContainer" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel"]
+layout_mode = 2
+theme_override_constants/separation = 4
+[node name="BlueprintQuickWall" type="Button" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel/BlueprintQuickTools"]
+unique_name_in_owner = true
+layout_mode = 2
+toggle_mode = true
+text = "墙"
+[node name="BlueprintQuickFloor" type="Button" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel/BlueprintQuickTools"]
+unique_name_in_owner = true
+layout_mode = 2
+toggle_mode = true
+text = "地板"
+[node name="BlueprintQuickZone" type="Button" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel/BlueprintQuickTools"]
+unique_name_in_owner = true
+layout_mode = 2
+toggle_mode = true
+text = "分区"
+[node name="BlueprintQuickRegion" type="Button" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel/BlueprintQuickTools"]
+unique_name_in_owner = true
+layout_mode = 2
+toggle_mode = true
+text = "整区"
+[node name="BlueprintQuickOpening" type="Button" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel/BlueprintQuickTools"]
+unique_name_in_owner = true
+layout_mode = 2
+toggle_mode = true
+text = "门窗"
+[node name="BlueprintGridToggle" type="CheckButton" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel"]
+unique_name_in_owner = true
+layout_mode = 2
+button_pressed = true
+text = "显示 0.5 米地板网格"
+[node name="BlueprintApertureHint" type="Label" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel"]
+layout_mode = 2
+autowrap_mode = 3
+text = "选择“拖动原有门窗位置”，点击对应的彩色标记并拖动。松开鼠标后可一次撤销整个操作。"
+[node name="BlueprintApertureTarget" type="OptionButton" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel"]
+unique_name_in_owner = true
+layout_mode = 2
+
 [node name="BlueprintShapeLabel" type="Label" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel"]
 layout_mode = 2
 text = "外轮廓：矩形 / L 型 / 自由轮廓"

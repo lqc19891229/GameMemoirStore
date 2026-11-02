@@ -24,6 +24,7 @@ var furniture_palette: OptionButton
 var blueprint_mode := false
 var wall_drag_button := 0
 var last_wall_cell := Vector2(INF, INF)
+var dragging_aperture := false
 const BLUEPRINT_KEYS := {"BlueprintWidth":"width", "BlueprintDepth":"depth", "BlueprintDoorX":"door_x", "BlueprintWindowZ":"window_z", "BlueprintNotchWidth":"notch_width", "BlueprintNotchDepth":"notch_depth"}
 @onready var world: Node3D = %Workstation3D
 var screen_focused: bool:
@@ -54,6 +55,18 @@ func _ready() -> void:
 	%BlueprintFloorTool.add_item("内墙独立改色")
 	%BlueprintFloorTool.add_item("功能分区画笔")
 	%BlueprintFloorTool.add_item("自动识别整区填充")
+	%BlueprintFloorTool.add_item("拖动原有门窗位置")
+	%BlueprintQuickWall.pressed.connect(func() -> void: _select_blueprint_tool(0))
+	%BlueprintQuickFloor.pressed.connect(func() -> void: _select_blueprint_tool(1))
+	%BlueprintQuickZone.pressed.connect(func() -> void: _select_blueprint_tool(6))
+	%BlueprintQuickRegion.pressed.connect(func() -> void: _select_blueprint_tool(7))
+	%BlueprintQuickOpening.pressed.connect(func() -> void: _select_blueprint_tool(8))
+	%BlueprintGridToggle.toggled.connect(func(enabled: bool) -> void:
+		world.get_node("BlueprintOverlay").set_grid_visible(enabled)
+	)
+	%BlueprintApertureTarget.add_item("后墙门")
+	%BlueprintApertureTarget.add_item("左墙窗")
+	%BlueprintApertureTarget.item_selected.connect(func(_index: int) -> void: _hide_wall_preview())
 	for slot in range(BlueprintData.MAX_SCHEMES):
 		%BlueprintSchemeSlot.add_item("方案 %d" % (slot+1))
 	%BlueprintSchemeSave.pressed.connect(func() -> void:
@@ -96,8 +109,13 @@ func _ready() -> void:
 	for label: String in ["保留实体墙", "窗户", "门洞"]:
 		%BlueprintOpeningKind.add_item(label)
 	%BlueprintFloorTool.item_selected.connect(func(_index: int) -> void:
+		if dragging_aperture:
+			world.layout.end_aperture_drag()
+			dragging_aperture = false
 		wall_drag_button = 0
+		world.get_node("BlueprintOverlay").clear_region()
 		_hide_wall_preview()
+		_sync_quick_tools()
 	)
 	for option: OptionButton in [%BlueprintTileFinish, %BlueprintWallFinish, %BlueprintOpeningKind]:
 		option.item_selected.connect(func(_index: int) -> void:
@@ -236,11 +254,18 @@ func _start_inventory_placement(item_id: String) -> void:
 
 func set_blueprint_mode(enabled: bool) -> void:
 	if enabled and not world.layout.active: return
+	if dragging_aperture:
+		world.layout.end_aperture_drag()
+		dragging_aperture = false
 	if enabled and not world.layout.placing_role.is_empty(): world.layout.cancel_placement()
 	blueprint_mode = enabled
 	wall_drag_button = 0
 	_hide_wall_preview()
 	world.get_node("Room").set_partition_editing(enabled)
+	var overlay = world.get_node("BlueprintOverlay")
+	overlay.visible = enabled
+	if enabled: overlay.configure(world.layout.blueprint)
+	else: overlay.clear_region()
 	%BlueprintToggle.set_pressed_no_signal(enabled)
 	%Content.visible = not enabled
 	%BlueprintPanel.visible = enabled
@@ -273,6 +298,8 @@ func _sync_blueprint_ui() -> void:
 		label.text = "%s：%.2f 米" % [display, float(blueprint[key])]
 	_sync_zone_controls()
 	_sync_scheme_controls()
+	_sync_quick_tools()
+	if blueprint_mode: world.get_node("BlueprintOverlay").configure(blueprint)
 	%BlueprintStatus.text = world.layout.message if world.layout.message.begins_with("调整失败") or world.layout.message.begins_with("建造失败") or world.layout.message.begins_with("绘制失败") else "%s · %.1f × %.1f 米 · 内墙 %d 段 · 缺口 %d 格" % ["自由轮廓" if blueprint.shape == "custom" else "L 型" if blueprint.shape == "l" else "矩形", blueprint.width, blueprint.depth, blueprint.partitions.size(), blueprint.removed_cells.size()]
 
 func _sync_zone_controls() -> void:
@@ -295,6 +322,64 @@ func _sync_scheme_controls() -> void:
 	%BlueprintSchemeInfo.text = "方案 %d：%s" % [slot+1, "已保存（%d 格分区）" % stored.zone_cells.size() if exists else "空槽位"]
 	%BlueprintSchemeLoad.disabled = not exists
 	%BlueprintSchemeClear.disabled = not exists
+
+func _select_blueprint_tool(index: int) -> void:
+	if not blueprint_mode: return
+	%BlueprintFloorTool.select(index)
+	wall_drag_button = 0
+	world.get_node("BlueprintOverlay").clear_region()
+	_hide_wall_preview()
+	_sync_quick_tools()
+
+func _sync_quick_tools() -> void:
+	for key: String in {"BlueprintQuickWall":0,"BlueprintQuickFloor":1,"BlueprintQuickZone":6,"BlueprintQuickRegion":7,"BlueprintQuickOpening":8}:
+		var button: Button = get_node("%" + key)
+		button.set_pressed_no_signal(%BlueprintFloorTool.selected == int({"BlueprintQuickWall":0,"BlueprintQuickFloor":1,"BlueprintQuickZone":6,"BlueprintQuickRegion":7,"BlueprintQuickOpening":8}[key]))
+
+func _aperture_key() -> String:
+	return "window_z" if %BlueprintApertureTarget.selected == 1 else "door_x"
+
+func _aperture_handle_point() -> Vector2:
+	var room: Dictionary = world.layout.blueprint
+	if _aperture_key() == "window_z": return Vector2(-float(room.width)*.5+.17,float(room.window_z))
+	return Vector2(float(room.door_x),-float(room.depth)*.5+.17)
+
+func _aperture_hover(pixel: Vector2) -> void:
+	var ghost: MeshInstance3D = world.get_node("WallPreview")
+	var hit: Variant = _floor_hit(pixel)
+	if hit == null:
+		ghost.hide()
+		return
+	var pos: Vector2 = _aperture_handle_point()
+	var close: bool = pos.distance_to(hit) < .65
+	ghost.position = Vector3(pos.x,.105,pos.y)
+	(ghost.mesh as BoxMesh).size = Vector3(.9,.10,.14) if _aperture_key() == "door_x" else Vector3(.14,.10,1.3)
+	(ghost.material_override as StandardMaterial3D).albedo_color = Color("6ed9ab",.65) if close else Color("f2c978",.50)
+	ghost.show()
+
+func _aperture_input(event: InputEvent) -> void:
+	if event is InputEventMouseButton:
+		if event.button_index == MOUSE_BUTTON_LEFT:
+			if event.pressed:
+				var hit: Variant = _floor_hit(event.position)
+				if hit != null and hit.distance_to(_aperture_handle_point()) < .65:
+					world.layout.begin_aperture_drag()
+					dragging_aperture = true
+			elif dragging_aperture:
+				world.layout.end_aperture_drag()
+				dragging_aperture = false
+			get_viewport().set_input_as_handled()
+		elif event.pressed and event.button_index in [MOUSE_BUTTON_WHEEL_UP,MOUSE_BUTTON_WHEEL_DOWN]:
+			world.zoom_overview(.9 if event.button_index == MOUSE_BUTTON_WHEEL_UP else 1.1)
+			get_viewport().set_input_as_handled()
+	elif event is InputEventMouseMotion:
+		if dragging_aperture:
+			var hit: Variant = _floor_hit(event.position)
+			if hit != null:
+				var value: float = hit.y if _aperture_key() == "window_z" else hit.x
+				world.layout.drag_aperture(_aperture_key(),value)
+		_aperture_hover(event.position)
+		get_viewport().set_input_as_handled()
 
 func _wall_axis() -> String:
 	return "z" if %WallAxis.selected == 1 else "x"
@@ -380,6 +465,7 @@ func _paint_hover(pixel: Vector2) -> void:
 	var at: Variant = _floor_hit(pixel)
 	if at == null:
 		ghost.hide()
+		world.get_node("BlueprintOverlay").clear_region()
 		return
 	var tool: int = %BlueprintFloorTool.selected
 	var good := false
@@ -390,8 +476,8 @@ func _paint_hover(pixel: Vector2) -> void:
 		good = world.layout.blueprint.shape == "custom" and BlueprintData.valid_cell(world.layout.blueprint,cell) and not BlueprintData.has_cell(world.layout.blueprint,cell)
 		if good: center = BlueprintData.cell_center(world.layout.blueprint,cell)
 		if tool == 7:
-			var region: Array = BlueprintData.room_region_at(world.layout.blueprint,at)
-			%BlueprintRegionInfo.text = "连通区域：%d 格 / %.2f 平方米（门洞可连通）" % [region.size(),float(region.size())*.25]
+			var count: int = world.get_node("BlueprintOverlay").preview_region(world.layout.blueprint,at)
+			%BlueprintRegionInfo.text = "连通区域：%d 格 / %.2f 平方米（门洞可连通）" % [count,float(count)*.25]
 	elif tool == 4:
 		var edge: Dictionary = BlueprintData.nearest_edge(world.layout.blueprint,at)
 		good = not edge.is_empty()
@@ -406,6 +492,8 @@ func _paint_hover(pixel: Vector2) -> void:
 			size = Vector3(1,.10,.14) if part.axis == "x" else Vector3(.14,.10,1)
 	if not good:
 		ghost.hide()
+		world.get_node("BlueprintOverlay").clear_region()
+		if tool == 7: %BlueprintRegionInfo.text = "连通区域：无可选地板"
 		return
 	ghost.position = Vector3(center.x,.08,center.y)
 	(ghost.mesh as BoxMesh).size = size
@@ -444,6 +532,9 @@ func _wall_hover(pixel: Vector2) -> void:
 	ghost.show()
 
 func _blueprint_input(event: InputEvent) -> void:
+	if %BlueprintFloorTool.selected == 8:
+		_aperture_input(event)
+		return
 	if event is InputEventMouseButton:
 		if event.pressed and event.button_index in [MOUSE_BUTTON_WHEEL_UP, MOUSE_BUTTON_WHEEL_DOWN]:
 			world.zoom_overview(.9 if event.button_index == MOUSE_BUTTON_WHEEL_UP else 1.1)
@@ -684,6 +775,9 @@ func _layout_input(event: InputEvent) -> void:
 		if orbiting or not layout.gesture.is_empty(): get_viewport().set_input_as_handled()
 
 func _clear_gesture() -> void:
+	if dragging_aperture:
+		world.layout.end_aperture_drag()
+		dragging_aperture = false
 	dragging = false
 	orbiting = false
 	world.layout.end_drag()
