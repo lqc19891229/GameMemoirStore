@@ -677,6 +677,48 @@ func paint_floor_finish(at: Vector2, finish: int) -> bool:
 	update()
 	return true
 
+func exterior_span_blocker(at: Vector2, count: int, kind: String, finish: int) -> String:
+	if not active or blueprint.shape != "custom": return "需要自定义房间"
+	if kind not in ["wall","door","window"] or finish < 0 or finish >= BlueprintData.FINISH_COUNT: return "门窗类型或材质无效"
+	var edge: Dictionary = BlueprintData.nearest_edge(blueprint,at)
+	if edge.is_empty(): return "未选择外墙段"
+	var span: Array = BlueprintData.edge_span(blueprint,edge,count)
+	if span.size() != count: return "外墙不足 %.1f 米连续长度" % (float(count)*BlueprintData.FLOOR_GRID)
+	for item: Dictionary in span:
+		var previous: Dictionary = BlueprintData.edge_edit(blueprint,item)
+		if int(previous.finish) > 0 or str(previous.kind) != "wall":
+			if str(previous.kind) != kind or int(previous.finish) != finish:
+				return "目标墙段已有独立门窗或配色"
+	return ""
+
+func paint_exterior_span(at: Vector2, count: int, kind: String, finish: int) -> bool:
+	var reason := exterior_span_blocker(at,count,kind,finish)
+	if not reason.is_empty():
+		message = "绘制失败：" + reason
+		changed.emit()
+		return false
+	var edge: Dictionary = BlueprintData.nearest_edge(blueprint,at)
+	var span: Array = BlueprintData.edge_span(blueprint,edge,count)
+	var next := blueprint.duplicate(true)
+	var changes := 0
+	for item: Dictionary in span:
+		var previous: Dictionary = BlueprintData.edge_edit(blueprint,item)
+		if previous.kind == kind and int(previous.finish) == finish: continue
+		changes += 1
+		if kind != "wall" or finish > 0:
+			next.edge_finishes.append({"ix":item.ix,"iz":item.iz,"dx":item.dx,"dz":item.dz,
+				"kind":kind,"finish":finish})
+	if changes == 0: return false
+	var before := _draft()
+	next = BlueprintData.clean(next)
+	if next.edge_finishes.size() != blueprint.edge_finishes.size()+changes:
+		return false
+	blueprint = next
+	world.get_node("Room").apply_blueprint(blueprint)
+	_remember(before)
+	update()
+	return true
+
 func paint_exterior_edge(at: Vector2, kind: String, finish: int) -> bool:
 	if not active or blueprint.shape != "custom": return false
 	if kind not in ["wall", "window", "door"] or finish < 0 or finish >= BlueprintData.FINISH_COUNT: return false
@@ -773,9 +815,9 @@ func _wall_snap_point(role: String, target: Vector2) -> Vector2:
 		for direction in [-1.0,1.0]:
 			var delta: float
 			if axis == 0:
-				delta = (-half.x + edge_margin - mins.x) if direction < 0 else half.x - edge_margin - maxs.x
+				delta = (-half.x + edge_margin + collision_margin + .015 - mins.x) if direction < 0 else half.x - edge_margin - collision_margin - .015 - maxs.x
 			else:
-				delta = (-half.y + edge_margin - mins.y) if direction < 0 else half.y - edge_margin - maxs.y
+				delta = (-half.y + edge_margin + collision_margin + .015 - mins.y) if direction < 0 else half.y - edge_margin - collision_margin - .015 - maxs.y
 			if absf(delta) > WALL_SNAP_RADIUS: continue
 			var candidate := target + (Vector2(delta,0) if axis == 0 else Vector2(0,delta))
 			candidates.append(candidate)
