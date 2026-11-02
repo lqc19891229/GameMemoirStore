@@ -75,7 +75,7 @@ func run() -> void:
 	check(layout.paint_floor_cell(center), "left brush removes a free floor cell")
 	check(layout.blueprint.removed_cells.size() == 1, "paint operation updates the serialized grid")
 	check(room.get_node("Shell/Custom_Exterior").get_child_count() > 0, "exposed custom edges receive generated walls")
-	check(not layout.floor_cell_blocker(selected, false).is_empty() == false, "deleted cell can be restored")
+	check(layout.floor_cell_blocker(selected, false).is_empty(), "deleted cell can be restored")
 	check(not Blueprint.footprint_inside(layout.blueprint, Blueprint.cell_polygon(layout.blueprint, selected)), "carved cell rejects future furniture placement")
 	check(not layout.add_partition(center, "x"), "interior walls cannot be built on a deleted cell")
 	layout.undo()
