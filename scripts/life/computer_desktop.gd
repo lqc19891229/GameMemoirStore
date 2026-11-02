@@ -269,7 +269,10 @@ func _build_furniture_catalog() -> void:
 	# Legacy authored placement controls remain for scene compatibility.
 	for role: String in InventoryData.ROOM_DEFAULTS:
 		var old := get_node_or_null("%Place_" + role) as Button
-		if old != null: old.hide()
+		if old != null:
+			old.hide()
+			var item_id: String = InventoryData.ROOM_DEFAULTS[role]
+			old.pressed.connect(func() -> void: _start_inventory_placement(item_id))
 	for item in ItemCatalog.room_furniture():
 		var id: String = item.item_id
 		var button: Button = %FurnitureCatalogTemplate.duplicate() as Button
@@ -790,6 +793,12 @@ func _sync_layout() -> void:
 		var item: MemoirItemDefinition = ItemCatalog.lookup(item_id)
 		var count := InventoryData.count(layout.available_inventory, item_id)
 		furniture_buttons[item_id].text = "%s · 空闲 %d/%d" % [item.name, _count_unused(item_id), count]
+		if InventoryData.ROOM_DEFAULTS.values().has(item_id):
+			var legacy_role: String = item.subcategory
+			var legacy: Button = get_node_or_null("%Place_" + legacy_role) as Button
+			if legacy != null:
+				legacy.text = furniture_buttons[item_id].text
+				legacy.disabled = furniture_buttons[item_id].disabled
 	if furniture_palette != null:
 		var colorable := InventoryData.is_room_furniture_role(layout.Data.base_role(layout.selected))
 		furniture_palette.disabled = not colorable
