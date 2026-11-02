@@ -2,6 +2,7 @@ extends Node3D
 const WindowScene = preload("res://scenes/computer/ui/app_window.tscn")
 const ItemCatalog: MemoirItemCatalog = preload("res://data/items/_catalog.tres")
 const InventoryData = preload("res://scripts/items/inventory_data.gd")
+const BlueprintData = preload("res://scripts/room/room_blueprint_data.gd")
 const APPS := {"platform": ["游戏平台", "res://scenes/apps/platform/store.tscn"], "browser": ["回忆生活 · 购物网页", "res://scenes/apps/browser/browser.tscn"], "game": ["正在游玩", "res://scenes/apps/game/game_player.tscn"]}
 @export var hardware_catalog: MemoirHardwareCatalog
 var session: MemoirGameSession
@@ -21,6 +22,8 @@ var last_screen_point := Vector2.ZERO
 var furniture_buttons: Dictionary = {}
 var furniture_palette: OptionButton
 var blueprint_mode := false
+var wall_drag_button := 0
+var last_wall_cell := Vector2(INF, INF)
 const BLUEPRINT_KEYS := {"BlueprintWidth":"width", "BlueprintDepth":"depth", "BlueprintDoorX":"door_x", "BlueprintWindowZ":"window_z"}
 @onready var world: Node3D = %Workstation3D
 var screen_focused: bool:
@@ -37,6 +40,15 @@ func _ready() -> void:
 	%ResetView.pressed.connect(world.reset_overview)
 	%EditLayout.pressed.connect(begin_layout)
 	%BlueprintToggle.pressed.connect(func() -> void: set_blueprint_mode(not blueprint_mode))
+	%WallAxis.add_item("横向墙 · X")
+	%WallAxis.add_item("纵向墙 · Z")
+	%WallKind.add_item("实体墙")
+	%WallKind.add_item("门洞")
+	%WallAxis.item_selected.connect(func(_index: int) -> void: _hide_wall_preview())
+	%WallKind.item_selected.connect(func(_index: int) -> void: _hide_wall_preview())
+	%WallRemoveMode.toggled.connect(func(_active: bool) -> void: _hide_wall_preview())
+	var wall_ghost: MeshInstance3D = world.get_node("WallPreview")
+	wall_ghost.material_override = wall_ghost.material_override.duplicate()
 	for slider_name: String in BLUEPRINT_KEYS:
 		var slider: HSlider = get_node("%" + slider_name)
 		var key: String = BLUEPRINT_KEYS[slider_name]
@@ -163,6 +175,9 @@ func set_blueprint_mode(enabled: bool) -> void:
 	if enabled and not world.layout.active: return
 	if enabled and not world.layout.placing_role.is_empty(): world.layout.cancel_placement()
 	blueprint_mode = enabled
+	wall_drag_button = 0
+	_hide_wall_preview()
+	world.get_node("Room").set_partition_editing(enabled)
 	%BlueprintToggle.set_pressed_no_signal(enabled)
 	%Content.visible = not enabled
 	%BlueprintPanel.visible = enabled
@@ -187,7 +202,68 @@ func _sync_blueprint_ui() -> void:
 		var label: Label = get_node("%" + label_key)
 		var display: String = {"width":"房间宽度", "depth":"房间深度", "door_x":"后墙门位置", "window_z":"左墙窗位置"}[key]
 		label.text = "%s：%.2f 米" % [display, float(blueprint[key])]
-	%BlueprintStatus.text = world.layout.message if world.layout.message.begins_with("调整失败") else "长宽：%.1f × %.1f 米 · 应用后保存" % [blueprint.width, blueprint.depth]
+	%BlueprintStatus.text = world.layout.message if world.layout.message.begins_with("调整失败") or world.layout.message.begins_with("建造失败") else "长宽 %.1f × %.1f 米 · 内墙 %d 段" % [blueprint.width, blueprint.depth, blueprint.partitions.size()]
+
+func _wall_axis() -> String:
+	return "z" if %WallAxis.selected == 1 else "x"
+
+func _wall_kind() -> String:
+	return "door" if %WallKind.selected == 1 else "wall"
+
+func _hide_wall_preview() -> void:
+	if is_instance_valid(world):
+		world.get_node("WallPreview").hide()
+
+func _blueprint_floor_hit(pixel: Vector2) -> Variant:
+	var plane := Plane(Vector3.UP, 0.0)
+	var hit: Variant = plane.intersects_ray(world.camera.project_ray_origin(pixel), world.camera.project_ray_normal(pixel))
+	if hit == null: return null
+	return Vector2(snappedf(hit.x, BlueprintData.WALL_GRID), snappedf(hit.z, BlueprintData.WALL_GRID))
+
+func _wall_action(at: Vector2, button: int) -> void:
+	var remove := button == MOUSE_BUTTON_RIGHT or %WallRemoveMode.button_pressed
+	if remove:
+		world.layout.remove_partition(at)
+	else:
+		world.layout.add_partition(at, _wall_axis(), _wall_kind())
+
+func _wall_hover(pixel: Vector2) -> void:
+	var ghost: MeshInstance3D = world.get_node("WallPreview")
+	var at: Variant = _blueprint_floor_hit(pixel)
+	if at == null:
+		ghost.hide()
+		return
+	var along_x := _wall_axis() == "x"
+	ghost.position = Vector3(at.x, .08, at.y)
+	(ghost.mesh as BoxMesh).size = Vector3(1.0, .10, .14) if along_x else Vector3(.14, .10, 1.0)
+	var part: Dictionary = BlueprintData.clean_partition({"x":at.x, "z":at.y, "axis":_wall_axis(), "kind":_wall_kind()})
+	var valid_wall := world.layout.partition_blocker(part).is_empty()
+	var tint := Color("6ed9ab", .48) if valid_wall else Color("f27777", .48)
+	(ghost.material_override as StandardMaterial3D).albedo_color = tint
+	ghost.show()
+
+func _blueprint_input(event: InputEvent) -> void:
+	if event is InputEventMouseButton:
+		if event.pressed and event.button_index in [MOUSE_BUTTON_WHEEL_UP, MOUSE_BUTTON_WHEEL_DOWN]:
+			world.zoom_overview(.9 if event.button_index == MOUSE_BUTTON_WHEEL_UP else 1.1)
+			get_viewport().set_input_as_handled()
+		elif event.button_index in [MOUSE_BUTTON_LEFT, MOUSE_BUTTON_RIGHT]:
+			wall_drag_button = event.button_index if event.pressed else 0
+			last_wall_cell = Vector2(INF, INF)
+			if event.pressed:
+				var at: Variant = _blueprint_floor_hit(event.position)
+				if at != null:
+					_wall_action(at, event.button_index)
+					last_wall_cell = at
+			get_viewport().set_input_as_handled()
+	elif event is InputEventMouseMotion:
+		_wall_hover(event.position)
+		if wall_drag_button != 0:
+			var at: Variant = _blueprint_floor_hit(event.position)
+			if at != null and at != last_wall_cell:
+				_wall_action(at, wall_drag_button)
+				last_wall_cell = at
+		get_viewport().set_input_as_handled()
 
 func _sync_layout() -> void:
 	if not world.layout.active: return
@@ -333,7 +409,8 @@ func _unhandled_input(event: InputEvent) -> void:
 			orbiting = false
 		return
 	if world.layout.active:
-		if not blueprint_mode: _layout_input(event)
+		if blueprint_mode: _blueprint_input(event)
+		else: _layout_input(event)
 		return
 	if screen_focused:
 		if event is InputEventMouse:

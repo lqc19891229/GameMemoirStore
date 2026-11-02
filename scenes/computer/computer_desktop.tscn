@@ -430,6 +430,24 @@ min_value = -3.65
 max_value = 3.65
 step = 0.05
 value = -0.8
+[node name="BlueprintWallsTitle" type="Label" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel"]
+layout_mode = 2
+text = "内墙绘制"
+theme_override_font_sizes/font_size = 16
+[node name="BlueprintWallHint" type="Label" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel"]
+layout_mode = 2
+autowrap_mode = 3
+text = "0.5 米网格 · 左键点击/拖动绘制 · 右键拆除 · 内墙和门洞每段长 1 米"
+[node name="WallAxis" type="OptionButton" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel"]
+unique_name_in_owner = true
+layout_mode = 2
+[node name="WallKind" type="OptionButton" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel"]
+unique_name_in_owner = true
+layout_mode = 2
+[node name="WallRemoveMode" type="CheckButton" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "拆除模式 · 左键点击墙段"
 [node name="BlueprintStatus" type="Label" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel"]
 unique_name_in_owner = true
 layout_mode = 2
