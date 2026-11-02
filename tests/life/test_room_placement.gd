@@ -28,7 +28,7 @@ func run() -> void:
 	state.wallet = 1000
 	var desktop = game.desktop
 	var layout = desktop.world.layout
-	var catalog_button: Button = desktop.get_node("HUD/Interface/LayoutPanel/Margin/Scroll/Content/FurnitureInventory/Place_chair")
+	var catalog_button: Button = desktop.get_node("%Place_chair")
 	check(catalog_button != null, "room editor exposes a direct furniture inventory")
 	check(game.session.buy_item("room_chair").begins_with("已购买"), "multiple copies may be purchased")
 	desktop.begin_layout()

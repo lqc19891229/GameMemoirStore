@@ -1,5 +1,6 @@
-[gd_scene load_steps=6 format=3]
+[gd_scene load_steps=7 format=3]
 [ext_resource type="Theme" path="res://assets/client_theme.tres" id="1"]
+[ext_resource type="Theme" path="res://assets/room_minimal_theme.tres" id="6"]
 [ext_resource type="Script" path="res://scripts/life/computer_desktop.gd" id="2"]
 [ext_resource type="PackedScene" path="res://scenes/computer/workstation_3d.tscn" id="3"]
 [ext_resource type="PackedScene" path="res://scenes/computer/ui/desktop_screen.tscn" id="4"]
@@ -20,7 +21,7 @@ unique_name_in_owner = true
 [node name="HUD" type="CanvasLayer" parent="."]
 layer = 1
 [node name="Interface" type="Control" parent="HUD"]
-theme = ExtResource("1")
+theme = ExtResource("6")
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -34,7 +35,7 @@ layout_mode = 1
 anchor_right = 1.0
 offset_bottom = 64.0
 mouse_filter = 2
-color = Color(0.035,0.065,0.07,0.88)
+color = Color(0.958, 0.961, 0.952, 0.96)
 
 [node name="Header" type="HBoxContainer" parent="HUD/Interface"]
 layout_mode = 1
@@ -49,8 +50,8 @@ theme_override_constants/separation = 12
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
-text = "我的像素房间"
-theme_override_font_sizes/font_size = 24
+text = "我的房间"
+theme_override_font_sizes/font_size = 21
 
 [node name="ResetView" type="Button" parent="HUD/Interface/Header"]
 unique_name_in_owner = true
@@ -61,7 +62,7 @@ theme_type_variation = "DarkButton"
 [node name="EditLayout" type="Button" parent="HUD/Interface/Header"]
 unique_name_in_owner = true
 layout_mode = 2
-text = "布置房间"
+text = "编辑房间"
 theme_type_variation = "DarkButton"
 [node name="BlueprintToggle" type="Button" parent="HUD/Interface/Header"]
 unique_name_in_owner = true
@@ -74,13 +75,13 @@ theme_type_variation = "DarkButton"
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
-text = "应用布置"
+text = "保存设计"
 theme_type_variation = "BlueButton"
 [node name="CancelLayout" type="Button" parent="HUD/Interface/Header"]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
-text = "取消 · Esc"
+text = "取消"
 theme_type_variation = "DarkButton"
 [node name="ManageDevices" type="Button" parent="HUD/Interface/Header"]
 unique_name_in_owner = true
@@ -118,24 +119,26 @@ theme_override_constants/separation = 4
 [node name="Title" type="Label" parent="HUD/Interface/OverviewHelp"]
 layout_mode = 2
 mouse_filter = 2
-text = "房间总览"
+text = "我的空间"
 theme_override_font_sizes/font_size = 14
 
 [node name="Controls" type="Label" parent="HUD/Interface/OverviewHelp"]
 layout_mode = 2
 mouse_filter = 2
-text = "拖动旋转 · 滚轮缩放 · 点击屏幕使用电脑 · 布置房间可调整家具、设备与配色"
+text = "拖动查看 · 滚轮缩放 · 点击家具选中 · 编辑房间开始设计"
 theme_override_font_sizes/font_size = 12
 
 [node name="LayoutPanel" type="PanelContainer" parent="HUD/Interface"]
 unique_name_in_owner = true
 visible = false
 layout_mode = 0
-offset_left = 20.0
-offset_top = 84.0
-offset_right = 248.0
+anchor_left = 1.0
+anchor_right = 1.0
 anchor_bottom = 1.0
-offset_bottom = -16.0
+offset_left = -326.0
+offset_top = 138.0
+offset_right = -22.0
+offset_bottom = -18.0
 [node name="Margin" type="MarginContainer" parent="HUD/Interface/LayoutPanel"]
 layout_mode = 2
 theme_override_constants/margin_left = 14
@@ -395,10 +398,12 @@ placeholder_text = "搜索家具名称或商品型号"
 unique_name_in_owner = true
 layout_mode = 2
 text = "家具分类目录"
-[node name="FurnitureCatalogItems" type="VBoxContainer" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content/FurnitureInventory"]
+[node name="FurnitureCatalogItems" type="GridContainer" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content/FurnitureInventory"]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_constants/separation = 4
+columns = 3
+theme_override_constants/h_separation = 7
+theme_override_constants/v_separation = 6
 [node name="FurnitureCatalogTemplate" type="Button" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content/FurnitureInventory/FurnitureCatalogItems"]
 unique_name_in_owner = true
 visible = false

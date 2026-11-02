@@ -1,5 +1,6 @@
 extends Node3D
 const WindowScene = preload("res://scenes/computer/ui/app_window.tscn")
+const RoomMinimalUI = preload("res://scripts/life/room_minimal_ui.gd")
 const ItemCatalog: MemoirItemCatalog = preload("res://data/items/_catalog.tres")
 const InventoryData = preload("res://scripts/items/inventory_data.gd")
 const Taxonomy = preload("res://scripts/items/item_taxonomy.gd")
@@ -26,6 +27,7 @@ var catalog_group_ids: Array[String] = [""]
 var catalog_type_ids: Array[String] = [""]
 var furniture_palette: OptionButton
 var blueprint_mode := false
+var room_ui
 var wall_drag_button := 0
 var last_wall_cell := Vector2(INF, INF)
 var dragging_aperture := false
@@ -167,6 +169,9 @@ func _ready() -> void:
 	%CopyFurniture.pressed.connect(world.layout.duplicate_selected)
 	%DeleteFurniture.pressed.connect(world.layout.store_selected)
 	_build_furniture_catalog()
+	room_ui = RoomMinimalUI.new()
+	add_child(room_ui)
+	room_ui.setup(self)
 	var styles := {
 		"wall":["墙面 · 鼠尾草","墙面 · 奶油米","墙面 · 雾蓝"],
 		"floor":["地板 · 原木","地板 · 浅灰木","地板 · 深胡桃"],
@@ -280,6 +285,8 @@ func _build_furniture_catalog() -> void:
 		button.name = "Catalog_" + id
 		button.alignment = HORIZONTAL_ALIGNMENT_LEFT
 		button.tooltip_text = item.description
+		button.custom_minimum_size = Vector2(180, 42)
+		button.clip_text = true
 		%FurnitureCatalogItems.add_child(button)
 		button.pressed.connect(func() -> void: _start_inventory_placement(id))
 		furniture_buttons[id] = button
@@ -385,6 +392,10 @@ func set_blueprint_mode(enabled: bool) -> void:
 	if world.layout.active: world.layout.update()
 	if enabled: world.layout.gizmo.hide()
 	_sync_blueprint_ui()
+	if room_ui != null:
+		if enabled: room_ui.mode = "build"
+		elif room_ui.mode == "build": room_ui.mode = "furniture"
+		room_ui.sync()
 
 func _sync_blueprint_ui() -> void:
 	var blueprint: Dictionary = world.layout.blueprint
@@ -828,6 +839,7 @@ func _sync_layout() -> void:
 		var info: Dictionary = catalog_special_buttons[role]
 		info.button.disabled = not layout.active or not layout.placing_role.is_empty()
 		info.button.text = str(info.label) + (" · 已选中" if layout.selected == role else "")
+	if room_ui != null: room_ui.sync()
 
 func _count_unused(item_id: String) -> int:
 	var total := 0
@@ -865,7 +877,8 @@ func _sync_mode() -> void:
 	%FocusToggle.visible = world.mode == "overview"
 	%ManageDevices.visible = world.mode == "overview"
 	%OverviewHelp.visible = world.mode == "overview"
-	%ViewTitle.text = {"overview": "我的游戏房间", "screen": "屏幕操作", "layout":"布置房间"}[world.mode]
+	%ViewTitle.text = {"overview": "我的空间", "screen": "屏幕操作", "layout":"房间设计"}[world.mode]
+	if room_ui != null: room_ui.sync()
 
 func _reframe_screen() -> void:
 	if not screen_focused: return
