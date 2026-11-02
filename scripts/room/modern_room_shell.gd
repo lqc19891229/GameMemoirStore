@@ -298,7 +298,7 @@ func _build_custom_exterior(wall: Material, trim: Material) -> void:
 			header.y = .88
 			_finish_box(section, "DoorHead", header, Vector3(center.x, 2.76, center.y), wall, finish, "wall")
 			for direction in [-1.0,1.0]:
-				var offset := direction * (Blueprint.FLOOR_GRID * .5 - .025)
+				var offset: float = float(direction) * (Blueprint.FLOOR_GRID * .5 - .025)
 				var post_at := Vector3(center.x, 1.16, center.y)
 				var post_size := Vector3(.05,2.32,.14) if not longitudinal else Vector3(.14,2.32,.05)
 				if longitudinal: post_at.z += offset
