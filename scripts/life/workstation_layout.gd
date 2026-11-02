@@ -1368,12 +1368,15 @@ func drag_to(pixel: Vector2) -> void:
 
 func end_drag() -> void:
 	var was_dragging := not gesture.is_empty()
+	# Keep the last collision reason readable after mouse-up, as before P21.
+	# Ordinary gesture cues and temporary magnets should disappear immediately.
+	var blocked_contact := message.begins_with("已阻挡：")
 	if was_dragging and not drag_before.is_empty(): _remember(drag_before)
 	gesture = ""
 	drag_before = {}
 	snap_bypass = false
 	wall_magnet_active = false
-	if was_dragging and active: update()
+	if was_dragging and active and not blocked_contact: update()
 
 func pick_handle(pixel: Vector2) -> String:
 	var origin: Vector3 = world.camera.project_ray_origin(pixel)
