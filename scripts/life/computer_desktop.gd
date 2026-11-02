@@ -127,31 +127,18 @@ func _start_purchased_furniture_placement(item_id: String, uid: String) -> void:
 	if not world.layout.start_place(item_id, uid): finish_layout(false)
 
 func _build_furniture_catalog() -> void:
-	var catalog := VBoxContainer.new()
-	catalog.name = "FurnitureInventory"
-	$HUD/Interface/LayoutPanel/Margin/Scroll/Content.add_child(catalog)
-	var header := Label.new()
-	header.text = "家具库存 · 点击开始摆放"
-	catalog.add_child(header)
 	for role: String in InventoryData.ROOM_DEFAULTS:
 		var item_id: String = InventoryData.ROOM_DEFAULTS[role]
 		var item: MemoirItemDefinition = ItemCatalog.lookup(item_id)
-		var button := Button.new()
-		button.name = "Place_" + role
+		var button: Button = get_node("%Place_" + role)
 		button.text = item.name if item != null else role
 		var selected_id := item_id
 		button.pressed.connect(func() -> void: _start_inventory_placement(selected_id))
-		catalog.add_child(button)
 		furniture_buttons[item_id] = button
-	var palette_label := Label.new()
-	palette_label.text = "选中家具 · 独立改色"
-	catalog.add_child(palette_label)
-	furniture_palette = OptionButton.new()
-	furniture_palette.name = "FurniturePalette"
+	furniture_palette = %FurniturePalette
 	for label: String in world.layout.FURNITURE_COLOR_LABELS:
 		furniture_palette.add_item(label)
 	furniture_palette.item_selected.connect(func(index: int) -> void: world.layout.set_furniture_color(index))
-	catalog.add_child(furniture_palette)
 
 func _start_inventory_placement(item_id: String) -> void:
 	var uid := InventoryData.unused_uid(world.layout.available_inventory, world.layout.placed_instances, item_id)
