@@ -380,7 +380,7 @@ size_flags_horizontal = 3
 theme_override_constants/separation = 12
 [node name="BlueprintTitle" type="Label" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel"]
 layout_mode = 2
-text = "房间蓝图 · 自由户型"
+text = "房间蓝图 · 自由户型与装修"
 theme_override_font_sizes/font_size = 18
 [node name="BlueprintHint" type="Label" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel"]
 layout_mode = 2
@@ -467,6 +467,24 @@ layout_mode = 2
 autowrap_mode = 3
 text = "选自由轮廓，再选择挖除或恢复地板。左键拖动绘制，右键反向操作。不能切断房间，也不能移除家具下方地板。"
 [node name="BlueprintFloorTool" type="OptionButton" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="BlueprintFinishTitle" type="Label" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel"]
+layout_mode = 2
+text = "区域装修 · 地板与墙面"
+theme_override_font_sizes/font_size = 16
+[node name="BlueprintFinishHint" type="Label" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel"]
+layout_mode = 2
+autowrap_mode = 3
+text = "选择上方的地板材质 / 自定义外墙 / 内墙改色画笔。左键拖动涂刷，右键恢复默认。外墙窗户和门洞每段宽 0.5 米。"
+[node name="BlueprintTileFinish" type="OptionButton" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel"]
+unique_name_in_owner = true
+layout_mode = 2
+[node name="BlueprintWallFinish" type="OptionButton" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel"]
+unique_name_in_owner = true
+layout_mode = 2
+[node name="BlueprintOpeningKind" type="OptionButton" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel"]
 unique_name_in_owner = true
 layout_mode = 2
 
