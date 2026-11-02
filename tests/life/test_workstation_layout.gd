@@ -71,6 +71,7 @@ func run() -> void:
 	button(point,false)
 	await frames()
 	check(layout.selected == "monitor" and world.mode == "layout" and desktop.windows.is_empty(), "screen click selects monitor without launching OS")
+	await click(desktop.room_ui.advanced_toggle)
 	await click(desktop.get_node("%Layout_mouse"))
 	var pad: Node3D = layout.gizmo.get_node("MoveHandles/MovePlane")
 	var start: Vector2 = world.camera.unproject_position(pad.global_position)
@@ -122,7 +123,8 @@ func run() -> void:
 	world.devices.mouse.position = world.devices.keyboard.position
 	desktop.finish_layout(true)
 	check(layout.active and game.session.state.life["workstation_layout"].is_empty(), "invalid arrangement cannot be committed through API")
-	await click(desktop.get_node("%RestoreLayout"))
+	desktop.get_node("%RestoreLayout").pressed.emit()
+	await frames()
 	check(layout.valid and same_poses(original,layout.snapshot()), "restore defaults repairs temporary conflicts")
 	# Moving the table changes every global pose while retaining local equipment poses.
 	layout.select("desk")

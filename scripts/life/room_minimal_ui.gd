@@ -5,6 +5,8 @@ var host # Dynamic controller: the room desktop owns its custom world/layout API
 var mode := "furniture"
 var advanced := false
 var catalog_open := true
+var last_selected := "desk"
+var was_active := false
 var dock: PanelContainer
 var bar: HBoxContainer
 var catalog_toggle: Button
@@ -166,6 +168,19 @@ func choose_mode(next_mode: String) -> void:
 func sync() -> void:
 	if not is_instance_valid(host) or not is_instance_valid(bar): return
 	var active: bool = host.world.mode == "layout" and host.world.layout.active
+	if active and not was_active:
+		mode = "furniture"
+		advanced = false
+		catalog_open = true
+		last_selected = "desk"
+	if active:
+		var selected: String = str(host.world.layout.selected)
+		# Once the player selects an object, free the central viewport for
+		# the 3D gizmo. The catalog can be reopened at any time from the bar.
+		if mode == "furniture" and selected != last_selected and selected != "desk":
+			catalog_open = false
+		last_selected = selected
+	was_active = active
 	bar.visible = active
 	dock.visible = active and mode == "furniture" and catalog_open and not host.blueprint_mode
 	catalog_toggle.visible = active and mode == "furniture"
