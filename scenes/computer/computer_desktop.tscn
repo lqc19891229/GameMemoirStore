@@ -380,7 +380,7 @@ size_flags_horizontal = 3
 theme_override_constants/separation = 12
 [node name="BlueprintTitle" type="Label" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel"]
 layout_mode = 2
-text = "房间蓝图 · 自由户型与装修"
+text = "房间蓝图 · 自由户型与分区"
 theme_override_font_sizes/font_size = 18
 [node name="BlueprintHint" type="Label" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel"]
 layout_mode = 2
@@ -487,6 +487,50 @@ layout_mode = 2
 [node name="BlueprintOpeningKind" type="OptionButton" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel"]
 unique_name_in_owner = true
 layout_mode = 2
+
+[node name="BlueprintZonesTitle" type="Label" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel"]
+layout_mode = 2
+text = "功能分区 · 游戏区 / 工作区 / 休息区"
+theme_override_font_sizes/font_size = 16
+[node name="BlueprintZonesHint" type="Label" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel"]
+layout_mode = 2
+autowrap_mode = 3
+text = "在自由轮廓模式下选功能分区画笔，选择区域后涂刷。右键清除分区；下方可分别配置地板、墙面和局部氛围灯。"
+[node name="BlueprintZoneSelect" type="OptionButton" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel"]
+unique_name_in_owner = true
+layout_mode = 2
+[node name="BlueprintZoneCount" type="Label" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "游戏区 · 0 格"
+[node name="BlueprintZoneFloorLabel" type="Label" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel"]
+layout_mode = 2
+text = "区域地板材质"
+[node name="BlueprintZoneFloor" type="OptionButton" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel"]
+unique_name_in_owner = true
+layout_mode = 2
+[node name="BlueprintZoneWallLabel" type="Label" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel"]
+layout_mode = 2
+text = "区域墙面配色"
+[node name="BlueprintZoneWall" type="OptionButton" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel"]
+unique_name_in_owner = true
+layout_mode = 2
+[node name="BlueprintZoneLightLabel" type="Label" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel"]
+layout_mode = 2
+text = "区域局部照明"
+[node name="BlueprintZoneLight" type="OptionButton" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel"]
+unique_name_in_owner = true
+layout_mode = 2
+[node name="BlueprintZonePresetLabel" type="Label" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel"]
+layout_mode = 2
+text = "一键装修预设"
+[node name="BlueprintZonePreset" type="OptionButton" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel"]
+unique_name_in_owner = true
+layout_mode = 2
+[node name="BlueprintZoneApplyPreset" type="Button" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "应用到选中功能区"
 
 [node name="BlueprintWallsTitle" type="Label" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel"]
 layout_mode = 2

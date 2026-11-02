@@ -52,6 +52,31 @@ func _ready() -> void:
 	%BlueprintFloorTool.add_item("地板材质画笔")
 	%BlueprintFloorTool.add_item("自定义外墙装修 / 门窗")
 	%BlueprintFloorTool.add_item("内墙独立改色")
+	%BlueprintFloorTool.add_item("功能分区画笔")
+	for label: String in BlueprintData.ZONE_NAMES:
+		%BlueprintZoneSelect.add_item(label)
+		%BlueprintZonePreset.add_item(label + " · 默认预设")
+	for label: String in ["跟随房间","奶油白","鼠尾草绿","雾蓝 / 深胡桃"]:
+		%BlueprintZoneFloor.add_item(label)
+		%BlueprintZoneWall.add_item(label)
+	for label: String in ["冷色游戏氛围","暖色工作照明","柔和休息照明"]:
+		%BlueprintZoneLight.add_item(label)
+	%BlueprintZoneSelect.item_selected.connect(func(_index: int) -> void:
+		_sync_zone_controls()
+		_hide_wall_preview()
+	)
+	%BlueprintZoneFloor.item_selected.connect(func(index: int) -> void:
+		if blueprint_mode: world.layout.set_zone_style(%BlueprintZoneSelect.selected+1,"floor",index)
+	)
+	%BlueprintZoneWall.item_selected.connect(func(index: int) -> void:
+		if blueprint_mode: world.layout.set_zone_style(%BlueprintZoneSelect.selected+1,"wall",index)
+	)
+	%BlueprintZoneLight.item_selected.connect(func(index: int) -> void:
+		if blueprint_mode: world.layout.set_zone_style(%BlueprintZoneSelect.selected+1,"light",index)
+	)
+	%BlueprintZoneApplyPreset.pressed.connect(func() -> void:
+		if blueprint_mode: world.layout.apply_zone_preset(%BlueprintZoneSelect.selected+1,%BlueprintZonePreset.selected)
+	)
 	for label: String in ["跟随房间材质", "奶油白 / 浅石砖", "鼠尾草绿", "雾蓝 / 胡桃木"]:
 		%BlueprintWallFinish.add_item(label)
 		%BlueprintTileFinish.add_item(label)
@@ -233,7 +258,21 @@ func _sync_blueprint_ui() -> void:
 		var label: Label = get_node("%" + label_key)
 		var display: String = {"width":"房间宽度", "depth":"房间深度", "door_x":"后墙门位置", "window_z":"左墙窗位置", "notch_width":"缺口宽度", "notch_depth":"缺口深度"}[key]
 		label.text = "%s：%.2f 米" % [display, float(blueprint[key])]
+	_sync_zone_controls()
 	%BlueprintStatus.text = world.layout.message if world.layout.message.begins_with("调整失败") or world.layout.message.begins_with("建造失败") or world.layout.message.begins_with("绘制失败") else "%s · %.1f × %.1f 米 · 内墙 %d 段 · 缺口 %d 格" % ["自由轮廓" if blueprint.shape == "custom" else "L 型" if blueprint.shape == "l" else "矩形", blueprint.width, blueprint.depth, blueprint.partitions.size(), blueprint.removed_cells.size()]
+
+func _sync_zone_controls() -> void:
+	if not is_instance_valid(world): return
+	var current: Dictionary = world.layout.blueprint
+	var selected: int = clampi(%BlueprintZoneSelect.selected+1,1,BlueprintData.ZONE_PRESETS.size())
+	var preset: Dictionary = BlueprintData.zone_style(current,selected)
+	%BlueprintZoneFloor.select(int(preset.floor))
+	%BlueprintZoneWall.select(int(preset.wall))
+	%BlueprintZoneLight.select(int(preset.light))
+	var count := 0
+	for entry: Dictionary in current.zone_cells:
+		if int(entry.zone) == selected: count += 1
+	%BlueprintZoneCount.text = "%s · %d 格 · %.2f 平方米" % [BlueprintData.ZONE_NAMES[selected-1],count,float(count)*BlueprintData.FLOOR_GRID*BlueprintData.FLOOR_GRID]
 
 func _wall_axis() -> String:
 	return "z" if %WallAxis.selected == 1 else "x"
@@ -309,6 +348,8 @@ func _paint_action(at: Vector2, button: int) -> void:
 			world.layout.paint_exterior_edge(at, "wall" if erase else kind, 0 if erase else %BlueprintWallFinish.selected)
 		5:
 			world.layout.paint_partition_finish(at, 0 if erase else %BlueprintWallFinish.selected)
+		6:
+			world.layout.paint_zone_cell(at, 0 if erase else %BlueprintZoneSelect.selected+1)
 
 func _paint_hover(pixel: Vector2) -> void:
 	var ghost: MeshInstance3D = world.get_node("WallPreview")
@@ -320,7 +361,7 @@ func _paint_hover(pixel: Vector2) -> void:
 	var good := false
 	var center := Vector2.ZERO
 	var size := Vector3(BlueprintData.FLOOR_GRID,.07,BlueprintData.FLOOR_GRID)
-	if tool == 3:
+	if tool == 3 or tool == 6:
 		var cell: Dictionary = BlueprintData.cell_at(world.layout.blueprint, at)
 		good = world.layout.blueprint.shape == "custom" and BlueprintData.valid_cell(world.layout.blueprint,cell) and not BlueprintData.has_cell(world.layout.blueprint,cell)
 		if good: center = BlueprintData.cell_center(world.layout.blueprint,cell)
@@ -358,7 +399,7 @@ func _brush_action(at: Vector2, button: int) -> void:
 	match %BlueprintFloorTool.selected:
 		0: _wall_action(at,button)
 		1,2: _floor_action(at,button)
-		3,4,5: _paint_action(at,button)
+		3,4,5,6: _paint_action(at,button)
 
 func _wall_hover(pixel: Vector2) -> void:
 	var ghost: MeshInstance3D = world.get_node("WallPreview")
