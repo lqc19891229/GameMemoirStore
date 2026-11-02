@@ -114,6 +114,8 @@ script = ExtResource("11")
 
 [node name="GridLines" type="MeshInstance3D" parent="BlueprintOverlay"]
 [node name="RegionFill" type="MeshInstance3D" parent="BlueprintOverlay"]
+[node name="WallStrokeValid" type="MeshInstance3D" parent="BlueprintOverlay"]
+[node name="WallStrokeBlocked" type="MeshInstance3D" parent="BlueprintOverlay"]
 [node name="DoorHandle" type="MeshInstance3D" parent="BlueprintOverlay"]
 [node name="WindowHandle" type="MeshInstance3D" parent="BlueprintOverlay"]
 

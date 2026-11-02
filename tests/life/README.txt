@@ -26,3 +26,5 @@ test_room_zones.gd：功能区分配与清理、三区材质/灯光、局部材�
 
 test_room_regions.gd：实体墙/门洞连通区域自动识别、一键区域填充、三个装修方案槽位、卫生校验、撤销和 JSON 恢复。\n
 test_blueprint_ux.gd：网格显示开关、整区高亮、缺口更新、固定门窗拖动、单次撤销及取消还原。
+
+test_room_build_feedback.gd：连续墙段红绿预览、快速拖动补间、自由外墙门窗移动/碰撞和撤销、家具尺寸提示及取消还原。

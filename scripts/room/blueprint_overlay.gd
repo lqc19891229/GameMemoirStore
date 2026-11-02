@@ -17,6 +17,8 @@ func _ready() -> void:
 	$RegionFill.material_override = _mat(REGION_COLOR)
 	$DoorHandle.material_override = _mat(Color(.95,.65,.25,.90))
 	$WindowHandle.material_override = _mat(Color(.34,.72,.95,.90))
+	$WallStrokeValid.material_override = _mat(Color(.30,.90,.64,.72))
+	$WallStrokeBlocked.material_override = _mat(Color(.96,.38,.34,.72))
 	$DoorHandle.mesh = BoxMesh.new()
 	$WindowHandle.mesh = BoxMesh.new()
 	($DoorHandle.mesh as BoxMesh).size = Vector3(.9,.065,.12)
@@ -90,3 +92,25 @@ func preview_region(blueprint: Dictionary, at: Vector2) -> int:
 	$RegionFill.mesh = surface.commit()
 	region_count = region.size()
 	return region_count
+
+func clear_wall_stroke() -> void:
+	$WallStrokeValid.mesh = null
+	$WallStrokeBlocked.mesh = null
+
+func show_wall_stroke(allowed: Array, blocked: Array, axis: String) -> void:
+	$WallStrokeValid.mesh = _stroke_mesh(allowed,axis)
+	$WallStrokeBlocked.mesh = _stroke_mesh(blocked,axis)
+
+func _stroke_mesh(steps: Array, axis: String) -> ArrayMesh:
+	if steps.is_empty(): return null
+	var surface := SurfaceTool.new()
+	surface.begin(Mesh.PRIMITIVE_TRIANGLES)
+	for step: Vector2 in steps:
+		var half: Vector2 = Vector2(.49,.08) if axis == "x" else Vector2(.08,.49)
+		var a := Vector3(step.x-half.x,.106,step.y-half.y)
+		var b := Vector3(step.x+half.x,.106,step.y-half.y)
+		var c := Vector3(step.x+half.x,.106,step.y+half.y)
+		var d := Vector3(step.x-half.x,.106,step.y+half.y)
+		for vertex: Vector3 in [a,b,c,a,c,d]:
+			surface.add_vertex(vertex)
+	return surface.commit()

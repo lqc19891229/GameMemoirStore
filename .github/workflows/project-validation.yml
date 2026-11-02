@@ -127,6 +127,7 @@ jobs:
             tests/life/test_room_zones.gd \
             tests/life/test_room_regions.gd \
             tests/life/test_blueprint_ux.gd \
+            tests/life/test_room_build_feedback.gd \
             tests/life/test_workstation_view.gd \
             tests/life/test_workstation_lighting.gd \
             tests/life/test_workstation_layout.gd \

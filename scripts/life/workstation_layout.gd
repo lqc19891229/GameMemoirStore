@@ -39,6 +39,8 @@ var committed_style: Dictionary = {}
 var blueprint: Dictionary = BlueprintData.DEFAULT.duplicate(true)
 var committed_blueprint: Dictionary = BlueprintData.DEFAULT.duplicate(true)
 var aperture_drag_before: Dictionary = {}
+var edge_drag_before: Dictionary = {}
+var edge_drag_source: Dictionary = {}
 var undo_stack: Array[Dictionary] = []
 var redo_stack: Array[Dictionary] = []
 var drag_before: Dictionary = {}
@@ -416,6 +418,64 @@ func end_aperture_drag(cancel: bool = false) -> void:
 		_remember(before)
 	update()
 
+func begin_custom_edge_drag(at: Vector2) -> bool:
+	if not active or blueprint.shape != "custom" or not edge_drag_before.is_empty(): return false
+	var source: Dictionary = BlueprintData.nearest_edge(blueprint,at,.28)
+	if source.is_empty(): return false
+	var record: Dictionary = BlueprintData.edge_edit(blueprint,source)
+	if str(record.kind) not in ["door","window"]: return false
+	end_drag()
+	edge_drag_before = _draft()
+	edge_drag_source = source.duplicate()
+	return true
+
+func edge_drag_blocker(at: Vector2) -> String:
+	if edge_drag_before.is_empty() or edge_drag_source.is_empty(): return "请先选中已有门洞或窗户"
+	var base: Dictionary = edge_drag_before.blueprint
+	var target: Dictionary = BlueprintData.nearest_edge(base,at,.36)
+	if target.is_empty(): return "目标不在可用外墙段"
+	if not BlueprintData.same_edge(target,edge_drag_source):
+		for entry: Dictionary in base.edge_finishes:
+			if BlueprintData.same_edge(entry,target):
+				return "目标外墙已设置门窗或独立颜色"
+	return ""
+
+func drag_custom_edge_to(at: Vector2) -> bool:
+	var reason := edge_drag_blocker(at)
+	if not reason.is_empty():
+		message = "移动失败：" + reason
+		changed.emit()
+		return false
+	var base: Dictionary = edge_drag_before.blueprint
+	var target: Dictionary = BlueprintData.nearest_edge(base,at,.36)
+	var original: Dictionary = BlueprintData.edge_edit(base,edge_drag_source)
+	if BlueprintData.same_edge(edge_drag_source,target) and blueprint == base: return false
+	var next: Dictionary = base.duplicate(true)
+	var kept: Array = []
+	for entry: Dictionary in base.edge_finishes:
+		if not BlueprintData.same_edge(entry,edge_drag_source): kept.append(entry.duplicate(true))
+	if not BlueprintData.same_edge(target,edge_drag_source):
+		kept.append({"ix":target.ix,"iz":target.iz,"dx":target.dx,"dz":target.dz,
+			"kind":original.kind,"finish":original.finish})
+	else:
+		kept.append(original.duplicate(true))
+	next.edge_finishes = kept
+	next = BlueprintData.clean(next)
+	if next.edge_finishes.size() != base.edge_finishes.size(): return false
+	blueprint = next
+	world.get_node("Room").apply_blueprint(blueprint)
+	update()
+	return true
+
+func end_custom_edge_drag(cancel: bool = false) -> void:
+	if edge_drag_before.is_empty(): return
+	var before: Dictionary = edge_drag_before
+	edge_drag_before = {}
+	edge_drag_source = {}
+	if cancel: _restore_draft(before)
+	else: _remember(before)
+	update()
+
 func floor_cell_blocker(cell: Dictionary, removing: bool = true) -> String:
 	if not active or blueprint.shape != "custom": return "请先选择自定义户型"
 	if not BlueprintData.valid_cell(blueprint, cell): return "超出房间范围"
@@ -743,6 +803,7 @@ func _remember(before: Dictionary) -> void:
 func undo() -> void:
 	if not active: return
 	end_aperture_drag()
+	end_custom_edge_drag()
 	end_drag()
 	if undo_stack.is_empty(): return
 	redo_stack.append(_draft())
@@ -752,6 +813,7 @@ func undo() -> void:
 func redo() -> void:
 	if not active: return
 	end_aperture_drag()
+	end_custom_edge_drag()
 	end_drag()
 	if redo_stack.is_empty(): return
 	undo_stack.append(_draft())
@@ -787,6 +849,7 @@ func begin() -> void:
 func finish(apply: bool) -> bool:
 	if not active: return false
 	end_aperture_drag(not apply)
+	end_custom_edge_drag(not apply)
 	if apply: update()
 	if apply and (not valid or not placing_role.is_empty()): return false
 	if not placing_role.is_empty(): cancel_placement()

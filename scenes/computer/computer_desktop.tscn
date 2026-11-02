@@ -265,6 +265,11 @@ button_pressed = true
 unique_name_in_owner = true
 layout_mode = 2
 text = "X 0.00  Z 0.00\n旋转 0°"
+[node name="LayoutSize" type="Label" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "占地 0.00 × 0.00 米 · 高 0.00 米"
+autowrap_mode = 2
 [node name="LayoutMessage" type="Label" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content"]
 unique_name_in_owner = true
 layout_mode = 2
@@ -418,6 +423,11 @@ unique_name_in_owner = true
 layout_mode = 2
 toggle_mode = true
 text = "门窗"
+[node name="BlueprintQuickEdgeMove" type="Button" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel/BlueprintQuickTools"]
+unique_name_in_owner = true
+layout_mode = 2
+toggle_mode = true
+text = "移窗"
 [node name="BlueprintGridToggle" type="CheckButton" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel"]
 unique_name_in_owner = true
 layout_mode = 2
@@ -426,7 +436,7 @@ text = "显示 0.5 米地板网格"
 [node name="BlueprintApertureHint" type="Label" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel"]
 layout_mode = 2
 autowrap_mode = 3
-text = "选择“拖动原有门窗位置”，点击对应的彩色标记并拖动。松开鼠标后可一次撤销整个操作。"
+text = "固定后墙门/左墙窗：选择“拖动原有门窗位置”。自由外墙门窗：选择“移动自定义外墙门窗”，从已有开口拖到另一空墙段。每次拖动可一次撤销。"
 [node name="BlueprintApertureTarget" type="OptionButton" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel"]
 unique_name_in_owner = true
 layout_mode = 2
@@ -625,6 +635,11 @@ theme_override_font_sizes/font_size = 16
 layout_mode = 2
 autowrap_mode = 3
 text = "0.5 米网格 · 左键点击/拖动绘制 · 右键拆除 · 内墙和门洞每段长 1 米"
+[node name="BlueprintStrokeInfo" type="Label" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "沿墙方向拖动连续建造 · 绿色成功 / 红色阻挡"
+autowrap_mode = 3
 [node name="WallAxis" type="OptionButton" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel"]
 unique_name_in_owner = true
 layout_mode = 2
