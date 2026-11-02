@@ -257,7 +257,9 @@ static func same_edge(a: Dictionary, b: Dictionary) -> bool:
 	return a.ix == b.ix and a.iz == b.iz and a.dx == b.dx and a.dz == b.dz
 
 static func edge_exposed(value: Dictionary, edge: Dictionary) -> bool:
-	if value.shape != "custom" or not valid_cell(value, edge) or not has_cell(value, edge): return false
+	if value.shape != "custom" or not valid_cell(value, edge): return false
+	var removed_cell := {"ix":int(edge.ix), "iz":int(edge.iz)}
+	if not has_cell(value, removed_cell): return false
 	var next := {"ix":int(edge.ix)+int(edge.dx), "iz":int(edge.iz)+int(edge.dz)}
 	return valid_cell(value, next) and not has_cell(value, next)
 
