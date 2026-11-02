@@ -1,7 +1,7 @@
 extends Node
 ## Room-only presentation layer. Existing controls keep their unique Godot names,
 ## signals, item IDs and save contracts. PC apps retain the original client theme.
-var host: Node3D
+var host # Dynamic controller: the room desktop owns its custom world/layout API.
 var mode := "furniture"
 var advanced := false
 var catalog_open := true
