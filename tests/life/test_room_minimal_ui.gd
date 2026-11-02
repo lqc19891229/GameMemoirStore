@@ -36,7 +36,7 @@ func run() -> void:
 	check(desktop.get_node("%FurnitureCatalogItems").get_parent() is ScrollContainer, "large catalog is scrollable instead of an endless panel")
 	check(desktop.get_node("%FurnitureCatalogItems") is GridContainer, "catalog cards render in a three-column grid")
 	check(desktop.get_node("%Place_chair") != null, "legacy scene identifiers stay addressable")
-	var dock_button := ui.catalog_toggle
+	var dock_button: Button = ui.catalog_toggle
 	dock_button.pressed.emit()
 	check(not ui.dock.visible and not ui.catalog_open, "player can hide catalog to enlarge visible room area")
 	dock_button.pressed.emit()
