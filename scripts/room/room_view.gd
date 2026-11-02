@@ -16,19 +16,26 @@ const LIGHTS := [Color("fff0dc"), Color("e5efff"), Color("ffd1a1")]
 const FILL_LIGHTS := [Color("d9e4df"), Color("d9e8f4"), Color("a8a09a")]
 const ZONE_LIGHT_COLORS := [Color("9bcbd8"), Color("ffe3b9"), Color("d5b7ea")]
 const ZONE_LIGHT_ENERGY := [0.34,0.28,0.22]
+const ATMOSPHERE_NAMES := ["晴昼","日落","夜晚","雨天"]
+const ATMOSPHERE_ENERGY := [1.0,.72,.28,.55]
+const ATMOSPHERE_SKY := [Color("c6d7d8"), Color("f0b39d"), Color("354767"), Color("899fae")]
+const ATMOSPHERE_BACKGROUND := [Color(.72,.76,.77),Color(.78,.57,.50),Color(.16,.20,.33),Color(.44,.52,.59)]
+const ATMOSPHERE_TINT := [Color(1,1,1),Color(1,.79,.69),Color(.60,.73,1),Color(.75,.83,.90)]
 
 signal style_changed(value: Dictionary)
 
-var style := {"wall": 0, "floor": 0, "light": 0, "rgb": 0, "brightness": 70, "effect": 0}
+var style := {"wall": 0, "floor": 0, "light": 0, "rgb": 0, "brightness": 70, "effect": 0, "wall_pattern":0, "floor_pattern":0, "atmosphere":0}
+var _patterns: Dictionary = {}
+var _environment_owned := false
 
 static func clean_style(raw: Variant) -> Dictionary:
-	var result := {"wall": 0, "floor": 0, "light": 0, "rgb": 0, "brightness": 70, "effect": 0}
+	var result := {"wall": 0, "floor": 0, "light": 0, "rgb": 0, "brightness": 70, "effect": 0, "wall_pattern":0, "floor_pattern":0, "atmosphere":0}
 	if not raw is Dictionary:
 		return result
-	for key: String in ["wall", "floor", "light", "effect"]:
+	for key: String in ["wall", "floor", "light", "effect", "wall_pattern", "floor_pattern", "atmosphere"]:
 		var value: Variant = raw.get(key, result[key])
 		if (value is int or value is float) and is_finite(float(value)):
-			result[key] = clampi(int(value), 0, 2)
+			result[key] = clampi(int(value), 0, 3 if key == "atmosphere" else 2)
 	var rgb: Variant = raw.get("rgb", 0)
 	if (rgb is int or rgb is float) and is_finite(float(rgb)):
 		result.rgb = clampi(int(rgb), 0, 6)
@@ -40,6 +47,70 @@ static func clean_style(raw: Variant) -> Dictionary:
 func _ready() -> void:
 	_prepare_materials()
 	apply_style(style)
+
+func _pattern_texture(kind: String, index: int) -> Texture2D:
+	if index <= 0: return null
+	var key := kind + str(index)
+	if _patterns.has(key): return _patterns[key]
+	var image := Image.create(64,64,false,Image.FORMAT_RGBA8)
+	for y in range(64):
+		for x in range(64):
+			var shade := 1.0
+			if kind == "wall":
+				if index == 1:
+					# Woven linen: alternating fine vertical and horizontal fibers.
+					shade = .90 + .035 * float(x % 4 == 0) + .04 * float(y % 7 == 0)
+				else:
+					# Staggered brick courses and recessed mortar.
+					var course: int = y / 16
+					var offset: int = (x + (course % 2) * 16) % 32
+					shade = .74 if y % 16 < 2 or offset < 2 else .97 - float((x + y) % 7) * .008
+			else:
+				if index == 1:
+					# Directional oak grain with narrow, offset board seams.
+					shade = .78 if x % 16 == 0 else .91 + .05 * sin(float(y) * .41 + float(x) * .12)
+				else:
+					# Matte stone tile with subtly varied squares and joints.
+					shade = .76 if x % 16 == 0 or y % 16 == 0 else .90 + float((x/16+y/16) % 3) * .026
+			image.set_pixel(x,y,Color(shade,shade,shade))
+	var texture := ImageTexture.create_from_image(image)
+	_patterns[key] = texture
+	return texture
+
+func _apply_atmosphere() -> void:
+	var index: int = int(style.atmosphere)
+	var world: Node3D = get_parent() as Node3D
+	var atmosphere_energy: float = ATMOSPHERE_ENERGY[index]
+	var tint: Color = ATMOSPHERE_TINT[index]
+	var env_node := world.get_node_or_null("Environment") as WorldEnvironment
+	if env_node != null and env_node.environment != null:
+		if not _environment_owned:
+			env_node.environment = env_node.environment.duplicate()
+			_environment_owned = true
+		env_node.environment.background_color = ATMOSPHERE_BACKGROUND[index]
+		env_node.environment.ambient_light_color = tint
+		env_node.environment.ambient_light_energy = [.34,.27,.14,.27][index]
+	var sky := $Shell.get_node_or_null("Left_Wall/WindowSky") as MeshInstance3D
+	if sky != null and sky.material_override is StandardMaterial3D:
+		(sky.material_override as StandardMaterial3D).albedo_color = ATMOSPHERE_SKY[index]
+	var rain := $Shell.get_node_or_null("Left_Wall/RainStreaks") as Node3D
+	if rain != null: rain.visible = index == 3
+	var key := world.get_node_or_null("KeyLight") as DirectionalLight3D
+	if key != null:
+		key.light_color = LIGHTS[style.light] * tint
+		key.light_energy = [0.75,.92,.48][style.light] * atmosphere_energy
+	var fill := world.get_node_or_null("FillLight") as DirectionalLight3D
+	if fill != null:
+		fill.light_color = FILL_LIGHTS[style.light] * tint
+		fill.light_energy = [.18,.24,.08][style.light] * maxf(.35,atmosphere_energy)
+	var ceiling := world.get_node_or_null("CeilingLight") as OmniLight3D
+	if ceiling != null:
+		ceiling.light_color = LIGHTS[style.light]
+		ceiling.light_energy = [0.12,.08,.32][style.light] * [1.0,1.5,2.5,1.8][index]
+	for item: Node3D in $Furniture.get_children():
+		if item.has_node("LampGlow"):
+			item.get_node("LampGlow").light_energy = [0.36,.18,.85][style.light] * [1.0,1.25,2.1,1.55][index]
+
 
 func _prepare_materials() -> void:
 	for mesh: MeshInstance3D in $Shell.find_children("*", "MeshInstance3D", true, false):
@@ -82,26 +153,20 @@ func apply_style(value: Variant) -> void:
 		if role == "wall":
 			var finish: int = int(mesh.get_meta("finish_id", 0))
 			material.albedo_color = WALL_FINISHES[finish] if finish > 0 and finish < WALL_FINISHES.size() else WALLS[style.wall]
+			material.albedo_texture = _pattern_texture("wall",int(style.wall_pattern))
+			material.uv1_scale = Vector3(2,2,1)
+			material.texture_repeat = BaseMaterial3D.TEXTURE_REPEAT_ENABLED
+			material.roughness = .92 if int(style.wall_pattern) != 2 else .98
 		elif role == "floor":
 			var tone := float(mesh.get_meta("tone", 1.0))
 			var finish: int = int(mesh.get_meta("finish_id", 0))
 			material.albedo_color = (FLOOR_FINISHES[finish] if finish > 0 and finish < FLOOR_FINISHES.size() else FLOORS[style.floor]) * tone
+			material.albedo_texture = _pattern_texture("floor",int(style.floor_pattern))
+			material.uv1_scale = Vector3(3,3,1)
+			material.texture_repeat = BaseMaterial3D.TEXTURE_REPEAT_ENABLED
+			material.roughness = .71 if int(style.floor_pattern) == 1 else .87 if int(style.floor_pattern) == 2 else .68
 
-	var key := get_parent().get_node_or_null("KeyLight") as DirectionalLight3D
-	if key != null:
-		key.light_color = LIGHTS[style.light]
-		key.light_energy = [0.75, 0.92, 0.48][style.light]
-	var fill := get_parent().get_node_or_null("FillLight") as DirectionalLight3D
-	if fill != null:
-		fill.light_color = FILL_LIGHTS[style.light]
-		fill.light_energy = [0.18, 0.24, 0.08][style.light]
-	var ceiling := get_parent().get_node_or_null("CeilingLight") as OmniLight3D
-	if ceiling != null:
-		ceiling.light_color = LIGHTS[style.light]
-		ceiling.light_energy = [0.12, 0.08, 0.32][style.light]
-	for item: Node3D in $Furniture.get_children():
-		if item.has_node("LampGlow"):
-			item.get_node("LampGlow").light_energy = [0.36, 0.18, 0.85][style.light]
+	_apply_atmosphere()
 	_refresh_zone_lights()
 	style_changed.emit(style)
 
