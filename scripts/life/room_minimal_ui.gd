@@ -1,4 +1,5 @@
 extends Node
+const Icons = preload("res://scripts/life/room_ui_icons.gd")
 ## Room-only presentation layer. Existing controls keep their unique Godot names,
 ## signals, item IDs and save contracts. PC apps retain the original client theme.
 var host # Dynamic controller: the room desktop owns its custom world/layout API.
@@ -14,6 +15,13 @@ var advanced_toggle: Button
 var mode_buttons: Dictionary = {}
 var inspector_content: VBoxContainer
 var blueprint_content: VBoxContainer
+var _last_dock_visible := false
+var _last_mode := ""
+var _last_dimensions := Vector2.ZERO
+var _catalog_scroller: ScrollContainer
+var _filter_row: HBoxContainer
+var _filter_parent: VBoxContainer
+var _inspector: PanelContainer
 
 const CORE_INSPECTOR := {
 	"furniture": ["LayoutSelection","Tools","Copies","FurniturePaletteLabel","FurniturePalette","LayoutMessage"],
@@ -37,6 +45,7 @@ func setup(owner_node: Node3D) -> void:
 		var button: Button = host.get_node("%"+name)
 		button.theme_type_variation = "MinimalAccentButton"
 	var inspector: PanelContainer = host.get_node("%LayoutPanel")
+	_inspector = inspector
 	inspector.anchor_left = 1.0
 	inspector.anchor_right = 1.0
 	inspector.anchor_top = 0.0
@@ -49,6 +58,8 @@ func setup(owner_node: Node3D) -> void:
 	blueprint_content = host.get_node("%BlueprintPanel")
 	_build_bar(canvas)
 	_build_dock(canvas)
+	host.get_viewport().size_changed.connect(_resize_layout)
+	_resize_layout()
 	sync()
 
 func _button(text_value: String, tooltip: String = "") -> Button:
@@ -56,6 +67,7 @@ func _button(text_value: String, tooltip: String = "") -> Button:
 	button.text = text_value
 	button.tooltip_text = tooltip
 	button.custom_minimum_size = Vector2(0, 38)
+	button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	return button
 
 func _build_bar(canvas: Control) -> void:
@@ -74,6 +86,7 @@ func _build_bar(canvas: Control) -> void:
 		var id: String = entry.id
 		var button := _button(str(entry.label))
 		button.toggle_mode = true
+		button.icon = Icons.texture(id)
 		button.custom_minimum_size.x = 69
 		button.pressed.connect(func() -> void: choose_mode(id))
 		bar.add_child(button)
@@ -83,12 +96,14 @@ func _build_bar(canvas: Control) -> void:
 	space.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	bar.add_child(space)
 	catalog_toggle = _button("收起目录", "显示或隐藏底部家具目录")
+	catalog_toggle.icon = Icons.texture("catalog")
 	catalog_toggle.pressed.connect(func() -> void:
 		catalog_open = not catalog_open
 		sync()
 	)
 	bar.add_child(catalog_toggle)
 	advanced_toggle = _button("高级", "展开完整坐标、吸附、对齐、蓝图等精细选项")
+	advanced_toggle.icon = Icons.texture("advanced")
 	advanced_toggle.pressed.connect(func() -> void:
 		advanced = not advanced
 		sync()
@@ -100,6 +115,8 @@ func _build_bar(canvas: Control) -> void:
 	history.reparent(bar)
 	for child: Control in history.get_children():
 		child.custom_minimum_size.x = 60
+		if child is Button:
+			child.icon = Icons.texture("undo" if child.name == "UndoLayout" else "redo")
 
 func _build_dock(canvas: Control) -> void:
 	dock = PanelContainer.new()
@@ -109,7 +126,7 @@ func _build_dock(canvas: Control) -> void:
 	dock.anchor_right = 1.0
 	dock.anchor_bottom = 1.0
 	dock.offset_left = 27.0
-	dock.offset_top = -257.0
+	dock.offset_top = -296.0
 	dock.offset_right = -348.0
 	dock.offset_bottom = -18.0
 	canvas.add_child(dock)
@@ -127,7 +144,9 @@ func _build_dock(canvas: Control) -> void:
 	inventory.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	# A compact single-line filter row replaces stacked filters.
 	var controls: VBoxContainer = inventory.get_node("FurnitureCatalogControls")
+	_filter_parent = controls
 	var filter_row := HBoxContainer.new()
+	_filter_row = filter_row
 	filter_row.add_theme_constant_override("separation", 8)
 	controls.add_child(filter_row)
 	for key: String in ["FurnitureCatalogGroup","FurnitureCatalogType","FurnitureCatalogSearch"]:
@@ -139,15 +158,16 @@ func _build_dock(canvas: Control) -> void:
 	var list: GridContainer = host.get_node("%FurnitureCatalogItems")
 	var scroller := ScrollContainer.new()
 	scroller.name = "RoomCatalogScroll"
-	scroller.custom_minimum_size = Vector2(0, 136)
+	scroller.custom_minimum_size = Vector2(0, 162)
 	scroller.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	scroller.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	_catalog_scroller = scroller
 	inventory.add_child(scroller)
 	list.reparent(scroller)
 	list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	for item: Button in list.get_children():
 		if item.visible:
-			item.custom_minimum_size = Vector2(178, 42)
+			item.custom_minimum_size = Vector2(174, 152) if item.name.begins_with("Catalog_room_") else Vector2(174, 46)
 			item.clip_text = true
 	# The room's individual finish selection belongs to the right inspector,
 	# not to the all-products catalog drawer.
