@@ -327,6 +327,33 @@ static func nearest_edge(value: Dictionary, at: Vector2, radius: float = .36) ->
 			best = edge
 	return best
 
+static func edge_neighbor(value: Dictionary, edge: Dictionary, step: int) -> Dictionary:
+	var nx: int = int(edge.ix) + (step if int(edge.dx) == 0 else 0)
+	var nz: int = int(edge.iz) + (step if int(edge.dz) == 0 else 0)
+	var candidate := {"ix":nx,"iz":nz,"dx":int(edge.dx),"dz":int(edge.dz)}
+	return candidate if edge_exposed(value,candidate) else {}
+
+static func same_opening_neighbor(value: Dictionary, edge: Dictionary, step: int) -> bool:
+	var adjacent: Dictionary = edge_neighbor(value,edge,step)
+	if adjacent.is_empty(): return false
+	var source: Dictionary = edge_edit(value,edge)
+	var neighbor: Dictionary = edge_edit(value,adjacent)
+	return source.kind == neighbor.kind and str(source.kind) in ["door","window"]
+
+static func edge_span(value: Dictionary, edge: Dictionary, count: int) -> Array:
+	if count < 1 or count > 4 or not edge_exposed(value,edge): return []
+	for direction in [1,-1]:
+		var result: Array = [edge]
+		var complete := true
+		for offset in range(1,count):
+			var neighbor: Dictionary = edge_neighbor(value,edge,offset*direction)
+			if neighbor.is_empty():
+				complete = false
+				break
+			result.append(neighbor)
+		if complete: return result
+	return []
+
 static func edge_edit(value: Dictionary, edge: Dictionary) -> Dictionary:
 	for old: Dictionary in value.get("edge_finishes", []):
 		if same_edge(old, edge): return old
