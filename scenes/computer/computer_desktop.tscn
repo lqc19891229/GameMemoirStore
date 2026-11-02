@@ -385,10 +385,10 @@ theme_override_font_sizes/font_size = 18
 [node name="BlueprintHint" type="Label" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel"]
 layout_mode = 2
 autowrap_mode = 3
-text = "可选矩形或右前角缺口的 L 型外轮廓。外墙改动不能穿过家具、桌子和内墙；支持撤销。"
+text = "矩形、L 型或自由地板网格。外墙修改不会穿过已有家具或内墙；支持撤销、取消与保存。"
 [node name="BlueprintShapeLabel" type="Label" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel"]
 layout_mode = 2
-text = "外轮廓：矩形 / L 型"
+text = "外轮廓：矩形 / L 型 / 自由轮廓"
 [node name="BlueprintShape" type="OptionButton" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel"]
 unique_name_in_owner = true
 layout_mode = 2
@@ -458,6 +458,18 @@ min_value = -3.65
 max_value = 3.65
 step = 0.05
 value = -0.8
+[node name="BlueprintFloorTitle" type="Label" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel"]
+layout_mode = 2
+text = "外轮廓 · 地板单元"
+theme_override_font_sizes/font_size = 16
+[node name="BlueprintFloorHint" type="Label" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel"]
+layout_mode = 2
+autowrap_mode = 3
+text = "选自由轮廓，再选择挖除或恢复地板。左键拖动绘制，右键反向操作。不能切断房间，也不能移除家具下方地板。"
+[node name="BlueprintFloorTool" type="OptionButton" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel"]
+unique_name_in_owner = true
+layout_mode = 2
+
 [node name="BlueprintWallsTitle" type="Label" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel"]
 layout_mode = 2
 text = "内墙绘制"

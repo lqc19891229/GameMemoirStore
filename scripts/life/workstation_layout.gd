@@ -344,17 +344,25 @@ func set_blueprint_value(key: String, value: float) -> bool:
 	return _apply_blueprint_change(BlueprintData.clean(next))
 
 func set_blueprint_shape(shape: String) -> bool:
-	if not active or shape not in ["rectangle", "l"]: return false
+	if not active or shape not in ["rectangle", "l", "custom"]: return false
 	end_drag()
 	var next := blueprint.duplicate(true)
 	next.shape = shape
+	next.removed_cells = []
+	# Existing L-shaped edits convert losslessly to removed grid cells.
+	if shape == "custom" and blueprint.shape == "l":
+		var size := BlueprintData.cell_count(next)
+		for iz in range(size.y):
+			for ix in range(size.x):
+				if float(ix) * BlueprintData.FLOOR_GRID >= float(next.width) - float(next.notch_width) and float(iz) * BlueprintData.FLOOR_GRID >= float(next.depth) - float(next.notch_depth):
+					next.removed_cells.append({"ix":ix,"iz":iz})
 	return _apply_blueprint_change(BlueprintData.clean(next))
 
 func _apply_blueprint_change(next: Dictionary) -> bool:
 	if next == blueprint: return false
 	# Do not drop internal walls when altering the outer boundary.
-	if next.partitions.size() != blueprint.partitions.size():
-		message = "调整失败：外轮廓将移除已有内墙，请先拆除相关墙段"
+	if next.partitions.size() != blueprint.partitions.size() or (next.shape == "custom" and blueprint.shape == "custom" and next.removed_cells.size() != blueprint.removed_cells.size()):
+		message = "调整失败：外轮廓将移除已有内墙或地板单元，请先调整结构"
 		changed.emit()
 		return false
 	var before := _draft()
@@ -375,6 +383,48 @@ func _apply_blueprint_change(next: Dictionary) -> bool:
 		message = "调整失败：" + collision + "，请先移动、拆除或收回相关物品"
 		changed.emit()
 		return false
+	_remember(before)
+	update()
+	return true
+
+func floor_cell_blocker(cell: Dictionary, removing: bool = true) -> String:
+	if not active or blueprint.shape != "custom": return "请先选择自定义户型"
+	if not BlueprintData.valid_cell(blueprint, cell): return "超出房间范围"
+	if removing:
+		if BlueprintData.has_cell(blueprint, cell): return "此处已经移除地板"
+		if not BlueprintData.editable_cell(blueprint, cell): return "门窗所在的后墙和左墙必须保留地板"
+		if blueprint.removed_cells.size() >= BlueprintData.MAX_REMOVED: return "可移除地板已达到上限"
+		var shape := BlueprintData.cell_polygon(blueprint, cell, collision_margin)
+		for role: String in nodes:
+			if not is_floor(role): continue
+			if InventoryData.ROOM_DEFAULTS.has(Data.base_role(role)) and not placed_instances.has(role): continue
+			if Data.overlap(shape, footprint(role, collision_margin)):
+				return "该地板上已有" + name_for(role)
+		for part: Dictionary in blueprint.partitions:
+			if Data.overlap(shape, BlueprintData.polygon(part, collision_margin)):
+				return "该地板上已有内墙"
+		var trial := blueprint.duplicate(true)
+		trial.removed_cells.append(cell)
+		if not BlueprintData.floor_connected(trial): return "不能将房间分成不相连的地板区域"
+	elif not BlueprintData.has_cell(blueprint, cell):
+		return "此处已有地板"
+	return ""
+
+func paint_floor_cell(at: Vector2, removing: bool = true) -> bool:
+	if not active or not placing_role.is_empty(): return false
+	var cell: Dictionary = BlueprintData.cell_at(blueprint, at)
+	var reason := floor_cell_blocker(cell, removing)
+	if not reason.is_empty():
+		message = "绘制失败：" + reason
+		changed.emit()
+		return false
+	end_drag()
+	var before := _draft()
+	var next := blueprint.duplicate(true)
+	if removing: next.removed_cells.append(cell)
+	else: next.removed_cells.erase(cell)
+	blueprint = BlueprintData.clean(next)
+	world.get_node("Room").apply_blueprint(blueprint)
 	_remember(before)
 	update()
 	return true
