@@ -74,7 +74,7 @@ func run() -> void:
 	check(layout.set_zone_style(1,"wall",2), "customize gaming zone wall finish")
 	check(layout.save_decor_scheme(0), "save area design to slot 1")
 	check(not Blueprint.scheme_for_slot(layout.blueprint,0).is_empty(), "saved snapshot is available from blueprints")
-	check(layout.fill_room_region(center,2) == 191, "single click fills the remaining connected floor cells")
+	check(layout.fill_room_region(center,2) == 192, "single click replaces the full connected room assignment")
 	check(layout.blueprint.zone_cells.size() == 192 and Blueprint.zone_at(layout.blueprint,chosen) == 2, "fill replaces all zone assignments without gaps")
 	check(room.has_node("ZoneLights/Zone_2"), "filled region updates localized lighting")
 	check(layout.load_decor_scheme(0), "load previous area design from slot 1")
