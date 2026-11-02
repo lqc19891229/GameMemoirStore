@@ -183,9 +183,9 @@ func _sync_blueprint_ui() -> void:
 			slider.min_value = -float(blueprint.depth) / 2.0 + 1.35
 			slider.max_value = float(blueprint.depth) / 2.0 - 1.35
 		slider.set_value_no_signal(float(blueprint[key]))
-		var label_key := {"width":"BlueprintWidthLabel", "depth":"BlueprintDepthLabel", "door_x":"BlueprintDoorLabel", "window_z":"BlueprintWindowLabel"}[key]
+		var label_key: String = {"width":"BlueprintWidthLabel", "depth":"BlueprintDepthLabel", "door_x":"BlueprintDoorLabel", "window_z":"BlueprintWindowLabel"}[key]
 		var label: Label = get_node("%" + label_key)
-		var display := {"width":"房间宽度", "depth":"房间深度", "door_x":"后墙门位置", "window_z":"左墙窗位置"}[key]
+		var display: String = {"width":"房间宽度", "depth":"房间深度", "door_x":"后墙门位置", "window_z":"左墙窗位置"}[key]
 		label.text = "%s：%.2f 米" % [display, float(blueprint[key])]
 	%BlueprintStatus.text = world.layout.message if world.layout.message.begins_with("调整失败") else "长宽：%.1f × %.1f 米 · 应用后保存" % [blueprint.width, blueprint.depth]
 
