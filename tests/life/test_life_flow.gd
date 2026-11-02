@@ -119,6 +119,7 @@ func run() -> void:
 	check(state.life["guides"][id]["royalties"] == 0, "new guide does not receive readership royalties immediately on publication")
 	# Preserve historical furniture and display data without instantiating a room.
 	state.life["items"].append("oak_desk")
+	state.life["inventory"].append({"uid":"legacy_oak_desk","item_id":"oak_desk"})
 	state.life["equipped"]["desk"] = "oak_desk"
 	state.life["room_layout"] = 1
 	state.life["displayed"] = [{"game_id": id, "achievement": "first_memory"}]
