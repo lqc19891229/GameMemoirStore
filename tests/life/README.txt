@@ -11,3 +11,5 @@ test_audit_regressions.gd：独立网页预览、屏幕投影、显示器背面�
 test_item_system.gd：物品目录、桌面/地面约束、实例库存、家具多份购买与历史数据迁移。
 
 test_room_placement.gd：房间家具目录、原始家具收回、实时摆放预览、取消/确认、单件改色、存档往返及桌面设备约束。
+
+test_room_blueprint.gd：矩形房间长宽与门窗编辑、几何重建、边界约束、无效缩小拒绝、撤销/重做、取消/应用和存档读回。
