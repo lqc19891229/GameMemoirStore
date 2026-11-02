@@ -163,7 +163,7 @@ func tick(minutes: int = 1) -> void:
 					var income: int = 2
 					for slot: String in ["computer", "audio"]:
 						var item: MemoirItemDefinition = ItemCatalog.lookup(str(state.life["equipped"].get(slot, "")))
-					if item != null: income += item.income
+						if item != null: income += item.income
 					state.wallet += income
 					state.life["stream_income"] = int(state.life["stream_income"]) + income
 					state.life["followers"] = int(state.life["followers"]) + 1

@@ -40,7 +40,7 @@ func refresh() -> void:
 	_tick()
 	var inventory: Array = session.state.life["inventory"]
 	var placements: Dictionary = session.state.life["placements"]
-	for item: MemoirItemDefinition in Catalog.items:
+	for item in Catalog.items:
 		var id := item.item_id
 		var count := InventoryData.count(inventory, id)
 		if tab == "shop" and (item.price <= 0 or item.retired): continue
