@@ -272,7 +272,8 @@ func _build_furniture_catalog() -> void:
 		if old != null: old.hide()
 	for item in ItemCatalog.room_furniture():
 		var id: String = item.item_id
-		var button := Button.new()
+		var button: Button = %FurnitureCatalogTemplate.duplicate() as Button
+		button.show()
 		button.name = "Catalog_" + id
 		button.alignment = HORIZONTAL_ALIGNMENT_LEFT
 		button.tooltip_text = item.description
@@ -287,7 +288,8 @@ func _build_furniture_catalog() -> void:
 		{"role":"mouse","type":"mouse","group":"hardware","label":"鼠标 · 已安装设备"}
 	]:
 		var role: String = entry.role
-		var button := Button.new()
+		var button: Button = %FurnitureCatalogTemplate.duplicate() as Button
+		button.show()
 		button.name = "CatalogSelect_" + role
 		button.alignment = HORIZONTAL_ALIGNMENT_LEFT
 		button.text = entry.label

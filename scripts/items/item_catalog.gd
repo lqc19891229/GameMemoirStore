@@ -28,7 +28,7 @@ func item_for_placement_role(role: String) -> MemoirItemDefinition:
 		if item.subcategory == role: return item
 	return null
 
-func matches_filters(item: MemoirItemDefinition, group: String = "", kind: String = "", query: String = "") -> bool:
+func matches_filters(item: Variant, group: String = "", kind: String = "", query: String = "") -> bool:
 	if not group.is_empty() and Taxonomy.group_for(item) != group: return false
 	if not kind.is_empty() and Taxonomy.type_for(item) != kind: return false
 	var text_value := query.strip_edges().to_lower()

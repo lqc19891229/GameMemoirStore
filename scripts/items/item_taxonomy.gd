@@ -35,7 +35,7 @@ static func valid_group(group: String) -> bool:
 		if entry.id == group: return true
 	return false
 
-static func group_for(item: MemoirItemDefinition) -> String:
+static func group_for(item: Variant) -> String:
 	if item == null: return ""
 	var value: String = str(item.catalog_group)
 	if not value.is_empty() and valid_group(value): return value
@@ -43,7 +43,7 @@ static func group_for(item: MemoirItemDefinition) -> String:
 	if item.category == "furniture": return str(ROLE_GROUPS.get(item.subcategory,"decor"))
 	return ""
 
-static func type_for(item: MemoirItemDefinition) -> String:
+static func type_for(item: Variant) -> String:
 	if item == null: return ""
 	if TYPES.has(item.catalog_type): return str(item.catalog_type)
 	if item.category == "device":
