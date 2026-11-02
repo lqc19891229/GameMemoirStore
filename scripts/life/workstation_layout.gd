@@ -337,27 +337,42 @@ func load_blueprint(raw: Variant) -> void:
 	committed_blueprint = blueprint.duplicate()
 
 func set_blueprint_value(key: String, value: float) -> bool:
-	if not active or key not in ["width", "depth", "door_x", "window_z"] or not is_finite(value): return false
+	if not active or key not in ["width", "depth", "door_x", "window_z", "notch_width", "notch_depth"] or not is_finite(value): return false
 	end_drag()
-	var before := _draft()
-	var next := blueprint.duplicate()
+	var next := blueprint.duplicate(true)
 	next[key] = value
-	next = BlueprintData.clean(next)
+	return _apply_blueprint_change(BlueprintData.clean(next))
+
+func set_blueprint_shape(shape: String) -> bool:
+	if not active or shape not in ["rectangle", "l"]: return false
+	end_drag()
+	var next := blueprint.duplicate(true)
+	next.shape = shape
+	return _apply_blueprint_change(BlueprintData.clean(next))
+
+func _apply_blueprint_change(next: Dictionary) -> bool:
+	if next == blueprint: return false
+	# Do not drop internal walls when altering the outer boundary.
 	if next.partitions.size() != blueprint.partitions.size():
-		message = "调整失败：房间尺寸会移除已有内墙，请先拆除相关墙段"
+		message = "调整失败：外轮廓将移除已有内墙，请先拆除相关墙段"
 		changed.emit()
 		return false
-	if next == blueprint: return false
+	var before := _draft()
 	blueprint = next
-	room_half_size = BlueprintData.half_size(next)
-	world.get_node("Room").apply_blueprint(next)
+	room_half_size = BlueprintData.half_size(blueprint)
+	world.get_node("Room").apply_blueprint(blueprint)
 	var collision := _layout_blocker()
+	if collision.is_empty():
+		for part: Dictionary in blueprint.partitions:
+			if not BlueprintData.inside(blueprint, part):
+				collision = "外墙与已有内墙重叠"
+				break
 	if not collision.is_empty():
-		blueprint = before.blueprint.duplicate()
+		blueprint = before.blueprint.duplicate(true)
 		room_half_size = BlueprintData.half_size(blueprint)
 		world.get_node("Room").apply_blueprint(blueprint)
 		update()
-		message = "调整失败：" + collision + "，请先移动或收回家具"
+		message = "调整失败：" + collision + "，请先移动、拆除或收回相关物品"
 		changed.emit()
 		return false
 	_remember(before)
@@ -607,10 +622,13 @@ func rotate_to(yaw: float) -> void:
 
 func _blocker(role: String, polygon: PackedVector2Array) -> String:
 	var floor_item := is_floor(role)
-	var limits := room_half_size if floor_item else tabletop_half_size
-	for point in polygon:
-		if absf(point.x) > limits.x - edge_margin + 0.002 or absf(point.y) > limits.y - edge_margin + 0.002:
-			return name_for(role) + ("到达房间边界" if floor_item else "到达桌沿")
+	if floor_item:
+		if not BlueprintData.footprint_inside(blueprint, polygon, edge_margin):
+			return name_for(role) + "到达房间边界"
+	else:
+		for point in polygon:
+			if absf(point.x) > tabletop_half_size.x - edge_margin + .002 or absf(point.y) > tabletop_half_size.y - edge_margin + .002:
+				return name_for(role) + "到达桌沿"
 	if not is_blocking(role): return ""
 	if floor_item:
 		for part: Dictionary in blueprint.partitions:
