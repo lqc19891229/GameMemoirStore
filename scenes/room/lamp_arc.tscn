@@ -3,12 +3,12 @@
 [ext_resource type="Script" path="res://scripts/room/catalog_furniture.gd" id="1"]
 
 [sub_resource type="BoxShape3D" id="Pick"]
-size = Vector3(0.94, 2.02, 0.76)
+size = Vector3(1.42, 2.02, 0.76)
 
 [node name="lamp_arc" type="Node3D"]
 script = ExtResource("1")
 role = "lamp_arc"
-bounds = Vector3(0.94, 2.02, 0.76)
+bounds = Vector3(1.42, 2.02, 0.76)
 blocking = true
 family = "lighting"
 variant = 1
