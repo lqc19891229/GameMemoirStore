@@ -66,7 +66,7 @@ func run() -> void:
 	check(layout.set_zone_style(1,"floor",3), "game zone floor can be set independently")
 	check(layout.set_zone_style(1,"wall",1), "game zone wall can be set independently")
 	check(layout.set_zone_style(1,"light",2), "game zone lighting color can be set independently")
-	check(room.get_node("ZoneLights/Zone_1").light_color == room.ZONE_LIGHT_COLORS[2], "zone light updates to the selected palette")
+	check(room.get_node("ZoneLights/Zone_1").light_color == Color("d5b7ea"), "zone light updates to the selected palette")
 	check(Blueprint.zone_style(layout.blueprint,1) == {"floor":3,"wall":1,"light":2}, "all three area settings persist together")
 	check(layout.paint_floor_finish(center,1), "explicit per-cell floor override still works inside a zone")
 	check(Blueprint.effective_floor_finish(layout.blueprint,cell) == 1, "manual material takes priority over zone floor")
