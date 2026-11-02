@@ -166,7 +166,7 @@ func save_state(notify_change: bool = true) -> bool:
 	if notify_change: changed.emit()
 	if not persistence_enabled:
 		return true
-	var payload := {"version": 3, "wallet": wallet, "month": month_index, "owned": owned, "wishlist": wishlist, "cart": cart, "history": history, "installed": installed, "favorites": favorites, "ignored": ignored, "followed": followed, "play_minutes": play_minutes, "play_sessions": play_sessions, "downloads": downloads, "activity": activity, "life": life}
+	var payload := {"version": 4, "wallet": wallet, "month": month_index, "owned": owned, "wishlist": wishlist, "cart": cart, "history": history, "installed": installed, "favorites": favorites, "ignored": ignored, "followed": followed, "play_minutes": play_minutes, "play_sessions": play_sessions, "downloads": downloads, "activity": activity, "life": life}
 	var temp_path := save_path + ".tmp"
 	var file := FileAccess.open(temp_path, FileAccess.WRITE)
 	if not file:
@@ -186,7 +186,7 @@ func load_state() -> void:
 	if not file:
 		return
 	var data: Variant = JSON.parse_string(file.get_as_text())
-	if not data is Dictionary or not _saved_int(data.get("version", 0)) in [1, 2, 3]:
+	if not data is Dictionary or not _saved_int(data.get("version", 0)) in [1, 2, 3, 4]:
 		return
 	wallet = _saved_int(data.get("wallet", 160), 160)
 	month_index = _saved_int(data.get("month", 0), 0, MAX_MONTH)
