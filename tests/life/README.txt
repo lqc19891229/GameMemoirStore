@@ -21,3 +21,5 @@ test_room_footprint.gd：L 型户型地板裁切、外墙、家具越界、内�
 test_room_grid_outline.gd：自由网格轮廓、地板挖除与恢复、连通性、墙体/家具约束、撤销重做和存档重建。
 
 test_room_finishes.gd：每单元地板装修、内墙分段颜色、外墙独立窗/门洞、存档过滤、撤销重做与重新加载。
+
+test_room_zones.gd：功能区分配与清理、三区材质/灯光、局部材质优先级、装修预设、撤销重做及存档加载。

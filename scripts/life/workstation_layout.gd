@@ -364,7 +364,8 @@ func _apply_blueprint_change(next: Dictionary) -> bool:
 	if (next.partitions.size() != blueprint.partitions.size()
 		or (next.shape == "custom" and blueprint.shape == "custom" and next.removed_cells.size() != blueprint.removed_cells.size())
 		or next.floor_finishes.size() != blueprint.floor_finishes.size()
-		or next.edge_finishes.size() != blueprint.edge_finishes.size()):
+		or next.edge_finishes.size() != blueprint.edge_finishes.size()
+		or next.zone_cells.size() != blueprint.zone_cells.size()):
 		message = "调整失败：外轮廓将移除已有内墙或地板单元，请先调整结构"
 		changed.emit()
 		return false
@@ -396,6 +397,7 @@ func floor_cell_blocker(cell: Dictionary, removing: bool = true) -> String:
 	if removing:
 		if BlueprintData.has_cell(blueprint, cell): return "此处已经移除地板"
 		if BlueprintData.floor_finish(blueprint, cell) != 0: return "请先将此地板恢复默认材质"
+		if BlueprintData.zone_at(blueprint, cell) != 0: return "请先清除此地板的功能分区"
 		if not BlueprintData.editable_cell(blueprint, cell): return "门窗所在的后墙和左墙必须保留地板"
 		if blueprint.removed_cells.size() >= BlueprintData.MAX_REMOVED: return "可移除地板已达到上限"
 		var shape := BlueprintData.cell_polygon(blueprint, cell, collision_margin)
@@ -428,11 +430,61 @@ func paint_floor_cell(at: Vector2, removing: bool = true) -> bool:
 	if removing: next.removed_cells.append(cell)
 	else: next.removed_cells.erase(cell)
 	next = BlueprintData.clean(next)
-	if next.edge_finishes.size() != blueprint.edge_finishes.size():
-		message = "绘制失败：此操作会移除已装修的外墙，请先恢复外墙"
+	if next.edge_finishes.size() != blueprint.edge_finishes.size() or next.zone_cells.size() != blueprint.zone_cells.size():
+		message = "绘制失败：此操作会移除已有外墙装修或功能分区，请先恢复相关配置"
 		changed.emit()
 		return false
 	blueprint = next
+	world.get_node("Room").apply_blueprint(blueprint)
+	_remember(before)
+	update()
+	return true
+
+func paint_zone_cell(at: Vector2, zone: int) -> bool:
+	if not active or blueprint.shape != "custom" or not placing_role.is_empty(): return false
+	if zone < 0 or zone > BlueprintData.ZONE_PRESETS.size(): return false
+	var cell: Dictionary = BlueprintData.cell_at(blueprint, at)
+	if not BlueprintData.valid_cell(blueprint, cell) or BlueprintData.has_cell(blueprint, cell): return false
+	if BlueprintData.zone_at(blueprint, cell) == zone: return false
+	var before := _draft()
+	var next := blueprint.duplicate(true)
+	var entries := []
+	for entry: Dictionary in next.zone_cells:
+		if entry.ix != cell.ix or entry.iz != cell.iz: entries.append(entry)
+	if zone > 0:
+		entries.append({"ix":cell.ix,"iz":cell.iz,"zone":zone})
+	next.zone_cells = entries
+	blueprint = BlueprintData.clean(next)
+	world.get_node("Room").apply_blueprint(blueprint)
+	_remember(before)
+	update()
+	return true
+
+func set_zone_style(zone: int, key: String, value: int) -> bool:
+	if not active or zone < 1 or zone > BlueprintData.ZONE_PRESETS.size(): return false
+	if key not in ["floor","wall","light"]: return false
+	if value < 0 or value >= (3 if key == "light" else BlueprintData.FINISH_COUNT): return false
+	var old: Dictionary = BlueprintData.zone_style(blueprint, zone)
+	if int(old[key]) == value: return false
+	var before := _draft()
+	var next := blueprint.duplicate(true)
+	var config: Dictionary = next.zone_styles[zone-1]
+	config[key] = value
+	blueprint = BlueprintData.clean(next)
+	world.get_node("Room").apply_blueprint(blueprint)
+	_remember(before)
+	update()
+	return true
+
+func apply_zone_preset(zone: int, preset: int) -> bool:
+	if not active or zone < 1 or zone > BlueprintData.ZONE_PRESETS.size(): return false
+	if preset < 0 or preset >= BlueprintData.ZONE_PRESETS.size(): return false
+	var target: Dictionary = BlueprintData.ZONE_PRESETS[preset]
+	if BlueprintData.zone_style(blueprint, zone) == target: return false
+	var before := _draft()
+	var next := blueprint.duplicate(true)
+	next.zone_styles[zone-1] = target.duplicate()
+	blueprint = BlueprintData.clean(next)
 	world.get_node("Room").apply_blueprint(blueprint)
 	_remember(before)
 	update()
