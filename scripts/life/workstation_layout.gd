@@ -2,6 +2,9 @@ extends Node
 signal changed
 const Data = preload("res://scripts/life/workstation_layout_data.gd")
 const InventoryData = preload("res://scripts/items/inventory_data.gd")
+const ItemCatalog: MemoirItemCatalog = preload("res://data/items/_catalog.tres")
+const FURNITURE_COLOR_LABELS := ["原色", "奶油白", "鼠尾草绿", "雾蓝", "暖粉", "浅橡木"]
+const FURNITURE_COLOR_HEX := ["", "eae1d4", "a4bdac", "9fbed3", "d9b3b5", "d6b184"]
 const NAMES := {"desk":"桌子（整套）", "monitor":"显示器", "computer":"机箱", "keyboard":"键盘", "mouse":"鼠标", "chair":"椅子", "bookcase":"书架", "lamp":"落地灯", "rug":"地毯", "plant":"盆栽"}
 @export var tabletop_half_size := Vector2(2.4, 1.15)
 @export var tabletop_height := 0.78
@@ -39,6 +42,10 @@ var templates: Dictionary = {}
 var available_inventory: Array = []
 var placed_instances: Dictionary = {}
 var committed_placements: Dictionary = {}
+var furniture_colors: Dictionary = {}
+var committed_colors: Dictionary = {}
+var placing_role := ""
+var placing_before: Dictionary = {}
 
 func setup(owner_world: Node3D) -> void:
 	world = owner_world
@@ -55,6 +62,8 @@ func setup(owner_world: Node3D) -> void:
 	available_inventory = InventoryData.initial()
 	placed_instances = InventoryData.initial_placements()
 	committed_placements = placed_instances.duplicate()
+	furniture_colors = {}
+	committed_colors = {}
 
 func snapshot() -> Dictionary:
 	var result: Dictionary = {}
@@ -69,6 +78,113 @@ func load_placements(raw: Dictionary, inventory: Array) -> void:
 	available_inventory = inventory.duplicate(true)
 	placed_instances = raw.duplicate()
 	committed_placements = placed_instances.duplicate()
+	_apply_furniture_appearance()
+
+func load_colors(raw: Dictionary) -> void:
+	if active: return
+	furniture_colors.clear()
+	for entry: Dictionary in available_inventory:
+		var uid := str(entry.uid)
+		var value: Variant = raw.get(uid, 0)
+		if value is int and int(value) > 0 and int(value) < FURNITURE_COLOR_LABELS.size():
+			furniture_colors[uid] = int(value)
+	committed_colors = furniture_colors.duplicate()
+	_apply_furniture_appearance()
+
+func color_for(role: String) -> int:
+	return int(furniture_colors.get(str(placed_instances.get(role, "")), 0))
+
+func set_furniture_color(index: int) -> void:
+	if not active or not InventoryData.ROOM_DEFAULTS.has(Data.base_role(selected)): return
+	if not placed_instances.has(selected) or index < 0 or index >= FURNITURE_COLOR_LABELS.size(): return
+	var before := _draft()
+	var uid := str(placed_instances[selected])
+	if index == 0: furniture_colors.erase(uid)
+	else: furniture_colors[uid] = index
+	_apply_furniture_appearance()
+	_remember(before)
+	update()
+
+func _apply_furniture_appearance() -> void:
+	for role: String in nodes:
+		if not InventoryData.ROOM_DEFAULTS.has(Data.base_role(role)): continue
+		var furniture: Node3D = nodes[role]
+		furniture.visible = placed_instances.has(role)
+		var preview := placing_role == role
+		var index := color_for(role)
+		var overlay: StandardMaterial3D = null
+		if preview or index != 0:
+			overlay = StandardMaterial3D.new()
+			var color := Color("76dbb1") if preview and valid else Color("ec786f") if preview else Color(FURNITURE_COLOR_HEX[index])
+			color.a = 0.35 if preview else 0.32
+			overlay.albedo_color = color
+			overlay.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+			overlay.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		for mesh: MeshInstance3D in furniture.find_children("*", "MeshInstance3D", true, false):
+			mesh.material_overlay = overlay
+			mesh.transparency = 0.35 if preview else 0.0
+
+func _next_furniture_role(base_role: String) -> String:
+	if not placed_instances.has(base_role): return base_role
+	for index in range(1, 9):
+		var role := base_role + "_" + str(index)
+		if not nodes.has(role): return role
+	return ""
+
+func start_place(item_id: String, uid: String) -> bool:
+	if not active or not placing_role.is_empty(): return false
+	var item: MemoirItemDefinition = ItemCatalog.lookup(item_id)
+	if item == null or item.category != "furniture" or item.placement_surface != "floor": return false
+	var base_role := item.subcategory
+	if str(InventoryData.ROOM_DEFAULTS.get(base_role, "")) != item_id: return false
+	if placed_instances.values().has(uid): return false
+	var owned := false
+	for entry: Dictionary in available_inventory:
+		if entry.uid == uid and entry.item_id == item_id: owned = true
+	if not owned: return false
+	var role := _next_furniture_role(base_role)
+	if role.is_empty(): return false
+	end_drag()
+	placing_before = _draft()
+	if not nodes.has(role): _create_copy(role)
+	placed_instances[role] = uid
+	selected = role
+	placing_role = role
+	nodes[role].transform = authored[base_role]
+	update()
+	return true
+
+func preview_placement(position_xz: Vector2) -> void:
+	if not active or placing_role.is_empty(): return
+	var position := position_xz.snapped(Vector2.ONE * grid_step) if snapping else position_xz
+	nodes[placing_role].position.x = position.x
+	nodes[placing_role].position.z = position.y
+	update()
+
+func preview_at(pixel: Vector2) -> void:
+	if placing_role.is_empty(): return
+	var plane := Plane(world.global_basis.y.normalized(), world.to_global(Vector3.ZERO))
+	var hit: Variant = plane.intersects_ray(world.camera.project_ray_origin(pixel), world.camera.project_ray_normal(pixel))
+	if hit != null:
+		var local: Vector3 = world.to_local(hit)
+		preview_placement(Vector2(local.x, local.z))
+
+func confirm_placement() -> bool:
+	if placing_role.is_empty() or not valid: return false
+	var before := placing_before
+	placing_role = ""
+	placing_before = {}
+	_apply_furniture_appearance()
+	_remember(before)
+	update()
+	return true
+
+func cancel_placement() -> void:
+	if placing_role.is_empty(): return
+	placing_role = ""
+	_restore_draft(placing_before)
+	placing_before = {}
+	update()
 
 func _create_copy(role: String) -> void:
 	if nodes.has(role) or not Data.is_copy(role): return
@@ -88,9 +204,10 @@ func restore(poses: Dictionary) -> void:
 		_create_copy(role)
 		nodes[role].transform = poses[role]
 	if not nodes.has(selected): selected = "desk"
+	_apply_furniture_appearance()
 
 func duplicate_selected() -> void:
-	if not active or not templates.has(Data.base_role(selected)): return
+	if not active or not placing_role.is_empty() or not templates.has(Data.base_role(selected)): return
 	var furniture_id: String = str(InventoryData.ROOM_DEFAULTS.get(Data.base_role(selected), ""))
 	var instance_uid := InventoryData.unused_uid(available_inventory, placed_instances, furniture_id)
 	if instance_uid.is_empty():
@@ -135,12 +252,19 @@ func duplicate_selected() -> void:
 	update()
 
 func delete_selected() -> void:
-	if not active or not Data.is_copy(selected): return
+	store_selected()
+
+func store_selected() -> void:
+	if not active or not InventoryData.ROOM_DEFAULTS.has(Data.base_role(selected)): return
+	if not placing_role.is_empty() or not placed_instances.has(selected): return
 	end_drag()
 	var before := _draft()
-	nodes[selected].free()
-	nodes.erase(selected)
 	placed_instances.erase(selected)
+	if Data.is_copy(selected):
+		nodes[selected].free()
+		nodes.erase(selected)
+	else:
+		nodes[selected].hide()
 	selected = "desk"
 	_remember(before)
 	update()
@@ -179,11 +303,13 @@ func load_style(raw: Variant) -> void:
 	committed_style = world.get_node("Room").style.duplicate()
 
 func _draft() -> Dictionary:
-	return {"poses":snapshot(), "style":world.get_node("Room").style.duplicate(), "placements":placed_instances.duplicate()}
+	return {"poses":snapshot(), "style":world.get_node("Room").style.duplicate(), "placements":placed_instances.duplicate(), "colors":furniture_colors.duplicate()}
 
 func _restore_draft(draft: Dictionary) -> void:
 	restore(draft.poses)
 	placed_instances = draft.placements.duplicate()
+	furniture_colors = draft.colors.duplicate()
+	_apply_furniture_appearance()
 	world.get_node("Room").apply_style(draft.style)
 
 func _remember(before: Dictionary) -> void:
@@ -220,34 +346,43 @@ func set_style(key: String, value: int) -> void:
 
 func begin() -> void:
 	active = true
+	placing_role = ""
+	placing_before = {}
 	undo_stack.clear()
 	redo_stack.clear()
 	selected = "desk"
 	gesture = ""
 	restore(committed)
 	placed_instances = committed_placements.duplicate()
+	furniture_colors = committed_colors.duplicate()
+	_apply_furniture_appearance()
 	update()
 
 func finish(apply: bool) -> bool:
 	if not active: return false
 	if apply: update()
-	if apply and not valid: return false
+	if apply and (not valid or not placing_role.is_empty()): return false
+	if not placing_role.is_empty(): cancel_placement()
 	end_drag()
 	if apply:
 		committed = snapshot()
 		committed_placements = placed_instances.duplicate()
+		committed_colors = furniture_colors.duplicate()
 		committed_style = world.get_node("Room").style.duplicate()
 		saved = export_layout()
 	else:
 		restore(committed)
 		placed_instances = committed_placements.duplicate()
+		furniture_colors = committed_colors.duplicate()
+		_apply_furniture_appearance()
 		world.get_node("Room").apply_style(committed_style)
 	active = false
 	gizmo.hide()
 	return true
 
 func select(role: String) -> void:
-	if not nodes.has(role): return
+	if not nodes.has(role) or not placing_role.is_empty(): return
+	if InventoryData.ROOM_DEFAULTS.has(Data.base_role(role)) and not placed_instances.has(role): return
 	selected = role
 	end_drag()
 	update()
@@ -263,6 +398,8 @@ func reset_layout() -> void:
 	var before := _draft()
 	restore(authored)
 	placed_instances = InventoryData.initial_placements()
+	furniture_colors.clear()
+	_apply_furniture_appearance()
 	world.get_node("Room").apply_style({})
 	_remember(before)
 	update()
@@ -305,6 +442,9 @@ func clamp_pose(role: String) -> void:
 
 func move_to(position_xz: Vector2) -> void:
 	if not active: return
+	if not placing_role.is_empty():
+		preview_placement(position_xz)
+		return
 	var undo_before := _draft()
 	var before: Transform3D = nodes[selected].transform
 	var point := position_xz
@@ -317,6 +457,10 @@ func move_to(position_xz: Vector2) -> void:
 
 func rotate_to(yaw: float) -> void:
 	if not active: return
+	if not placing_role.is_empty():
+		nodes[placing_role].rotation.y = wrapf(snappedf(yaw, deg_to_rad(angle_step)) if snapping else yaw, -PI, PI)
+		update()
+		return
 	var undo_before := _draft()
 	var before: Transform3D = nodes[selected].transform
 	if snapping: yaw = snappedf(yaw, deg_to_rad(angle_step))
@@ -334,6 +478,7 @@ func _blocker(role: String, polygon: PackedVector2Array) -> String:
 	if not is_blocking(role): return ""
 	for other: String in nodes:
 		if other == role or is_floor(other) != floor_item or not is_blocking(other): continue
+		if InventoryData.ROOM_DEFAULTS.has(Data.base_role(other)) and not placed_instances.has(other): continue
 		if Data.overlap(polygon, footprint(other, collision_margin)):
 			return name_for(role) + "碰到" + name_for(other)
 	return ""
@@ -345,6 +490,7 @@ func _layout_blocker() -> String:
 		if nodes[role].get_parent() != world.get_node("%Equipment"):
 			return name_for(role) + "必须放在电脑桌上"
 	for role: String in nodes:
+		if InventoryData.ROOM_DEFAULTS.has(Data.base_role(role)) and not placed_instances.has(role): continue
 		var blocker := _blocker(role, footprint(role, collision_margin))
 		if not blocker.is_empty(): return blocker
 	return ""
@@ -440,8 +586,11 @@ func pick_handle(pixel: Vector2) -> String:
 func update(contact: String = "") -> void:
 	var blocker := _layout_blocker()
 	valid = blocker.is_empty()
+	if not placing_role.is_empty(): _apply_furniture_appearance()
 	message = "右键环绕 · 滚轮缩放 · 拖动物品布置房间"
-	if not valid: message = blocker + "，请调整位置或恢复默认布置"
+	if not placing_role.is_empty():
+		message = "鼠标移动预览 · 左键放置 · 右键/Esc 取消"
+	if not valid: message = blocker + "，请选择其他位置" if not placing_role.is_empty() else blocker + "，请调整位置或恢复默认布置"
 	elif not contact.is_empty(): message = "已阻挡：" + contact
 	_update_gizmo(not contact.is_empty())
 	changed.emit()
