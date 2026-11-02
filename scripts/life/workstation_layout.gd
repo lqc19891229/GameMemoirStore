@@ -70,7 +70,7 @@ func setup(owner_world: Node3D) -> void:
 	for item: Node3D in world.get_node("Room/Furniture").get_children():
 		nodes[item.role] = item
 		templates[item.role] = load(item.scene_file_path)
-	for item: MemoirItemDefinition in ItemCatalog.items:
+	for item in ItemCatalog.items:
 		if item.category == "furniture" and InventoryData.ROOM_DEFAULTS.get(item.subcategory, "") == item.item_id and item.furniture_scene != null:
 			if not templates.has(item.subcategory): templates[item.subcategory] = item.furniture_scene
 	committed_style = world.get_node("Room").style.duplicate()

@@ -155,7 +155,6 @@ func apply_style(value: Variant) -> void:
 			material.albedo_color = WALL_FINISHES[finish] if finish > 0 and finish < WALL_FINISHES.size() else WALLS[style.wall]
 			material.albedo_texture = _pattern_texture("wall",int(style.wall_pattern))
 			material.uv1_scale = Vector3(2,2,1)
-			material.texture_repeat = BaseMaterial3D.TEXTURE_REPEAT_ENABLED
 			material.roughness = .92 if int(style.wall_pattern) != 2 else .98
 		elif role == "floor":
 			var tone := float(mesh.get_meta("tone", 1.0))
@@ -163,7 +162,6 @@ func apply_style(value: Variant) -> void:
 			material.albedo_color = (FLOOR_FINISHES[finish] if finish > 0 and finish < FLOOR_FINISHES.size() else FLOORS[style.floor]) * tone
 			material.albedo_texture = _pattern_texture("floor",int(style.floor_pattern))
 			material.uv1_scale = Vector3(3,3,1)
-			material.texture_repeat = BaseMaterial3D.TEXTURE_REPEAT_ENABLED
 			material.roughness = .71 if int(style.floor_pattern) == 1 else .87 if int(style.floor_pattern) == 2 else .68
 
 	_apply_atmosphere()
