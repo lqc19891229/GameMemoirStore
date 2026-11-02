@@ -49,10 +49,22 @@ func _ready() -> void:
 	%BlueprintFloorTool.add_item("内墙绘制")
 	%BlueprintFloorTool.add_item("挖除地板")
 	%BlueprintFloorTool.add_item("恢复地板")
+	%BlueprintFloorTool.add_item("地板材质画笔")
+	%BlueprintFloorTool.add_item("自定义外墙装修 / 门窗")
+	%BlueprintFloorTool.add_item("内墙独立改色")
+	for label: String in ["跟随房间材质", "奶油白 / 浅石砖", "鼠尾草绿", "雾蓝 / 胡桃木"]:
+		%BlueprintWallFinish.add_item(label)
+		%BlueprintTileFinish.add_item(label)
+	for label: String in ["保留实体墙", "窗户", "门洞"]:
+		%BlueprintOpeningKind.add_item(label)
 	%BlueprintFloorTool.item_selected.connect(func(_index: int) -> void:
 		wall_drag_button = 0
 		_hide_wall_preview()
 	)
+	for option: OptionButton in [%BlueprintTileFinish, %BlueprintWallFinish, %BlueprintOpeningKind]:
+		option.item_selected.connect(func(_index: int) -> void:
+			_hide_wall_preview()
+		)
 	%WallAxis.add_item("横向墙 · X")
 	%WallAxis.add_item("纵向墙 · Z")
 	%WallKind.add_item("实体墙")
@@ -277,6 +289,77 @@ func _floor_hover(pixel: Vector2) -> void:
 	(ghost.material_override as StandardMaterial3D).albedo_color = Color("6ed9ab", .48) if eligible else Color("f27777", .48)
 	ghost.show()
 
+func _partition_at(at: Vector2) -> Dictionary:
+	var best := {}
+	var distance := .36
+	for part: Dictionary in world.layout.blueprint.partitions:
+		var delta := Vector2(float(part.x), float(part.z)).distance_to(at)
+		if delta < distance:
+			distance = delta
+			best = part
+	return best
+
+func _paint_action(at: Vector2, button: int) -> void:
+	var erase := button == MOUSE_BUTTON_RIGHT
+	match %BlueprintFloorTool.selected:
+		3:
+			world.layout.paint_floor_finish(at, 0 if erase else %BlueprintTileFinish.selected)
+		4:
+			var kind: String = ["wall","window","door"][%BlueprintOpeningKind.selected]
+			world.layout.paint_exterior_edge(at, "wall" if erase else kind, 0 if erase else %BlueprintWallFinish.selected)
+		5:
+			world.layout.paint_partition_finish(at, 0 if erase else %BlueprintWallFinish.selected)
+
+func _paint_hover(pixel: Vector2) -> void:
+	var ghost: MeshInstance3D = world.get_node("WallPreview")
+	var at: Variant = _floor_hit(pixel)
+	if at == null:
+		ghost.hide()
+		return
+	var tool: int = %BlueprintFloorTool.selected
+	var good := false
+	var center := Vector2.ZERO
+	var size := Vector3(BlueprintData.FLOOR_GRID,.07,BlueprintData.FLOOR_GRID)
+	if tool == 3:
+		var cell: Dictionary = BlueprintData.cell_at(world.layout.blueprint, at)
+		good = world.layout.blueprint.shape == "custom" and BlueprintData.valid_cell(world.layout.blueprint,cell) and not BlueprintData.has_cell(world.layout.blueprint,cell)
+		if good: center = BlueprintData.cell_center(world.layout.blueprint,cell)
+	elif tool == 4:
+		var edge: Dictionary = BlueprintData.nearest_edge(world.layout.blueprint,at)
+		good = not edge.is_empty()
+		if good:
+			center = BlueprintData.edge_center(world.layout.blueprint,edge)
+			size = Vector3(.14,.10,BlueprintData.FLOOR_GRID) if edge.dx != 0 else Vector3(BlueprintData.FLOOR_GRID,.10,.14)
+	else:
+		var part: Dictionary = _partition_at(at)
+		good = not part.is_empty()
+		if good:
+			center = Vector2(float(part.x),float(part.z))
+			size = Vector3(1,.10,.14) if part.axis == "x" else Vector3(.14,.10,1)
+	if not good:
+		ghost.hide()
+		return
+	ghost.position = Vector3(center.x,.08,center.y)
+	(ghost.mesh as BoxMesh).size = size
+	(ghost.material_override as StandardMaterial3D).albedo_color = Color("6ed9ab",.48)
+	ghost.show()
+
+func _brush_key(at: Vector2) -> Vector2:
+	var tool: int = %BlueprintFloorTool.selected
+	if tool == 0 or tool == 5: return at.snapped(Vector2.ONE * BlueprintData.WALL_GRID)
+	if tool == 4:
+		var edge: Dictionary = BlueprintData.nearest_edge(world.layout.blueprint,at)
+		if edge.is_empty(): return Vector2(INF,INF)
+		return BlueprintData.edge_center(world.layout.blueprint,edge)
+	var cell: Dictionary = BlueprintData.cell_at(world.layout.blueprint,at)
+	return Vector2(cell.ix,cell.iz)
+
+func _brush_action(at: Vector2, button: int) -> void:
+	match %BlueprintFloorTool.selected:
+		0: _wall_action(at,button)
+		1,2: _floor_action(at,button)
+		3,4,5: _paint_action(at,button)
+
 func _wall_hover(pixel: Vector2) -> void:
 	var ghost: MeshInstance3D = world.get_node("WallPreview")
 	var at: Variant = _blueprint_floor_hit(pixel)
@@ -299,33 +382,24 @@ func _blueprint_input(event: InputEvent) -> void:
 			get_viewport().set_input_as_handled()
 		elif event.button_index in [MOUSE_BUTTON_LEFT, MOUSE_BUTTON_RIGHT]:
 			wall_drag_button = event.button_index if event.pressed else 0
-			last_wall_cell = Vector2(INF, INF)
+			last_wall_cell = Vector2(INF,INF)
 			if event.pressed:
 				var at: Variant = _blueprint_floor_hit(event.position) if %BlueprintFloorTool.selected == 0 else _floor_hit(event.position)
 				if at != null:
-					if %BlueprintFloorTool.selected == 0:
-						_wall_action(at, event.button_index)
-						last_wall_cell = at
-					else:
-						var grid_cell: Dictionary = BlueprintData.cell_at(world.layout.blueprint, at)
-						_floor_action(at, event.button_index)
-						last_wall_cell = Vector2(grid_cell.ix, grid_cell.iz)
+					_brush_action(at,event.button_index)
+					last_wall_cell = _brush_key(at)
 			get_viewport().set_input_as_handled()
 	elif event is InputEventMouseMotion:
 		if %BlueprintFloorTool.selected == 0: _wall_hover(event.position)
-		else: _floor_hover(event.position)
+		elif %BlueprintFloorTool.selected in [1,2]: _floor_hover(event.position)
+		else: _paint_hover(event.position)
 		if wall_drag_button != 0:
 			var at: Variant = _blueprint_floor_hit(event.position) if %BlueprintFloorTool.selected == 0 else _floor_hit(event.position)
 			if at != null:
-				if %BlueprintFloorTool.selected == 0 and at != last_wall_cell:
-					_wall_action(at, wall_drag_button)
-					last_wall_cell = at
-				elif %BlueprintFloorTool.selected != 0:
-					var grid_cell: Dictionary = BlueprintData.cell_at(world.layout.blueprint, at)
-					var cell_id := Vector2(grid_cell.ix, grid_cell.iz)
-					if cell_id != last_wall_cell:
-						_floor_action(at, wall_drag_button)
-						last_wall_cell = cell_id
+				var key := _brush_key(at)
+				if key != last_wall_cell:
+					_brush_action(at,wall_drag_button)
+					last_wall_cell = key
 		get_viewport().set_input_as_handled()
 
 func _sync_layout() -> void:

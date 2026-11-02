@@ -1,7 +1,7 @@
 class_name MemoirRoomBlueprintData
 extends RefCounted
 ## Rectangular, L and grid-painted orthogonal footprints with validated interior walls.
-const DEFAULT := {"width": 8.0, "depth": 6.0, "door_x": -2.75, "window_z": -0.8, "partitions": [], "shape":"rectangle", "notch_width":1.5, "notch_depth":1.5, "removed_cells":[]}
+const DEFAULT := {"width": 8.0, "depth": 6.0, "door_x": -2.75, "window_z": -0.8, "partitions": [], "shape":"rectangle", "notch_width":1.5, "notch_depth":1.5, "removed_cells":[], "floor_finishes":[], "edge_finishes":[]}
 const MIN_WIDTH := 6.0
 const MAX_WIDTH := 12.0
 const MIN_DEPTH := 5.0
@@ -12,6 +12,8 @@ const WALL_GRID := 0.5
 const MAX_PARTITIONS := 96
 const FLOOR_GRID := 0.5
 const MAX_REMOVED := 128
+const FINISH_COUNT := 4
+const MAX_EDGE_EDITS := 256
 
 static func clean(raw: Variant) -> Dictionary:
 	var result: Dictionary = DEFAULT.duplicate(true)
@@ -52,6 +54,26 @@ static func clean(raw: Variant) -> Dictionary:
 					duplicate_or_overlap = true
 					break
 			if not duplicate_or_overlap: result.partitions.append(part)
+	if result.shape == "custom":
+		var floor_entries: Variant = raw.get("floor_finishes", [])
+		if floor_entries is Array:
+			for raw_entry: Variant in floor_entries:
+				var finish: Dictionary = clean_floor_finish(raw_entry)
+				if finish.is_empty() or not valid_cell(result, finish) or has_cell(result, finish): continue
+				if floor_finish(result, finish) != 0: continue
+				result.floor_finishes.append(finish)
+		var edge_entries: Variant = raw.get("edge_finishes", [])
+		if edge_entries is Array:
+			for raw_entry: Variant in edge_entries:
+				if result.edge_finishes.size() >= MAX_EDGE_EDITS: break
+				var edge: Dictionary = clean_edge_finish(raw_entry)
+				if edge.is_empty() or not edge_exposed(result, edge): continue
+				var present := false
+				for old_edge: Dictionary in result.edge_finishes:
+					if same_edge(old_edge, edge):
+						present = true
+						break
+				if not present: result.edge_finishes.append(edge)
 	return result
 
 static func clean_partition(raw: Variant) -> Dictionary:
@@ -67,7 +89,10 @@ static func clean_partition(raw: Variant) -> Dictionary:
 	var at_x := snappedf(float(x), WALL_GRID)
 	var at_z := snappedf(float(z), WALL_GRID)
 	if absf(float(x) - at_x) > .001 or absf(float(z) - at_z) > .001: return {}
-	return {"x": at_x, "z": at_z, "axis": axis, "kind": kind}
+	var part := {"x": at_x, "z": at_z, "axis": axis, "kind": kind}
+	var finish: int = finish_id(raw.get("finish", 0))
+	if finish != 0: part["finish"] = finish
+	return part
 
 static func half_size(value: Dictionary) -> Vector2:
 	return Vector2(float(value.width) * .5, float(value.depth) * .5)
@@ -143,7 +168,10 @@ static func editable_cell(value: Dictionary, cell: Dictionary) -> bool:
 	return valid_cell(value, cell) and cell.ix > 0 and cell.iz > 0
 
 static func has_cell(value: Dictionary, cell: Dictionary) -> bool:
-	return value.removed_cells.has(cell)
+	if cell.is_empty(): return false
+	for removed: Dictionary in value.removed_cells:
+		if removed.ix == cell.ix and removed.iz == cell.iz: return true
+	return false
 
 static func cell_at(value: Dictionary, at: Vector2) -> Dictionary:
 	return {"ix":floori((at.x + float(value.width) * .5) / FLOOR_GRID),
@@ -189,3 +217,80 @@ static func floor_connected(value: Dictionary) -> bool:
 			visited[other] = true
 			pending.append(other)
 	return visited.size() == total
+
+## Floor finishes and exterior wall edits only apply to custom rooms.
+## They are keyed by stable grid coordinates, never by scene-tree indices.
+static func finish_id(value: Variant) -> int:
+	if not (value is int or value is float): return 0
+	if not is_finite(float(value)) or float(value) != floorf(float(value)): return 0
+	return int(value) if int(value) >= 0 and int(value) < FINISH_COUNT else 0
+
+static func clean_floor_finish(value: Variant) -> Dictionary:
+	var cell := clean_cell(value)
+	if cell.is_empty(): return {}
+	var finish: int = finish_id(value.get("finish", 0))
+	if finish == 0: return {}
+	cell["finish"] = finish
+	return cell
+
+static func floor_finish(value: Dictionary, cell: Dictionary) -> int:
+	for entry: Dictionary in value.get("floor_finishes", []):
+		if int(entry.ix) == int(cell.ix) and int(entry.iz) == int(cell.iz):
+			return int(entry.finish)
+	return 0
+
+static func clean_edge_finish(value: Variant) -> Dictionary:
+	var cell := clean_cell(value)
+	if cell.is_empty(): return {}
+	var dx: Variant = value.get("dx", null)
+	var dz: Variant = value.get("dz", null)
+	if not (dx is int or dx is float) or not (dz is int or dz is float): return {}
+	if not is_finite(float(dx)) or not is_finite(float(dz)): return {}
+	if absf(float(dx)) + absf(float(dz)) != 1.0: return {}
+	var kind: String = str(value.get("kind", "wall"))
+	if kind not in ["wall", "window", "door"]: return {}
+	var finish: int = finish_id(value.get("finish", 0))
+	cell["dx"] = int(dx)
+	cell["dz"] = int(dz)
+	cell["kind"] = kind
+	cell["finish"] = finish
+	return cell
+
+static func same_edge(a: Dictionary, b: Dictionary) -> bool:
+	return a.ix == b.ix and a.iz == b.iz and a.dx == b.dx and a.dz == b.dz
+
+static func edge_exposed(value: Dictionary, edge: Dictionary) -> bool:
+	if value.shape != "custom" or not valid_cell(value, edge): return false
+	var removed_cell := {"ix":int(edge.ix), "iz":int(edge.iz)}
+	if not has_cell(value, removed_cell): return false
+	var next := {"ix":int(edge.ix)+int(edge.dx), "iz":int(edge.iz)+int(edge.dz)}
+	return valid_cell(value, next) and not has_cell(value, next)
+
+static func exposed_edges(value: Dictionary) -> Array:
+	var edges := []
+	if value.shape != "custom": return edges
+	for cell: Dictionary in value.removed_cells:
+		for delta: Vector2i in [Vector2i.LEFT, Vector2i.RIGHT, Vector2i.UP, Vector2i.DOWN]:
+			var edge := {"ix":int(cell.ix), "iz":int(cell.iz),
+				"dx":delta.x, "dz":delta.y}
+			if edge_exposed(value, edge): edges.append(edge)
+	return edges
+
+static func edge_center(value: Dictionary, edge: Dictionary) -> Vector2:
+	return cell_center(value, edge) + Vector2(float(edge.dx), float(edge.dz)) * FLOOR_GRID * .5
+
+static func nearest_edge(value: Dictionary, at: Vector2, radius: float = .36) -> Dictionary:
+	var best := {}
+	var dist := radius
+	for edge: Dictionary in exposed_edges(value):
+		var pos := edge_center(value, edge)
+		var metric := pos.distance_to(at)
+		if metric < dist:
+			dist = metric
+			best = edge
+	return best
+
+static func edge_edit(value: Dictionary, edge: Dictionary) -> Dictionary:
+	for old: Dictionary in value.get("edge_finishes", []):
+		if same_edge(old, edge): return old
+	return {"ix":edge.ix, "iz":edge.iz, "dx":edge.dx, "dz":edge.dz, "kind":"wall", "finish":0}
