@@ -35,6 +35,11 @@ func _box(parent: Node, node_name: String, size: Vector3, at: Vector3, material:
 	parent.add_child(instance)
 	return instance
 
+func _finish_box(parent: Node, node_name: String, size: Vector3, at: Vector3, material: Material, finish: int, role: String) -> MeshInstance3D:
+	var mesh: MeshInstance3D = _box(parent, node_name, size, at, material, role)
+	if finish > 0: mesh.set_meta("finish_id", finish)
+	return mesh
+
 func _cylinder(parent: Node, node_name: String, top_radius: float, bottom_radius: float, height: float, at: Vector3, material: Material, radial_segments: int = 32) -> MeshInstance3D:
 	var mesh := CylinderMesh.new()
 	mesh.top_radius = top_radius
@@ -207,15 +212,16 @@ func _build_partitions(wall: Material, trim: Material) -> void:
 		piece.position = Vector3(float(part.x), 0, float(part.z))
 		var along_x: bool = part.axis == "x"
 		var horizontal: Vector3 = Vector3(1.0, 0, .14) if along_x else Vector3(.14, 0, 1.0)
+		var finish: int = int(part.get("finish", 0))
 		if part.kind == "door":
 			# Structural posts and lintel leave a real passable opening.
 			for sign in [-1.0, 1.0]:
 				var post: Vector3 = Vector3(sign * .47, 1.48, 0) if along_x else Vector3(0, 1.48, sign * .47)
 				var dims: Vector3 = Vector3(.06, 2.96, .14) if along_x else Vector3(.14, 2.96, .06)
 				_box(piece, "DoorPost", dims, post, trim, "wall")
-			_box(piece, "DoorLintel", Vector3(1.0, .3, .14) if along_x else Vector3(.14, .3, 1.0), Vector3(0, 3.05, 0), wall, "wall")
+			_finish_box(piece, "DoorLintel", Vector3(1.0, .3, .14) if along_x else Vector3(.14, .3, 1.0), Vector3(0, 3.05, 0), wall, finish, "wall")
 		else:
-			_box(piece, "WallBody", Vector3(horizontal.x, 3.2, horizontal.z), Vector3(0, 1.6, 0), wall, "wall")
+			_finish_box(piece, "WallBody", Vector3(horizontal.x, 3.2, horizontal.z), Vector3(0, 1.6, 0), wall, finish, "wall")
 		# A subtle top rail makes individual one-metre pieces readable from above.
 		_box(piece, "TopTrim", Vector3(horizontal.x, .045, horizontal.z), Vector3(0, 3.22, 0), trim)
 
@@ -250,41 +256,64 @@ func _build_grid_floor() -> void:
 				ix += 1
 				continue
 			var begin := ix
-			while ix < size.x and not removed.has(Vector2i(ix, iz)):
+			var finish: int = Blueprint.floor_finish(blueprint, {"ix":begin,"iz":iz})
+			while ix < size.x and not removed.has(Vector2i(ix, iz)) and Blueprint.floor_finish(blueprint, {"ix":ix,"iz":iz}) == finish:
 				ix += 1
 			var length := float(ix - begin) * Blueprint.FLOOR_GRID
 			var center_x := -float(blueprint.width) * .5 + (float(ix + begin) * .5) * Blueprint.FLOOR_GRID
 			var center_z := -float(blueprint.depth) * .5 + (float(iz) + .5) * Blueprint.FLOOR_GRID
-			_box(self, "Floor" if index == 0 else "FloorSegment_%03d" % index,
+			_finish_box(self, "Floor" if index == 0 else "FloorSegment_%03d" % index,
 				Vector3(length + .008, .2, Blueprint.FLOOR_GRID + .008),
-				Vector3(center_x, -.1, center_z), material, "floor")
+				Vector3(center_x, -.1, center_z), material, finish, "floor")
 			var tone: float = tones[iz % tones.size()]
 			var plank := _material(Color("b99572") * tone, .61)
-			_box(self, "FloorBoard_%02d_%02d" % [iz,begin],
+			var board := _finish_box(self, "FloorBoard_%02d_%02d" % [iz,begin],
 				Vector3(length, .014, Blueprint.FLOOR_GRID - .014),
-				Vector3(center_x, .006, center_z), plank, "floor", tone)
+				Vector3(center_x, .006, center_z), plank, finish, "floor")
+			board.set_meta("tone", tone)
 			index += 1
 
 func _build_custom_exterior(wall: Material, trim: Material) -> void:
 	if blueprint.shape != "custom": return
 	var group := _group(self, "Custom_Exterior")
-	var size: Vector2i = Blueprint.cell_count(blueprint)
-	var removed: Dictionary = {}
-	for cell: Dictionary in blueprint.removed_cells:
-		removed[Vector2i(cell.ix, cell.iz)] = true
-	var counter := 0
-	for cell: Dictionary in blueprint.removed_cells:
-		var at := Vector2i(cell.ix, cell.iz)
-		var center: Vector2 = Blueprint.cell_center(blueprint, cell)
-		for edge: Vector2i in [Vector2i.LEFT, Vector2i.RIGHT, Vector2i.UP, Vector2i.DOWN]:
-			var neighbor := at + edge
-			if neighbor.x < 0 or neighbor.y < 0 or neighbor.x >= size.x or neighbor.y >= size.y: continue
-			if removed.has(neighbor): continue
-			var longitudinal: bool = edge.x != 0
-			var position := Vector3(center.x + float(edge.x) * Blueprint.FLOOR_GRID * .5,
-				1.6, center.y + float(edge.y) * Blueprint.FLOOR_GRID * .5)
-			var span := Vector3(.12,3.2,Blueprint.FLOOR_GRID) if longitudinal else Vector3(Blueprint.FLOOR_GRID,3.2,.12)
-			_box(group, "ReturnWall_%03d" % counter, span, position, wall, "wall")
-			var cap := Vector3(span.x,.06,span.z)
-			_box(group, "ReturnTrim_%03d" % counter, cap, position + Vector3(0,1.59,0), trim)
-			counter += 1
+	var edges: Array = Blueprint.exposed_edges(blueprint)
+	var clear_glass := _material(Color(0.52, 0.75, 0.86, .34), .22)
+	clear_glass.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	for counter in range(edges.size()):
+		var edge: Dictionary = edges[counter]
+		var config: Dictionary = Blueprint.edge_edit(blueprint, edge)
+		var kind: String = str(config.kind)
+		var finish: int = int(config.finish)
+		var center: Vector2 = Blueprint.edge_center(blueprint, edge)
+		var longitudinal: bool = edge.dx != 0
+		var span := Vector3(.12,3.2,Blueprint.FLOOR_GRID) if longitudinal else Vector3(Blueprint.FLOOR_GRID,3.2,.12)
+		var at := Vector3(center.x, 1.6, center.y)
+		var section := _group(group, "Edge_%03d" % counter)
+		if kind == "wall":
+			_finish_box(section, "ReturnWall_%03d" % counter, span, at, wall, finish, "wall")
+		elif kind == "door":
+			# One grid edge is a 0.5m narrow doorway module; door-sized
+			# openings can later span multiple neighboring edges.
+			var header := span
+			header.y = .88
+			_finish_box(section, "DoorHead", header, Vector3(center.x, 2.76, center.y), wall, finish, "wall")
+			for direction in [-1.0,1.0]:
+				var offset := direction * (Blueprint.FLOOR_GRID * .5 - .025)
+				var post_at := Vector3(center.x, 1.16, center.y)
+				var post_size := Vector3(.05,2.32,.14) if not longitudinal else Vector3(.14,2.32,.05)
+				if longitudinal: post_at.z += offset
+				else: post_at.x += offset
+				_box(section, "DoorFrame", post_size, post_at, trim)
+		elif kind == "window":
+			var lower := span
+			lower.y = 1.05
+			_finish_box(section, "WindowLower", lower, Vector3(center.x,.525,center.y), wall, finish, "wall")
+			var upper := span
+			upper.y = .85
+			_finish_box(section, "WindowUpper", upper, Vector3(center.x,2.775,center.y), wall, finish, "wall")
+			var glass_size := Vector3(.026,1.30,Blueprint.FLOOR_GRID-.08) if longitudinal else Vector3(Blueprint.FLOOR_GRID-.08,1.30,.026)
+			_box(section, "WindowGlass", glass_size, Vector3(center.x,1.70,center.y), clear_glass)
+			var sill := Vector3(.2,.06,Blueprint.FLOOR_GRID+.03) if longitudinal else Vector3(Blueprint.FLOOR_GRID+.03,.06,.2)
+			_box(section, "WindowSill", sill, Vector3(center.x,1.06,center.y), trim)
+		_box(section, "ReturnTrim_%03d" % counter,
+			Vector3(span.x,.06,span.z), Vector3(center.x,3.19,center.y), trim)

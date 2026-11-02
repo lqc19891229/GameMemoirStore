@@ -8,6 +8,9 @@ var blueprint: Dictionary = Blueprint.DEFAULT.duplicate(true)
 var partitions_editing := false
 
 const WALLS := [Color("f1eee8"), Color("e5e1da"), Color("dce6df")]
+# Style 0 follows the existing room-wide wall/floor presets.
+const WALL_FINISHES := [Color("f1eee8"), Color("d8c5ae"), Color("9dad9f"), Color("8e9ca8")]
+const FLOOR_FINISHES := [Color("b99572"), Color("e0d7c6"), Color("9aa69e"), Color("856e5c")]
 const FLOORS := [Color("b99572"), Color("967153"), Color("a8ada8")]
 const LIGHTS := [Color("fff0dc"), Color("e5efff"), Color("ffd1a1")]
 const FILL_LIGHTS := [Color("d9e4df"), Color("d9e8f4"), Color("a8a09a")]
@@ -75,10 +78,12 @@ func apply_style(value: Variant) -> void:
 		if material == null:
 			continue
 		if role == "wall":
-			material.albedo_color = WALLS[style.wall]
+			var finish: int = int(mesh.get_meta("finish_id", 0))
+			material.albedo_color = WALL_FINISHES[finish] if finish > 0 and finish < WALL_FINISHES.size() else WALLS[style.wall]
 		elif role == "floor":
 			var tone := float(mesh.get_meta("tone", 1.0))
-			material.albedo_color = FLOORS[style.floor] * tone
+			var finish: int = int(mesh.get_meta("finish_id", 0))
+			material.albedo_color = (FLOOR_FINISHES[finish] if finish > 0 and finish < FLOOR_FINISHES.size() else FLOORS[style.floor]) * tone
 
 	var key := get_parent().get_node_or_null("KeyLight") as DirectionalLight3D
 	if key != null:
