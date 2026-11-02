@@ -20,16 +20,44 @@ static func clean(raw: Variant) -> Dictionary:
 		result[role] = {"x": clampf(float(pose.x), -MAX_POSITION, MAX_POSITION), "z": clampf(float(pose.z), -MAX_POSITION, MAX_POSITION), "yaw": wrapf(float(pose.yaw), -PI, PI)}
 	return result
 
+## Existing "chair_1"…"_8" names are accepted unchanged on load.
+## Newly placed instances use one immutable role per inventory UID, with no slot limit.
+const INSTANCE_SEPARATOR := "__instance__"
+
+static func instance_role(furniture_role: String, uid: String) -> String:
+	if Catalog.item_for_placement_role(furniture_role) == null: return ""
+	if not uid.begins_with("item_") or uid.length() > 80: return ""
+	var index := uid.substr(5)
+	if not index.is_valid_int() or int(index) < 1 or str(int(index)) != index: return ""
+	return furniture_role + INSTANCE_SEPARATOR + uid
+
+static func is_instance_role(role: String) -> bool:
+	var separator := role.find(INSTANCE_SEPARATOR)
+	if separator < 1: return false
+	var furniture_role := role.substr(0,separator)
+	var uid := role.substr(separator+INSTANCE_SEPARATOR.length())
+	return instance_role(furniture_role,uid) == role
+
+static func instance_uid(role: String) -> String:
+	if not is_instance_role(role): return ""
+	return role.substr(role.find(INSTANCE_SEPARATOR)+INSTANCE_SEPARATOR.length())
+
 static func base_role(role: String) -> String:
-	if is_copy(role): return role.substr(0, role.rfind("_"))
+	if is_instance_role(role):
+		return role.substr(0,role.find(INSTANCE_SEPARATOR))
+	if is_legacy_copy(role):
+		return role.substr(0,role.rfind("_"))
 	return role
 
-static func is_copy(role: String) -> bool:
+static func is_legacy_copy(role: String) -> bool:
 	var index := role.rfind("_")
 	if index < 1: return false
 	var suffix := role.substr(index+1)
 	if not suffix.is_valid_int() or int(suffix) < 1 or int(suffix) > 8: return false
 	return Catalog.item_for_placement_role(role.substr(0,index)) != null
+
+static func is_copy(role: String) -> bool:
+	return is_instance_role(role) or is_legacy_copy(role)
 
 static func valid_role(role: String) -> bool:
 	return role in ROLES or Catalog.item_for_placement_role(role) != null or is_copy(role)

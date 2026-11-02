@@ -170,12 +170,13 @@ func _apply_furniture_appearance() -> void:
 				mesh.transparency = 0.0
 	if placing_role.is_empty(): preview_original_materials.clear()
 
-func _next_furniture_role(base_role: String) -> String:
-	if not placed_instances.has(base_role): return base_role
-	for index in range(1, 9):
-		var role := base_role + "_" + str(index)
-		if not nodes.has(role): return role
-	return ""
+func _next_furniture_role(base_role: String, uid: String) -> String:
+	# Replacing the original free starter piece keeps legacy room keys stable.
+	# All newly purchased pieces use their inventory UID as an unlimited key.
+	if authored.has(base_role) and not placed_instances.has(base_role):
+		if InventoryData.initial_placements().get(base_role, "") == uid:
+			return base_role
+	return Data.instance_role(base_role, uid)
 
 func start_place(item_id: String, uid: String) -> bool:
 	if not active or not placing_role.is_empty(): return false
@@ -188,7 +189,7 @@ func start_place(item_id: String, uid: String) -> bool:
 	for entry: Dictionary in available_inventory:
 		if entry.uid == uid and entry.item_id == item_id: owned = true
 	if not owned: return false
-	var role := _next_furniture_role(base_role)
+	var role := _next_furniture_role(base_role, uid)
 	if role.is_empty(): return false
 	end_drag()
 	placing_before = _draft()
@@ -264,14 +265,9 @@ func duplicate_selected() -> void:
 	end_drag()
 	var before := _draft()
 	var source: Node3D = nodes[selected]
-	var role := ""
-	for index in range(1,9):
-		var candidate := Data.base_role(selected) + "_" + str(index)
-		if not nodes.has(candidate):
-			role = candidate
-			break
-	if role.is_empty():
-		message = "这类家具最多可复制 8 件"
+	var role := _next_furniture_role(Data.base_role(selected), instance_uid)
+	if role.is_empty() or nodes.has(role):
+		message = "这件家具的库存实例标识无效"
 		changed.emit()
 		return
 	_create_copy(role)
