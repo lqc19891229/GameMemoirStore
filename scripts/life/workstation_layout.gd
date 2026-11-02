@@ -36,8 +36,8 @@ var start_angle := 0.0
 var start_axis := Vector3.ZERO
 var drag_height := 0.78
 var committed_style: Dictionary = {}
-var blueprint: Dictionary = BlueprintData.DEFAULT.duplicate()
-var committed_blueprint: Dictionary = BlueprintData.DEFAULT.duplicate()
+var blueprint: Dictionary = BlueprintData.DEFAULT.duplicate(true)
+var committed_blueprint: Dictionary = BlueprintData.DEFAULT.duplicate(true)
 var undo_stack: Array[Dictionary] = []
 var redo_stack: Array[Dictionary] = []
 var drag_before: Dictionary = {}
@@ -63,7 +63,7 @@ func setup(owner_world: Node3D) -> void:
 		templates[item.role] = load(item.scene_file_path)
 	committed_style = world.get_node("Room").style.duplicate()
 	blueprint = world.get_node("Room").blueprint.duplicate()
-	committed_blueprint = blueprint.duplicate()
+	committed_blueprint = blueprint.duplicate(true)
 	authored = snapshot()
 	committed = authored.duplicate()
 	available_inventory = InventoryData.initial()
@@ -337,12 +337,16 @@ func load_blueprint(raw: Variant) -> void:
 	committed_blueprint = blueprint.duplicate()
 
 func set_blueprint_value(key: String, value: float) -> bool:
-	if not active or key not in BlueprintData.DEFAULT or not is_finite(value): return false
+	if not active or key not in ["width", "depth", "door_x", "window_z"] or not is_finite(value): return false
 	end_drag()
 	var before := _draft()
 	var next := blueprint.duplicate()
 	next[key] = value
 	next = BlueprintData.clean(next)
+	if next.partitions.size() != blueprint.partitions.size():
+		message = "调整失败：房间尺寸会移除已有内墙，请先拆除相关墙段"
+		changed.emit()
+		return false
 	if next == blueprint: return false
 	blueprint = next
 	room_half_size = BlueprintData.half_size(next)
@@ -360,16 +364,72 @@ func set_blueprint_value(key: String, value: float) -> bool:
 	update()
 	return true
 
+func add_partition(at: Vector2, axis: String, kind: String = "wall") -> bool:
+	if not active or not placing_role.is_empty(): return false
+	var part: Dictionary = BlueprintData.clean_partition({
+		"x": snappedf(at.x, BlueprintData.WALL_GRID),
+		"z": snappedf(at.y, BlueprintData.WALL_GRID),
+		"axis": axis, "kind": kind
+	})
+	var blocker := partition_blocker(part)
+	if not blocker.is_empty():
+		message = "建造失败：" + blocker
+		changed.emit()
+		return false
+	var before := _draft()
+	var next := blueprint.duplicate(true)
+	next.partitions.append(part)
+	blueprint = BlueprintData.clean(next)
+	world.get_node("Room").apply_blueprint(blueprint)
+	_remember(before)
+	update()
+	return true
+
+func partition_blocker(part: Dictionary) -> String:
+	if part.is_empty(): return "无效墙段"
+	if blueprint.partitions.size() >= BlueprintData.MAX_PARTITIONS: return "墙段已达上限"
+	if not BlueprintData.inside(blueprint, part): return "墙段超出房间范围"
+	for existing: Dictionary in blueprint.partitions:
+		if BlueprintData.intersects(existing, part): return "此处已有墙体"
+	var shape := BlueprintData.polygon(part, collision_margin)
+	for role: String in nodes:
+		if not is_floor(role): continue
+		if InventoryData.ROOM_DEFAULTS.has(Data.base_role(role)) and not placed_instances.has(role): continue
+		# Rugs cannot pass through structural walls either.
+		if Data.overlap(shape, footprint(role, collision_margin)):
+			return "墙体会穿过" + name_for(role)
+	return ""
+
+func remove_partition(at: Vector2) -> bool:
+	if not active or blueprint.partitions.is_empty(): return false
+	var nearest := -1
+	var distance := .34
+	for index in range(blueprint.partitions.size()):
+		var part: Dictionary = blueprint.partitions[index]
+		var extents := BlueprintData.extents(part)
+		var delta := Vector2(absf(float(part.x) - at.x), absf(float(part.z) - at.y)) - extents
+		var metric := Vector2(maxf(delta.x, 0.0), maxf(delta.y, 0.0)).length()
+		if metric < distance:
+			nearest = index
+			distance = metric
+	if nearest == -1: return false
+	var before := _draft()
+	blueprint.partitions.remove_at(nearest)
+	world.get_node("Room").apply_blueprint(blueprint)
+	_remember(before)
+	update()
+	return true
+
 func load_style(raw: Variant) -> void:
 	if active: return
 	world.get_node("Room").apply_style(raw)
 	committed_style = world.get_node("Room").style.duplicate()
 
 func _draft() -> Dictionary:
-	return {"poses":snapshot(), "style":world.get_node("Room").style.duplicate(), "placements":placed_instances.duplicate(), "colors":furniture_colors.duplicate(), "blueprint":blueprint.duplicate()}
+	return {"poses":snapshot(), "style":world.get_node("Room").style.duplicate(), "placements":placed_instances.duplicate(), "colors":furniture_colors.duplicate(), "blueprint":blueprint.duplicate(true)}
 
 func _restore_draft(draft: Dictionary) -> void:
-	blueprint = draft.blueprint.duplicate()
+	blueprint = draft.blueprint.duplicate(true)
 	room_half_size = BlueprintData.half_size(blueprint)
 	world.get_node("Room").apply_blueprint(blueprint)
 	restore(draft.poses)
@@ -412,7 +472,7 @@ func set_style(key: String, value: int) -> void:
 
 func begin() -> void:
 	active = true
-	blueprint = committed_blueprint.duplicate()
+	blueprint = committed_blueprint.duplicate(true)
 	room_half_size = BlueprintData.half_size(blueprint)
 	world.get_node("Room").apply_blueprint(blueprint)
 	placing_role = ""
@@ -438,7 +498,7 @@ func finish(apply: bool) -> bool:
 		committed_placements = placed_instances.duplicate()
 		committed_colors = furniture_colors.duplicate()
 		committed_style = world.get_node("Room").style.duplicate()
-		committed_blueprint = blueprint.duplicate()
+		committed_blueprint = blueprint.duplicate(true)
 		saved = export_layout()
 	else:
 		restore(committed)
@@ -446,7 +506,7 @@ func finish(apply: bool) -> bool:
 		furniture_colors = committed_colors.duplicate()
 		_apply_furniture_appearance()
 		world.get_node("Room").apply_style(committed_style)
-		blueprint = committed_blueprint.duplicate()
+		blueprint = committed_blueprint.duplicate(true)
 		room_half_size = BlueprintData.half_size(blueprint)
 		world.get_node("Room").apply_blueprint(blueprint)
 	active = false
@@ -470,7 +530,7 @@ func reset_layout() -> void:
 	end_drag()
 	var before := _draft()
 	restore(authored)
-	blueprint = BlueprintData.DEFAULT.duplicate()
+	blueprint = BlueprintData.DEFAULT.duplicate(true)
 	room_half_size = BlueprintData.half_size(blueprint)
 	world.get_node("Room").apply_blueprint(blueprint)
 	placed_instances = InventoryData.initial_placements()
@@ -552,6 +612,10 @@ func _blocker(role: String, polygon: PackedVector2Array) -> String:
 		if absf(point.x) > limits.x - edge_margin + 0.002 or absf(point.y) > limits.y - edge_margin + 0.002:
 			return name_for(role) + ("到达房间边界" if floor_item else "到达桌沿")
 	if not is_blocking(role): return ""
+	if floor_item:
+		for part: Dictionary in blueprint.partitions:
+			if Data.overlap(polygon, BlueprintData.polygon(part, collision_margin)):
+				return name_for(role) + "碰到内墙"
 	for other: String in nodes:
 		if other == role or is_floor(other) != floor_item or not is_blocking(other): continue
 		if InventoryData.ROOM_DEFAULTS.has(Data.base_role(other)) and not placed_instances.has(other): continue

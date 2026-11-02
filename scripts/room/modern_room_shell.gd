@@ -92,6 +92,7 @@ func _build() -> void:
 	_build_left_wall(wall, trim, wood, metal, linen, glass)
 	_build_back_wall(wall, trim, wood, dark_wood, metal, canvas, art_blue, art_sage, art_ochre)
 	_build_ceiling_trim(trim, metal)
+	_build_partitions(wall, trim)
 
 func _build_floor() -> void:
 	var width: float = blueprint.width
@@ -180,3 +181,23 @@ func _build_ceiling_trim(trim: Material, metal: Material) -> void:
 	_box(ceiling, "Left_CeilingCove", Vector3(.20, .11, blueprint.depth + .2), Vector3(-half_x + .01, 3.16, 0), trim)
 	_box(ceiling, "Back_CeilingCove", Vector3(blueprint.width + .2, .11, .20), Vector3(0, 3.16, -half_z + .01), trim)
 	_cylinder(ceiling, "RecessedSpotTrim", .12, .12, .035, Vector3(.1, 3.08, -half_z + .28), metal, 32)
+
+func _build_partitions(wall: Material, trim: Material) -> void:
+	var pieces := _group(self, "Partitions")
+	for index in range(blueprint.partitions.size()):
+		var part: Dictionary = blueprint.partitions[index]
+		var piece := _group(pieces, "Segment_%02d" % index)
+		piece.position = Vector3(float(part.x), 0, float(part.z))
+		var along_x: bool = part.axis == "x"
+		var horizontal: Vector3 = Vector3(1.0, 0, .14) if along_x else Vector3(.14, 0, 1.0)
+		if part.kind == "door":
+			# Structural posts and lintel leave a real passable opening.
+			for sign in [-1.0, 1.0]:
+				var post: Vector3 = Vector3(sign * .47, 1.48, 0) if along_x else Vector3(0, 1.48, sign * .47)
+				var dims: Vector3 = Vector3(.06, 2.96, .14) if along_x else Vector3(.14, 2.96, .06)
+				_box(piece, "DoorPost", dims, post, trim, "wall")
+			_box(piece, "DoorLintel", Vector3(1.0, .3, .14) if along_x else Vector3(.14, .3, 1.0), Vector3(0, 3.05, 0), wall, "wall")
+		else:
+			_box(piece, "WallBody", Vector3(horizontal.x, 3.2, horizontal.z), Vector3(0, 1.6, 0), wall, "wall")
+		# A subtle top rail makes individual one-metre pieces readable from above.
+		_box(piece, "TopTrim", Vector3(horizontal.x, .045, horizontal.z), Vector3(0, 3.22, 0), trim)
