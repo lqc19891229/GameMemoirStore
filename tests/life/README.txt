@@ -19,3 +19,5 @@ test_room_partitions.gd：网格内墙/门洞建造、墙体碰撞、无效存�
 test_room_footprint.gd：L 型户型地板裁切、外墙、家具越界、内墙承托、撤销/重做、应用/取消、JSON 存档与旧档兼容。
 
 test_room_grid_outline.gd：自由网格轮廓、地板挖除与恢复、连通性、墙体/家具约束、撤销重做和存档重建。
+
+test_room_finishes.gd：每单元地板装修、内墙分段颜色、外墙独立窗/门洞、存档过滤、撤销重做与重新加载。
