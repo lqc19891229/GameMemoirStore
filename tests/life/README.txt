@@ -32,3 +32,5 @@ test_room_build_feedback.gd：连续墙段红绿预览、快速拖动补间、�
 test_room_smart_build.gd：整次连续画墙的撤销、双段门窗、已有装修防覆盖、靠墙智能吸附、JSON 存档回读。
 
 test_furniture_assists.gd：内墙吸附独立开关、家具对齐、三件以上同类家具等距排列、尺寸距离提示、单步撤销和旧布局取消还原。
+
+test_room_visual_polish.gd：新家具沙发与矮凳的购买/放置、材质纹理、四种环境光影、雨景切换和跨会话存档恢复。
