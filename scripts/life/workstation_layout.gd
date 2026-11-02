@@ -38,6 +38,7 @@ var drag_height := 0.78
 var committed_style: Dictionary = {}
 var blueprint: Dictionary = BlueprintData.DEFAULT.duplicate(true)
 var committed_blueprint: Dictionary = BlueprintData.DEFAULT.duplicate(true)
+var aperture_drag_before: Dictionary = {}
 var undo_stack: Array[Dictionary] = []
 var redo_stack: Array[Dictionary] = []
 var drag_before: Dictionary = {}
@@ -358,7 +359,7 @@ func set_blueprint_shape(shape: String) -> bool:
 					next.removed_cells.append({"ix":ix,"iz":iz})
 	return _apply_blueprint_change(BlueprintData.clean(next))
 
-func _apply_blueprint_change(next: Dictionary) -> bool:
+func _apply_blueprint_change(next: Dictionary, remember: bool = true) -> bool:
 	if next == blueprint: return false
 	# Do not drop internal walls when altering the outer boundary.
 	if (next.partitions.size() != blueprint.partitions.size()
@@ -388,9 +389,32 @@ func _apply_blueprint_change(next: Dictionary) -> bool:
 		message = "调整失败：" + collision + "，请先移动、拆除或收回相关物品"
 		changed.emit()
 		return false
-	_remember(before)
+	if remember: _remember(before)
 	update()
 	return true
+
+func begin_aperture_drag() -> void:
+	if not active: return
+	if not aperture_drag_before.is_empty(): return
+	end_drag()
+	aperture_drag_before = _draft()
+
+func drag_aperture(key: String, value: float) -> bool:
+	if not active or aperture_drag_before.is_empty(): return false
+	if key not in ["door_x","window_z"] or not is_finite(value): return false
+	var next := blueprint.duplicate(true)
+	next[key] = snappedf(value,.05)
+	return _apply_blueprint_change(BlueprintData.clean(next), false)
+
+func end_aperture_drag(cancel: bool = false) -> void:
+	if aperture_drag_before.is_empty(): return
+	var before: Dictionary = aperture_drag_before
+	aperture_drag_before = {}
+	if cancel:
+		_restore_draft(before)
+	else:
+		_remember(before)
+	update()
 
 func floor_cell_blocker(cell: Dictionary, removing: bool = true) -> String:
 	if not active or blueprint.shape != "custom": return "请先选择自定义户型"
@@ -718,6 +742,7 @@ func _remember(before: Dictionary) -> void:
 
 func undo() -> void:
 	if not active: return
+	end_aperture_drag()
 	end_drag()
 	if undo_stack.is_empty(): return
 	redo_stack.append(_draft())
@@ -726,6 +751,7 @@ func undo() -> void:
 
 func redo() -> void:
 	if not active: return
+	end_aperture_drag()
 	end_drag()
 	if redo_stack.is_empty(): return
 	undo_stack.append(_draft())
@@ -760,6 +786,7 @@ func begin() -> void:
 
 func finish(apply: bool) -> bool:
 	if not active: return false
+	end_aperture_drag(not apply)
 	if apply: update()
 	if apply and (not valid or not placing_role.is_empty()): return false
 	if not placing_role.is_empty(): cancel_placement()
