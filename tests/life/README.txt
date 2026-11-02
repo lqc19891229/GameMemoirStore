@@ -36,3 +36,5 @@ test_furniture_assists.gd：内墙吸附独立开关、家具对齐、三件以�
 test_room_visual_polish.gd：新家具沙发与矮凳的购买/放置、材质纹理、四种环境光影、雨景切换和跨会话存档恢复。
 
 test_furniture_catalog.gd：家具/硬件统一分类、二级类型、商店与房间目录搜索筛选、旧家具与设备约束、库存角色兼容。
+
+test_furniture_expansion.gd：27 种商品场景模型及包围盒、20 款新家具分类和灯光、购物/重复购买、自由摆放与碰撞、独立改色、带下划线的摆放角色与副本跨存档还原。
