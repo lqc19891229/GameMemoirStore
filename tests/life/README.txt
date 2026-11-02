@@ -23,3 +23,5 @@ test_room_grid_outline.gd：自由网格轮廓、地板挖除与恢复、连通�
 test_room_finishes.gd：每单元地板装修、内墙分段颜色、外墙独立窗/门洞、存档过滤、撤销重做与重新加载。
 
 test_room_zones.gd：功能区分配与清理、三区材质/灯光、局部材质优先级、装修预设、撤销重做及存档加载。
+
+test_room_regions.gd：实体墙/门洞连通区域自动识别、一键区域填充、三个装修方案槽位、卫生校验、撤销和 JSON 恢复。\n
