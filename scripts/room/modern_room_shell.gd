@@ -92,19 +92,32 @@ func _build() -> void:
 	_build_left_wall(wall, trim, wood, metal, linen, glass)
 	_build_back_wall(wall, trim, wood, dark_wood, metal, canvas, art_blue, art_sage, art_ochre)
 	_build_ceiling_trim(trim, metal)
+	_build_notch_walls(wall, trim)
 	_build_partitions(wall, trim)
 
 func _build_floor() -> void:
 	var width: float = blueprint.width
 	var depth: float = blueprint.depth
-	var base := _material(Color("b99572"), 0.68)
-	_box(self, "Floor", Vector3(width + 0.24, 0.2, depth + 0.24), Vector3(0, -0.1, 0), base, "floor")
-	var tones := [0.96, 1.02, 0.99, 1.04]
-	for row in range(roundi(depth / 0.5)):
+	var cutout: bool = blueprint.shape == "l"
+	var notch_w: float = blueprint.notch_width if cutout else 0.0
+	var notch_d: float = blueprint.notch_depth if cutout else 0.0
+	var cut_z: float = depth * .5 - notch_d
+	var base := _material(Color("b99572"), .68)
+	if cutout:
+		# Two adjoining rectangles make a real hole in the floor mesh (not a color mask).
+		_box(self, "Floor", Vector3(width + .24, .2, depth - notch_d + .12), Vector3(0, -.1, -(notch_d + .12) * .5), base, "floor")
+		_box(self, "FloorWing", Vector3(width - notch_w + .12, .2, notch_d + .12), Vector3(-(notch_w + .12) * .5, -.1, depth * .5 - notch_d * .5 + .06), base, "floor")
+	else:
+		_box(self, "Floor", Vector3(width + .24, .2, depth + .24), Vector3(0, -.1, 0), base, "floor")
+	var tones := [.96, 1.02, .99, 1.04]
+	for row in range(roundi(depth / .5)):
 		var tone: float = tones[row % tones.size()]
-		var plank := _material(Color("b99572") * tone, 0.61)
-		var z := -depth / 2.0 + .25 + float(row) * .5
-		_box(self, "FloorBoard_%02d" % row, Vector3(width, .014, .486), Vector3(0, .006, z), plank, "floor", tone)
+		var plank := _material(Color("b99572") * tone, .61)
+		var z: float = -depth * .5 + .25 + float(row) * .5
+		var wing: bool = cutout and z >= cut_z
+		var plank_width := width - notch_w if wing else width
+		var plank_x := -notch_w * .5 if wing else 0.0
+		_box(self, "FloorBoard_%02d" % row, Vector3(plank_width, .014, .486), Vector3(plank_x, .006, z), plank, "floor", tone)
 
 func _build_left_wall(wall: Material, trim: Material, wood: Material, metal: Material, linen: Material, glass: Material) -> void:
 	var left := _group(self, "Left_Wall")
@@ -201,3 +214,18 @@ func _build_partitions(wall: Material, trim: Material) -> void:
 			_box(piece, "WallBody", Vector3(horizontal.x, 3.2, horizontal.z), Vector3(0, 1.6, 0), wall, "wall")
 		# A subtle top rail makes individual one-metre pieces readable from above.
 		_box(piece, "TopTrim", Vector3(horizontal.x, .045, horizontal.z), Vector3(0, 3.22, 0), trim)
+
+func _build_notch_walls(wall: Material, trim: Material) -> void:
+	if blueprint.shape != "l": return
+	var group := _group(self, "Notch_Walls")
+	var half_w: float = blueprint.width * .5
+	var half_d: float = blueprint.depth * .5
+	var cut_x: float = half_w - float(blueprint.notch_width)
+	var cut_z: float = half_d - float(blueprint.notch_depth)
+	var notch_w: float = blueprint.notch_width
+	var notch_d: float = blueprint.notch_depth
+	# Concave outer contour: two return walls where the missing front-right corner begins.
+	_box(group, "NotchBack", Vector3(notch_w, 3.2, .12), Vector3(cut_x + notch_w * .5, 1.6, cut_z + .06), wall, "wall")
+	_box(group, "NotchSide", Vector3(.12, 3.2, notch_d), Vector3(cut_x + .06, 1.6, cut_z + notch_d * .5), wall, "wall")
+	_box(group, "NotchBackTrim", Vector3(notch_w, .07, .16), Vector3(cut_x + notch_w * .5, 3.19, cut_z + .06), trim)
+	_box(group, "NotchSideTrim", Vector3(.16, .07, notch_d), Vector3(cut_x + .06, 3.19, cut_z + notch_d * .5), trim)

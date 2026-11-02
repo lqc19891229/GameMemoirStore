@@ -15,3 +15,5 @@ test_room_placement.gd：房间家具目录、原始家具收回、实时摆放�
 test_room_blueprint.gd：矩形房间长宽与门窗编辑、几何重建、边界约束、无效缩小拒绝、撤销/重做、取消/应用和存档读回。
 
 test_room_partitions.gd：网格内墙/门洞建造、墙体碰撞、无效存档过滤、撤销/删除、蓝图尺寸约束、取消/应用和新会话重建。
+
+test_room_footprint.gd：L 型户型地板裁切、外墙、家具越界、内墙承托、撤销/重做、应用/取消、JSON 存档与旧档兼容。

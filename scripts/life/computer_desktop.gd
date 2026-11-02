@@ -24,7 +24,7 @@ var furniture_palette: OptionButton
 var blueprint_mode := false
 var wall_drag_button := 0
 var last_wall_cell := Vector2(INF, INF)
-const BLUEPRINT_KEYS := {"BlueprintWidth":"width", "BlueprintDepth":"depth", "BlueprintDoorX":"door_x", "BlueprintWindowZ":"window_z"}
+const BLUEPRINT_KEYS := {"BlueprintWidth":"width", "BlueprintDepth":"depth", "BlueprintDoorX":"door_x", "BlueprintWindowZ":"window_z", "BlueprintNotchWidth":"notch_width", "BlueprintNotchDepth":"notch_depth"}
 @onready var world: Node3D = %Workstation3D
 var screen_focused: bool:
 	get: return is_instance_valid(world) and world.mode == "screen"
@@ -40,6 +40,11 @@ func _ready() -> void:
 	%ResetView.pressed.connect(world.reset_overview)
 	%EditLayout.pressed.connect(begin_layout)
 	%BlueprintToggle.pressed.connect(func() -> void: set_blueprint_mode(not blueprint_mode))
+	%BlueprintShape.add_item("矩形房间")
+	%BlueprintShape.add_item("L 型房间 · 右前角缺口")
+	%BlueprintShape.item_selected.connect(func(index: int) -> void:
+		if blueprint_mode: world.layout.set_blueprint_shape("l" if index == 1 else "rectangle")
+	)
 	%WallAxis.add_item("横向墙 · X")
 	%WallAxis.add_item("纵向墙 · Z")
 	%WallKind.add_item("实体墙")
@@ -188,6 +193,11 @@ func set_blueprint_mode(enabled: bool) -> void:
 
 func _sync_blueprint_ui() -> void:
 	var blueprint: Dictionary = world.layout.blueprint
+	%BlueprintShape.select(1 if blueprint.shape == "l" else 0)
+	%BlueprintNotchWidth.editable = blueprint.shape == "l"
+	%BlueprintNotchDepth.editable = blueprint.shape == "l"
+	%BlueprintNotchWidth.max_value = minf(4.0, float(blueprint.width) - 3.0)
+	%BlueprintNotchDepth.max_value = minf(4.0, float(blueprint.depth) - 2.5)
 	for name: String in BLUEPRINT_KEYS:
 		var key: String = BLUEPRINT_KEYS[name]
 		var slider: HSlider = get_node("%" + name)
@@ -198,11 +208,11 @@ func _sync_blueprint_ui() -> void:
 			slider.min_value = -float(blueprint.depth) / 2.0 + 1.35
 			slider.max_value = float(blueprint.depth) / 2.0 - 1.35
 		slider.set_value_no_signal(float(blueprint[key]))
-		var label_key: String = {"width":"BlueprintWidthLabel", "depth":"BlueprintDepthLabel", "door_x":"BlueprintDoorLabel", "window_z":"BlueprintWindowLabel"}[key]
+		var label_key: String = {"width":"BlueprintWidthLabel", "depth":"BlueprintDepthLabel", "door_x":"BlueprintDoorLabel", "window_z":"BlueprintWindowLabel", "notch_width":"BlueprintNotchWidthLabel", "notch_depth":"BlueprintNotchDepthLabel"}[key]
 		var label: Label = get_node("%" + label_key)
-		var display: String = {"width":"房间宽度", "depth":"房间深度", "door_x":"后墙门位置", "window_z":"左墙窗位置"}[key]
+		var display: String = {"width":"房间宽度", "depth":"房间深度", "door_x":"后墙门位置", "window_z":"左墙窗位置", "notch_width":"缺口宽度", "notch_depth":"缺口深度"}[key]
 		label.text = "%s：%.2f 米" % [display, float(blueprint[key])]
-	%BlueprintStatus.text = world.layout.message if world.layout.message.begins_with("调整失败") or world.layout.message.begins_with("建造失败") else "长宽 %.1f × %.1f 米 · 内墙 %d 段" % [blueprint.width, blueprint.depth, blueprint.partitions.size()]
+	%BlueprintStatus.text = world.layout.message if world.layout.message.begins_with("调整失败") or world.layout.message.begins_with("建造失败") else "%s · %.1f × %.1f 米 · 内墙 %d 段" % ["L 型" if blueprint.shape == "l" else "矩形", blueprint.width, blueprint.depth, blueprint.partitions.size()]
 
 func _wall_axis() -> String:
 	return "z" if %WallAxis.selected == 1 else "x"

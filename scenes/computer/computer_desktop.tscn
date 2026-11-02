@@ -380,12 +380,40 @@ size_flags_horizontal = 3
 theme_override_constants/separation = 12
 [node name="BlueprintTitle" type="Label" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel"]
 layout_mode = 2
-text = "房间蓝图 · 矩形户型"
+text = "房间蓝图 · 自由户型"
 theme_override_font_sizes/font_size = 18
 [node name="BlueprintHint" type="Label" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel"]
 layout_mode = 2
 autowrap_mode = 3
-text = "调整房间尺寸和门窗在墙面的位置。家具超出范围时会拒绝修改；可撤销或取消。"
+text = "可选矩形或右前角缺口的 L 型外轮廓。外墙改动不能穿过家具、桌子和内墙；支持撤销。"
+[node name="BlueprintShapeLabel" type="Label" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel"]
+layout_mode = 2
+text = "外轮廓：矩形 / L 型"
+[node name="BlueprintShape" type="OptionButton" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel"]
+unique_name_in_owner = true
+layout_mode = 2
+[node name="BlueprintNotchWidthLabel" type="Label" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "右前角缺口宽度：1.5 米"
+[node name="BlueprintNotchWidth" type="HSlider" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel"]
+unique_name_in_owner = true
+layout_mode = 2
+min_value = 1.0
+max_value = 4.0
+step = 0.5
+value = 1.5
+[node name="BlueprintNotchDepthLabel" type="Label" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "右前角缺口深度：1.5 米"
+[node name="BlueprintNotchDepth" type="HSlider" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel"]
+unique_name_in_owner = true
+layout_mode = 2
+min_value = 1.0
+max_value = 4.0
+step = 0.5
+value = 1.5
 [node name="BlueprintWidthLabel" type="Label" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel"]
 unique_name_in_owner = true
 layout_mode = 2
