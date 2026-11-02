@@ -221,7 +221,7 @@ func _blueprint_floor_hit(pixel: Vector2) -> Variant:
 	return Vector2(snappedf(hit.x, BlueprintData.WALL_GRID), snappedf(hit.z, BlueprintData.WALL_GRID))
 
 func _wall_action(at: Vector2, button: int) -> void:
-	var remove := button == MOUSE_BUTTON_RIGHT or %WallRemoveMode.button_pressed
+	var remove: bool = button == MOUSE_BUTTON_RIGHT or %WallRemoveMode.button_pressed
 	if remove:
 		world.layout.remove_partition(at)
 	else:
@@ -237,7 +237,7 @@ func _wall_hover(pixel: Vector2) -> void:
 	ghost.position = Vector3(at.x, .08, at.y)
 	(ghost.mesh as BoxMesh).size = Vector3(1.0, .10, .14) if along_x else Vector3(.14, .10, 1.0)
 	var part: Dictionary = BlueprintData.clean_partition({"x":at.x, "z":at.y, "axis":_wall_axis(), "kind":_wall_kind()})
-	var valid_wall := world.layout.partition_blocker(part).is_empty()
+	var valid_wall: bool = world.layout.partition_blocker(part).is_empty()
 	var tint := Color("6ed9ab", .48) if valid_wall else Color("f27777", .48)
 	(ghost.material_override as StandardMaterial3D).albedo_color = tint
 	ghost.show()
