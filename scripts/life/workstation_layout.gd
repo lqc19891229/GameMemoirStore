@@ -884,6 +884,25 @@ func _matching_furniture(role: String) -> Array[String]:
 			peers.append(other)
 	return peers
 
+func furniture_spacing_summary(role: String = "") -> String:
+	if role.is_empty(): role = selected
+	var peers: Array[String] = _matching_furniture(role)
+	if peers.size() < 2: return "同类家具不足 2 件，无法计算等距参考"
+	var details: Array[String] = []
+	for dimension in ["x","z"]:
+		var values: Array[float] = []
+		for peer: String in peers:
+			values.append(float(nodes[peer].position.x if dimension == "x" else nodes[peer].position.z))
+		values.sort()
+		var minimum := INF
+		var maximum := 0.0
+		for index in range(1,values.size()):
+			var gap: float = values[index] - values[index-1]
+			minimum = minf(minimum,gap)
+			maximum = maxf(maximum,gap)
+		details.append("%s 中心距 %.2f–%.2f 米" % [dimension.to_upper(),minimum,maximum])
+	return "%d 件同类家具 · %s" % [peers.size()," · ".join(details)]
+
 func nearest_alignment(role: String, dimension: String) -> Dictionary:
 	if dimension not in ["x","z"] or not nodes.has(role) or not is_floor(role): return {}
 	var node: Node3D = nodes[role]
