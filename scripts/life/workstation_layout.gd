@@ -124,6 +124,9 @@ func _apply_furniture_appearance() -> void:
 		if not InventoryData.ROOM_DEFAULTS.has(Data.base_role(role)): continue
 		var furniture: Node3D = nodes[role]
 		furniture.visible = placed_instances.has(role)
+		# Hiding Node3D does not disable its Area3D ray picking volume.
+		var pick_area := furniture.get_node_or_null("PickArea") as Area3D
+		if pick_area != null: pick_area.collision_layer = 1 if furniture.visible else 0
 		var preview := placing_role == role
 		var index := color_for(role)
 		var overlay: StandardMaterial3D = _tint_material(index, preview) if preview or index != 0 else null

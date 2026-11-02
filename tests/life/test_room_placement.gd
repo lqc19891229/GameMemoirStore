@@ -35,6 +35,7 @@ func run() -> void:
 	layout.select("chair")
 	layout.store_selected()
 	check(not layout.nodes.chair.visible and not layout.placed_instances.has("chair"), "original furniture can be returned to inventory")
+	check(layout.nodes.chair.get_node("PickArea").collision_layer == 0, "stored furniture cannot intercept room picking rays")
 	check(not layout._layout_blocker().contains("椅子"), "stored furniture does not block the floor")
 	check(catalog_button.text.contains("2/2"), "storing original furniture releases its instance")
 	var uid := "starter_chair"
@@ -47,6 +48,7 @@ func run() -> void:
 	layout.preview_placement(Vector2(authored.origin.x, authored.origin.z))
 	check(layout.valid, "valid floor location is accepted")
 	check(layout.confirm_placement() and layout.placing_role.is_empty(), "confirmation finalizes the furniture instance")
+	check(layout.nodes.chair.get_node("PickArea").collision_layer == 1, "placed furniture becomes pickable again")
 	layout.set_furniture_color(2)
 	check(layout.color_for("chair") == 2 and layout.nodes.chair.find_children("*", "MeshInstance3D", true, false)[0].material_overlay != null, "per-instance furniture tint is applied to model")
 	layout.select("chair")
