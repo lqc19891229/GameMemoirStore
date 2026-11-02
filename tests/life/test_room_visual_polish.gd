@@ -1,6 +1,7 @@
 extends SceneTree
 const Catalog = preload("res://data/items/_catalog.tres")
 const Inventory = preload("res://scripts/items/inventory_data.gd")
+const LayoutData = preload("res://scripts/life/workstation_layout_data.gd")
 const RoomView = preload("res://scripts/room/room_view.gd")
 const State = preload("res://scripts/store_state.gd")
 var checks := 0
@@ -66,6 +67,7 @@ func run() -> void:
 	check(game.session.buy_item("room_stool").begins_with("已购买"), "stool can be purchased through gameplay")
 	desktop.begin_layout()
 	check(layout.templates.has("sofa") and layout.templates.has("stool"), "layout controller discovers purchased furniture scenes")
+	var placed_roles: Dictionary = {}
 	for entry: Dictionary in [
 		{"role":"sofa","item":"room_sofa","pos":Vector2(-2.6,2.1),"mesh":"SeatCushion_0"},
 		{"role":"stool","item":"room_stool","pos":Vector2(2.1,2.3),"mesh":"AccentTray"}
@@ -73,21 +75,23 @@ func run() -> void:
 		var uid: String = Inventory.unused_uid(layout.available_inventory,layout.placed_instances,entry.item)
 		check(not uid.is_empty(), "purchased furniture creates an unused stock instance: "+entry.item)
 		check(layout.start_place(entry.item,uid), "new furniture can enter the ghost placement mode: "+entry.role)
-		check(layout.nodes.has(entry.role) and layout.nodes[entry.role].has_node("Model/"+entry.mesh), "runtime procedural geometry builds for "+entry.role)
-		check(layout.nodes[entry.role].get_node("Model").find_children("*","MeshInstance3D",true,false).size() >= 10, "new asset uses multiple actual textured meshes")
+		var instance_role: String = LayoutData.instance_role(str(entry.role),uid)
+		placed_roles[str(entry.role)] = instance_role
+		check(layout.nodes.has(instance_role) and layout.nodes[instance_role].has_node("Model/"+entry.mesh), "runtime geometry is instantiated for "+entry.role)
+		check(layout.nodes[instance_role].get_node("Model").find_children("*","MeshInstance3D",true,false).size() >= 10, "new asset uses multiple actual textured meshes")
 		layout.preview_placement(entry.pos)
 		check(layout.valid, "initial proposed position for new furniture is collision-free: "+entry.role)
 		check(layout.confirm_placement(), "new furniture can be confirmed into the current layout: "+entry.role)
-	check(layout.placed_instances.has("sofa") and layout.placed_instances.has("stool"), "both new assets are tracked as independent movable furniture")
+	check(layout.placed_instances.has(placed_roles["sofa"]) and layout.placed_instances.has(placed_roles["stool"]), "both new assets are tracked as independent movable furniture")
 	check(layout.valid, "additional furniture leaves the existing room layout collision-free")
 	var history: int = layout.undo_stack.size()
-	layout.select("sofa")
+	layout.select(placed_roles["sofa"])
 	layout.move_to(Vector2(-2.45,2.1))
 	check(layout.undo_stack.size() == history+1, "new furniture supports ordinary movement undo")
 	layout.undo()
-	check(layout.nodes.has("sofa"), "undo does not lose the purchased sofa instance")
+	check(layout.nodes.has(placed_roles["sofa"]), "undo does not lose the purchased sofa instance")
 	layout.redo()
-	check(layout.nodes.has("sofa"), "redo restores new furniture move")
+	check(layout.nodes.has(placed_roles["sofa"]), "redo restores new furniture move")
 
 	layout.set_style("wall_pattern",1)
 	layout.set_style("floor_pattern",2)
@@ -100,7 +104,7 @@ func run() -> void:
 	stored.save_path = state.save_path
 	stored.load_state()
 	check(stored.life.room_style.atmosphere == 3 and stored.life.room_style.wall_pattern == 1 and stored.life.room_style.floor_pattern == 2, "new texture and weather settings round trip through JSON")
-	check(stored.life.placements.has("sofa") and stored.life.placements.has("stool"), "new furniture ownership and placements survive JSON save")
+	check(stored.life.placements.has(placed_roles["sofa"]) and stored.life.placements.has(placed_roles["stool"]), "new furniture ownership and placements survive JSON save")
 	state.persistence_enabled = false
 	game.queue_free()
 	await frames()
@@ -111,8 +115,8 @@ func run() -> void:
 	await frames()
 	var restored_room: MemoirRoomView = resumed.desktop.world.get_node("Room")
 	var restored_layout = resumed.desktop.world.layout
-	check(restored_layout.nodes.has("sofa") and restored_layout.nodes.has("stool"), "new session reconstructs purchased furniture 3D scenes")
-	check(restored_layout.placed_instances.has("sofa") and restored_layout.placed_instances.has("stool"), "new session respects purchased furniture placements")
+	check(restored_layout.nodes.has(placed_roles["sofa"]) and restored_layout.nodes.has(placed_roles["stool"]), "new session reconstructs purchased furniture 3D scenes")
+	check(restored_layout.placed_instances.has(placed_roles["sofa"]) and restored_layout.placed_instances.has(placed_roles["stool"]), "new session respects purchased furniture placements")
 	check(restored_room.style.atmosphere == 3 and restored_room.style.floor_pattern == 2, "saved rain scene and materials restore in next session")
 	check(restored_room.get_node("Shell/Left_Wall/RainStreaks").visible, "weather state restores external rain after reloading")
 	check(restored_layout.valid, "restored furniture remains collision-free")
