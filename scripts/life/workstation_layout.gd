@@ -1,6 +1,7 @@
 extends Node
 signal changed
 const Data = preload("res://scripts/life/workstation_layout_data.gd")
+const InventoryData = preload("res://scripts/items/inventory_data.gd")
 const NAMES := {"desk":"桌子（整套）", "monitor":"显示器", "computer":"机箱", "keyboard":"键盘", "mouse":"鼠标", "chair":"椅子", "bookcase":"书架", "lamp":"落地灯", "rug":"地毯", "plant":"盆栽"}
 @export var tabletop_half_size := Vector2(2.4, 1.15)
 @export var tabletop_height := 0.78
@@ -35,6 +36,9 @@ var undo_stack: Array[Dictionary] = []
 var redo_stack: Array[Dictionary] = []
 var drag_before: Dictionary = {}
 var templates: Dictionary = {}
+var available_inventory: Array = []
+var placed_instances: Dictionary = {}
+var committed_placements: Dictionary = {}
 
 func setup(owner_world: Node3D) -> void:
 	world = owner_world
@@ -48,6 +52,9 @@ func setup(owner_world: Node3D) -> void:
 	committed_style = world.get_node("Room").style.duplicate()
 	authored = snapshot()
 	committed = authored.duplicate()
+	available_inventory = InventoryData.initial()
+	placed_instances = InventoryData.initial_placements()
+	committed_placements = placed_instances.duplicate()
 
 func snapshot() -> Dictionary:
 	var result: Dictionary = {}
@@ -56,6 +63,12 @@ func snapshot() -> Dictionary:
 
 func name_for(role: String) -> String:
 	return NAMES.get(Data.base_role(role),role) + (" · " + role.get_slice("_",1) if Data.is_copy(role) else "")
+
+func load_placements(raw: Dictionary, inventory: Array) -> void:
+	if active: return
+	available_inventory = inventory.duplicate(true)
+	placed_instances = raw.duplicate()
+	committed_placements = placed_instances.duplicate()
 
 func _create_copy(role: String) -> void:
 	if nodes.has(role) or not Data.is_copy(role): return
@@ -78,6 +91,12 @@ func restore(poses: Dictionary) -> void:
 
 func duplicate_selected() -> void:
 	if not active or not templates.has(Data.base_role(selected)): return
+	var furniture_id: String = str(InventoryData.ROOM_DEFAULTS.get(Data.base_role(selected), ""))
+	var instance_uid := InventoryData.unused_uid(available_inventory, placed_instances, furniture_id)
+	if instance_uid.is_empty():
+		message = "没有可用的家具，请先在商店购买"
+		changed.emit()
+		return
 	end_drag()
 	var before := _draft()
 	var source: Node3D = nodes[selected]
@@ -110,6 +129,7 @@ func duplicate_selected() -> void:
 		message = "附近没有足够空间，请先腾出位置"
 		changed.emit()
 		return
+	placed_instances[role] = instance_uid
 	selected = role
 	_remember(before)
 	update()
@@ -120,6 +140,7 @@ func delete_selected() -> void:
 	var before := _draft()
 	nodes[selected].free()
 	nodes.erase(selected)
+	placed_instances.erase(selected)
 	selected = "desk"
 	_remember(before)
 	update()
@@ -158,10 +179,11 @@ func load_style(raw: Variant) -> void:
 	committed_style = world.get_node("Room").style.duplicate()
 
 func _draft() -> Dictionary:
-	return {"poses":snapshot(), "style":world.get_node("Room").style.duplicate()}
+	return {"poses":snapshot(), "style":world.get_node("Room").style.duplicate(), "placements":placed_instances.duplicate()}
 
 func _restore_draft(draft: Dictionary) -> void:
 	restore(draft.poses)
+	placed_instances = draft.placements.duplicate()
 	world.get_node("Room").apply_style(draft.style)
 
 func _remember(before: Dictionary) -> void:
@@ -203,6 +225,7 @@ func begin() -> void:
 	selected = "desk"
 	gesture = ""
 	restore(committed)
+	placed_instances = committed_placements.duplicate()
 	update()
 
 func finish(apply: bool) -> bool:
@@ -212,10 +235,12 @@ func finish(apply: bool) -> bool:
 	end_drag()
 	if apply:
 		committed = snapshot()
+		committed_placements = placed_instances.duplicate()
 		committed_style = world.get_node("Room").style.duplicate()
 		saved = export_layout()
 	else:
 		restore(committed)
+		placed_instances = committed_placements.duplicate()
 		world.get_node("Room").apply_style(committed_style)
 	active = false
 	gizmo.hide()
@@ -237,6 +262,7 @@ func reset_layout() -> void:
 	end_drag()
 	var before := _draft()
 	restore(authored)
+	placed_instances = InventoryData.initial_placements()
 	world.get_node("Room").apply_style({})
 	_remember(before)
 	update()
@@ -252,8 +278,11 @@ func _footprint_at(role: String, pose: Transform3D, padding: float) -> PackedVec
 		result.append(Vector2(point.x, point.z))
 	return result
 
+func surface_for(role: String) -> String:
+	return "desk" if world.devices.has(role) else "floor"
+
 func is_floor(role: String) -> bool:
-	return not world.devices.has(role)
+	return surface_for(role) == "floor"
 
 func bounds_for(role: String) -> Vector3:
 	if role == "desk": return Vector3(tabletop_half_size.x*2, tabletop_height, tabletop_half_size.y*2)
@@ -310,6 +339,11 @@ func _blocker(role: String, polygon: PackedVector2Array) -> String:
 	return ""
 
 func _layout_blocker() -> String:
+	# Desktop hardware must stay under the table's Equipment node. It is
+	# never a free floor item, even when a save or caller bypasses the UI.
+	for role: String in world.devices:
+		if nodes[role].get_parent() != world.get_node("%Equipment"):
+			return name_for(role) + "必须放在电脑桌上"
 	for role: String in nodes:
 		var blocker := _blocker(role, footprint(role, collision_margin))
 		if not blocker.is_empty(): return blocker

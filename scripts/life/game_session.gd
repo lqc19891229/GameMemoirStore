@@ -5,8 +5,11 @@ signal changed
 signal tick_updated
 signal notice(message: String)
 signal play_requested(game_id: String)
+signal furniture_place_requested(item_id: String, instance_uid: String)
 const State = preload("res://scripts/store_state.gd")
 const Data = preload("res://scripts/life/life_data.gd")
+const ItemCatalog: MemoirItemCatalog = preload("res://data/items/_catalog.tres")
+const InventoryData = preload("res://scripts/items/inventory_data.gd")
 var state = State.new()
 var timer: Timer
 
@@ -35,25 +38,50 @@ func activity_text() -> String:
 	return "%s · %s · %d 分钟%s" % ["正在游玩" if active()["kind"] == "play" else "制作攻略", state.game(active()["game_id"])["title"], active()["minutes"], " · 直播中" if active().get("streaming", false) else ""]
 
 func buy_item(id: String) -> String:
-	if not Data.ITEMS.has(id) or int(Data.ITEMS[id]["price"]) <= 0: return "商品不存在。"
-	if Data.ROOM_ONLY_SLOTS.has(Data.ITEMS[id]["slot"]): return "该商品已停售。"
-	if state.life["items"].has(id): return "已经拥有这件物品。"
-	var cost: int = int(Data.ITEMS[id]["price"])
-	if state.wallet < cost: return "预算不足，还差 %d 点。" % (cost - state.wallet)
-	state.wallet -= cost
-	state.life["items"].append(id)
+	var item: MemoirItemDefinition = ItemCatalog.lookup(id)
+	if item == null or item.price <= 0 or item.retired: return "商品不存在或已停售。"
+	if item.category != "furniture" and InventoryData.owns(state.life["inventory"], id): return "已经拥有这件物品。"
+	if state.wallet < item.price: return "预算不足，还差 %d 点。" % (item.price - state.wallet)
+	state.wallet -= item.price
+	state.life["inventory"].append({"uid": InventoryData.next_uid(state.life["inventory"]), "item_id": id})
+	# Keep V3 ownership for old starter hardware; V4 records every instance.
+	if Data.ITEMS.has(id) and not state.life["items"].has(id): state.life["items"].append(id)
 	state.save_state()
-	return "已购买 %s，可在物品栏安装。" % Data.ITEMS[id]["name"]
+	return "已购买 %s，已加入物品栏。" % item.name
 
 func equip_item(id: String) -> String:
-	if not state.life["items"].has(id) or not Data.ITEMS.has(id): return "尚未拥有这件物品。"
-	var slot: String = Data.ITEMS[id]["slot"]
-	state.life["equipped"][slot] = id
-	if slot == "cabinet":
-		var capacity: int = int(Data.ITEMS[id].get("capacity", 1))
-		if state.life["displayed"].size() > capacity: state.life["displayed"].resize(capacity)
+	var item: MemoirItemDefinition = ItemCatalog.lookup(id)
+	if item == null or not InventoryData.owns(state.life["inventory"], id): return "尚未拥有这件物品。"
+	if item.category != "device": return "此物品不能安装到电脑上。"
+	if item.slot.is_empty(): return "此物品没有可用的装备槽位。"
+	state.life["equipped"][item.slot] = id
+	if item.slot == "peripheral":
+		state.life["equipped"]["keyboard"] = id
+		state.life["equipped"]["mouse"] = id
 	state.save_state()
-	return "已安装 %s。" % Data.ITEMS[id]["name"]
+	return "已安装 %s。" % item.name
+
+func unequip_item(slot: String) -> String:
+	if slot not in ["monitor", "computer", "peripheral", "keyboard", "mouse", "audio"]: return "无效装备槽位。"
+	if slot in ["monitor", "computer", "peripheral"]:
+		var starter := {"monitor":"starter_monitor", "computer":"starter_pc", "peripheral":"starter_mouse"}
+		state.life["equipped"][slot] = starter[slot]
+		if slot == "peripheral":
+			state.life["equipped"]["keyboard"] = "starter_mouse"
+			state.life["equipped"]["mouse"] = "starter_mouse"
+	else:
+		state.life["equipped"][slot] = "starter_mouse" if slot in ["keyboard", "mouse"] else ""
+	state.save_state()
+	return "设备已卸载。"
+
+func request_place_furniture(id: String) -> String:
+	var item: MemoirItemDefinition = ItemCatalog.lookup(id)
+	if item == null or item.category != "furniture" or item.retired or item.placement_surface != "floor":
+		return "此物品不能摆放在房间地面。"
+	var uid := InventoryData.unused_uid(state.life["inventory"], state.life["placements"], id)
+	if uid.is_empty(): return "没有尚未摆放的库存物品。"
+	furniture_place_requested.emit(id, uid)
+	return "已进入房间布置，请确认摆放位置。"
 
 func start_play(game_id: String) -> String:
 	if not state.owned.has(game_id) or not state.installed.has(game_id): return "请先购买并安装这款游戏。"
@@ -104,7 +132,11 @@ func challenge_rate(game_id: String) -> float:
 	for key: String in weights: ability += float(state.life["attributes"][key]) * float(weights[key])
 	var equipment: float = 1.0
 	for slot: String in ["computer", "peripheral"]:
-		equipment *= float(Data.ITEMS[state.life["equipped"][slot]].get("speed", 1.0))
+		var item: MemoirItemDefinition = ItemCatalog.lookup(str(state.life["equipped"].get(slot, "")))
+		if item != null: equipment *= item.speed
+	for slot: String in ["keyboard", "mouse"]:
+		var item: MemoirItemDefinition = ItemCatalog.lookup(str(state.life["equipped"].get(slot, "")))
+		if item != null and item.slot == slot: equipment *= item.speed
 	return (1.0 + ability / 100.0) * equipment
 
 func tick(minutes: int = 1) -> void:
@@ -130,7 +162,8 @@ func tick(minutes: int = 1) -> void:
 				if active().get("streaming", false) and int(active()["minutes"]) % 5 == 0:
 					var income: int = 2
 					for slot: String in ["computer", "audio"]:
-						income += int(Data.ITEMS.get(state.life["equipped"][slot], {}).get("income", 0))
+						var item: MemoirItemDefinition = ItemCatalog.lookup(str(state.life["equipped"].get(slot, "")))
+						if item != null: income += item.income
 					state.wallet += income
 					state.life["stream_income"] = int(state.life["stream_income"]) + income
 					state.life["followers"] = int(state.life["followers"]) + 1

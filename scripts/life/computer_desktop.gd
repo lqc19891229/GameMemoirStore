@@ -1,5 +1,6 @@
 extends Node3D
 const WindowScene = preload("res://scenes/computer/ui/app_window.tscn")
+const ItemCatalog: MemoirItemCatalog = preload("res://data/items/_catalog.tres")
 const APPS := {"platform": ["游戏平台", "res://scenes/apps/platform/store.tscn"], "browser": ["回忆生活 · 购物网页", "res://scenes/apps/browser/browser.tscn"], "game": ["正在游玩", "res://scenes/apps/game/game_player.tscn"]}
 @export var hardware_catalog: MemoirHardwareCatalog
 var session: MemoirGameSession
@@ -77,6 +78,7 @@ func _ready() -> void:
 	_sync_mode()
 	if session == null: return
 	session.changed.connect(refresh)
+	session.furniture_place_requested.connect(_start_purchased_furniture_placement)
 	session.tick_updated.connect(_update_status)
 	refresh()
 
@@ -84,13 +86,15 @@ func _update_equipment() -> void:
 	if session == null or hardware_catalog == null: return
 	var reposition := false
 	for role: String in world.devices:
-		var slot := "peripheral" if role in ["keyboard", "mouse"] else role
-		var id: String = session.state.life["equipped"].get(slot, "")
-		var model := hardware_catalog.visual_for(role, id)
+		var id: String = str(session.state.life["equipped"].get(role, ""))
+		var item: MemoirItemDefinition = ItemCatalog.lookup(id)
+		var visual_id := item.visual_id if item != null else id
+		var model := hardware_catalog.visual_for(role, visual_id)
 		if model != null and world.devices[role].appearance != model:
 			world.devices[role].appearance = model
 			reposition = reposition or (screen_focused and role == "monitor")
 	world.layout.load_saved(session.state.life.get("workstation_layout", {}))
+	world.layout.load_placements(session.state.life.get("placements", {}), session.state.life.get("inventory", []))
 	world.layout.load_style(session.state.life.get("room_style", {}))
 	if world.layout.active: world.layout.update()
 	if reposition: world.set_mode("screen", false)
@@ -106,8 +110,18 @@ func finish_layout(apply: bool) -> void:
 	_set_mode("overview", false)
 	if apply and session != null:
 		session.state.life["workstation_layout"] = world.layout.export_layout()
+		session.state.life["placements"] = world.layout.committed_placements.duplicate()
 		session.state.life["room_style"] = world.layout.committed_style.duplicate()
 		session.state.save_state()
+
+func _start_purchased_furniture_placement(item_id: String, _uid: String) -> void:
+	var item: MemoirItemDefinition = ItemCatalog.lookup(item_id)
+	if item == null or item.category != "furniture" or item.placement_surface != "floor": return
+	if world.layout.active: return
+	set_screen_focused(false, false)
+	begin_layout()
+	world.layout.select(item.subcategory)
+	world.layout.duplicate_selected()
 
 func _sync_layout() -> void:
 	if not world.layout.active: return
