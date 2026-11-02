@@ -1,0 +1,322 @@
+[gd_resource type="Resource" script_class="MemoirItemCatalog" load_steps=25 format=3]
+
+[ext_resource type="Script" path="res://scripts/items/item_catalog.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/items/item_definition.gd" id="2"]
+[ext_resource type="PackedScene" path="res://scenes/room/chair.tscn" id="s_chair"]
+[ext_resource type="PackedScene" path="res://scenes/room/bookcase.tscn" id="s_bookcase"]
+[ext_resource type="PackedScene" path="res://scenes/room/lamp.tscn" id="s_lamp"]
+[ext_resource type="PackedScene" path="res://scenes/room/rug.tscn" id="s_rug"]
+[ext_resource type="PackedScene" path="res://scenes/room/plant.tscn" id="s_plant"]
+
+[sub_resource type="Resource" id="item_0"]
+script = ExtResource("2")
+item_id = "starter_monitor"
+name = "旧日 CRT 显示器"
+category = "device"
+subcategory = "monitor"
+slot = "monitor"
+price = 0
+description = "厚实的米色边框，熟悉的游戏时光。"
+placement_surface = "desk"
+visual_id = "starter_monitor"
+speed = 1
+income = 0
+capacity = 0
+retired = false
+
+[sub_resource type="Resource" id="item_1"]
+script = ExtResource("2")
+item_id = "lcd_monitor"
+name = "轻薄液晶显示器"
+category = "device"
+subcategory = "monitor"
+slot = "monitor"
+price = 75
+description = "更轻薄的银灰色显示器。"
+placement_surface = "desk"
+visual_id = "lcd_monitor"
+speed = 1
+income = 0
+capacity = 0
+retired = false
+
+[sub_resource type="Resource" id="item_2"]
+script = ExtResource("2")
+item_id = "starter_pc"
+name = "旧日主机"
+category = "device"
+subcategory = "computer"
+slot = "computer"
+price = 0
+description = "陪你开始收藏的第一台电脑。"
+placement_surface = "desk"
+visual_id = "starter_pc"
+speed = 1
+income = 0
+capacity = 0
+retired = false
+
+[sub_resource type="Resource" id="item_3"]
+script = ExtResource("2")
+item_id = "starter_mouse"
+name = "有线键鼠"
+category = "device"
+subcategory = "input"
+slot = "peripheral"
+price = 0
+description = "可靠的入门外设。"
+placement_surface = "desk"
+visual_id = "starter_mouse"
+speed = 1
+income = 0
+capacity = 0
+retired = false
+
+[sub_resource type="Resource" id="item_4"]
+script = ExtResource("2")
+item_id = "precise_mouse"
+name = "精准键鼠套装"
+category = "device"
+subcategory = "input"
+slot = "peripheral"
+price = 28
+description = "成就挑战进度增加 15%。"
+placement_surface = "desk"
+visual_id = "precise_mouse"
+speed = 1.15
+income = 0
+capacity = 0
+retired = false
+
+[sub_resource type="Resource" id="item_5"]
+script = ExtResource("2")
+item_id = "stream_mic"
+name = "桌面麦克风"
+category = "device"
+subcategory = "microphone"
+slot = "audio"
+price = 45
+description = "直播每次结算额外获得 1 点。"
+placement_surface = "desk"
+visual_id = ""
+speed = 1
+income = 1
+capacity = 0
+retired = false
+
+[sub_resource type="Resource" id="item_6"]
+script = ExtResource("2")
+item_id = "workstation"
+name = "进阶游戏主机"
+category = "device"
+subcategory = "computer"
+slot = "computer"
+price = 120
+description = "挑战进度增加 20%，直播每次结算额外获得 1 点。"
+placement_surface = "desk"
+visual_id = "workstation"
+speed = 1.2
+income = 1
+capacity = 0
+retired = false
+
+[sub_resource type="Resource" id="item_7"]
+script = ExtResource("2")
+item_id = "starter_desk"
+name = "旧木书桌"
+category = "furniture"
+subcategory = "desk"
+slot = "desk"
+price = 0
+description = "历史收藏记录。"
+placement_surface = "floor"
+visual_id = ""
+speed = 1
+income = 0
+capacity = 0
+retired = true
+
+[sub_resource type="Resource" id="item_8"]
+script = ExtResource("2")
+item_id = "starter_cabinet"
+name = "纪念小架"
+category = "furniture"
+subcategory = "cabinet"
+slot = "cabinet"
+price = 0
+description = "历史收藏记录。"
+placement_surface = "floor"
+visual_id = ""
+speed = 1
+income = 0
+capacity = 1
+retired = true
+
+[sub_resource type="Resource" id="item_9"]
+script = ExtResource("2")
+item_id = "oak_desk"
+name = "橡木工作台"
+category = "furniture"
+subcategory = "desk"
+slot = "desk"
+price = 60
+description = "历史收藏记录。"
+placement_surface = "floor"
+visual_id = ""
+speed = 1
+income = 0
+capacity = 0
+retired = true
+
+[sub_resource type="Resource" id="item_10"]
+script = ExtResource("2")
+item_id = "reading_lamp"
+name = "暖光台灯"
+category = "furniture"
+subcategory = "lamp"
+slot = "decor"
+price = 24
+description = "历史收藏记录。"
+placement_surface = "floor"
+visual_id = ""
+speed = 1
+income = 0
+capacity = 0
+retired = true
+
+[sub_resource type="Resource" id="item_11"]
+script = ExtResource("2")
+item_id = "display_cabinet"
+name = "玻璃成就柜"
+category = "furniture"
+subcategory = "cabinet"
+slot = "cabinet"
+price = 80
+description = "历史收藏记录。"
+placement_surface = "floor"
+visual_id = ""
+speed = 1
+income = 0
+capacity = 3
+retired = true
+
+[sub_resource type="Resource" id="item_12"]
+script = ExtResource("2")
+item_id = "room_chair"
+name = "现代办公椅"
+category = "furniture"
+subcategory = "chair"
+slot = ""
+price = 90
+description = "可以放置在房间地面。"
+placement_surface = "floor"
+visual_id = ""
+speed = 1
+income = 0
+capacity = 0
+retired = false
+furniture_scene = ExtResource("s_chair")
+
+[sub_resource type="Resource" id="item_13"]
+script = ExtResource("2")
+item_id = "room_bookcase"
+name = "现代书架"
+category = "furniture"
+subcategory = "bookcase"
+slot = ""
+price = 85
+description = "可以放置在房间地面。"
+placement_surface = "floor"
+visual_id = ""
+speed = 1
+income = 0
+capacity = 0
+retired = false
+furniture_scene = ExtResource("s_bookcase")
+
+[sub_resource type="Resource" id="item_14"]
+script = ExtResource("2")
+item_id = "room_lamp"
+name = "现代落地灯"
+category = "furniture"
+subcategory = "lamp"
+slot = ""
+price = 40
+description = "可以放置在房间地面。"
+placement_surface = "floor"
+visual_id = ""
+speed = 1
+income = 0
+capacity = 0
+retired = false
+furniture_scene = ExtResource("s_lamp")
+
+[sub_resource type="Resource" id="item_15"]
+script = ExtResource("2")
+item_id = "room_rug"
+name = "现代地毯"
+category = "furniture"
+subcategory = "rug"
+slot = ""
+price = 35
+description = "可以放置在房间地面。"
+placement_surface = "floor"
+visual_id = ""
+speed = 1
+income = 0
+capacity = 0
+retired = false
+furniture_scene = ExtResource("s_rug")
+
+[sub_resource type="Resource" id="item_16"]
+script = ExtResource("2")
+item_id = "room_plant"
+name = "室内绿植"
+category = "furniture"
+subcategory = "plant"
+slot = ""
+price = 25
+description = "可以放置在房间地面。"
+placement_surface = "floor"
+visual_id = ""
+speed = 1
+income = 0
+capacity = 0
+retired = false
+furniture_scene = ExtResource("s_plant")
+
+[sub_resource type="Resource" id="item_17"]
+script = ExtResource("2")
+item_id = "mechanical_keyboard"
+name = "机械键盘"
+category = "device"
+subcategory = "keyboard"
+slot = "keyboard"
+price = 35
+description = "独立升级键盘。"
+placement_surface = "desk"
+visual_id = "precise_mouse"
+speed = 1.03
+income = 0
+capacity = 0
+retired = false
+
+[sub_resource type="Resource" id="item_18"]
+script = ExtResource("2")
+item_id = "optical_mouse"
+name = "光学游戏鼠标"
+category = "device"
+subcategory = "mouse"
+slot = "mouse"
+price = 25
+description = "独立升级鼠标。"
+placement_surface = "desk"
+visual_id = "precise_mouse"
+speed = 1.1
+income = 0
+capacity = 0
+retired = false
+
+[resource]
+script = ExtResource("1")
+items = Array[ExtResource("2")]([SubResource("item_0"), SubResource("item_1"), SubResource("item_2"), SubResource("item_3"), SubResource("item_4"), SubResource("item_5"), SubResource("item_6"), SubResource("item_7"), SubResource("item_8"), SubResource("item_9"), SubResource("item_10"), SubResource("item_11"), SubResource("item_12"), SubResource("item_13"), SubResource("item_14"), SubResource("item_15"), SubResource("item_16"), SubResource("item_17"), SubResource("item_18")])
