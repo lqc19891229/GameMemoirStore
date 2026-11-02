@@ -47,7 +47,8 @@ func run() -> void:
 	# Find a genuine ray-pickable body point; never confuse a gizmo hit for an object.
 	var picked := ""
 	var pixel := Vector2.ZERO
-	for role: String in ["sofa","chair","bookcase","plant","lamp","stool"]:
+	for role: String in ["chair","bookcase","plant","lamp","rug"]:
+		if not layout.nodes.has(role) or not layout.placed_instances.has(role): continue
 		layout.select(role)
 		var furniture: Node3D = layout.nodes[role]
 		var dims: Vector3 = layout.bounds_for(role)
