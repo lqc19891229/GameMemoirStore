@@ -43,11 +43,16 @@ func run() -> void:
 			check(node.get_node("Model").scene_file_path == glb_path, "new furniture instances its imported GLB rather than procedural geometry: " + item.item_id)
 		var mesh_nodes: Array = node.get_node("Model").find_children("*","MeshInstance3D",true,false)
 		var within_bounds := not mesh_nodes.is_empty()
+		var out_of_bounds_parts := PackedStringArray()
 		for mesh: MeshInstance3D in mesh_nodes:
 			var aabb: AABB = node.global_transform.affine_inverse()*mesh.global_transform*mesh.get_aabb()
+			var mesh_inside := true
 			for point: Vector3 in [aabb.position,aabb.end]:
-				within_bounds = within_bounds and absf(point.x) <= float(node.bounds.x)*.5+.015 and absf(point.z) <= float(node.bounds.z)*.5+.015 and point.y >= -.015 and point.y <= float(node.bounds.y)+.015
-		check(within_bounds, "mesh geometry stays inside declared picking/collision bounds: "+item.item_id)
+				mesh_inside = mesh_inside and absf(point.x) <= float(node.bounds.x)*.5+.015 and absf(point.z) <= float(node.bounds.z)*.5+.015 and point.y >= -.015 and point.y <= float(node.bounds.y)+.015
+			if not mesh_inside:
+				out_of_bounds_parts.append("%s: %s" % [mesh.name, str(aabb)])
+			within_bounds = within_bounds and mesh_inside
+		check(within_bounds, "mesh geometry fits collision bounds for %s (bounds=%s; offending meshes: %s)" % [item.item_id, str(node.bounds), ", ".join(out_of_bounds_parts)])
 		if group == "lighting" and item.item_id.begins_with("room_lamp_"):
 			check(node.get_node_or_null("LampGlow") is OmniLight3D, "new floor lamps contain actual local lights: "+item.item_id)
 		if group == "decor" and Taxonomy.type_for(item) == "rug" and item.item_id != "room_rug":
