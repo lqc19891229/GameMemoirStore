@@ -78,6 +78,7 @@ func run() -> void:
 	check(not state.life.placements.has("chair"), "live room store removes the original placement")
 	check(not restored.life.placements.has("chair"), "stored original stays absent after save reload: %s" % [str(restored.life.placements)])
 	check(restored.life.furniture_colors.get(uid) == 2, "furniture tint survives reload: %s" % [str(restored.life.furniture_colors)])
+	check(layout.nodes.chair.find_children("*", "MeshInstance3D", true, false)[0].material_override == null, "preview overrides are restored on confirmation")
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(state.save_path))
 	state.persistence_enabled = false
 	# Built-in computers and all input peripherals remain restricted to the desk.

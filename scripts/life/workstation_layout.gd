@@ -46,6 +46,8 @@ var furniture_colors: Dictionary = {}
 var committed_colors: Dictionary = {}
 var placing_role := ""
 var placing_before: Dictionary = {}
+var preview_original_materials: Dictionary = {}
+var tint_materials: Dictionary = {}
 
 func setup(owner_world: Node3D) -> void:
 	world = owner_world
@@ -105,6 +107,18 @@ func set_furniture_color(index: int) -> void:
 	_remember(before)
 	update()
 
+func _tint_material(index: int, preview: bool) -> StandardMaterial3D:
+	var key := "ghost_valid" if preview and valid else "ghost_invalid" if preview else str(index)
+	if tint_materials.has(key): return tint_materials[key]
+	var overlay := StandardMaterial3D.new()
+	var color := Color("76dbb1") if preview and valid else Color("ec786f") if preview else Color(FURNITURE_COLOR_HEX[index])
+	color.a = 0.38 if preview else 0.32
+	overlay.albedo_color = color
+	overlay.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	overlay.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	tint_materials[key] = overlay
+	return overlay
+
 func _apply_furniture_appearance() -> void:
 	for role: String in nodes:
 		if not InventoryData.ROOM_DEFAULTS.has(Data.base_role(role)): continue
@@ -112,17 +126,24 @@ func _apply_furniture_appearance() -> void:
 		furniture.visible = placed_instances.has(role)
 		var preview := placing_role == role
 		var index := color_for(role)
-		var overlay: StandardMaterial3D = null
-		if preview or index != 0:
-			overlay = StandardMaterial3D.new()
-			var color := Color("76dbb1") if preview and valid else Color("ec786f") if preview else Color(FURNITURE_COLOR_HEX[index])
-			color.a = 0.35 if preview else 0.32
-			overlay.albedo_color = color
-			overlay.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-			overlay.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		var overlay: StandardMaterial3D = _tint_material(index, preview) if preview or index != 0 else null
 		for mesh: MeshInstance3D in furniture.find_children("*", "MeshInstance3D", true, false):
-			mesh.material_overlay = overlay
-			mesh.transparency = 0.35 if preview else 0.0
+			var mesh_id := mesh.get_instance_id()
+			if preview:
+				# GeometryInstance3D.transparency is not supported by Compatibility.
+				# A transparent override makes previews genuinely translucent there.
+				if not preview_original_materials.has(mesh_id):
+					preview_original_materials[mesh_id] = mesh.material_override
+				mesh.material_override = overlay
+				mesh.material_overlay = null
+				mesh.transparency = 0.35
+			else:
+				if preview_original_materials.has(mesh_id):
+					mesh.material_override = preview_original_materials[mesh_id]
+					preview_original_materials.erase(mesh_id)
+				mesh.material_overlay = overlay
+				mesh.transparency = 0.0
+	if placing_role.is_empty(): preview_original_materials.clear()
 
 func _next_furniture_role(base_role: String) -> String:
 	if not placed_instances.has(base_role): return base_role

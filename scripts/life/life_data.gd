@@ -65,8 +65,8 @@ static func clean(raw: Variant, owned: Array[String], installed: Array[String]) 
 		for raw_uid: Variant in raw["furniture_colors"]:
 			var uid := str(raw_uid)
 			var value: Variant = raw["furniture_colors"][raw_uid]
-			if known_uids.has(uid) and value is int and value > 0 and value < 6:
-				result["furniture_colors"][uid] = value
+			if known_uids.has(uid) and (value is int or value is float) and is_finite(float(value)) and int(value) > 0 and int(value) < 6:
+				result["furniture_colors"][uid] = int(value)
 	# Older saves have a single bundled keyboard/mouse slot.
 	if raw.get("equipped") is Dictionary:
 		var previous: Dictionary = raw["equipped"]
