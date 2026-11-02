@@ -290,6 +290,7 @@ func store_selected() -> void:
 	else:
 		nodes[selected].hide()
 	selected = "desk"
+	_apply_furniture_appearance()
 	_remember(before)
 	update()
 
