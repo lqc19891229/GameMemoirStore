@@ -42,8 +42,16 @@ func _ready() -> void:
 	%BlueprintToggle.pressed.connect(func() -> void: set_blueprint_mode(not blueprint_mode))
 	%BlueprintShape.add_item("矩形房间")
 	%BlueprintShape.add_item("L 型房间 · 右前角缺口")
+	%BlueprintShape.add_item("自由轮廓 · 网格地板")
 	%BlueprintShape.item_selected.connect(func(index: int) -> void:
-		if blueprint_mode: world.layout.set_blueprint_shape("l" if index == 1 else "rectangle")
+		if blueprint_mode: world.layout.set_blueprint_shape(["rectangle","l","custom"][index])
+	)
+	%BlueprintFloorTool.add_item("内墙绘制")
+	%BlueprintFloorTool.add_item("挖除地板")
+	%BlueprintFloorTool.add_item("恢复地板")
+	%BlueprintFloorTool.item_selected.connect(func(_index: int) -> void:
+		wall_drag_button = 0
+		_hide_wall_preview()
 	)
 	%WallAxis.add_item("横向墙 · X")
 	%WallAxis.add_item("纵向墙 · Z")
@@ -193,9 +201,10 @@ func set_blueprint_mode(enabled: bool) -> void:
 
 func _sync_blueprint_ui() -> void:
 	var blueprint: Dictionary = world.layout.blueprint
-	%BlueprintShape.select(1 if blueprint.shape == "l" else 0)
+	%BlueprintShape.select(2 if blueprint.shape == "custom" else 1 if blueprint.shape == "l" else 0)
 	%BlueprintNotchWidth.editable = blueprint.shape == "l"
 	%BlueprintNotchDepth.editable = blueprint.shape == "l"
+	%BlueprintFloorTool.disabled = blueprint.shape != "custom" and %BlueprintFloorTool.selected != 0
 	%BlueprintNotchWidth.max_value = minf(4.0, float(blueprint.width) - 3.0)
 	%BlueprintNotchDepth.max_value = minf(4.0, float(blueprint.depth) - 2.5)
 	for name: String in BLUEPRINT_KEYS:
@@ -212,7 +221,7 @@ func _sync_blueprint_ui() -> void:
 		var label: Label = get_node("%" + label_key)
 		var display: String = {"width":"房间宽度", "depth":"房间深度", "door_x":"后墙门位置", "window_z":"左墙窗位置", "notch_width":"缺口宽度", "notch_depth":"缺口深度"}[key]
 		label.text = "%s：%.2f 米" % [display, float(blueprint[key])]
-	%BlueprintStatus.text = world.layout.message if world.layout.message.begins_with("调整失败") or world.layout.message.begins_with("建造失败") else "%s · %.1f × %.1f 米 · 内墙 %d 段" % ["L 型" if blueprint.shape == "l" else "矩形", blueprint.width, blueprint.depth, blueprint.partitions.size()]
+	%BlueprintStatus.text = world.layout.message if world.layout.message.begins_with("调整失败") or world.layout.message.begins_with("建造失败") or world.layout.message.begins_with("绘制失败") else "%s · %.1f × %.1f 米 · 内墙 %d 段 · 缺口 %d 格" % ["自由轮廓" if blueprint.shape == "custom" else "L 型" if blueprint.shape == "l" else "矩形", blueprint.width, blueprint.depth, blueprint.partitions.size(), blueprint.removed_cells.size()]
 
 func _wall_axis() -> String:
 	return "z" if %WallAxis.selected == 1 else "x"
@@ -236,6 +245,32 @@ func _wall_action(at: Vector2, button: int) -> void:
 		world.layout.remove_partition(at)
 	else:
 		world.layout.add_partition(at, _wall_axis(), _wall_kind())
+
+func _floor_action(at: Vector2, button: int) -> void:
+	var removing: bool = %BlueprintFloorTool.selected == 1
+	if button == MOUSE_BUTTON_RIGHT: removing = not removing
+	world.layout.paint_floor_cell(at, removing)
+
+func _floor_hover(pixel: Vector2) -> void:
+	var ghost: MeshInstance3D = world.get_node("WallPreview")
+	var plane := Plane(Vector3.UP, 0.0)
+	var hit: Variant = plane.intersects_ray(world.camera.project_ray_origin(pixel), world.camera.project_ray_normal(pixel))
+	if hit == null:
+		ghost.hide()
+		return
+	var at := Vector2(hit.x, hit.z)
+	var cell: Dictionary = BlueprintData.cell_at(world.layout.blueprint, at)
+	if not BlueprintData.valid_cell(world.layout.blueprint, cell):
+		ghost.hide()
+		return
+	var center: Vector2 = BlueprintData.cell_center(world.layout.blueprint, cell)
+	ghost.position = Vector3(center.x, .08, center.y)
+	(ghost.mesh as BoxMesh).size = Vector3(BlueprintData.FLOOR_GRID, .07, BlueprintData.FLOOR_GRID)
+	var removing: bool = %BlueprintFloorTool.selected == 1
+	if wall_drag_button == MOUSE_BUTTON_RIGHT: removing = not removing
+	var eligible: bool = world.layout.floor_cell_blocker(cell, removing).is_empty()
+	(ghost.material_override as StandardMaterial3D).albedo_color = Color("6ed9ab", .48) if eligible else Color("f27777", .48)
+	ghost.show()
 
 func _wall_hover(pixel: Vector2) -> void:
 	var ghost: MeshInstance3D = world.get_node("WallPreview")
@@ -263,16 +298,29 @@ func _blueprint_input(event: InputEvent) -> void:
 			if event.pressed:
 				var at: Variant = _blueprint_floor_hit(event.position)
 				if at != null:
-					_wall_action(at, event.button_index)
-					last_wall_cell = at
+					if %BlueprintFloorTool.selected == 0:
+						_wall_action(at, event.button_index)
+						last_wall_cell = at
+					else:
+						var grid_cell: Dictionary = BlueprintData.cell_at(world.layout.blueprint, at)
+						_floor_action(at, event.button_index)
+						last_wall_cell = Vector2(grid_cell.ix, grid_cell.iz)
 			get_viewport().set_input_as_handled()
 	elif event is InputEventMouseMotion:
-		_wall_hover(event.position)
+		if %BlueprintFloorTool.selected == 0: _wall_hover(event.position)
+		else: _floor_hover(event.position)
 		if wall_drag_button != 0:
 			var at: Variant = _blueprint_floor_hit(event.position)
-			if at != null and at != last_wall_cell:
-				_wall_action(at, wall_drag_button)
-				last_wall_cell = at
+			if at != null:
+				if %BlueprintFloorTool.selected == 0 and at != last_wall_cell:
+					_wall_action(at, wall_drag_button)
+					last_wall_cell = at
+				elif %BlueprintFloorTool.selected != 0:
+					var grid_cell: Dictionary = BlueprintData.cell_at(world.layout.blueprint, at)
+					var cell_id := Vector2(grid_cell.ix, grid_cell.iz)
+					if cell_id != last_wall_cell:
+						_floor_action(at, wall_drag_button)
+						last_wall_cell = cell_id
 		get_viewport().set_input_as_handled()
 
 func _sync_layout() -> void:
