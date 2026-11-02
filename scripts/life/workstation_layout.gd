@@ -365,7 +365,8 @@ func _apply_blueprint_change(next: Dictionary) -> bool:
 		or (next.shape == "custom" and blueprint.shape == "custom" and next.removed_cells.size() != blueprint.removed_cells.size())
 		or next.floor_finishes.size() != blueprint.floor_finishes.size()
 		or next.edge_finishes.size() != blueprint.edge_finishes.size()
-		or next.zone_cells.size() != blueprint.zone_cells.size()):
+		or next.zone_cells.size() != blueprint.zone_cells.size()
+		or next.saved_schemes != blueprint.saved_schemes):
 		message = "调整失败：外轮廓将移除已有内墙或地板单元，请先调整结构"
 		changed.emit()
 		return false
@@ -398,6 +399,10 @@ func floor_cell_blocker(cell: Dictionary, removing: bool = true) -> String:
 		if BlueprintData.has_cell(blueprint, cell): return "此处已经移除地板"
 		if BlueprintData.floor_finish(blueprint, cell) != 0: return "请先将此地板恢复默认材质"
 		if BlueprintData.zone_at(blueprint, cell) != 0: return "请先清除此地板的功能分区"
+		for scheme: Dictionary in blueprint.saved_schemes:
+			for stored: Dictionary in scheme.zone_cells:
+				if stored.ix == cell.ix and stored.iz == cell.iz:
+					return "此格已用于保存的装修方案，请先覆盖或删除相应方案"
 		if not BlueprintData.editable_cell(blueprint, cell): return "门窗所在的后墙和左墙必须保留地板"
 		if blueprint.removed_cells.size() >= BlueprintData.MAX_REMOVED: return "可移除地板已达到上限"
 		var shape := BlueprintData.cell_polygon(blueprint, cell, collision_margin)
@@ -430,12 +435,86 @@ func paint_floor_cell(at: Vector2, removing: bool = true) -> bool:
 	if removing: next.removed_cells.append(cell)
 	else: next.removed_cells.erase(cell)
 	next = BlueprintData.clean(next)
-	if next.edge_finishes.size() != blueprint.edge_finishes.size() or next.zone_cells.size() != blueprint.zone_cells.size():
+	if next.edge_finishes.size() != blueprint.edge_finishes.size() or next.zone_cells.size() != blueprint.zone_cells.size() or next.saved_schemes != blueprint.saved_schemes:
 		message = "绘制失败：此操作会移除已有外墙装修或功能分区，请先恢复相关配置"
 		changed.emit()
 		return false
 	blueprint = next
 	world.get_node("Room").apply_blueprint(blueprint)
+	_remember(before)
+	update()
+	return true
+
+func fill_room_region(at: Vector2, zone: int) -> int:
+	if not active or blueprint.shape != "custom" or not placing_role.is_empty(): return 0
+	if zone < 0 or zone > BlueprintData.ZONE_PRESETS.size(): return 0
+	var region: Array = BlueprintData.room_region_at(blueprint, at)
+	if region.is_empty(): return 0
+	var existing: Dictionary = {}
+	for entry: Dictionary in blueprint.zone_cells:
+		existing[Vector2i(int(entry.ix),int(entry.iz))] = entry
+	var changed_cells := 0
+	for cell: Dictionary in region:
+		if BlueprintData.zone_at(blueprint,cell) != zone: changed_cells += 1
+	if changed_cells == 0: return 0
+	var before := _draft()
+	for cell: Dictionary in region:
+		var key := Vector2i(int(cell.ix),int(cell.iz))
+		existing.erase(key)
+		if zone > 0:
+			existing[key] = {"ix":cell.ix,"iz":cell.iz,"zone":zone}
+	var next := blueprint.duplicate(true)
+	next.zone_cells = existing.values()
+	blueprint = BlueprintData.clean(next)
+	world.get_node("Room").apply_blueprint(blueprint)
+	_remember(before)
+	update()
+	return changed_cells
+
+func save_decor_scheme(slot: int) -> bool:
+	if not active or blueprint.shape != "custom" or slot < 0 or slot >= BlueprintData.MAX_SCHEMES: return false
+	var before := _draft()
+	var next := blueprint.duplicate(true)
+	var saved_schemes := []
+	for entry: Dictionary in next.saved_schemes:
+		if int(entry.slot) != slot: saved_schemes.append(entry)
+	saved_schemes.append({"slot":slot,
+		"zone_cells":next.zone_cells.duplicate(true),
+		"zone_styles":next.zone_styles.duplicate(true),
+		"floor_finishes":next.floor_finishes.duplicate(true)})
+	next.saved_schemes = saved_schemes
+	blueprint = BlueprintData.clean(next)
+	if before.blueprint == blueprint: return false
+	_remember(before)
+	update()
+	return true
+
+func load_decor_scheme(slot: int) -> bool:
+	if not active or blueprint.shape != "custom": return false
+	var scheme: Dictionary = BlueprintData.scheme_for_slot(blueprint,slot)
+	if scheme.is_empty(): return false
+	var before := _draft()
+	var next := blueprint.duplicate(true)
+	next.zone_cells = scheme.zone_cells.duplicate(true)
+	next.zone_styles = scheme.zone_styles.duplicate(true)
+	next.floor_finishes = scheme.floor_finishes.duplicate(true)
+	blueprint = BlueprintData.clean(next)
+	if before.blueprint == blueprint: return false
+	world.get_node("Room").apply_blueprint(blueprint)
+	_remember(before)
+	update()
+	return true
+
+func clear_decor_scheme(slot: int) -> bool:
+	if not active or slot < 0 or slot >= BlueprintData.MAX_SCHEMES: return false
+	if BlueprintData.scheme_for_slot(blueprint,slot).is_empty(): return false
+	var before := _draft()
+	var next := blueprint.duplicate(true)
+	var keep := []
+	for entry: Dictionary in next.saved_schemes:
+		if int(entry.slot) != slot: keep.append(entry)
+	next.saved_schemes = keep
+	blueprint = BlueprintData.clean(next)
 	_remember(before)
 	update()
 	return true
