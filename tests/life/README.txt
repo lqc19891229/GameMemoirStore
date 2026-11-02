@@ -34,3 +34,5 @@ test_room_smart_build.gd：整次连续画墙的撤销、双段门窗、已有�
 test_furniture_assists.gd：内墙吸附独立开关、家具对齐、三件以上同类家具等距排列、尺寸距离提示、单步撤销和旧布局取消还原。
 
 test_room_visual_polish.gd：新家具沙发与矮凳的购买/放置、材质纹理、四种环境光影、雨景切换和跨会话存档恢复。
+
+test_furniture_catalog.gd：家具/硬件统一分类、二级类型、商店与房间目录搜索筛选、旧家具与设备约束、库存角色兼容。
