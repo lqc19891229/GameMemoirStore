@@ -65,7 +65,7 @@ func run() -> void:
 	desktop._update_catalog_types()
 	check(desktop.furniture_buttons["room_sofa"].visible, "seating tab includes the sofa")
 	check(not desktop.furniture_buttons["room_lamp"].visible, "seating tab excludes lighting")
-	var sofa_index := desktop.catalog_type_ids.find("sofa")
+	var sofa_index: int = desktop.catalog_type_ids.find("sofa")
 	check(sofa_index > 0, "sofa type is available after selecting seating group")
 	kind.select(sofa_index)
 	desktop._filter_furniture_catalog()
