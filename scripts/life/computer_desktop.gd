@@ -204,7 +204,7 @@ func _sync_blueprint_ui() -> void:
 	%BlueprintShape.select(2 if blueprint.shape == "custom" else 1 if blueprint.shape == "l" else 0)
 	%BlueprintNotchWidth.editable = blueprint.shape == "l"
 	%BlueprintNotchDepth.editable = blueprint.shape == "l"
-	%BlueprintFloorTool.disabled = blueprint.shape != "custom" and %BlueprintFloorTool.selected != 0
+	%BlueprintFloorTool.disabled = false
 	%BlueprintNotchWidth.max_value = minf(4.0, float(blueprint.width) - 3.0)
 	%BlueprintNotchDepth.max_value = minf(4.0, float(blueprint.depth) - 2.5)
 	for name: String in BLUEPRINT_KEYS:
@@ -233,11 +233,16 @@ func _hide_wall_preview() -> void:
 	if is_instance_valid(world):
 		world.get_node("WallPreview").hide()
 
-func _blueprint_floor_hit(pixel: Vector2) -> Variant:
+func _floor_hit(pixel: Vector2) -> Variant:
 	var plane := Plane(Vector3.UP, 0.0)
 	var hit: Variant = plane.intersects_ray(world.camera.project_ray_origin(pixel), world.camera.project_ray_normal(pixel))
 	if hit == null: return null
-	return Vector2(snappedf(hit.x, BlueprintData.WALL_GRID), snappedf(hit.z, BlueprintData.WALL_GRID))
+	return Vector2(hit.x, hit.z)
+
+func _blueprint_floor_hit(pixel: Vector2) -> Variant:
+	var hit: Variant = _floor_hit(pixel)
+	if hit == null: return null
+	return hit.snapped(Vector2.ONE * BlueprintData.WALL_GRID)
 
 func _wall_action(at: Vector2, button: int) -> void:
 	var remove: bool = button == MOUSE_BUTTON_RIGHT or %WallRemoveMode.button_pressed
@@ -296,7 +301,7 @@ func _blueprint_input(event: InputEvent) -> void:
 			wall_drag_button = event.button_index if event.pressed else 0
 			last_wall_cell = Vector2(INF, INF)
 			if event.pressed:
-				var at: Variant = _blueprint_floor_hit(event.position)
+				var at: Variant = _blueprint_floor_hit(event.position) if %BlueprintFloorTool.selected == 0 else _floor_hit(event.position)
 				if at != null:
 					if %BlueprintFloorTool.selected == 0:
 						_wall_action(at, event.button_index)
@@ -310,7 +315,7 @@ func _blueprint_input(event: InputEvent) -> void:
 		if %BlueprintFloorTool.selected == 0: _wall_hover(event.position)
 		else: _floor_hover(event.position)
 		if wall_drag_button != 0:
-			var at: Variant = _blueprint_floor_hit(event.position)
+			var at: Variant = _blueprint_floor_hit(event.position) if %BlueprintFloorTool.selected == 0 else _floor_hit(event.position)
 			if at != null:
 				if %BlueprintFloorTool.selected == 0 and at != last_wall_cell:
 					_wall_action(at, wall_drag_button)
