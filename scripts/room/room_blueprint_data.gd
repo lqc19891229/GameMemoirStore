@@ -168,7 +168,10 @@ static func editable_cell(value: Dictionary, cell: Dictionary) -> bool:
 	return valid_cell(value, cell) and cell.ix > 0 and cell.iz > 0
 
 static func has_cell(value: Dictionary, cell: Dictionary) -> bool:
-	return value.removed_cells.has(cell)
+	if cell.is_empty(): return false
+	for removed: Dictionary in value.removed_cells:
+		if removed.ix == cell.ix and removed.iz == cell.iz: return true
+	return false
 
 static func cell_at(value: Dictionary, at: Vector2) -> Dictionary:
 	return {"ix":floori((at.x + float(value.width) * .5) / FLOOR_GRID),
