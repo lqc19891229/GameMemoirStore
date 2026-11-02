@@ -465,6 +465,7 @@ func _paint_hover(pixel: Vector2) -> void:
 	var at: Variant = _floor_hit(pixel)
 	if at == null:
 		ghost.hide()
+		world.get_node("BlueprintOverlay").clear_region()
 		return
 	var tool: int = %BlueprintFloorTool.selected
 	var good := false
@@ -491,6 +492,8 @@ func _paint_hover(pixel: Vector2) -> void:
 			size = Vector3(1,.10,.14) if part.axis == "x" else Vector3(.14,.10,1)
 	if not good:
 		ghost.hide()
+		world.get_node("BlueprintOverlay").clear_region()
+		if tool == 7: %BlueprintRegionInfo.text = "连通区域：无可选地板"
 		return
 	ghost.position = Vector3(center.x,.08,center.y)
 	(ghost.mesh as BoxMesh).size = size
