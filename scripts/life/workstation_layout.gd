@@ -4,8 +4,9 @@ const Data = preload("res://scripts/life/workstation_layout_data.gd")
 const InventoryData = preload("res://scripts/items/inventory_data.gd")
 const ItemCatalog: MemoirItemCatalog = preload("res://data/items/_catalog.tres")
 const BlueprintData = preload("res://scripts/room/room_blueprint_data.gd")
-const FURNITURE_COLOR_LABELS := ["原色", "奶油白", "鼠尾草绿", "雾蓝", "暖粉", "浅橡木"]
-const FURNITURE_COLOR_HEX := ["", "eae1d4", "a4bdac", "9fbed3", "d9b3b5", "d6b184"]
+const Finishes = preload("res://scripts/items/furniture_finishes.gd")
+const FURNITURE_COLOR_LABELS = Finishes.LABELS
+const FURNITURE_COLOR_HEX = Finishes.HEX
 const NAMES := {"desk":"桌子（整套）", "monitor":"显示器", "computer":"机箱", "keyboard":"键盘", "mouse":"鼠标", "chair":"椅子", "bookcase":"书架", "lamp":"落地灯", "rug":"地毯", "plant":"盆栽", "sofa":"双人沙发", "stool":"软垫矮凳"}
 @export var tabletop_half_size := Vector2(2.4, 1.15)
 @export var tabletop_height := 0.78
@@ -130,12 +131,13 @@ func set_furniture_color(index: int) -> void:
 func _tint_material(index: int, preview: bool) -> StandardMaterial3D:
 	var key := "ghost_valid" if preview and valid else "ghost_invalid" if preview else str(index)
 	if tint_materials.has(key): return tint_materials[key]
-	var overlay := StandardMaterial3D.new()
-	var color := Color("76dbb1") if preview and valid else Color("ec786f") if preview else Color(FURNITURE_COLOR_HEX[index])
-	color.a = 0.38 if preview else 0.32
-	overlay.albedo_color = color
-	overlay.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	overlay.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	var overlay: StandardMaterial3D = StandardMaterial3D.new() if preview else Finishes.overlay(index)
+	if preview:
+		var color := Color("76dbb1") if valid else Color("ec786f")
+		color.a = 0.38
+		overlay.albedo_color = color
+		overlay.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		overlay.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	tint_materials[key] = overlay
 	return overlay
 
