@@ -45,6 +45,11 @@ var edge_drag_source: Dictionary = {}
 var wall_stroke_before: Dictionary = {}
 var wall_snap := false
 var inner_wall_snap := false
+# Ephemeral editing affordance: a wall magnet during direct dragging and
+# first placement. Explicit wall snap toggles retain their previous behavior.
+var smart_snap := true
+var snap_bypass := false
+var wall_magnet_active := false
 const WALL_SNAP_RADIUS := .32
 const ALIGN_RADIUS := .65
 const WALL_SAFE_GAP := .045
@@ -220,6 +225,8 @@ func preview_at(pixel: Vector2) -> void:
 func confirm_placement() -> bool:
 	if placing_role.is_empty() or not valid: return false
 	var before := placing_before
+	wall_magnet_active = false
+	snap_bypass = false
 	placing_role = ""
 	placing_before = {}
 	_apply_furniture_appearance()
@@ -229,6 +236,8 @@ func confirm_placement() -> bool:
 
 func cancel_placement() -> void:
 	if placing_role.is_empty(): return
+	wall_magnet_active = false
+	snap_bypass = false
 	placing_role = ""
 	_restore_draft(placing_before)
 	placing_before = {}
@@ -831,7 +840,12 @@ func wall_clearance(role: String = "") -> float:
 	return maxf(0.0,minf(minf(left+limits.x,limits.x-right),minf(back+limits.y,limits.y-front)))
 
 func _wall_snap_point(role: String, target: Vector2) -> Vector2:
-	if not is_floor(role) or (not wall_snap and not inner_wall_snap): return target
+	wall_magnet_active = false
+	if not is_floor(role): return target
+	var temporary_magnet := smart_snap and not snap_bypass and (role == placing_role or (role == selected and gesture == "move"))
+	var snap_exterior := not snap_bypass and (wall_snap or temporary_magnet)
+	var snap_interior := not snap_bypass and (inner_wall_snap or temporary_magnet)
+	if not snap_exterior and not snap_interior: return target
 	var node: Node3D = nodes[role]
 	var pose: Transform3D = node.transform
 	pose.origin.x = target.x
@@ -843,7 +857,7 @@ func _wall_snap_point(role: String, target: Vector2) -> Vector2:
 		mins = mins.min(point)
 		maxs = maxs.max(point)
 	var candidates: Array[Vector2] = []
-	if wall_snap:
+	if snap_exterior:
 		var half: Vector2 = BlueprintData.half_size(blueprint)
 		for axis_id in range(2):
 			for direction in [-1.0,1.0]:
@@ -854,7 +868,7 @@ func _wall_snap_point(role: String, target: Vector2) -> Vector2:
 					delta = (-half.y + edge_margin + collision_margin + .015 - mins.y) if direction < 0 else half.y - edge_margin - collision_margin - .015 - maxs.y
 				if absf(delta) <= WALL_SNAP_RADIUS:
 					candidates.append(target + (Vector2(delta,0) if axis_id == 0 else Vector2(0,delta)))
-	if inner_wall_snap:
+	if snap_interior:
 		for part: Dictionary in blueprint.partitions:
 			if str(part.kind) == "door": continue
 			var extents: Vector2 = BlueprintData.extents(part)
@@ -876,6 +890,7 @@ func _wall_snap_point(role: String, target: Vector2) -> Vector2:
 		pose.origin.x = candidate.x
 		pose.origin.z = candidate.y
 		if _blocker(role,_footprint_at(role,pose,collision_margin)).is_empty():
+			wall_magnet_active = true
 			return candidate
 	return target
 
@@ -1304,6 +1319,7 @@ func _constrain_motion(before: Transform3D, target: Transform3D) -> void:
 			else: high = middle
 		node.transform = previous.interpolate_with(next, low)
 		break
+	if not blocker.is_empty(): wall_magnet_active = false
 	update(blocker)
 
 func rotate_step(direction: float) -> void:
@@ -1334,6 +1350,9 @@ func begin_drag(pixel: Vector2, operation: String = "move", direction: String = 
 	start_yaw = nodes[selected].rotation.y
 	start_axis = (nodes[selected].basis.x if axis == "x" else nodes[selected].basis.z).normalized()
 	start_angle = atan2(hit.z - start_position.z, hit.x - start_position.x)
+	# Show the contextual gesture cue immediately on pointer-down, not only
+	# after the first mouse motion event.
+	update()
 
 func drag_to(pixel: Vector2) -> void:
 	if gesture.is_empty(): return
@@ -1348,9 +1367,16 @@ func drag_to(pixel: Vector2) -> void:
 		rotate_to(start_yaw - angle_difference(start_angle,current))
 
 func end_drag() -> void:
-	if not gesture.is_empty() and not drag_before.is_empty(): _remember(drag_before)
+	var was_dragging := not gesture.is_empty()
+	# Keep the last collision reason readable after mouse-up, as before P21.
+	# Ordinary gesture cues and temporary magnets should disappear immediately.
+	var blocked_contact := message.begins_with("已阻挡：")
+	if was_dragging and not drag_before.is_empty(): _remember(drag_before)
 	gesture = ""
 	drag_before = {}
+	snap_bypass = false
+	wall_magnet_active = false
+	if was_dragging and active and not blocked_contact: update()
 
 func pick_handle(pixel: Vector2) -> String:
 	var origin: Vector3 = world.camera.project_ray_origin(pixel)
@@ -1365,9 +1391,12 @@ func update(contact: String = "") -> void:
 	if not placing_role.is_empty(): _apply_furniture_appearance()
 	message = "右键环绕 · 滚轮缩放 · 拖动物品布置房间"
 	if not placing_role.is_empty():
-		message = "鼠标移动预览 · 左键放置 · 右键/Esc 取消"
+		message = "鼠标移动预览 · 左键放置 · Q/E 旋转 · 右键取消"
 	if not valid: message = blocker + "，请选择其他位置" if not placing_role.is_empty() else blocker + "，请调整位置或恢复默认布置"
 	elif not contact.is_empty(): message = "已阻挡：" + contact
+	elif wall_magnet_active: message = "已贴墙吸附 · 按住 Alt 暂时关闭吸附"
+	elif gesture == "rotate": message = "正在旋转 · 松开鼠标完成 · Q/E 微调"
+	elif gesture == "move": message = "正在移动 · Shift＋拖动可旋转 · Alt 关闭吸附"
 	_update_gizmo(not contact.is_empty())
 	changed.emit()
 
@@ -1383,7 +1412,7 @@ func _update_gizmo(contact: bool = false) -> void:
 	gizmo.global_rotation.y = node.global_rotation.y
 	var outline: MeshInstance3D = gizmo.get_node("Outline")
 	outline.scale = Vector3(size.x + .06,size.z + .06,1)
-	outline.material_override.set_shader_parameter("line_color",Color("ff756a") if not valid else (Color("ffc563") if contact else Color("61d9ff")))
+	outline.material_override.set_shader_parameter("line_color",Color("ff756a") if not valid else Color("ffc563") if contact else Color("82c6a3") if wall_magnet_active else Color("61d9ff"))
 	var handle_height := 0.0 if selected == "desk" else size.y + .08
 	gizmo.get_node("MoveHandles").position.y = handle_height
 	gizmo.get_node("RotateHandles").position.y = handle_height

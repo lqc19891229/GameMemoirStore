@@ -999,17 +999,23 @@ func _layout_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton:
 		if not layout.placing_role.is_empty():
 			if event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
+				layout.snap_bypass = event.alt_pressed
 				layout.preview_at(event.position)
 				layout.confirm_placement()
 			elif event.button_index == MOUSE_BUTTON_RIGHT and event.pressed:
 				layout.cancel_placement()
 			elif event.pressed and event.button_index in [MOUSE_BUTTON_WHEEL_UP, MOUSE_BUTTON_WHEEL_DOWN]:
-				world.zoom_overview(0.9 if event.button_index == MOUSE_BUTTON_WHEEL_UP else 1.1)
+				if event.shift_pressed:
+					layout.rotate_step(-1 if event.button_index == MOUSE_BUTTON_WHEEL_UP else 1)
+				else:
+					world.zoom_overview(0.9 if event.button_index == MOUSE_BUTTON_WHEEL_UP else 1.1)
 			get_viewport().set_input_as_handled()
 			return
 		if event.button_index == MOUSE_BUTTON_LEFT:
-			if not event.pressed: layout.end_drag()
+			if not event.pressed:
+				layout.end_drag()
 			else:
+				layout.snap_bypass = event.alt_pressed
 				var handle: String = layout.pick_handle(event.position)
 				if not handle.is_empty():
 					layout.begin_drag(event.position,"rotate" if handle == "rotate" else "move",handle,true)
@@ -1017,13 +1023,16 @@ func _layout_input(event: InputEvent) -> void:
 					var role: String = world.pick_at(event.position)
 					if not role.is_empty():
 						layout.select(role)
-						layout.begin_drag(event.position,layout.tool)
+						# Clicking the object itself always means moving it.
+						# Shift + click-and-drag rotates without changing tools.
+						layout.begin_drag(event.position,"rotate" if event.shift_pressed else "move")
 		elif event.button_index == MOUSE_BUTTON_RIGHT: orbiting = event.pressed
 		elif event.pressed and event.button_index in [MOUSE_BUTTON_WHEEL_UP,MOUSE_BUTTON_WHEEL_DOWN]:
 			world.zoom_overview(0.9 if event.button_index == MOUSE_BUTTON_WHEEL_UP else 1.1)
 		else: return
 		get_viewport().set_input_as_handled()
 	elif event is InputEventMouseMotion:
+		layout.snap_bypass = event.alt_pressed
 		if not layout.placing_role.is_empty():
 			layout.preview_at(event.position)
 			get_viewport().set_input_as_handled()
