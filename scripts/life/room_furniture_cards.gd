@@ -3,6 +3,7 @@ extends Node
 ## All stock actions and item IDs are still owned by computer_desktop.gd.
 const Catalog: MemoirItemCatalog = preload("res://data/items/_catalog.tres")
 const Thumbnails = preload("res://scripts/life/furniture_thumbnail_cache.gd")
+const InventoryData = preload("res://scripts/items/inventory_data.gd")
 const Icons = preload("res://scripts/life/room_ui_icons.gd")
 var host
 var renderer
@@ -66,7 +67,7 @@ func setup(desktop: Node3D) -> void:
 func refresh_counts() -> void:
 	if not is_instance_valid(host): return
 	for id: String in cards:
-		var count: int = host.InventoryData.count(host.world.layout.available_inventory, id)
+		var count: int = InventoryData.count(host.world.layout.available_inventory, id)
 		var free: int = host._count_unused(id)
 		var info: Dictionary = cards[id]
 		var badge: Label = info.stock

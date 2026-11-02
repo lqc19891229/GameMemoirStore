@@ -1,6 +1,7 @@
 extends Node3D
 const WindowScene = preload("res://scenes/computer/ui/app_window.tscn")
 const RoomMinimalUI = preload("res://scripts/life/room_minimal_ui.gd")
+const RoomCards = preload("res://scripts/life/room_furniture_cards.gd")
 const ItemCatalog: MemoirItemCatalog = preload("res://data/items/_catalog.tres")
 const InventoryData = preload("res://scripts/items/inventory_data.gd")
 const Taxonomy = preload("res://scripts/items/item_taxonomy.gd")
@@ -28,6 +29,7 @@ var catalog_type_ids: Array[String] = [""]
 var furniture_palette: OptionButton
 var blueprint_mode := false
 var room_ui
+var furniture_cards
 var wall_drag_button := 0
 var last_wall_cell := Vector2(INF, INF)
 var dragging_aperture := false
@@ -169,6 +171,9 @@ func _ready() -> void:
 	%CopyFurniture.pressed.connect(world.layout.duplicate_selected)
 	%DeleteFurniture.pressed.connect(world.layout.store_selected)
 	_build_furniture_catalog()
+	furniture_cards = RoomCards.new()
+	add_child(furniture_cards)
+	furniture_cards.setup(self)
 	room_ui = RoomMinimalUI.new()
 	add_child(room_ui)
 	room_ui.setup(self)
@@ -351,6 +356,7 @@ func _filter_furniture_catalog() -> void:
 		var label: String = info.label
 		info.button.visible = (group.is_empty() or group == info.group) and (kind.is_empty() or kind == info.type) and (query.is_empty() or label.to_lower().contains(query))
 	%FurnitureCatalogStatus.text = "%d 种家具商品 · 支持分类和名称搜索" % ItemCatalog.room_furniture().size()
+	if furniture_cards != null: furniture_cards.request_visible.call_deferred()
 
 func _start_inventory_placement(item_id: String) -> void:
 	var uid := InventoryData.unused_uid(world.layout.available_inventory, world.layout.placed_instances, item_id)
@@ -817,12 +823,14 @@ func _sync_layout() -> void:
 		furniture_buttons[item_id].disabled = (unused.is_empty() and not existing) or not layout.placing_role.is_empty()
 		var item: MemoirItemDefinition = ItemCatalog.lookup(item_id)
 		var count := InventoryData.count(layout.available_inventory, item_id)
-		furniture_buttons[item_id].text = "%s · 空闲 %d/%d" % [item.name, _count_unused(item_id), count]
+		var status_text: String = "%s · 空闲 %d/%d" % [item.name, _count_unused(item_id), count]
+		if furniture_cards == null:
+			furniture_buttons[item_id].text = status_text
 		if InventoryData.ROOM_DEFAULTS.values().has(item_id):
 			var legacy_role: String = item.subcategory
 			var legacy: Button = get_node_or_null("%Place_" + legacy_role) as Button
 			if legacy != null:
-				legacy.text = furniture_buttons[item_id].text
+				legacy.text = status_text
 				legacy.disabled = furniture_buttons[item_id].disabled
 	if furniture_palette != null:
 		var colorable := InventoryData.is_room_furniture_role(layout.Data.base_role(layout.selected))
@@ -839,6 +847,7 @@ func _sync_layout() -> void:
 		var info: Dictionary = catalog_special_buttons[role]
 		info.button.disabled = not layout.active or not layout.placing_role.is_empty()
 		info.button.text = str(info.label) + (" · 已选中" if layout.selected == role else "")
+	if furniture_cards != null: furniture_cards.refresh_counts()
 	if room_ui != null: room_ui.sync()
 
 func _count_unused(item_id: String) -> int:

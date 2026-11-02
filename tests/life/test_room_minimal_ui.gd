@@ -33,9 +33,29 @@ func run() -> void:
 	check(ui.inspector_content.get_node("Tools").visible and ui.inspector_content.get_node("Copies").visible, "only core object actions are shown")
 	check(not ui.inspector_content.get_node("FurnitureAlignmentTools").visible, "alignment options are folded into advanced settings")
 	check(not desktop.get_node("%LayoutPose").visible, "raw X/Z position is not visible by default")
+	var start_window: Vector2i = root.size
+	root.size = Vector2i(850, 660)
+	await process_frame
+	ui._resize_layout()
+	check(desktop.get_node("%FurnitureCatalogItems").columns == 2 and ui.dock.offset_right == -14.0, "narrow display stacks catalog below inspector with two card columns")
+	check(ui.bar.position.x == 16.0, "compact mode toolbar keeps controls inside narrow window")
+	root.size = Vector2i(1280, 800)
+	await process_frame
+	ui._resize_layout()
+	check(desktop.get_node("%FurnitureCatalogItems").columns == 3 and ui.dock.offset_right == -348.0, "desktop layout restores three-column bottom dock and right inspector")
+	root.size = start_window
+	await process_frame
+	ui._resize_layout()
 	check(desktop.get_node("%FurnitureCatalogItems").get_parent() is ScrollContainer, "large catalog is scrollable instead of an endless panel")
 	check(desktop.get_node("%FurnitureCatalogItems") is GridContainer, "catalog cards render in a three-column grid")
 	check(desktop.get_node("%Place_chair") != null, "legacy scene identifiers stay addressable")
+	check(desktop.furniture_cards.cards.size() == 27, "all 27 furniture SKUs have compact visual cards")
+	check(desktop.furniture_cards.renderer.get_child_count() == 1, "room cards reuse one shared offscreen thumbnail viewport")
+	var sample_card: Dictionary = desktop.furniture_cards.cards["room_sofa"]
+	check(sample_card.button.get_node("VisualCard/FurniturePreview") == sample_card.image, "3D thumbnail is embedded in the clickable purchase card")
+	check(sample_card.button.text.is_empty() and not sample_card.stock.text.is_empty(), "card renders its own title and current inventory badge")
+	check(ui.mode_buttons["furniture"].icon != null and ui.mode_buttons["lighting"].icon != null, "room modes use consistent scalable line icons")
+	
 	var dock_button: Button = ui.catalog_toggle
 	dock_button.pressed.emit()
 	check(not ui.dock.visible and not ui.catalog_open, "player can hide catalog to enlarge visible room area")
