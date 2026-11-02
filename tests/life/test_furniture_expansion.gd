@@ -36,7 +36,11 @@ func run() -> void:
 		var node: Node3D = item.furniture_scene.instantiate()
 		root.add_child(node)
 		await process_frame
-		check(node.has_node("Model") and node.get_node("Model").find_children("*","MeshInstance3D",true,false).size() >= 4, "authored procedural 3D model has layered parts: "+item.item_id)
+		check(node.has_node("Model") and node.get_node("Model").find_children("*","MeshInstance3D",true,false).size() >= 4, "authored 3D model has layered mesh parts: "+item.item_id)
+		if item.item_id not in ["room_chair","room_bookcase","room_lamp","room_rug","room_plant","room_sofa","room_stool"]:
+			var glb_path := "res://assets/models/room/catalog/%s.glb" % item.subcategory
+			check(ResourceLoader.exists(glb_path), "new furniture GLB exists: " + glb_path)
+			check(node.get_node("Model").scene_file_path == glb_path, "new furniture instances its imported GLB rather than procedural geometry: " + item.item_id)
 		var mesh_nodes: Array = node.get_node("Model").find_children("*","MeshInstance3D",true,false)
 		var within_bounds := not mesh_nodes.is_empty()
 		for mesh: MeshInstance3D in mesh_nodes:
