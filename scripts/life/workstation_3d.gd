@@ -10,6 +10,7 @@ var overview_yaw := 0.0
 var overview_pitch := 0.25
 var overview_distance := 6.0
 var overview_view: Transform3D
+var blueprint_view_backup: Dictionary = {}
 @export var orbit_target := Vector3(0, 1.1, 0)
 @export var minimum_distance := 1.8
 @export var maximum_distance := 22.0
@@ -80,6 +81,21 @@ func zoom_overview(amount: float) -> void:
 	if transitioning or mode not in ["overview", "layout"]: return
 	overview_distance = clampf(overview_distance * amount, minimum_distance, maximum_distance)
 	_update_overview_camera()
+
+func set_blueprint_camera(enabled: bool) -> void:
+	if enabled and blueprint_view_backup.is_empty():
+		blueprint_view_backup = {"yaw":overview_yaw, "pitch":overview_pitch, "distance":overview_distance, "view":overview_view}
+		overview_yaw = 0.0
+		overview_pitch = 1.18
+		overview_distance = clampf(maxf($Room.blueprint.width, $Room.blueprint.depth) * 1.6, minimum_distance, maximum_distance)
+		_update_overview_camera()
+	elif not enabled and not blueprint_view_backup.is_empty():
+		overview_yaw = blueprint_view_backup.yaw
+		overview_pitch = blueprint_view_backup.pitch
+		overview_distance = blueprint_view_backup.distance
+		overview_view = blueprint_view_backup.view
+		camera.transform = overview_view
+		blueprint_view_backup.clear()
 
 func screen_uv(pixel: Vector2, clip: bool = true) -> Variant:
 	var screen: MeshInstance3D = %Monitor.get_node("Screen")

@@ -3,6 +3,7 @@ signal changed
 const Data = preload("res://scripts/life/workstation_layout_data.gd")
 const InventoryData = preload("res://scripts/items/inventory_data.gd")
 const ItemCatalog: MemoirItemCatalog = preload("res://data/items/_catalog.tres")
+const BlueprintData = preload("res://scripts/room/room_blueprint_data.gd")
 const FURNITURE_COLOR_LABELS := ["原色", "奶油白", "鼠尾草绿", "雾蓝", "暖粉", "浅橡木"]
 const FURNITURE_COLOR_HEX := ["", "eae1d4", "a4bdac", "9fbed3", "d9b3b5", "d6b184"]
 const NAMES := {"desk":"桌子（整套）", "monitor":"显示器", "computer":"机箱", "keyboard":"键盘", "mouse":"鼠标", "chair":"椅子", "bookcase":"书架", "lamp":"落地灯", "rug":"地毯", "plant":"盆栽"}
@@ -35,6 +36,8 @@ var start_angle := 0.0
 var start_axis := Vector3.ZERO
 var drag_height := 0.78
 var committed_style: Dictionary = {}
+var blueprint: Dictionary = BlueprintData.DEFAULT.duplicate()
+var committed_blueprint: Dictionary = BlueprintData.DEFAULT.duplicate()
 var undo_stack: Array[Dictionary] = []
 var redo_stack: Array[Dictionary] = []
 var drag_before: Dictionary = {}
@@ -59,6 +62,8 @@ func setup(owner_world: Node3D) -> void:
 		nodes[item.role] = item
 		templates[item.role] = load(item.scene_file_path)
 	committed_style = world.get_node("Room").style.duplicate()
+	blueprint = world.get_node("Room").blueprint.duplicate()
+	committed_blueprint = blueprint.duplicate()
 	authored = snapshot()
 	committed = authored.duplicate()
 	available_inventory = InventoryData.initial()
@@ -322,15 +327,51 @@ func export_layout() -> Dictionary:
 		result[role] = {"x":pose.origin.x, "z":pose.origin.z, "yaw":pose.basis.get_euler().y}
 	return result
 
+func load_blueprint(raw: Variant) -> void:
+	if active: return
+	var next: Dictionary = BlueprintData.clean(raw)
+	if next != blueprint:
+		blueprint = next
+		room_half_size = BlueprintData.half_size(blueprint)
+		world.get_node("Room").apply_blueprint(blueprint)
+	committed_blueprint = blueprint.duplicate()
+
+func set_blueprint_value(key: String, value: float) -> bool:
+	if not active or key not in BlueprintData.DEFAULT or not is_finite(value): return false
+	end_drag()
+	var before := _draft()
+	var next := blueprint.duplicate()
+	next[key] = value
+	next = BlueprintData.clean(next)
+	if next == blueprint: return false
+	blueprint = next
+	room_half_size = BlueprintData.half_size(next)
+	world.get_node("Room").apply_blueprint(next)
+	var collision := _layout_blocker()
+	if not collision.is_empty():
+		blueprint = before.blueprint.duplicate()
+		room_half_size = BlueprintData.half_size(blueprint)
+		world.get_node("Room").apply_blueprint(blueprint)
+		update()
+		message = "调整失败：" + collision + "，请先移动或收回家具"
+		changed.emit()
+		return false
+	_remember(before)
+	update()
+	return true
+
 func load_style(raw: Variant) -> void:
 	if active: return
 	world.get_node("Room").apply_style(raw)
 	committed_style = world.get_node("Room").style.duplicate()
 
 func _draft() -> Dictionary:
-	return {"poses":snapshot(), "style":world.get_node("Room").style.duplicate(), "placements":placed_instances.duplicate(), "colors":furniture_colors.duplicate()}
+	return {"poses":snapshot(), "style":world.get_node("Room").style.duplicate(), "placements":placed_instances.duplicate(), "colors":furniture_colors.duplicate(), "blueprint":blueprint.duplicate()}
 
 func _restore_draft(draft: Dictionary) -> void:
+	blueprint = draft.blueprint.duplicate()
+	room_half_size = BlueprintData.half_size(blueprint)
+	world.get_node("Room").apply_blueprint(blueprint)
 	restore(draft.poses)
 	placed_instances = draft.placements.duplicate()
 	furniture_colors = draft.colors.duplicate()
@@ -371,6 +412,9 @@ func set_style(key: String, value: int) -> void:
 
 func begin() -> void:
 	active = true
+	blueprint = committed_blueprint.duplicate()
+	room_half_size = BlueprintData.half_size(blueprint)
+	world.get_node("Room").apply_blueprint(blueprint)
 	placing_role = ""
 	placing_before = {}
 	undo_stack.clear()
@@ -394,6 +438,7 @@ func finish(apply: bool) -> bool:
 		committed_placements = placed_instances.duplicate()
 		committed_colors = furniture_colors.duplicate()
 		committed_style = world.get_node("Room").style.duplicate()
+		committed_blueprint = blueprint.duplicate()
 		saved = export_layout()
 	else:
 		restore(committed)
@@ -401,6 +446,9 @@ func finish(apply: bool) -> bool:
 		furniture_colors = committed_colors.duplicate()
 		_apply_furniture_appearance()
 		world.get_node("Room").apply_style(committed_style)
+		blueprint = committed_blueprint.duplicate()
+		room_half_size = BlueprintData.half_size(blueprint)
+		world.get_node("Room").apply_blueprint(blueprint)
 	active = false
 	gizmo.hide()
 	return true
@@ -422,6 +470,9 @@ func reset_layout() -> void:
 	end_drag()
 	var before := _draft()
 	restore(authored)
+	blueprint = BlueprintData.DEFAULT.duplicate()
+	room_half_size = BlueprintData.half_size(blueprint)
+	world.get_node("Room").apply_blueprint(blueprint)
 	placed_instances = InventoryData.initial_placements()
 	furniture_colors.clear()
 	_apply_furniture_appearance()

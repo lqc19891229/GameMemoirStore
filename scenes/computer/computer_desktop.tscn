@@ -63,6 +63,13 @@ unique_name_in_owner = true
 layout_mode = 2
 text = "布置房间"
 theme_type_variation = "DarkButton"
+[node name="BlueprintToggle" type="Button" parent="HUD/Interface/Header"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+text = "房间蓝图"
+toggle_mode = true
+theme_type_variation = "DarkButton"
 [node name="ApplyLayout" type="Button" parent="HUD/Interface/Header"]
 unique_name_in_owner = true
 visible = false
@@ -139,6 +146,7 @@ theme_override_constants/margin_bottom = 14
 layout_mode = 2
 horizontal_scroll_mode = 0
 [node name="Content" type="VBoxContainer" parent="HUD/Interface/LayoutPanel/Margin/Scroll"]
+unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 8
@@ -363,5 +371,69 @@ text = "选中家具 · 独立改色"
 [node name="FurniturePalette" type="OptionButton" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content/FurnitureInventory"]
 unique_name_in_owner = true
 layout_mode = 2
+
+[node name="BlueprintPanel" type="VBoxContainer" parent="HUD/Interface/LayoutPanel/Margin/Scroll"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 12
+[node name="BlueprintTitle" type="Label" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel"]
+layout_mode = 2
+text = "房间蓝图 · 矩形户型"
+theme_override_font_sizes/font_size = 18
+[node name="BlueprintHint" type="Label" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel"]
+layout_mode = 2
+autowrap_mode = 3
+text = "调整房间尺寸和门窗在墙面的位置。家具超出范围时会拒绝修改；可撤销或取消。"
+[node name="BlueprintWidthLabel" type="Label" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "房间宽度：8 米"
+[node name="BlueprintWidth" type="HSlider" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel"]
+unique_name_in_owner = true
+layout_mode = 2
+min_value = 6.0
+max_value = 12.0
+step = 0.5
+value = 8.0
+[node name="BlueprintDepthLabel" type="Label" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "房间深度：6 米"
+[node name="BlueprintDepth" type="HSlider" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel"]
+unique_name_in_owner = true
+layout_mode = 2
+min_value = 5.0
+max_value = 10.0
+step = 0.5
+value = 6.0
+[node name="BlueprintDoorLabel" type="Label" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "后墙门位置：-2.75 米"
+[node name="BlueprintDoorX" type="HSlider" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel"]
+unique_name_in_owner = true
+layout_mode = 2
+min_value = -5.3
+max_value = 5.3
+step = 0.05
+value = -2.75
+[node name="BlueprintWindowLabel" type="Label" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "左墙窗位置：-0.8 米"
+[node name="BlueprintWindowZ" type="HSlider" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel"]
+unique_name_in_owner = true
+layout_mode = 2
+min_value = -3.65
+max_value = 3.65
+step = 0.05
+value = -0.8
+[node name="BlueprintStatus" type="Label" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel"]
+unique_name_in_owner = true
+layout_mode = 2
+autowrap_mode = 3
+text = "应用布置后保存蓝图，取消则还原。"
 
 [editable path="Workstation3D"]
