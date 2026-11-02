@@ -289,8 +289,8 @@ tooltip_text = "Ctrl + D；椅子、书架、灯、地毯、绿植可复制"
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
-text = "删除副本"
-tooltip_text = "Delete；初始家具保留，副本可以删除"
+text = "收回家具"
+tooltip_text = "Delete；把选中家具收回库存，可再次摆放"
 [node name="StyleLabel" type="Label" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content"]
 layout_mode = 2
 text = "房间配色与灯光"
