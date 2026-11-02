@@ -34,6 +34,8 @@ jobs:
             tests/life/test_furniture_showcase.gd \
             tests/life/test_workstation_layout.gd \
             tests/life/test_furniture_direct_interaction.gd \
+            tests/life/test_furniture_assists.gd \
+            tests/life/test_workstation_collision.gd \
             tests/life/test_workstation_view.gd
           do
             echo "Running $test"
