@@ -20,6 +20,8 @@ var screen_mouse_down := false
 var last_screen_point := Vector2.ZERO
 var furniture_buttons: Dictionary = {}
 var furniture_palette: OptionButton
+var blueprint_mode := false
+const BLUEPRINT_KEYS := {"BlueprintWidth":"width", "BlueprintDepth":"depth", "BlueprintDoorX":"door_x", "BlueprintWindowZ":"window_z"}
 @onready var world: Node3D = %Workstation3D
 var screen_focused: bool:
 	get: return is_instance_valid(world) and world.mode == "screen"
@@ -34,6 +36,14 @@ func _ready() -> void:
 	get_viewport().size_changed.connect(_reframe_screen)
 	%ResetView.pressed.connect(world.reset_overview)
 	%EditLayout.pressed.connect(begin_layout)
+	%BlueprintToggle.pressed.connect(func() -> void: set_blueprint_mode(not blueprint_mode))
+	for slider_name: String in BLUEPRINT_KEYS:
+		var slider: HSlider = get_node("%" + slider_name)
+		var key: String = BLUEPRINT_KEYS[slider_name]
+		slider.value_changed.connect(func(value: float) -> void:
+			if blueprint_mode:
+				world.layout.set_blueprint_value(key, value)
+		)
 	%ApplyLayout.pressed.connect(func() -> void: finish_layout(true))
 	%CancelLayout.pressed.connect(func() -> void: finish_layout(false))
 	%RestoreLayout.pressed.connect(world.layout.reset_layout)
@@ -98,6 +108,7 @@ func _update_equipment() -> void:
 			world.devices[role].appearance = model
 			reposition = reposition or (screen_focused and role == "monitor")
 	world.layout.load_placements(session.state.life.get("placements", {}), session.state.life.get("inventory", []))
+	world.layout.load_blueprint(session.state.life.get("room_blueprint", {}))
 	world.layout.load_saved(session.state.life.get("workstation_layout", {}))
 	world.layout.load_colors(session.state.life.get("furniture_colors", {}))
 	world.layout.load_style(session.state.life.get("room_style", {}))
@@ -106,18 +117,21 @@ func _update_equipment() -> void:
 
 func begin_layout() -> void:
 	if world.transitioning or world.layout.active: return
+	blueprint_mode = false
 	_set_mode("layout", false)
 	world.layout.begin()
 	_sync_layout()
 
 func finish_layout(apply: bool) -> void:
 	if not world.layout.finish(apply): return
+	if blueprint_mode: set_blueprint_mode(false)
 	_set_mode("overview", false)
 	if apply and session != null:
 		session.state.life["workstation_layout"] = world.layout.export_layout()
 		session.state.life["placements"] = world.layout.committed_placements.duplicate()
 		session.state.life["furniture_colors"] = world.layout.committed_colors.duplicate()
 		session.state.life["room_style"] = world.layout.committed_style.duplicate()
+		session.state.life["room_blueprint"] = world.layout.committed_blueprint.duplicate()
 		session.state.save_state()
 
 func _start_purchased_furniture_placement(item_id: String, uid: String) -> void:
@@ -145,6 +159,36 @@ func _start_inventory_placement(item_id: String) -> void:
 	if uid.is_empty(): return
 	world.layout.start_place(item_id, uid)
 
+func set_blueprint_mode(enabled: bool) -> void:
+	if not world.layout.active: return
+	if enabled and not world.layout.placing_role.is_empty(): world.layout.cancel_placement()
+	blueprint_mode = enabled
+	%BlueprintToggle.set_pressed_no_signal(enabled)
+	%Content.visible = not enabled
+	%BlueprintPanel.visible = enabled
+	world.set_blueprint_camera(enabled)
+	world.layout.update()
+	if enabled: world.layout.gizmo.hide()
+	_sync_blueprint_ui()
+
+func _sync_blueprint_ui() -> void:
+	var blueprint: Dictionary = world.layout.blueprint
+	for name: String in BLUEPRINT_KEYS:
+		var key: String = BLUEPRINT_KEYS[name]
+		var slider: HSlider = get_node("%" + name)
+		slider.set_value_no_signal(float(blueprint[key]))
+		if key == "door_x":
+			slider.min_value = -float(blueprint.width) / 2.0 + .7
+			slider.max_value = float(blueprint.width) / 2.0 - .7
+		elif key == "window_z":
+			slider.min_value = -float(blueprint.depth) / 2.0 + 1.35
+			slider.max_value = float(blueprint.depth) / 2.0 - 1.35
+		var label_key := {"width":"BlueprintWidthLabel", "depth":"BlueprintDepthLabel", "door_x":"BlueprintDoorLabel", "window_z":"BlueprintWindowLabel"}[key]
+		var label: Label = get_node("%" + label_key)
+		var display := {"width":"房间宽度", "depth":"房间深度", "door_x":"后墙门位置", "window_z":"左墙窗位置"}[key]
+		label.text = "%s：%.2f 米" % [display, float(blueprint[key])]
+	%BlueprintStatus.text = world.layout.message if world.layout.message.begins_with("调整失败") else "长宽：%.1f × %.1f 米 · 应用后保存" % [blueprint.width, blueprint.depth]
+
 func _sync_layout() -> void:
 	if not world.layout.active: return
 	var layout = world.layout
@@ -152,6 +196,8 @@ func _sync_layout() -> void:
 	var node: Node3D = layout.nodes[layout.selected]
 	%LayoutPose.text = "X %.2f   Z %.2f\n旋转 %.0f°" % [node.position.x,node.position.z,rad_to_deg(node.rotation.y)]
 	%LayoutMessage.text = layout.message
+	_sync_blueprint_ui()
+	if blueprint_mode: layout.gizmo.hide()
 	%LayoutMessage.modulate = Color.WHITE if layout.valid else Color("ff756a")
 	%ApplyLayout.disabled = not layout.valid or not layout.placing_role.is_empty()
 	%MoveTool.set_pressed_no_signal(layout.tool == "move")
@@ -205,6 +251,7 @@ func _sync_mode() -> void:
 	%ReturnOverview.visible = screen_focused
 	%ResetView.visible = world.mode in ["overview", "layout"]
 	%EditLayout.visible = world.mode == "overview"
+	%BlueprintToggle.visible = world.mode == "layout"
 	%ApplyLayout.visible = world.mode == "layout"
 	%CancelLayout.visible = world.mode == "layout"
 	%LayoutPanel.visible = world.mode == "layout"
@@ -246,6 +293,10 @@ func _input(event: InputEvent) -> void:
 		_clear_gesture.call_deferred()
 	if not event is InputEventKey or world.transitioning: return
 	if world.layout.active:
+		if event.pressed and not event.echo and blueprint_mode and event.keycode == KEY_ESCAPE:
+			set_blueprint_mode(false)
+			get_viewport().set_input_as_handled()
+			return
 		if event.pressed and not event.echo:
 			if event.ctrl_pressed and event.keycode in [KEY_Z, KEY_Y]:
 				if event.keycode == KEY_Y or event.shift_pressed: world.layout.redo()
@@ -282,7 +333,7 @@ func _unhandled_input(event: InputEvent) -> void:
 			orbiting = false
 		return
 	if world.layout.active:
-		_layout_input(event)
+		if not blueprint_mode: _layout_input(event)
 		return
 	if screen_focused:
 		if event is InputEventMouse:

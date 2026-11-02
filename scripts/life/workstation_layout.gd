@@ -329,9 +329,11 @@ func export_layout() -> Dictionary:
 
 func load_blueprint(raw: Variant) -> void:
 	if active: return
-	blueprint = BlueprintData.clean(raw)
-	room_half_size = BlueprintData.half_size(blueprint)
-	world.get_node("Room").apply_blueprint(blueprint)
+	var next: Dictionary = BlueprintData.clean(raw)
+	if next != blueprint:
+		blueprint = next
+		room_half_size = BlueprintData.half_size(blueprint)
+		world.get_node("Room").apply_blueprint(blueprint)
 	committed_blueprint = blueprint.duplicate()
 
 func set_blueprint_value(key: String, value: float) -> bool:
