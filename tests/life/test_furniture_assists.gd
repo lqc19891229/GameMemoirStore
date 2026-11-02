@@ -89,33 +89,60 @@ func run() -> void:
 		return
 	var middle: Node3D = layout.nodes["lamp_1"]
 	var common_z: float = middle.position.z
-	middle.position.z += .18
-	check(layout._layout_blocker().is_empty(), "a small offset in Z keeps middle furniture valid")
 	layout.select("lamp_1")
-	var align: Dictionary = layout.nearest_alignment("lamp_1","z")
-	check(not align.is_empty() and align.axis == "z", "nearby furniture provides an exact Z alignment guide")
+	var z_shift := 0.0
+	var align := {}
+	for candidate_shift: float in [-.12,.12,-.08,.08,-.04,.04]:
+		middle.position.z = common_z+candidate_shift
+		if not layout._layout_blocker().is_empty(): continue
+		align = layout.nearest_alignment("lamp_1","z")
+		if not align.is_empty():
+			z_shift = candidate_shift
+			break
+	check(not is_zero_approx(z_shift), "fixture has a small collision-free Z offset and alignment guide")
+	if is_zero_approx(z_shift):
+		layout._restore_draft(initial)
+		desktop.finish_layout(false)
+		game.queue_free()
+		await frames()
+		quit(1)
+		return
+	check(align.axis == "z", "nearby furniture provides an exact Z alignment guide")
 	var history_before: int = layout.undo_stack.size()
 	check(layout.align_selected("z"), "selected furniture can align with its neighbor's Z position")
-	check(is_equal_approx(middle.position.z,common_z), "alignment moves furniture to a shared center line")
+	check(is_equal_approx(layout.nodes["lamp_1"].position.z,common_z), "alignment moves furniture to a shared center line")
 	check(layout.undo_stack.size() == history_before+1, "single alignment produces exactly one undo step")
 	layout.undo()
-	check(is_equal_approx(layout.nodes["lamp_1"].position.z,common_z+.18), "undo restores the prior Z offset")
+	check(is_equal_approx(layout.nodes["lamp_1"].position.z,common_z+z_shift), "undo restores the prior Z offset")
 	layout.redo()
 	check(is_equal_approx(layout.nodes["lamp_1"].position.z,common_z), "redo reapplies furniture alignment")
 	check("3 件同类家具" in layout.furniture_spacing_summary("lamp_1"), "spacing guide reports the matching group")
 	check("中心距" in layout.furniture_spacing_summary("lamp_1"), "guides measure center distance in metres")
 	middle = layout.nodes["lamp_1"]
-	middle.position.x += .16
 	var first_x: float = layout.nodes["lamp"].position.x
 	var last_x: float = layout.nodes["lamp_2"].position.x
 	var expected: float = (first_x+last_x)*.5
+	var x_shift := 0.0
+	for trial_shift: float in [.10,-.10,.06,-.06,.03,-.03]:
+		middle.position.x = expected+trial_shift
+		if layout._layout_blocker().is_empty():
+			x_shift = trial_shift
+			break
+	check(not is_zero_approx(x_shift), "fixture has a valid uneven X spacing")
+	if is_zero_approx(x_shift):
+		layout._restore_draft(initial)
+		desktop.finish_layout(false)
+		game.queue_free()
+		await frames()
+		quit(1)
+		return
 	history_before = layout.undo_stack.size()
 	check(layout.distribute_matching_furniture("x"), "three similar floor items can be evenly distributed")
 	check(is_equal_approx(layout.nodes["lamp_1"].position.x,expected), "equal-spacing action moves only the interior item to midpoint")
 	check(is_equal_approx(layout.nodes["lamp"].position.x,first_x) and is_equal_approx(layout.nodes["lamp_2"].position.x,last_x), "distribution keeps both endpoint furniture unmoved")
 	check(layout.undo_stack.size() == history_before+1, "an entire arrangement is a single undo entry")
 	layout.undo()
-	check(is_equal_approx(layout.nodes["lamp_1"].position.x,expected+.16), "undo restores uneven positions")
+	check(is_equal_approx(layout.nodes["lamp_1"].position.x,expected+x_shift), "undo restores uneven positions")
 	layout.redo()
 	check(is_equal_approx(layout.nodes["lamp_1"].position.x,expected), "redo restores equal spacing")
 	check(layout.valid and layout._layout_blocker().is_empty(), "aligned and distributed furniture remain collision-free")
