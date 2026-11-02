@@ -1,6 +1,7 @@
 extends Control
 const Catalog: MemoirItemCatalog = preload("res://data/items/_catalog.tres")
 const InventoryData = preload("res://scripts/items/inventory_data.gd")
+const Taxonomy = preload("res://scripts/items/item_taxonomy.gd")
 var session: MemoirGameSession
 var tab := "shop"
 var box: VBoxContainer
@@ -8,17 +9,51 @@ var message: Label
 var pending := false
 var wallet_label: Label
 var purchase_buttons: Dictionary = {}
+var catalog_group_ids: Array[String] = [""]
+var catalog_type_ids: Array[String] = [""]
 
 func _ready() -> void:
 	box = %Rows
 	message = %Message
 	wallet_label = %Wallet
+	%ShopCatalogGroup.add_item("全部分类")
+	for entry: Dictionary in Taxonomy.GROUPS:
+		%ShopCatalogGroup.add_item(str(entry.name))
+		catalog_group_ids.append(str(entry.id))
+	%ShopCatalogGroup.item_selected.connect(func(_i: int) -> void: _update_catalog_types())
+	%ShopCatalogType.item_selected.connect(func(_i: int) -> void: refresh())
+	%ShopCatalogSearch.text_changed.connect(func(_query: String) -> void: refresh())
+	_update_catalog_types()
 	%ShopTab.pressed.connect(func() -> void: set_tab("shop"))
 	%InventoryTab.pressed.connect(func() -> void: set_tab("inventory"))
 	if session == null: return
 	session.tick_updated.connect(_tick)
 	session.changed.connect(_queue_refresh)
 	refresh()
+
+func _category() -> String:
+	var index: int = %ShopCatalogGroup.selected
+	return catalog_group_ids[index] if index >= 0 and index < catalog_group_ids.size() else ""
+
+func _item_type() -> String:
+	var index: int = %ShopCatalogType.selected
+	return catalog_type_ids[index] if index >= 0 and index < catalog_type_ids.size() else ""
+
+func _update_catalog_types() -> void:
+	var group: String = _category()
+	var kinds: Dictionary = {}
+	for item in Catalog.items:
+		if not group.is_empty() and Taxonomy.group_for(item) != group: continue
+		kinds[Taxonomy.type_for(item)] = true
+	%ShopCatalogType.clear()
+	%ShopCatalogType.add_item("全部类型")
+	catalog_type_ids = [""]
+	for key: String in Taxonomy.TYPES:
+		if kinds.has(key):
+			%ShopCatalogType.add_item(Taxonomy.type_name(key))
+			catalog_type_ids.append(key)
+	%ShopCatalogType.select(0)
+	if session != null: refresh()
 
 func set_tab(value: String) -> void:
 	tab = value
@@ -41,6 +76,7 @@ func refresh() -> void:
 	var inventory: Array = session.state.life["inventory"]
 	var placements: Dictionary = session.state.life["placements"]
 	for item in Catalog.items:
+		if not Catalog.matches_filters(item,_category(),_item_type(),%ShopCatalogSearch.text): continue
 		var id := item.item_id
 		var count := InventoryData.count(inventory, id)
 		if tab == "shop" and (item.price <= 0 or item.retired): continue

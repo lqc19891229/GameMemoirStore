@@ -71,7 +71,7 @@ func setup(owner_world: Node3D) -> void:
 		nodes[item.role] = item
 		templates[item.role] = load(item.scene_file_path)
 	for item in ItemCatalog.items:
-		if item.category == "furniture" and InventoryData.ROOM_DEFAULTS.get(item.subcategory, "") == item.item_id and item.furniture_scene != null:
+		if item.category == "furniture" and item.furniture_scene != null and not item.retired:
 			if not templates.has(item.subcategory): templates[item.subcategory] = item.furniture_scene
 	committed_style = world.get_node("Room").style.duplicate()
 	blueprint = world.get_node("Room").blueprint.duplicate()
@@ -90,7 +90,10 @@ func snapshot() -> Dictionary:
 	return result
 
 func name_for(role: String) -> String:
-	return NAMES.get(Data.base_role(role),role) + (" · " + role.get_slice("_",1) if Data.is_copy(role) else "")
+	var base: String = Data.base_role(role)
+	var item: MemoirItemDefinition = ItemCatalog.item_for_placement_role(base)
+	var label: String = NAMES.get(base,item.name if item != null else base)
+	return label + (" · " + role.substr(role.rfind("_")+1) if Data.is_copy(role) else "")
 
 func load_placements(raw: Dictionary, inventory: Array) -> void:
 	if active: return
@@ -114,7 +117,7 @@ func color_for(role: String) -> int:
 	return int(furniture_colors.get(str(placed_instances.get(role, "")), 0))
 
 func set_furniture_color(index: int) -> void:
-	if not active or not InventoryData.ROOM_DEFAULTS.has(Data.base_role(selected)): return
+	if not active or not InventoryData.is_room_furniture_role(Data.base_role(selected)): return
 	if not placed_instances.has(selected) or index < 0 or index >= FURNITURE_COLOR_LABELS.size(): return
 	var before := _draft()
 	var uid := str(placed_instances[selected])
@@ -138,7 +141,7 @@ func _tint_material(index: int, preview: bool) -> StandardMaterial3D:
 
 func _apply_furniture_appearance() -> void:
 	for role: String in nodes:
-		if not InventoryData.ROOM_DEFAULTS.has(Data.base_role(role)): continue
+		if not InventoryData.is_room_furniture_role(Data.base_role(role)): continue
 		var furniture: Node3D = nodes[role]
 		furniture.visible = placed_instances.has(role)
 		# Hiding Node3D does not disable its Area3D ray picking volume.
@@ -177,7 +180,7 @@ func start_place(item_id: String, uid: String) -> bool:
 	var item: MemoirItemDefinition = ItemCatalog.lookup(item_id)
 	if item == null or item.category != "furniture" or item.placement_surface != "floor": return false
 	var base_role := item.subcategory
-	if str(InventoryData.ROOM_DEFAULTS.get(base_role, "")) != item_id: return false
+	if ItemCatalog.item_for_placement_role(base_role) != item: return false
 	if placed_instances.values().has(uid): return false
 	var owned := false
 	for entry: Dictionary in available_inventory:
@@ -250,7 +253,7 @@ func restore(poses: Dictionary) -> void:
 
 func duplicate_selected() -> void:
 	if not active or not placing_role.is_empty() or not templates.has(Data.base_role(selected)): return
-	var furniture_id: String = str(InventoryData.ROOM_DEFAULTS.get(Data.base_role(selected), ""))
+	var furniture_id: String = InventoryData.furniture_item_id(Data.base_role(selected))
 	var instance_uid := InventoryData.unused_uid(available_inventory, placed_instances, furniture_id)
 	if instance_uid.is_empty():
 		message = "没有可用的家具，请先在商店购买"
@@ -297,7 +300,7 @@ func delete_selected() -> void:
 	store_selected()
 
 func store_selected() -> void:
-	if not active or not InventoryData.ROOM_DEFAULTS.has(Data.base_role(selected)): return
+	if not active or not InventoryData.is_room_furniture_role(Data.base_role(selected)): return
 	if not placing_role.is_empty() or not placed_instances.has(selected): return
 	end_drag()
 	var before := _draft()
@@ -502,7 +505,7 @@ func floor_cell_blocker(cell: Dictionary, removing: bool = true) -> String:
 		var shape := BlueprintData.cell_polygon(blueprint, cell, collision_margin)
 		for role: String in nodes:
 			if not is_floor(role): continue
-			if InventoryData.ROOM_DEFAULTS.has(Data.base_role(role)) and not placed_instances.has(role): continue
+			if InventoryData.is_room_furniture_role(Data.base_role(role)) and not placed_instances.has(role): continue
 			if Data.overlap(shape, footprint(role, collision_margin)):
 				return "该地板上已有" + name_for(role)
 		for part: Dictionary in blueprint.partitions:
@@ -914,7 +917,7 @@ func nearest_alignment(role: String, dimension: String) -> Dictionary:
 	var nearest := ALIGN_RADIUS
 	for other: String in nodes:
 		if other == role or not is_floor(other): continue
-		if InventoryData.ROOM_DEFAULTS.has(Data.base_role(other)) and not placed_instances.has(other): continue
+		if InventoryData.is_room_furniture_role(Data.base_role(other)) and not placed_instances.has(other): continue
 		var peer: Node3D = nodes[other]
 		var shift: float = peer.position.x-current.x if dimension == "x" else peer.position.z-current.y
 		if absf(shift) < .002 or absf(shift) >= nearest: continue
@@ -1016,7 +1019,7 @@ func partition_blocker(part: Dictionary) -> String:
 	var shape := BlueprintData.polygon(part, collision_margin)
 	for role: String in nodes:
 		if not is_floor(role): continue
-		if InventoryData.ROOM_DEFAULTS.has(Data.base_role(role)) and not placed_instances.has(role): continue
+		if InventoryData.is_room_furniture_role(Data.base_role(role)) and not placed_instances.has(role): continue
 		# Rugs cannot pass through structural walls either.
 		if Data.overlap(shape, footprint(role, collision_margin)):
 			return "墙体会穿过" + name_for(role)
@@ -1146,7 +1149,7 @@ func finish(apply: bool) -> bool:
 
 func select(role: String) -> void:
 	if not nodes.has(role) or not placing_role.is_empty(): return
-	if InventoryData.ROOM_DEFAULTS.has(Data.base_role(role)) and not placed_instances.has(role): return
+	if InventoryData.is_room_furniture_role(Data.base_role(role)) and not placed_instances.has(role): return
 	selected = role
 	end_drag()
 	update()
@@ -1253,7 +1256,7 @@ func _blocker(role: String, polygon: PackedVector2Array) -> String:
 				return name_for(role) + "碰到内墙"
 	for other: String in nodes:
 		if other == role or is_floor(other) != floor_item or not is_blocking(other): continue
-		if InventoryData.ROOM_DEFAULTS.has(Data.base_role(other)) and not placed_instances.has(other): continue
+		if InventoryData.is_room_furniture_role(Data.base_role(other)) and not placed_instances.has(other): continue
 		if Data.overlap(polygon, footprint(other, collision_margin)):
 			return name_for(role) + "碰到" + name_for(other)
 	return ""
@@ -1265,7 +1268,7 @@ func _layout_blocker() -> String:
 		if nodes[role].get_parent() != world.get_node("%Equipment"):
 			return name_for(role) + "必须放在电脑桌上"
 	for role: String in nodes:
-		if InventoryData.ROOM_DEFAULTS.has(Data.base_role(role)) and not placed_instances.has(role): continue
+		if InventoryData.is_room_furniture_role(Data.base_role(role)) and not placed_instances.has(role): continue
 		var blocker := _blocker(role, footprint(role, collision_margin))
 		if not blocker.is_empty(): return blocker
 	return ""

@@ -6,6 +6,9 @@ extends Resource
 @export var name := ""
 @export_enum("furniture", "device", "component", "decoration") var category := "device"
 @export var subcategory := ""
+## Display-only facets. Keep subcategory as the stable placement role.
+@export var catalog_group := ""
+@export var catalog_type := ""
 @export var slot := ""
 @export var price := 0
 @export_multiline var description := ""

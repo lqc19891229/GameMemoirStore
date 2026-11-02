@@ -2,6 +2,7 @@ extends Node3D
 const WindowScene = preload("res://scenes/computer/ui/app_window.tscn")
 const ItemCatalog: MemoirItemCatalog = preload("res://data/items/_catalog.tres")
 const InventoryData = preload("res://scripts/items/inventory_data.gd")
+const Taxonomy = preload("res://scripts/items/item_taxonomy.gd")
 const BlueprintData = preload("res://scripts/room/room_blueprint_data.gd")
 const APPS := {"platform": ["游戏平台", "res://scenes/apps/platform/store.tscn"], "browser": ["回忆生活 · 购物网页", "res://scenes/apps/browser/browser.tscn"], "game": ["正在游玩", "res://scenes/apps/game/game_player.tscn"]}
 @export var hardware_catalog: MemoirHardwareCatalog
@@ -20,6 +21,9 @@ const DRAG_THRESHOLD := 6.0
 var screen_mouse_down := false
 var last_screen_point := Vector2.ZERO
 var furniture_buttons: Dictionary = {}
+var catalog_special_buttons: Dictionary = {}
+var catalog_group_ids: Array[String] = [""]
+var catalog_type_ids: Array[String] = [""]
 var furniture_palette: OptionButton
 var blueprint_mode := false
 var wall_drag_button := 0
@@ -255,18 +259,91 @@ func _start_purchased_furniture_placement(item_id: String, uid: String) -> void:
 	if not world.layout.start_place(item_id, uid): finish_layout(false)
 
 func _build_furniture_catalog() -> void:
+	%FurnitureCatalogGroup.add_item("全部分类")
+	for entry: Dictionary in Taxonomy.GROUPS:
+		%FurnitureCatalogGroup.add_item(str(entry.name))
+		catalog_group_ids.append(str(entry.id))
+	%FurnitureCatalogGroup.item_selected.connect(func(_index: int) -> void: _update_catalog_types())
+	%FurnitureCatalogType.item_selected.connect(func(_index: int) -> void: _filter_furniture_catalog())
+	%FurnitureCatalogSearch.text_changed.connect(func(_value: String) -> void: _filter_furniture_catalog())
+	# Legacy authored placement controls remain for scene compatibility.
 	for role: String in InventoryData.ROOM_DEFAULTS:
-		var item_id: String = InventoryData.ROOM_DEFAULTS[role]
-		var item: MemoirItemDefinition = ItemCatalog.lookup(item_id)
-		var button: Button = get_node("%Place_" + role)
-		button.text = item.name if item != null else role
-		var selected_id := item_id
-		button.pressed.connect(func() -> void: _start_inventory_placement(selected_id))
-		furniture_buttons[item_id] = button
+		var old := get_node_or_null("%Place_" + role) as Button
+		if old != null:
+			old.hide()
+			var item_id: String = InventoryData.ROOM_DEFAULTS[role]
+			old.pressed.connect(func() -> void: _start_inventory_placement(item_id))
+	for item in ItemCatalog.room_furniture():
+		var id: String = item.item_id
+		var button: Button = %FurnitureCatalogTemplate.duplicate() as Button
+		button.show()
+		button.name = "Catalog_" + id
+		button.alignment = HORIZONTAL_ALIGNMENT_LEFT
+		button.tooltip_text = item.description
+		%FurnitureCatalogItems.add_child(button)
+		button.pressed.connect(func() -> void: _start_inventory_placement(id))
+		furniture_buttons[id] = button
+	for entry: Dictionary in [
+		{"role":"desk","type":"computer_desk","group":"tables","label":"电脑桌 · 调整位置"},
+		{"role":"monitor","type":"monitor","group":"hardware","label":"显示器 · 已安装设备"},
+		{"role":"computer","type":"computer","group":"hardware","label":"机箱 · 已安装设备"},
+		{"role":"keyboard","type":"keyboard","group":"hardware","label":"键盘 · 已安装设备"},
+		{"role":"mouse","type":"mouse","group":"hardware","label":"鼠标 · 已安装设备"}
+	]:
+		var role: String = entry.role
+		var button: Button = %FurnitureCatalogTemplate.duplicate() as Button
+		button.show()
+		button.name = "CatalogSelect_" + role
+		button.alignment = HORIZONTAL_ALIGNMENT_LEFT
+		button.text = entry.label
+		%FurnitureCatalogItems.add_child(button)
+		button.pressed.connect(func() -> void: world.layout.select(role))
+		catalog_special_buttons[role] = {"button":button,"group":entry.group,"type":entry.type,"label":entry.label}
 	furniture_palette = %FurniturePalette
 	for label: String in world.layout.FURNITURE_COLOR_LABELS:
 		furniture_palette.add_item(label)
 	furniture_palette.item_selected.connect(func(index: int) -> void: world.layout.set_furniture_color(index))
+	_update_catalog_types()
+
+func _catalog_group() -> String:
+	var index: int = %FurnitureCatalogGroup.selected
+	return catalog_group_ids[index] if index >= 0 and index < catalog_group_ids.size() else ""
+
+func _catalog_type() -> String:
+	var index: int = %FurnitureCatalogType.selected
+	return catalog_type_ids[index] if index >= 0 and index < catalog_type_ids.size() else ""
+
+func _update_catalog_types() -> void:
+	var group: String = _catalog_group()
+	var types: Dictionary = {}
+	for item in ItemCatalog.room_furniture():
+		if group.is_empty() or Taxonomy.group_for(item) == group:
+			types[Taxonomy.type_for(item)] = true
+	for role: String in catalog_special_buttons:
+		var info: Dictionary = catalog_special_buttons[role]
+		if group.is_empty() or info.group == group: types[info.type] = true
+	%FurnitureCatalogType.clear()
+	%FurnitureCatalogType.add_item("全部类型")
+	catalog_type_ids = [""]
+	for key: String in Taxonomy.TYPES:
+		if types.has(key):
+			%FurnitureCatalogType.add_item(Taxonomy.type_name(key))
+			catalog_type_ids.append(key)
+	%FurnitureCatalogType.select(0)
+	_filter_furniture_catalog()
+
+func _filter_furniture_catalog() -> void:
+	var group: String = _catalog_group()
+	var kind: String = _catalog_type()
+	var query: String = %FurnitureCatalogSearch.text.strip_edges().to_lower()
+	for item_id: String in furniture_buttons:
+		var item: MemoirItemDefinition = ItemCatalog.lookup(item_id)
+		furniture_buttons[item_id].visible = item != null and ItemCatalog.matches_filters(item,group,kind,query)
+	for role: String in catalog_special_buttons:
+		var info: Dictionary = catalog_special_buttons[role]
+		var label: String = info.label
+		info.button.visible = (group.is_empty() or group == info.group) and (kind.is_empty() or kind == info.type) and (query.is_empty() or label.to_lower().contains(query))
+	%FurnitureCatalogStatus.text = "%d 种家具商品 · 支持分类和名称搜索" % ItemCatalog.room_furniture().size()
 
 func _start_inventory_placement(item_id: String) -> void:
 	var uid := InventoryData.unused_uid(world.layout.available_inventory, world.layout.placed_instances, item_id)
@@ -709,15 +786,21 @@ func _sync_layout() -> void:
 	%MoveTool.set_pressed_no_signal(layout.tool == "move")
 	%RotateTool.set_pressed_no_signal(layout.tool == "rotate")
 	%CopyFurniture.disabled = not layout.templates.has(layout.Data.base_role(layout.selected)) or not layout.placing_role.is_empty()
-	%DeleteFurniture.disabled = not InventoryData.ROOM_DEFAULTS.has(layout.Data.base_role(layout.selected)) or not layout.placing_role.is_empty()
+	%DeleteFurniture.disabled = not InventoryData.is_room_furniture_role(layout.Data.base_role(layout.selected)) or not layout.placing_role.is_empty()
 	for item_id: String in furniture_buttons:
 		var unused := InventoryData.unused_uid(layout.available_inventory, layout.placed_instances, item_id)
 		furniture_buttons[item_id].disabled = unused.is_empty() or not layout.placing_role.is_empty()
 		var item: MemoirItemDefinition = ItemCatalog.lookup(item_id)
 		var count := InventoryData.count(layout.available_inventory, item_id)
 		furniture_buttons[item_id].text = "%s · 空闲 %d/%d" % [item.name, _count_unused(item_id), count]
+		if InventoryData.ROOM_DEFAULTS.values().has(item_id):
+			var legacy_role: String = item.subcategory
+			var legacy: Button = get_node_or_null("%Place_" + legacy_role) as Button
+			if legacy != null:
+				legacy.text = furniture_buttons[item_id].text
+				legacy.disabled = furniture_buttons[item_id].disabled
 	if furniture_palette != null:
-		var colorable := InventoryData.ROOM_DEFAULTS.has(layout.Data.base_role(layout.selected))
+		var colorable := InventoryData.is_room_furniture_role(layout.Data.base_role(layout.selected))
 		furniture_palette.disabled = not colorable
 		furniture_palette.select(layout.color_for(layout.selected) if colorable else 0)
 	%UndoLayout.disabled = layout.undo_stack.is_empty()
@@ -727,6 +810,10 @@ func _sync_layout() -> void:
 		(get_node("%Style_" + key) as OptionButton).select(int(style.get(key, 0)))
 	(%Style_brightness as HSlider).set_value_no_signal(float(style.get("brightness", 70)))
 	for role: String in layout.NAMES: get_node("%Layout_" + role).set_pressed_no_signal(layout.selected == role)
+	for role: String in catalog_special_buttons:
+		var info: Dictionary = catalog_special_buttons[role]
+		info.button.disabled = not layout.active or not layout.placing_role.is_empty()
+		info.button.text = str(info.label) + (" · 已选中" if layout.selected == role else "")
 
 func _count_unused(item_id: String) -> int:
 	var total := 0

@@ -205,6 +205,8 @@ retired = true
 [sub_resource type="Resource" id="item_12"]
 script = ExtResource("2")
 item_id = "room_chair"
+catalog_group = "seating"
+catalog_type = "office_chair"
 name = "现代办公椅"
 category = "furniture"
 subcategory = "chair"
@@ -222,6 +224,8 @@ furniture_scene = ExtResource("s_chair")
 [sub_resource type="Resource" id="item_13"]
 script = ExtResource("2")
 item_id = "room_bookcase"
+catalog_group = "storage"
+catalog_type = "bookcase"
 name = "现代书架"
 category = "furniture"
 subcategory = "bookcase"
@@ -239,6 +243,8 @@ furniture_scene = ExtResource("s_bookcase")
 [sub_resource type="Resource" id="item_14"]
 script = ExtResource("2")
 item_id = "room_lamp"
+catalog_group = "lighting"
+catalog_type = "floor_lamp"
 name = "现代落地灯"
 category = "furniture"
 subcategory = "lamp"
@@ -256,6 +262,8 @@ furniture_scene = ExtResource("s_lamp")
 [sub_resource type="Resource" id="item_15"]
 script = ExtResource("2")
 item_id = "room_rug"
+catalog_group = "decor"
+catalog_type = "rug"
 name = "现代地毯"
 category = "furniture"
 subcategory = "rug"
@@ -273,6 +281,8 @@ furniture_scene = ExtResource("s_rug")
 [sub_resource type="Resource" id="item_16"]
 script = ExtResource("2")
 item_id = "room_plant"
+catalog_group = "decor"
+catalog_type = "plant"
 name = "室内绿植"
 category = "furniture"
 subcategory = "plant"
@@ -322,6 +332,8 @@ retired = false
 [sub_resource type="Resource" id="item_19"]
 script = ExtResource("2")
 item_id = "room_sofa"
+catalog_group = "seating"
+catalog_type = "sofa"
 name = "奶油双人沙发"
 category = "furniture"
 subcategory = "sofa"
@@ -339,6 +351,8 @@ furniture_scene = ExtResource("s_sofa")
 [sub_resource type="Resource" id="item_20"]
 script = ExtResource("2")
 item_id = "room_stool"
+catalog_group = "seating"
+catalog_type = "stool"
 name = "胡桃木软垫矮凳"
 category = "furniture"
 subcategory = "stool"

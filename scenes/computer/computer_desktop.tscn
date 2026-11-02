@@ -378,6 +378,33 @@ text = "双人沙发"
 unique_name_in_owner = true
 layout_mode = 2
 text = "软垫矮凳"
+[node name="FurnitureCatalogControls" type="VBoxContainer" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content/FurnitureInventory"]
+layout_mode = 2
+theme_override_constants/separation = 5
+[node name="FurnitureCatalogGroup" type="OptionButton" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content/FurnitureInventory/FurnitureCatalogControls"]
+unique_name_in_owner = true
+layout_mode = 2
+[node name="FurnitureCatalogType" type="OptionButton" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content/FurnitureInventory/FurnitureCatalogControls"]
+unique_name_in_owner = true
+layout_mode = 2
+[node name="FurnitureCatalogSearch" type="LineEdit" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content/FurnitureInventory/FurnitureCatalogControls"]
+unique_name_in_owner = true
+layout_mode = 2
+placeholder_text = "搜索家具名称或商品型号"
+[node name="FurnitureCatalogStatus" type="Label" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content/FurnitureInventory/FurnitureCatalogControls"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "家具分类目录"
+[node name="FurnitureCatalogItems" type="VBoxContainer" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content/FurnitureInventory"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 4
+[node name="FurnitureCatalogTemplate" type="Button" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content/FurnitureInventory/FurnitureCatalogItems"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+size_flags_horizontal = 3
+text = "家具商品模板"
 [node name="FurniturePaletteLabel" type="Label" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content/FurnitureInventory"]
 layout_mode = 2
 text = "选中家具 · 独立改色"
