@@ -75,7 +75,9 @@ func run() -> void:
 	var restored = State.new()
 	restored.save_path = state.save_path
 	restored.load_state()
-	check(not restored.life.placements.has("chair") and restored.life.furniture_colors.get(uid) == 2, "stored original furniture and tint survive reload")
+	check(not state.life.placements.has("chair"), "live room store removes the original placement")
+	check(not restored.life.placements.has("chair"), "stored original stays absent after save reload: %s" % [str(restored.life.placements)])
+	check(restored.life.furniture_colors.get(uid) == 2, "furniture tint survives reload: %s" % [str(restored.life.furniture_colors)])
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(state.save_path))
 	state.persistence_enabled = false
 	# Built-in computers and all input peripherals remain restricted to the desk.

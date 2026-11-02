@@ -146,6 +146,39 @@ theme_override_constants/separation = 8
 unique_name_in_owner = true
 layout_mode = 2
 text = "选中：桌子（整套）"
+[node name="FurnitureInventory" type="VBoxContainer" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content"]
+layout_mode = 2
+theme_override_constants/separation = 6
+[node name="FurnitureCatalogLabel" type="Label" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content/FurnitureInventory"]
+layout_mode = 2
+text = "家具库存 · 点击开始摆放"
+[node name="Place_chair" type="Button" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content/FurnitureInventory"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "办公椅"
+[node name="Place_bookcase" type="Button" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content/FurnitureInventory"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "书架"
+[node name="Place_lamp" type="Button" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content/FurnitureInventory"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "落地灯"
+[node name="Place_rug" type="Button" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content/FurnitureInventory"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "地毯"
+[node name="Place_plant" type="Button" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content/FurnitureInventory"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "绿植"
+[node name="FurniturePaletteLabel" type="Label" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content/FurnitureInventory"]
+layout_mode = 2
+text = "选中家具 · 独立改色"
+[node name="FurniturePalette" type="OptionButton" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content/FurnitureInventory"]
+unique_name_in_owner = true
+layout_mode = 2
+
 [node name="Objects" type="GridContainer" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content"]
 layout_mode = 2
 columns = 2
@@ -330,38 +363,5 @@ min_value = 0.0
 max_value = 100.0
 step = 5.0
 value = 70.0
-
-[node name="FurnitureInventory" type="VBoxContainer" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content"]
-layout_mode = 2
-theme_override_constants/separation = 6
-[node name="FurnitureCatalogLabel" type="Label" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content/FurnitureInventory"]
-layout_mode = 2
-text = "家具库存 · 点击开始摆放"
-[node name="Place_chair" type="Button" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content/FurnitureInventory"]
-unique_name_in_owner = true
-layout_mode = 2
-text = "办公椅"
-[node name="Place_bookcase" type="Button" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content/FurnitureInventory"]
-unique_name_in_owner = true
-layout_mode = 2
-text = "书架"
-[node name="Place_lamp" type="Button" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content/FurnitureInventory"]
-unique_name_in_owner = true
-layout_mode = 2
-text = "落地灯"
-[node name="Place_rug" type="Button" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content/FurnitureInventory"]
-unique_name_in_owner = true
-layout_mode = 2
-text = "地毯"
-[node name="Place_plant" type="Button" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content/FurnitureInventory"]
-unique_name_in_owner = true
-layout_mode = 2
-text = "绿植"
-[node name="FurniturePaletteLabel" type="Label" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content/FurnitureInventory"]
-layout_mode = 2
-text = "选中家具 · 独立改色"
-[node name="FurniturePalette" type="OptionButton" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content/FurnitureInventory"]
-unique_name_in_owner = true
-layout_mode = 2
 
 [editable path="Workstation3D"]
