@@ -998,12 +998,32 @@ func _input(event: InputEvent) -> void:
 		if (focused is LineEdit or focused is TextEdit or focused is OptionButton or focused is Range) and event.keycode != KEY_ESCAPE:
 			return
 		if world.layout.group_copy_preview_active:
-			if event.pressed and not event.echo:
+			if event.pressed and not event.meta_pressed:
+				var preview = world.layout
 				if event.keycode == KEY_ESCAPE or event.ctrl_pressed and event.keycode in [KEY_Z,KEY_Y]:
-					world.layout.cancel_group_copy_preview()
-				elif event.keycode in [KEY_ENTER,KEY_KP_ENTER]:
-					if world.layout.confirm_group_copy_preview():
-						room_ui.show_keyboard_feedback("整组复制成功 · Ctrl+Z 撤销")
+					if not event.echo: preview.cancel_group_copy_preview()
+				elif not event.ctrl_pressed and not event.alt_pressed:
+					if event.keycode in [KEY_ENTER,KEY_KP_ENTER] and not event.echo:
+						if preview.confirm_group_copy_preview():
+							room_ui.show_keyboard_feedback("整组复制成功 · Ctrl+Z 撤销")
+					elif event.keycode in [KEY_LEFT,KEY_RIGHT,KEY_UP,KEY_DOWN]:
+						var direction := Vector2.ZERO
+						match event.keycode:
+							KEY_LEFT: direction = Vector2.LEFT
+							KEY_RIGHT: direction = Vector2.RIGHT
+							KEY_UP: direction = Vector2(0,-1)
+							KEY_DOWN: direction = Vector2(0,1)
+						preview.nudge_group_copy_preview(direction,event.shift_pressed)
+					elif event.keycode in [KEY_Q,KEY_E] and not event.echo:
+						preview.rotate_group_copy_preview_step(-1 if event.keycode == KEY_Q else 1,event.shift_pressed)
+					elif event.keycode == KEY_F and not event.echo and not event.shift_pressed:
+						preview.find_group_copy_preview_space()
+					elif event.keycode == KEY_S and not event.echo and not event.shift_pressed:
+						preview.set_snapping(not preview.snapping)
+						preview.set_group_copy_preview_offset(preview.group_copy_preview_offset,true)
+					elif event.keycode == KEY_TAB and not event.echo and not event.shift_pressed:
+						preview.cancel_group_copy_preview()
+						set_blueprint_mode(true)
 			get_viewport().set_input_as_handled()
 			return
 		if event.pressed and not event.echo and blueprint_mode and event.keycode == KEY_ESCAPE:
