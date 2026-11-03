@@ -69,7 +69,7 @@ func run() -> void:
 	check(tools.action_buttons["arrange"].icon != null and tools.arrange_buttons.size() == 4, "arrangement uses a vector toolbar icon and four X/Z buttons")
 	tools.action_buttons["arrange"].pressed.emit()
 	check(tools.arrange_panel.visible and tools.action_buttons["arrange"].button_pressed, "contextual arrangement opens beside selected furniture and highlights its button")
-	check(tools.arrange_summary.text.contains("件同类家具") and tools.arrange_buttons["space_x"].disabled and tools.arrange_buttons["space_z"].disabled, "distribution buttons clearly disable when fewer than three matching pieces are placed")
+	check(tools.arrange_summary.text.contains("等距需至少 3 件") and tools.arrange_buttons["space_x"].disabled and tools.arrange_buttons["space_z"].disabled, "arrangement explains the three-piece minimum and disables unavailable spacing buttons")
 	check(tools.arrange_buttons["align_x"].disabled == layout.nearest_alignment("chair","x").is_empty() and tools.arrange_buttons["align_z"].disabled == layout.nearest_alignment("chair","z").is_empty(), "alignment buttons reflect collision-safe nearby guides")
 	var pose_before_arrange: Transform3D = layout.nodes["chair"].transform
 	var history_before_arrange: int = layout.undo_stack.size()
