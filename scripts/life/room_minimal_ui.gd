@@ -307,9 +307,13 @@ func _sync_feedback(active: bool) -> void:
 
 func choose_mode(next_mode: String) -> void:
 	if not mode_buttons.has(next_mode): return
+	# Never leave a ghost active under the decoration or lighting inspector:
+	# mode switches discard only the unfinished preview, not purchased stock.
+	if next_mode != "furniture" and not host.world.layout.placing_role.is_empty():
+		host.world.layout.cancel_placement()
 	mode = next_mode
 	if scene_actions != null: scene_actions.hide_colors()
-	if next_mode == "furniture": catalog_open = true
+	if next_mode == "furniture": catalog_open = host.world.layout.placing_role.is_empty()
 	host.set_blueprint_mode(mode == "build")
 	sync()
 
@@ -322,6 +326,10 @@ func sync() -> void:
 		catalog_open = false
 		last_selected = "desk"
 	if active:
+		# A pending placement needs an unobstructed 3D canvas. Do not let a
+		# second category click or a mode refresh reopen the drawer over it.
+		if not host.world.layout.placing_role.is_empty():
+			catalog_open = false
 		var selected: String = str(host.world.layout.selected)
 		# Once the player selects an object, free the central viewport for
 		# the 3D gizmo. The catalog can be reopened at any time from the bar.
@@ -345,7 +353,7 @@ func sync() -> void:
 			if host.furniture_cards != null:
 				host.furniture_cards.request_visible.call_deferred()
 		_last_dock_visible = show_dock
-	catalog_toggle.visible = active and mode == "furniture"
+	catalog_toggle.visible = active and mode == "furniture" and host.world.layout.placing_role.is_empty()
 	catalog_toggle.text = "" if _last_dimensions.x < 640 else "收起" if catalog_open else "物品"
 	advanced_toggle.text = "" if _last_dimensions.x < 640 else "收起" if advanced else "精细"
 	for id: String in mode_buttons:

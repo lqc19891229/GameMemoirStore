@@ -74,7 +74,7 @@ func _build_categories(canvas: Control) -> void:
 
 func open_category(index: int) -> void:
 	if index < 0 or index >= GROUP_KEYS.size(): return
-	if not host.world.layout.active or host.blueprint_mode: return
+	if not host.world.layout.active or host.blueprint_mode or not host.world.layout.placing_role.is_empty(): return
 	var group: OptionButton = host.get_node("%FurnitureCatalogGroup")
 	group.select(index)
 	host._update_catalog_types()
@@ -182,7 +182,7 @@ func hide_colors() -> void:
 
 func sync(active: bool) -> void:
 	var furniture_mode: bool = active and room_ui.mode == "furniture" and not host.blueprint_mode
-	rail.visible = furniture_mode
+	rail.visible = furniture_mode and host.world.layout.placing_role.is_empty()
 	hint.visible = active and host.get_viewport().get_visible_rect().size.x >= 1060
 	for index in range(GROUP_KEYS.size()):
 		var button: Button = category_buttons[GROUP_KEYS[index]]
