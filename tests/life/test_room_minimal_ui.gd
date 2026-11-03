@@ -2,6 +2,7 @@ extends SceneTree
 ## Room editor scene-first UI regression: left categories, contextual object actions,
 ## progressive disclosure and isolation from the independent PC app screen.
 const Life = preload("res://scripts/life/life_data.gd")
+const Inventory = preload("res://scripts/items/inventory_data.gd")
 var checks := 0
 var failures := 0
 
@@ -104,6 +105,30 @@ func run() -> void:
 	check(sample_card.button.get_node("VisualCard/FurniturePreview") == sample_card.image, "item card still shows its true GLB model")
 	check(sample_card.button.custom_minimum_size.x == 132.0, "narrow icon drawer uses compact inventory cards")
 	check(desktop.get_node("%Place_chair") != null, "legacy Godot node IDs remain available for saved scenes")
+
+	# Placement previews should own the 3D canvas. Opening other modes must
+	# discard the ghost without consuming a furniture UID or changing the save.
+	layout.select("chair")
+	layout.store_selected()
+	var staged_placements: Dictionary = layout.placed_instances.duplicate()
+	var free_chair: String = Inventory.unused_uid(layout.available_inventory,layout.placed_instances,"room_chair")
+	check(not free_chair.is_empty() and layout.start_place("room_chair",free_chair), "stored owned furniture can be previewed from an open catalog")
+	check(not ui.catalog_open and not ui.dock.visible, "starting placement automatically clears the catalog overlay")
+	check(not tools.rail.visible and not ui.catalog_toggle.visible and not tools.action_strip.visible, "preview hides category rail, catalog toggle and context actions")
+	var original_group: int = desktop.get_node("%FurnitureCatalogGroup").selected
+	tools.open_category(2)
+	check(desktop.get_node("%FurnitureCatalogGroup").selected == original_group and not ui.catalog_open, "category clicks cannot reopen drawer during a pending placement")
+	desktop._input(shortcut(KEY_B))
+	check(not ui.catalog_open and not ui.dock.visible, "B does not reopen the drawer over the placement ghost")
+	desktop._input(shortcut(KEY_ESCAPE))
+	check(layout.active and layout.placing_role.is_empty() and tools.rail.visible, "Escape cancels preview and restores the category rail without leaving the editor")
+	check(layout.placed_instances == staged_placements and Inventory.unused_uid(layout.available_inventory,layout.placed_instances,"room_chair") == free_chair, "canceling preview retains the original stock UID and placements")
+	check(layout.start_place("room_chair",free_chair), "the same inventory UID remains available for a second preview")
+	ui.choose_mode("decor")
+	check(layout.placing_role.is_empty() and ui.mode == "decor" and desktop.get_node("%Style_wall").visible, "switching to decoration safely cancels pending placement")
+	check(layout.placed_instances == staged_placements and Inventory.unused_uid(layout.available_inventory,layout.placed_instances,"room_chair") == free_chair, "mode switch never consumes the previewed furniture UID")
+	ui.choose_mode("furniture")
+	check(ui.catalog_open and tools.rail.visible, "returning to furniture restores normal browsing after preview cancellation")
 
 	# Keyboard rules follow the same direct-edit grammar as the compact icons.
 	desktop._input(shortcut(KEY_B))
