@@ -963,11 +963,29 @@ func _input(event: InputEvent) -> void:
 				world.layout.duplicate_selected()
 				get_viewport().set_input_as_handled()
 				return
+			# Same low-friction blueprint switching as common room builders.
+			# Input fields keep Tab/letter keys for ordinary text entry.
+			if event.keycode == KEY_TAB:
+				set_blueprint_mode(not blueprint_mode)
+				get_viewport().set_input_as_handled()
+				return
 			match event.keycode:
 				KEY_DELETE: world.layout.delete_selected()
 				KEY_ESCAPE:
-					if not world.layout.placing_role.is_empty(): world.layout.cancel_placement()
-					else: finish_layout(false)
+					if not world.layout.placing_role.is_empty():
+						world.layout.cancel_placement()
+					elif room_ui.scene_actions.swatches.visible:
+						room_ui.scene_actions.hide_colors()
+						room_ui.sync()
+					elif room_ui.catalog_open:
+						room_ui.catalog_open = false
+						room_ui.sync()
+					else:
+						finish_layout(false)
+				KEY_B:
+					if not blueprint_mode:
+						room_ui.catalog_open = not room_ui.catalog_open
+						room_ui.sync()
 				KEY_G: world.layout.set_tool("move")
 				KEY_R: world.layout.set_tool("rotate")
 				KEY_Q: world.layout.rotate_step(-1)
@@ -1036,7 +1054,7 @@ func _layout_input(event: InputEvent) -> void:
 			elif event.button_index == MOUSE_BUTTON_RIGHT and event.pressed:
 				layout.cancel_placement()
 			elif event.pressed and event.button_index in [MOUSE_BUTTON_WHEEL_UP, MOUSE_BUTTON_WHEEL_DOWN]:
-				if event.shift_pressed:
+				if event.shift_pressed or event.ctrl_pressed:
 					layout.rotate_step(-1 if event.button_index == MOUSE_BUTTON_WHEEL_UP else 1)
 				else:
 					world.zoom_overview(0.9 if event.button_index == MOUSE_BUTTON_WHEEL_UP else 1.1)
