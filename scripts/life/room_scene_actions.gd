@@ -519,7 +519,7 @@ func perform_action(id: String) -> void:
 	if not host.world.layout.active or host.blueprint_mode or room_ui.catalog_open: return
 	var layout = host.world.layout
 	if not layout.placing_role.is_empty() or not layout.gesture.is_empty(): return
-	if layout.group_selection.size() > 1 and id not in ["move","rotate"]: return
+	if layout.group_selection.size() > 1 and id not in ["move","rotate","paint","arrange"]: return
 	if id != "arrange": hide_arrange()
 	if id != "paint": hide_colors()
 	if id not in ["move","rotate"]: hide_group_members()
@@ -543,22 +543,36 @@ func perform_arrangement(id: String) -> void:
 	if not arrange_buttons.has(id) or not arrange_panel.visible: return
 	if not host.world.layout.active or host.blueprint_mode or room_ui.mode != "furniture" or room_ui.catalog_open: return
 	var layout = host.world.layout
-	if not layout.placing_role.is_empty() or not layout.gesture.is_empty() or layout.group_selection.size() > 1: return
+	if not layout.placing_role.is_empty() or not layout.gesture.is_empty(): return
 	var role: String = str(layout.selected)
 	if not layout.nodes.has(role) or not layout.placed_instances.has(role): return
+	var multi: bool = layout.group_selection.size() > 1
 	var is_alignment := id.begins_with("align_")
 	var axis := "x" if id.ends_with("_x") else "z"
-	var changed: bool = layout.align_selected(axis) if is_alignment else layout.distribute_matching_furniture(axis)
-	if changed:
-		room_ui.show_keyboard_feedback("%s 轴%s完成 · Ctrl+Z 撤销" % [axis.to_upper(),"对齐" if is_alignment else "等距排列"])
+	var changed: bool
+	if multi:
+		changed = layout.align_group(axis) if is_alignment else layout.distribute_group(axis)
 	else:
-		var reason := "附近没有可安全对齐的家具" if is_alignment else "至少需要 3 件已摆放的同类家具" if layout._matching_furniture(role).size() < 3 else "位置已均匀或移动受到阻挡"
+		changed = layout.align_selected(axis) if is_alignment else layout.distribute_matching_furniture(axis)
+	if changed:
+		room_ui.show_keyboard_feedback("%s · %s 轴%s完成 · Ctrl+Z 撤销" % ["整组" if multi else "家具",axis.to_upper(),"对齐" if is_alignment else "等距排列"])
+	else:
+		var reason := ""
+		if multi:
+			reason = str(layout.message) if str(layout.message).begins_with("整组排列受阻") else "已对齐、等距或目标会造成重叠"
+		else:
+			reason = "附近没有可安全对齐的家具" if is_alignment else "至少需要 3 件已摆放的同类家具" if layout._matching_furniture(role).size() < 3 else "位置已均匀或移动受到阻挡"
 		room_ui.show_keyboard_feedback("未改变布局 · " + reason)
 	room_ui.sync()
 
 func apply_color(index: int) -> void:
 	if index < 0 or index >= color_buttons.size(): return
-	host.world.layout.set_furniture_color(index)
+	var layout = host.world.layout
+	if layout.group_selection.size() > 1:
+		var changed: bool = layout.set_group_furniture_color(index)
+		if changed: room_ui.show_keyboard_feedback("已统一改色 %d 件 · Ctrl+Z 撤销" % layout.group_selection.size())
+	else:
+		layout.set_furniture_color(index)
 	hide_colors()
 	room_ui.sync()
 
@@ -580,11 +594,32 @@ func _hide_object_actions() -> void:
 
 func _refresh_arrangement(role: String) -> void:
 	var layout = host.world.layout
+	var multi: bool = layout.group_selection.size() > 1
 	var matching: Array[String] = layout._matching_furniture(role)
-	arrange_summary.text = "附近家具对齐 · 同类 %d 件%s" % [matching.size()," · 可等距排列" if matching.size() >= 3 else " · 等距需至少 3 件"]
-	for axis in ["x","z"]:
-		arrange_buttons["align_" + axis].disabled = layout.nearest_alignment(role,axis).is_empty()
-		arrange_buttons["space_" + axis].disabled = matching.size() < 3
+	if multi:
+		var members: Array[String] = layout.group_selection
+		arrange_summary.text = "当前多选 %d 件 · 与主控对齐 · 等距固定首尾" % members.size()
+		for axis in ["x","z"]:
+			var anchor: float = layout.nodes[role].position.x if axis == "x" else layout.nodes[role].position.z
+			var needs_align := false
+			var minimum := INF
+			var maximum := -INF
+			for member: String in members:
+				var value: float = layout.nodes[member].position.x if axis == "x" else layout.nodes[member].position.z
+				if absf(value-anchor) > .002: needs_align = true
+				minimum = minf(minimum,value)
+				maximum = maxf(maximum,value)
+			arrange_buttons["align_" + axis].disabled = not needs_align
+			arrange_buttons["space_" + axis].disabled = members.size() < 3 or maximum-minimum < .05
+			arrange_buttons["align_" + axis].tooltip_text = "以主控家具为基准，沿 %s 轴对齐全部选中家具" % axis.to_upper()
+			arrange_buttons["space_" + axis].tooltip_text = "沿 %s 轴等距排列当前多选家具，保持两端不动" % axis.to_upper()
+	else:
+		arrange_summary.text = "附近家具对齐 · 同类 %d 件%s" % [matching.size()," · 可等距排列" if matching.size() >= 3 else " · 等距需至少 3 件"]
+		for axis in ["x","z"]:
+			arrange_buttons["align_" + axis].disabled = layout.nearest_alignment(role,axis).is_empty()
+			arrange_buttons["space_" + axis].disabled = matching.size() < 3
+			arrange_buttons["align_" + axis].tooltip_text = "将选中家具与附近家具沿 %s 中心线对齐" % axis.to_upper()
+			arrange_buttons["space_" + axis].tooltip_text = "将三件以上同类家具沿 %s 轴等间距排列" % axis.to_upper()
 
 func sync(active: bool) -> void:
 	var furniture_mode: bool = active and room_ui.mode == "furniture" and not host.blueprint_mode
@@ -627,14 +662,12 @@ func sync(active: bool) -> void:
 	group_button.text = "成员 %d" % group_size if multi else "成员"
 	group_button.set_pressed_no_signal(multi and group_panel.visible)
 	if group_panel.visible: _refresh_group_members()
-	var ordinary_hints := {
-		"paint":"选择单件家具颜色",
-		"arrange":"附近家具对齐 · 同类家具等距排列",
-		"store":"收纳这件家具 · Delete"
-	}
-	for action_id in ["paint","arrange","store"]:
-		action_buttons[action_id].disabled = multi
-		action_buttons[action_id].tooltip_text = "多选时仅支持整组移动与旋转 · Esc 返回单选" if multi else str(ordinary_hints[action_id])
+	action_buttons["paint"].disabled = false
+	action_buttons["arrange"].disabled = false
+	action_buttons["store"].disabled = multi
+	action_buttons["paint"].tooltip_text = "统一修改 %d 件家具的颜色" % group_size if multi else "选择单件家具颜色"
+	action_buttons["arrange"].tooltip_text = "当前多选对齐与等距排列" if multi else "附近家具对齐 · 同类家具等距排列"
+	action_buttons["store"].tooltip_text = "多选不支持直接收纳 · Esc 返回单选" if multi else "收纳这件家具 · Delete"
 	if arrange_panel.visible: _refresh_arrangement(role)
 	var has_copy: bool = not InventoryData.unused_uid(layout.available_inventory,layout.placed_instances,InventoryData.furniture_item_id(layout.Data.base_role(role))).is_empty()
 	action_buttons["duplicate"].disabled = multi or not has_copy
@@ -643,8 +676,9 @@ func sync(active: bool) -> void:
 	if swatches.visible:
 		for i in range(color_buttons.size()):
 			var style := color_buttons[i].get_theme_stylebox("normal") as StyleBoxFlat
-			style.border_color = Color("317a56") if layout.color_for(role) == i else Color("b9c9b9")
-			style.set_border_width_all(3 if layout.color_for(role) == i else 2)
+			var selected_color: int = layout.group_color_index() if multi else layout.color_for(role)
+			style.border_color = Color("317a56") if selected_color == i else Color("b9c9b9")
+			style.set_border_width_all(3 if selected_color == i else 2)
 
 func _process(_delta: float) -> void:
 	if action_strip == null or not is_instance_valid(host): return

@@ -144,7 +144,7 @@ func run() -> void:
 			check(layout.gesture.is_empty() and desktop.pending_drag_role.is_empty(), "Ctrl+click does not secretly arm a movement gesture")
 			check(layout.snapshot() == selection_before and layout.undo_stack.size() == history_depth, "Ctrl+click does not transform furniture or write undo history")
 			check(layout.group_markers.size() == 1 and ui.scene_actions.selection_chip.text.contains("已选 2 件"), "multi-selection has both a secondary 3D outline and a contextual furniture-count label")
-			check(ui.scene_actions.action_buttons["store"].disabled and ui.scene_actions.action_buttons["paint"].disabled and ui.scene_actions.action_buttons["arrange"].disabled, "multi-selection disables single-item actions without affecting group transforms")
+			check(ui.scene_actions.action_buttons["store"].disabled and ui.scene_actions.action_buttons["duplicate"].disabled and not ui.scene_actions.action_buttons["paint"].disabled and not ui.scene_actions.action_buttons["arrange"].disabled, "multi-selection keeps batch paint/arrange available while blocking single-item storage and duplication")
 			layout.store_selected()
 			check(layout.placed_instances.has(second_role), "storage shortcuts cannot silently remove one member of a multi-selection")
 			desktop._layout_input(mouse(second_pixel,true,false,false,true))

@@ -314,6 +314,98 @@ func run() -> void:
 		layout.update()
 	layout.gesture = ""
 	layout.end_drag()
+	# P37: batch tint is one inventory-UID-colored transaction, while group
+	# alignment/distribution verify their entire sweep and roll back atomically.
+	check(layout.group_selection.size() == 3 and layout.selected == "lamp_2", "batch arrangement operates on actual selected members, not the full same-item catalog")
+	var first_uid: String = str(layout.placed_instances["lamp"])
+	var second_uid: String = str(layout.placed_instances["lamp_1"])
+	var third_uid: String = str(layout.placed_instances["lamp_2"])
+	layout.furniture_colors[first_uid] = 2
+	layout.furniture_colors[second_uid] = 4
+	layout.furniture_colors.erase(third_uid)
+	layout._apply_furniture_appearance()
+	layout.update()
+	check(layout.group_color_index() == -1, "mixed group finishes are reported without guessing a common color")
+	var before_group_colors: Dictionary = layout.furniture_colors.duplicate()
+	var color_history: int = layout.undo_stack.size()
+	check(layout.set_group_furniture_color(5), "one batch color action recolors all three selected furniture UIDs")
+	check(layout.color_for("lamp") == 5 and layout.color_for("lamp_1") == 5 and layout.color_for("lamp_2") == 5 and layout.group_color_index() == 5, "batch recolor applies the chosen finish to all group members")
+	check(layout.undo_stack.size() == color_history+1 and not layout.set_group_furniture_color(5), "identical group recolor is a no-op and a real change takes one undo record")
+	layout.undo()
+	check(layout.furniture_colors == before_group_colors and layout.group_color_index() == -1, "one undo restores every previously mixed member finish")
+	layout.redo()
+	check(layout.group_color_index() == 5 and layout.undo_stack.size() == color_history+1, "one redo reapplies all selected furniture colors")
+	check(not layout.set_group_furniture_color(-1) and not layout.set_group_furniture_color(999), "invalid group finish indices never modify owned stock")
+	check(layout.placed_instances == placed_before_group, "batch recolor changes per-UID appearance but never relabels inventory")
+
+	# Search for a fresh collision-free diagonal row, independent of prior
+	# drag, undo, magnet and blueprint subtests. Validate both the offset
+	# starting pose and each sweep to the target aligned centerline.
+	var arrangement_ready := false
+	for candidate_z in [-2.0,-2.3,1.8,2.1,0.0]:
+		for spread in [2.4,2.7,2.1,3.0]:
+			for i in range(group.size()):
+				var fixture_role: String = group[i]
+				layout.nodes[fixture_role].transform = quick_poses[fixture_role]
+				layout.nodes[fixture_role].position = Vector3(float(i-1)*spread,base_y,candidate_z)
+			if not layout._layout_blocker().is_empty(): continue
+			layout.nodes["lamp"].position.z += .08
+			layout.nodes["lamp_1"].position.z += .14
+			if not layout._layout_blocker().is_empty(): continue
+			var swept_ok := true
+			for role: String in group:
+				var target: Transform3D = layout.nodes[role].transform
+				target.origin.z = candidate_z
+				if not layout._sweep_blocker(role,layout.nodes[role].transform,target,group).is_empty():
+					swept_ok = false
+					break
+			if swept_ok:
+				arrangement_ready = true
+				break
+		if arrangement_ready: break
+	layout.update()
+	check(arrangement_ready and layout.valid and layout._layout_blocker().is_empty(), "group alignment fixture starts with a verified collision-free pose and sweep: " + layout._layout_blocker())
+	var before_group_align: Dictionary = layout.snapshot()
+	var align_history: int = layout.undo_stack.size()
+	check(layout.align_group("z"), "group alignment centers each member on the primary lamp's Z position")
+	var aligned_z: float = layout.nodes["lamp_2"].position.z
+	for role: String in group:
+		check(absf(layout.nodes[role].position.z-aligned_z) < .003, "group alignment preserves every member and matches the chosen primary center line: " + role)
+	check(layout.undo_stack.size() == align_history+1 and layout.valid, "all three aligned members share one undo record and a valid layout")
+	check(not layout.align_group("z") and not layout.align_group("invalid"), "repeating aligned axis or supplying unknown axis cannot add undo entries")
+	layout.undo()
+	for role: String in group:
+		check(layout.nodes[role].transform.is_equal_approx(before_group_align[role]), "single undo restores all group offsets after alignment: " + role)
+	layout.redo()
+
+	# Aligning all three onto the same X when already co-linear on Z would
+	# make them overlap. Reject the entire operation without partial moves.
+	var before_invalid_align: Dictionary = layout.snapshot()
+	var rejected_history: int = layout.undo_stack.size()
+	check(not layout.align_group("x"), "alignment that would stack three furniture footprints is rejected")
+	for role: String in group:
+		check(layout.nodes[role].transform.is_equal_approx(before_invalid_align[role]), "collision rejection rolls back every member, not just the last: " + role)
+	check(layout.undo_stack.size() == rejected_history and layout.valid, "blocked group alignment creates no undo record and restores a valid layout")
+
+	var ordered: Array[String] = group.duplicate()
+	ordered.sort_custom(func(a: String,b: String) -> bool: return layout.nodes[a].position.x < layout.nodes[b].position.x)
+	var minimum_x: float = layout.nodes[ordered[0]].position.x
+	var maximum_x: float = layout.nodes[ordered[-1]].position.x
+	layout.nodes[ordered[1]].position.x += .28
+	layout.update()
+	check(layout.valid and layout._layout_blocker().is_empty(), "off-center middle item gives a collision-free distribution fixture")
+	var before_spacing: Dictionary = layout.snapshot()
+	var spacing_history: int = layout.undo_stack.size()
+	check(layout.distribute_group("x"), "three selected members can be evenly spaced along X")
+	check(absf(layout.nodes[ordered[1]].position.x-(minimum_x+maximum_x)*.5) < .003, "group X distribution centers only the middle member")
+	check(absf(layout.nodes[ordered[0]].position.x-minimum_x) < .003 and absf(layout.nodes[ordered[-1]].position.x-maximum_x) < .003, "group equal spacing preserves both endpoint coordinates")
+	check(layout.undo_stack.size() == spacing_history+1 and layout.valid and layout._layout_blocker().is_empty(), "complete group equal spacing is one safe undo transaction")
+	check(not layout.distribute_group("x") and not layout.distribute_group("bad"), "an already-even group or invalid axis adds no history")
+	layout.undo()
+	for role: String in group:
+		check(layout.nodes[role].transform.is_equal_approx(before_spacing[role]), "single undo restores every member's pre-distribution pose: " + role)
+	layout.redo()
+	check(layout.placed_instances == placed_before_group, "group alignment and spacing never change owned furniture UIDs")
 	check(layout.toggle_group_member("lamp_2"), "Ctrl-style toggle removes one existing member without moving it")
 	check(layout.group_selection.size() == 2 and layout.group_markers.size() == 1, "removing a member updates group selection outlines")
 	layout.clear_group_selection()
