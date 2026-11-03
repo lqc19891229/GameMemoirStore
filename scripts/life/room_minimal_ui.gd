@@ -25,6 +25,7 @@ var _filter_parent: VBoxContainer
 var _inspector: PanelContainer
 var feedback: PanelContainer
 var feedback_text: Label
+var feedback_pose_text: Label
 var feedback_state := "none"
 var _preview_role := ""
 var _confirmed_role := ""
@@ -261,7 +262,7 @@ func _build_feedback(canvas: Control) -> void:
 	feedback.name = "PlacementFeedback"
 	feedback.visible = false
 	feedback.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	feedback.custom_minimum_size = Vector2(242,40)
+	feedback.custom_minimum_size = Vector2(318,62)
 	var surface := StyleBoxFlat.new()
 	surface.bg_color = Color("f7f8f3",0.94)
 	surface.border_color = Color("bac9b9",0.74)
@@ -273,12 +274,24 @@ func _build_feedback(canvas: Control) -> void:
 	surface.content_margin_bottom = 9.0
 	feedback.add_theme_stylebox_override("panel",surface)
 	canvas.add_child(feedback)
+	var contents := VBoxContainer.new()
+	contents.name = "FeedbackContents"
+	contents.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	contents.add_theme_constant_override("separation",4)
+	feedback.add_child(contents)
 	feedback_text = Label.new()
 	feedback_text.name = "Status"
 	feedback_text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	feedback_text.add_theme_font_size_override("font_size",12)
 	feedback_text.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	feedback.add_child(feedback_text)
+	contents.add_child(feedback_text)
+	feedback_pose_text = Label.new()
+	feedback_pose_text.name = "TransformReadout"
+	feedback_pose_text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	feedback_pose_text.add_theme_font_size_override("font_size",11)
+	feedback_pose_text.add_theme_color_override("font_color",Color("56695c"))
+	feedback_pose_text.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	contents.add_child(feedback_pose_text)
 	_confirmation_timer = Timer.new()
 	_confirmation_timer.name = "PlacementConfirmationTimer"
 	_confirmation_timer.one_shot = true
@@ -311,6 +324,20 @@ func _track_placement_completion(active: bool) -> void:
 		if layout.placed_instances.has(completed):
 			_confirmed_role = completed
 			_confirmation_timer.start()
+
+func _transform_readout(layout) -> String:
+	# Read the actual constrained world-local transform, not the intended mouse
+	# target. This remains accurate after grid rounding and collision clipping.
+	var node: Node3D = layout.nodes[layout.selected]
+	var pose := "X %.2f m  ·  Z %.2f m  ·  角度 %.0f°" % [
+		node.position.x,node.position.z,rad_to_deg(node.rotation.y)
+	]
+	var precision := "网格 %.2f m  ·  旋转步长 %.0f°" % [layout.grid_step,layout.angle_step] if layout.snapping else "自由定位  ·  自由旋转"
+	if layout.wall_magnet_active:
+		precision = "墙面已吸附（范围 %.2f m） · Alt 跳过" % layout.WALL_SNAP_RADIUS
+	elif layout.snap_bypass:
+		precision += "  ·  Alt 已跳过贴墙吸附"
+	return pose + "\n" + precision
 
 func _sync_feedback(active: bool) -> void:
 	feedback_state = "none"
@@ -355,11 +382,12 @@ func _sync_feedback(active: bool) -> void:
 			return
 		feedback.position = Vector2(maxf(12.0,(view.x-340.0)*0.5),128.0)
 	else:
-		feedback.position = Vector2(clampf(pixel.x + 12.0, 12.0, maxf(12.0,view.x - 310.0)),clampf(pixel.y - 64.0, 127.0, maxf(127.0, view.y - 86.0)))
+		feedback.position = Vector2(clampf(pixel.x + 12.0, 12.0, maxf(12.0,view.x - 340.0)),clampf(pixel.y - 86.0, 127.0, maxf(127.0, view.y - 116.0)))
 	var surface: StyleBoxFlat = feedback.get_theme_stylebox("panel") as StyleBoxFlat
 	surface.border_color = Color("ce8d83") if feedback_state == "blocked" else Color("83b799") if feedback_state in ["ready","snapped","confirmed"] else Color("bac9b9")
 	surface.bg_color = Color("fff1ec",0.96) if feedback_state == "blocked" else Color("f0f7ed",0.96) if feedback_state in ["ready","snapped","confirmed"] else Color("f7f8f3",0.94)
 	feedback_text.text = display_message
+	feedback_pose_text.text = _transform_readout(layout)
 	feedback_text.add_theme_color_override("font_color",Color("a9433d") if feedback_state == "blocked" else Color("29694d") if feedback_state in ["ready","snapped","confirmed"] else Color("394f40"))
 	feedback.show()
 
