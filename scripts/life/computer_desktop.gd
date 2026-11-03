@@ -983,7 +983,7 @@ func _input(event: InputEvent) -> void:
 					else:
 						finish_layout(false)
 				KEY_B:
-					if not blueprint_mode:
+					if not blueprint_mode and world.layout.placing_role.is_empty():
 						room_ui.catalog_open = not room_ui.catalog_open
 						room_ui.sync()
 				KEY_G: world.layout.set_tool("move")
