@@ -1004,8 +1004,7 @@ func _input(event: InputEvent) -> void:
 					if not event.echo: preview.cancel_group_copy_preview()
 				elif not event.ctrl_pressed and not event.alt_pressed:
 					if event.keycode in [KEY_ENTER,KEY_KP_ENTER] and not event.echo:
-						if preview.confirm_group_copy_preview():
-							room_ui.show_keyboard_feedback("整组复制成功 · Ctrl+Z 撤销")
+						room_ui.scene_actions.confirm_group_copy_preview()
 					elif event.keycode in [KEY_LEFT,KEY_RIGHT,KEY_UP,KEY_DOWN]:
 						var direction := Vector2.ZERO
 						match event.keycode:
@@ -1181,8 +1180,7 @@ func _layout_input(event: InputEvent) -> void:
 			if event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
 				layout.snap_bypass = event.alt_pressed
 				layout.group_copy_preview_at(event.position)
-				if layout.confirm_group_copy_preview():
-					room_ui.show_keyboard_feedback("整组复制成功 · Ctrl+Z 撤销")
+				room_ui.scene_actions.confirm_group_copy_preview()
 			elif event.button_index == MOUSE_BUTTON_RIGHT and event.pressed:
 				layout.cancel_group_copy_preview()
 			elif event.pressed and event.button_index in [MOUSE_BUTTON_WHEEL_UP,MOUSE_BUTTON_WHEEL_DOWN]:
