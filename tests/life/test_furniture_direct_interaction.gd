@@ -26,6 +26,14 @@ func mouse(at: Vector2, down: bool, shift: bool = false, alt: bool = false) -> I
 	event.alt_pressed = alt
 	return event
 
+func motion(at: Vector2, shift: bool = false) -> InputEventMouseMotion:
+	var event := InputEventMouseMotion.new()
+	event.position = at
+	event.global_position = at
+	event.shift_pressed = shift
+	event.button_mask = MOUSE_BUTTON_MASK_LEFT
+	return event
+
 func run() -> void:
 	var game = load("res://scenes/main/game_root.tscn").instantiate()
 	root.add_child(game)
@@ -65,14 +73,27 @@ func run() -> void:
 	if not picked.is_empty():
 		layout.select(picked)
 		layout.set_tool("rotate")
+		var original_pose: Transform3D = layout.nodes[picked].transform
+		var original_undo_size: int = layout.undo_stack.size()
 		desktop._layout_input(mouse(pixel,true))
-		check(layout.selected == picked and layout.gesture == "move", "click-drag on furniture always moves it even when rotate tool is active")
-		desktop._layout_input(mouse(pixel,false))
-		check(layout.gesture.is_empty() and layout.tool == "rotate", "release completes move without changing the selected tool")
+		check(layout.selected == picked and layout.gesture.is_empty() and desktop.pending_drag_role == picked, "mouse-down selects furniture without starting movement")
+		desktop._layout_input(motion(pixel+Vector2(3,2)))
+		check(layout.gesture.is_empty() and layout.nodes[picked].transform.is_equal_approx(original_pose), "pointer jitter under six pixels cannot move selected furniture")
+		desktop._layout_input(mouse(pixel+Vector2(3,2),false))
+		check(desktop.pending_drag_role.is_empty() and layout.gesture.is_empty() and layout.undo_stack.size() == original_undo_size, "click-release creates no ghost drag or unnecessary undo record")
+		check(layout.nodes[picked].transform.is_equal_approx(original_pose) and not ui.feedback.visible, "clicking to select leaves pose and transient feedback unchanged")
+		desktop._layout_input(mouse(pixel,true))
+		desktop._layout_input(motion(pixel+Vector2(14,0)))
+		check(desktop.pending_drag_role.is_empty() and layout.gesture == "move", "drag beyond threshold moves furniture even when rotate tool is selected")
+		check(ui.feedback.visible and ui.feedback_text.text.contains("移动"), "actual drag shows movement cue only after threshold")
+		desktop._layout_input(mouse(pixel+Vector2(14,0),false))
+		check(layout.gesture.is_empty() and layout.tool == "rotate", "release completes movement while preserving selected gizmo tool")
 		desktop._layout_input(mouse(pixel,true,true))
-		check(layout.gesture == "rotate", "Shift+mouse-down on furniture directly enters rotation")
-		check(ui.feedback.visible and ui.feedback_text.text.contains("旋转"), "selected object shows short non-blocking rotation feedback")
-		desktop._layout_input(mouse(pixel,false,true))
+		check(layout.gesture.is_empty() and desktop.pending_drag_operation == "rotate", "Shift+mouse-down arms rotation without immediately transforming furniture")
+		desktop._layout_input(motion(pixel+Vector2(0,14),true))
+		check(layout.gesture == "rotate", "Shift+drag beyond threshold activates rotation")
+		check(ui.feedback.visible and ui.feedback_text.text.contains("旋转"), "selected object shows short non-blocking rotation feedback during real drag")
+		desktop._layout_input(mouse(pixel+Vector2(0,14),false,true))
 		check(layout.gesture.is_empty() and not ui.feedback.visible, "releasing rotation clears transient visual feedback")
 
 	# A close-to-wall probe should snap during direct dragging, but never
