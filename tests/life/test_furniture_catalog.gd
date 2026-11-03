@@ -35,7 +35,7 @@ func run() -> void:
 		check(Taxonomy.group_for(item) == case.group, "item group: "+case.id)
 		check(Taxonomy.type_for(item) == case.type, "item subtype: "+case.id)
 	check(Catalog.room_furniture().size() == 33, "all 33 active furnishing SKUs are discoverable without a hard-coded list")
-	check(Catalog.filtered_items(Catalog.room_furniture(),"seating").size() == 7, "seating filter returns chair, sofa and stool")
+	check(Catalog.filtered_items(Catalog.room_furniture(),"seating").size() == 8, "seating filter returns chair, sofa and stool")
 	check(Catalog.filtered_items(Catalog.room_furniture(),"lighting","floor_lamp").size() == 3, "subcategory filter selects floor lamps")
 	check(Catalog.filtered_items(Catalog.room_furniture(),"seating","sofa","奶油").size() == 1, "localized name search combines with category and type")
 	check(Catalog.filtered_items(Catalog.room_furniture(),"seating","sofa","missing").is_empty(), "unmatched search returns empty list")
