@@ -190,6 +190,11 @@ func run() -> void:
 	check(ui.scene_actions.hint.text.contains("网格关"), "shortcut hint displays current grid-off state")
 	desktop._input(shortcut(KEY_S))
 	check(layout.snapping and ui.scene_actions.hint.text.contains("网格开"), "S restores grid snapping with an updated hint")
+	var held_snap := shortcut(KEY_S)
+	held_snap.echo = true
+	desktop._input(held_snap)
+	desktop._input(shortcut(KEY_S,false,true))
+	check(layout.snapping, "held S repeats and Ctrl+S do not unexpectedly toggle grid snapping")
 	var pose_before_catalog: Transform3D = layout.nodes["rug"].transform
 	ui.catalog_open = true
 	ui.sync()
