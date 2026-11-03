@@ -440,6 +440,7 @@ func choose_mode(next_mode: String) -> void:
 		scene_actions.hide_colors()
 		scene_actions.hide_arrange()
 		scene_actions.hide_group_members()
+		scene_actions.hide_quick_groups()
 	if next_mode == "furniture": catalog_open = host.world.layout.placing_role.is_empty()
 	host.set_blueprint_mode(mode == "build")
 	sync()
