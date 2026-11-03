@@ -1175,6 +1175,15 @@ func finish(apply: bool) -> bool:
 func _group_eligible(role: String) -> bool:
 	return nodes.has(role) and placed_instances.has(role) and is_floor(role) and InventoryData.is_room_furniture_role(Data.base_role(role))
 
+func group_pivot() -> Vector2:
+	var center := Vector2.ZERO
+	var count := 0
+	for role: String in group_selection:
+		if not _group_eligible(role): continue
+		center += Vector2(nodes[role].position.x,nodes[role].position.z)
+		count += 1
+	return center/float(count) if count > 0 else Vector2.ZERO
+
 func group_world_bounds(roles: Array[String] = []) -> Rect2:
 	var members: Array[String] = group_selection if roles.is_empty() else roles
 	var minimum := Vector2(INF,INF)
@@ -1300,7 +1309,9 @@ func _sync_group_bounds() -> void:
 	for i in range(4):
 		lines.surface_add_vertex(corners[i])
 		lines.surface_add_vertex(corners[(i+1)%4])
-	var pivot: Vector2 = rect.get_center()
+	# This cross is the actual rotation pivot (mean of member centers),
+	# rather than the potentially different bounding-box midpoint.
+	var pivot: Vector2 = group_pivot()
 	var radius := .14
 	for displacement in [Vector2(radius,0),Vector2(0,radius)]:
 		lines.surface_add_vertex(Vector3(pivot.x-displacement.x,y,pivot.y-displacement.y))
@@ -1554,11 +1565,7 @@ func _group_wall_snap_delta(delta: Vector2) -> Vector2:
 					adjustment = float(part.x)-extents.x-WALL_SAFE_GAP-maximum.x if direction < 0 else float(part.x)+extents.x+WALL_SAFE_GAP-minimum.x
 					if absf(adjustment) <= WALL_SNAP_RADIUS: candidates.append(delta+Vector2(adjustment,0))
 	candidates.sort_custom(func(a: Vector2,b: Vector2) -> bool: return a.distance_to(delta) < b.distance_to(delta))
-	var pivot := Vector2.ZERO
-	for role: String in group_selection:
-		var origin: Vector3 = nodes[role].position
-		pivot += Vector2(origin.x,origin.z)
-	pivot /= float(group_selection.size())
+	var pivot: Vector2 = group_pivot()
 	for candidate: Vector2 in candidates:
 		var target: Dictionary = _group_pose_targets(initial,candidate,0.0,1.0,pivot)
 		if _group_swept_contact(initial,target).is_empty(): return candidate
@@ -1567,13 +1574,11 @@ func _group_wall_snap_delta(delta: Vector2) -> Vector2:
 func _transform_group(delta: Vector2, yaw: float, magnet: bool = false) -> void:
 	if group_selection.size() <= 1 or not _group_eligible(selected): return
 	var initial := {}
-	var pivot := Vector2.ZERO
+	var pivot: Vector2 = group_pivot()
 	for role: String in group_selection:
 		if not _group_eligible(role): return
 		var pose: Transform3D = nodes[role].transform
 		initial[role] = pose
-		pivot += Vector2(pose.origin.x,pose.origin.z)
-	pivot /= float(group_selection.size())
 	# Evaluate rigid group poses from a shared starting state. Swept collision
 	# tests ignore members of the group but retain walls and all other objects.
 	# Rotate in 1-degree segments to prevent a member from cutting corners.
