@@ -298,7 +298,7 @@ func _hide_object_actions() -> void:
 func _refresh_arrangement(role: String) -> void:
 	var layout = host.world.layout
 	var matching: Array[String] = layout._matching_furniture(role)
-	arrange_summary.text = "附近家具对齐 · %d 件同类家具可等距排列" % matching.size()
+	arrange_summary.text = "附近家具对齐 · 同类 %d 件%s" % [matching.size()," · 可等距排列" if matching.size() >= 3 else " · 等距需至少 3 件"]
 	for axis in ["x","z"]:
 		arrange_buttons["align_" + axis].disabled = layout.nearest_alignment(role,axis).is_empty()
 		arrange_buttons["space_" + axis].disabled = matching.size() < 3
