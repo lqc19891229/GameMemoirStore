@@ -111,7 +111,6 @@ func run() -> void:
 	layout.available_inventory.append(removed)
 	check(layout.set_group_copy_preview_offset(layout.group_copy_preview_offset,true),"restoring the exact same UID makes the next preview valid again")
 	var second_plan: Dictionary = layout.group_copy_preview_plan.duplicate(true)
-	var poses_before_second: Dictionary = layout.snapshot()
 	desktop._input(key(KEY_ENTER))
 	var second_batch: Array[String] = layout.group_selection.duplicate()
 	var after_second: Dictionary = layout._draft()
