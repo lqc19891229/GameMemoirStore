@@ -199,7 +199,7 @@ func _ready() -> void:
 	for key: String in styles:
 		var selector: OptionButton = get_node("%Style_" + key)
 		for label: String in styles[key]: selector.add_item(label)
-		selector.item_selected.connect(func(index: int) -> void: world.layout.set_style(key, index))
+		selector.item_selected.connect(func(index: int) -> void: world.layout.set_style(key, index, key == "atmosphere"))
 	%Style_brightness.value_changed.connect(func(value: float) -> void: world.layout.set_style("brightness", roundi(value)))
 	%Style_ambience_volume.value_changed.connect(func(value: float) -> void:
 		world.layout.set_style("ambience_volume", roundi(value))
