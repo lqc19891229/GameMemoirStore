@@ -113,7 +113,7 @@ func run() -> void:
 			var dims: Vector3 = layout.bounds_for(role)
 			for f: float in [0.24,0.48,0.73]:
 				for x: float in [-0.28,0.0,0.28]:
-					var candidate := world.camera.unproject_position(furniture.to_global(Vector3(dims.x*x,dims.y*f,0)))
+					var candidate: Vector2 = world.camera.unproject_position(furniture.to_global(Vector3(dims.x*x,dims.y*f,0)))
 					if world.pick_at(candidate) == role and layout.pick_handle(candidate).is_empty():
 						second_role = role
 						second_pixel = candidate
