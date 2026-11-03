@@ -20,6 +20,9 @@ func run() -> void:
 	game.session.state.persistence_enabled = false
 	var room: MemoirRoomView = game.desktop.world.get_node("Room")
 	var original: Dictionary = room.style.duplicate(true)
+	check(int(room.style.ambience_volume) == 70, "default ambience volume is backward compatible")
+	check(int(MemoirRoomView.clean_style({"ambience_volume":250}).ambience_volume) == 100, "volume is sanitized")
+	check(int(MemoirRoomView.clean_style({"ambience_volume":-5}).ambience_volume) == 0, "negative volume is clamped")
 	var layout: Dictionary = game.desktop.world.layout.snapshot()
 	room.apply_style({"atmosphere":3})
 	var rain: Node3D = room.get_node("Shell/Left_Wall/RainStreaks")
@@ -34,6 +37,10 @@ func run() -> void:
 	var before := first_drop.position.y
 	await create_timer(.12).timeout
 	check(not is_equal_approx(first_drop.position.y, before), "rain particles move without modifying blueprint")
+	room.apply_style({"atmosphere":3, "ambience_volume":0})
+	check(player != null and not player.playing, "zero volume mutes rain")
+	room.apply_style({"atmosphere":3, "ambience_volume":45})
+	check(player != null and player.playing and player.volume_db < -30.0, "adjusting volume resumes quieter ambience")
 	room.apply_style({"atmosphere":2})
 	check(not rain.visible and player != null and not player.playing, "night stops rain audio and hides droplets")
 	room.apply_style({"atmosphere":3})
