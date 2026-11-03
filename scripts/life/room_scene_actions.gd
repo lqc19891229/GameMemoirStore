@@ -19,6 +19,10 @@ var group_member_list: VBoxContainer
 var group_member_buttons: Dictionary = {}
 var group_solo_button: Button
 var _member_signature := ""
+var quick_groups_button: Button
+var quick_groups_panel: PanelContainer
+var quick_slot_labels: Dictionary = {}
+var quick_slot_buttons: Dictionary = {}
 var swatches: PanelContainer
 var arrange_panel: PanelContainer
 var arrange_summary: Label
@@ -46,6 +50,7 @@ func setup(owner: Node3D, controller: Node, canvas: Control) -> void:
 	host = owner
 	room_ui = controller
 	_build_categories(canvas)
+	_build_quick_groups(canvas)
 	_build_object_actions(canvas)
 	_build_hint(canvas)
 	_build_marquee(canvas)
@@ -97,6 +102,119 @@ func _build_categories(canvas: Control) -> void:
 		category_buttons[key] = button
 		rail.add_child(button)
 
+func _build_quick_groups(canvas: Control) -> void:
+	# A fixed left-rail entry is reachable even after Esc collapses the group
+	# or the current furniture is offscreen.
+	quick_groups_button = _round_button("arrange","临时家具编组 · Ctrl+Shift+1～3 保存 / Alt+1～3 重选",43)
+	quick_groups_button.name = "QuickFurnitureGroupsToggle"
+	quick_groups_button.toggle_mode = true
+	quick_groups_button.visible = true
+	rail.add_child(quick_groups_button)
+	rail.move_child(quick_groups_button,0)
+	quick_groups_button.pressed.connect(func() -> void:
+		quick_groups_panel.visible = not quick_groups_panel.visible
+		hide_colors()
+		hide_arrange()
+		hide_group_members()
+		_refresh_quick_groups()
+		room_ui.sync()
+	)
+	quick_groups_panel = PanelContainer.new()
+	quick_groups_panel.name = "QuickFurnitureGroupsPanel"
+	quick_groups_panel.visible = false
+	quick_groups_panel.mouse_filter = Control.MOUSE_FILTER_PASS
+	quick_groups_panel.custom_minimum_size = Vector2(346,0)
+	var shell := StyleBoxFlat.new()
+	shell.bg_color = Color("f4f6f2",0.98)
+	shell.border_color = Color("9bbbaa")
+	shell.set_border_width_all(1)
+	shell.set_corner_radius_all(10)
+	shell.content_margin_left = 10
+	shell.content_margin_right = 10
+	shell.content_margin_top = 9
+	shell.content_margin_bottom = 9
+	quick_groups_panel.add_theme_stylebox_override("panel",shell)
+	canvas.add_child(quick_groups_panel)
+	var content := VBoxContainer.new()
+	content.name = "QuickGroupsContent"
+	content.add_theme_constant_override("separation",7)
+	quick_groups_panel.add_child(content)
+	var title := Label.new()
+	title.name = "QuickGroupsTitle"
+	title.text = "临时家具组合 · 本次编辑有效"
+	title.add_theme_font_size_override("font_size",13)
+	title.add_theme_color_override("font_color",Color("315341"))
+	content.add_child(title)
+	var note := Label.new()
+	note.text = "Ctrl+Shift+数字 保存 · Alt+数字 重选"
+	note.add_theme_font_size_override("font_size",11)
+	note.add_theme_color_override("font_color",Color("556d5a"))
+	content.add_child(note)
+	for slot in range(1,4):
+		var number: int = slot
+		var row := HBoxContainer.new()
+		row.name = "QuickGroupSlot_" + str(number)
+		row.add_theme_constant_override("separation",4)
+		content.add_child(row)
+		var caption := Label.new()
+		caption.name = "QuickGroupSummary_" + str(number)
+		caption.custom_minimum_size = Vector2(142,32)
+		caption.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		caption.clip_text = true
+		caption.add_theme_font_size_override("font_size",11)
+		row.add_child(caption)
+		quick_slot_labels[number] = caption
+		var controls := {}
+		for action in ["save","recall","clear"]:
+			var button := Button.new()
+			button.name = "QuickSlot_%d_%s" % [number,action]
+			button.text = {"save":"保存","recall":"重选","clear":"清空"}[action]
+			button.custom_minimum_size = Vector2(52,32)
+			button.tooltip_text = "%s快捷编组 %d" % [button.text,number]
+			row.add_child(button)
+			controls[action] = button
+			var operation: String = action
+			button.pressed.connect(func() -> void: perform_quick_slot(operation,number))
+		quick_slot_buttons[number] = controls
+
+func _refresh_quick_groups() -> void:
+	if not is_instance_valid(quick_groups_panel): return
+	var layout = host.world.layout
+	for slot in range(1,4):
+		var controls: Dictionary = quick_slot_buttons[slot]
+		var summary: Label = quick_slot_labels[slot]
+		summary.text = "%d · %s" % [slot,layout.quick_group_summary(slot)]
+		summary.tooltip_text = summary.text
+		controls["save"].disabled = layout.group_selection.size() < 2 or not layout.gesture.is_empty() or not layout.placing_role.is_empty()
+		controls["recall"].disabled = layout.quick_group_size(slot) < 2
+		controls["clear"].disabled = not layout.quick_groups.has(slot)
+
+func perform_quick_slot(action: String, slot: int) -> bool:
+	if not host.world.layout.active or host.blueprint_mode or room_ui.mode != "furniture" or room_ui.catalog_open: return false
+	var layout = host.world.layout
+	if not layout.gesture.is_empty() or not layout.placing_role.is_empty(): return false
+	var ok := false
+	match action:
+		"save": ok = layout.save_quick_group(slot)
+		"recall": ok = layout.recall_quick_group(slot)
+		"clear": ok = layout.clear_quick_group(slot)
+		_: return false
+	if ok:
+		var notice := ""
+		match action:
+			"save": notice = "已保存快捷编组 %d · %d 件" % [slot,layout.quick_group_size(slot)]
+			"recall": notice = "已重选快捷编组 %d · %d 件" % [slot,layout.group_selection.size()]
+			"clear": notice = "已清空快捷编组 %d" % slot
+		room_ui.show_keyboard_feedback(notice)
+		if action == "recall": hide_quick_groups()
+	_refresh_quick_groups()
+	room_ui.sync()
+	return ok
+
+func hide_quick_groups() -> void:
+	if is_instance_valid(quick_groups_panel): quick_groups_panel.hide()
+	if is_instance_valid(quick_groups_button): quick_groups_button.set_pressed_no_signal(false)
+
 func open_category(index: int) -> void:
 	if index < 0 or index >= GROUP_KEYS.size(): return
 	if not host.world.layout.active or host.blueprint_mode or not host.world.layout.placing_role.is_empty(): return
@@ -106,6 +224,7 @@ func open_category(index: int) -> void:
 	room_ui.mode = "furniture"
 	room_ui.catalog_open = true
 	hide_colors()
+	hide_quick_groups()
 	room_ui.sync()
 
 func _build_object_actions(canvas: Control) -> void:
@@ -470,8 +589,13 @@ func _refresh_arrangement(role: String) -> void:
 func sync(active: bool) -> void:
 	var furniture_mode: bool = active and room_ui.mode == "furniture" and not host.blueprint_mode
 	rail.visible = furniture_mode and host.world.layout.placing_role.is_empty()
+	quick_groups_button.set_pressed_no_signal(quick_groups_panel.visible)
+	if not furniture_mode or room_ui.catalog_open or not host.world.layout.gesture.is_empty() or not host.world.layout.placing_role.is_empty():
+		hide_quick_groups()
+	elif quick_groups_panel.visible:
+		_refresh_quick_groups()
 	hint.visible = active and host.get_viewport().get_visible_rect().size.x >= 1060
-	hint.text = ("空白拖动框选 · Ctrl+框选追加 · 拖动整组 · Shift+拖动旋转 · Esc 单选" if host.world.layout.group_selection.size() > 1 else "空白拖动框选 · Ctrl+单击/框选追加 · 方向键微调 · Q/E旋转 · S 网格%s" % ("开" if host.world.layout.snapping else "关"))
+	hint.text = ("Ctrl+框选追加 · Alt+1～3 重选组合 · 拖动整组 · Esc 单选" if host.world.layout.group_selection.size() > 1 else "空白框选 · Ctrl+单击/框选 · Alt+1～3 重选组合 · Q/E 旋转 · S 网格%s" % ("开" if host.world.layout.snapping else "关"))
 	for index in range(GROUP_KEYS.size()):
 		var button: Button = category_buttons[GROUP_KEYS[index]]
 		button.set_pressed_no_signal(host.get_node("%FurnitureCatalogGroup").selected == index and room_ui.catalog_open)
@@ -538,8 +662,12 @@ func resize(view: Vector2) -> void:
 	if rail == null: return
 	rail.position = Vector2(10 if view.x < 800 else 15,139 if view.y < 660 else 149)
 	hint.visible = host.world.layout.active and view.x >= 1060
-	hint.position = Vector2(maxf(510,view.x-640),84)
+	hint.position = Vector2(maxf(510,view.x-740),84)
 	hint.size = Vector2(maxf(0.0,view.x - hint.position.x - 20),30)
+	quick_groups_panel.position = Vector2(
+		clampf(rail.position.x+54.0,8.0,maxf(8.0,view.x-356.0)),
+		clampf(rail.position.y,120.0,maxf(120.0,view.y-quick_groups_panel.size.y-8.0))
+	)
 
 func _reposition() -> void:
 	if action_strip == null: return

@@ -19,12 +19,13 @@ func frames() -> void:
 	for i in range(5):
 		await process_frame
 
-func shortcut(code: Key, shift: bool = false, ctrl: bool = false) -> InputEventKey:
+func shortcut(code: Key, shift: bool = false, ctrl: bool = false, alt: bool = false) -> InputEventKey:
 	var event := InputEventKey.new()
 	event.keycode = code
 	event.pressed = true
 	event.shift_pressed = shift
 	event.ctrl_pressed = ctrl
+	event.alt_pressed = alt
 	return event
 
 func run() -> void:
@@ -119,10 +120,36 @@ func run() -> void:
 	check(tools.group_panel.visible, "member manager can reopen after a fresh multi-selection")
 	desktop._input(shortcut(KEY_ESCAPE))
 	check(layout.active and not tools.group_panel.visible and layout.group_selection.size() == 2, "Escape closes the members panel before canceling the group")
+	check(tools.quick_groups_button.is_visible_in_tree() and not tools.quick_groups_panel.visible, "quick-group launcher remains in the left rail while furniture group is selected")
+	var quick_poses: Dictionary = layout.snapshot()
+	var quick_undo: int = layout.undo_stack.size()
+	tools.quick_groups_button.pressed.emit()
+	check(tools.quick_groups_panel.visible and tools.quick_slot_buttons.size() == 3 and not tools.quick_slot_buttons[1]["save"].disabled, "quick-group popup exposes three usable save/reselect/clear rows")
+	check(tools.quick_slot_buttons[1]["recall"].disabled and tools.quick_slot_buttons[2]["recall"].disabled, "unsaved quick slots cannot recall nonexistent groups")
+	tools.quick_slot_buttons[1]["save"].pressed.emit()
+	check(layout.quick_group_size(1) == 2 and not tools.quick_slot_buttons[1]["recall"].disabled and tools.quick_slot_labels[1].text.contains("2 件"), "saving through a real slot row enables recall and shows the member count")
+	desktop._input(shortcut(KEY_ESCAPE))
+	check(not tools.quick_groups_panel.visible and layout.group_selection.size() == 2, "Escape first dismisses quick-group popup without changing selected members")
 	ui.show_keyboard_feedback("整组平移测试")
 	check(ui.feedback_pose_text.text.contains("整组 2 件"), "floating transform readout labels group pivot behavior")
 	desktop._input(shortcut(KEY_ESCAPE))
 	check(layout.active and layout.group_selection.size() == 1 and layout.group_markers.is_empty(), "second Escape clears group selection without closing the editor")
+	desktop._input(shortcut(KEY_1,false,false,true))
+	check(layout.group_selection.size() == 2 and layout.group_selection.has("chair") and layout.group_selection.has("plant"), "Alt+1 instantly reselects a remembered pair after Escape")
+	check(layout.snapshot() == quick_poses and layout.undo_stack.size() == quick_undo, "quick-group recall changes only selection, never furniture transforms or undo")
+	desktop._input(shortcut(KEY_2,true,true))
+	check(layout.quick_group_size(2) == 2, "Ctrl+Shift+2 saves the current pair without opening the slot panel")
+	desktop._input(shortcut(KEY_ESCAPE))
+	check(layout.group_selection.size() == 1, "Escape returns quick-recalled pair to solo mode")
+	tools.quick_groups_button.pressed.emit()
+	check(tools.quick_groups_panel.visible and tools.quick_slot_buttons[1]["clear"].disabled == false, "quick-group slot panel stays available after a group is deselected")
+	tools.quick_slot_buttons[1]["clear"].pressed.emit()
+	check(layout.quick_group_size(1) == 0 and tools.quick_slot_buttons[1]["recall"].disabled, "clear button removes only the chosen slot")
+	desktop._input(shortcut(KEY_ESCAPE))
+	desktop._input(shortcut(KEY_2,false,false,true))
+	check(layout.group_selection.size() == 2 and layout.group_selection.has("plant"), "another independent saved slot still recalls the same valid furniture")
+	desktop._input(shortcut(KEY_ESCAPE))
+	check(layout.group_selection.size() == 1 and layout.snapshot() == quick_poses, "quick-slot keyboard operations are purely UI selection changes")
 	layout.select("chair")
 	check(not tools.action_buttons["paint"].disabled and not tools.action_buttons["arrange"].disabled, "returning to a single item restores individual contextual controls")
 	ui.advanced_toggle.pressed.emit()
@@ -253,7 +280,8 @@ func run() -> void:
 	desktop._input(shortcut(KEY_TAB))
 	check(not desktop.blueprint_mode, "after precision-key checks Tab returns to furniture mode")
 	desktop.finish_layout(false)
-	check(not ui.bar.visible and not ui.dock.visible and not tools.rail.visible and not tools.action_strip.visible and not tools.selection_chip.visible and not tools.arrange_panel.visible, "leaving editing restores an unobstructed room view")
+	check(not ui.bar.visible and not ui.dock.visible and not tools.rail.visible and not tools.action_strip.visible and not tools.selection_chip.visible and not tools.arrange_panel.visible and not tools.quick_groups_panel.visible, "leaving editing restores an unobstructed room view")
+	check(layout.quick_groups.is_empty(), "closing room editor destroys ephemeral quick-group slots")
 	check(game.session.state.life.workstation_layout == Life.defaults().workstation_layout, "UI-only actions never change saved workstation poses")
 	check(not game.session.state.life.furniture_colors.has("starter_chair"), "canceling editing discards the contextual color change")
 	game.queue_free()

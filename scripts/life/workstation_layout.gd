@@ -26,6 +26,10 @@ var active := false
 var selected := "desk"
 # Editor-only multi-selection; persisted poses and inventory contracts stay unchanged.
 var group_selection: Array[String] = []
+# Three session-only selection presets. Each UID prevents accidental reuse
+# when a furniture instance has been stored, replaced or undone.
+const QUICK_GROUP_SLOTS := 3
+var quick_groups: Dictionary = {}
 var group_markers: Dictionary = {}
 var group_bounds_marker: MeshInstance3D
 var tool := "move"
@@ -1125,6 +1129,7 @@ func set_style(key: String, value: int) -> void:
 
 func begin() -> void:
 	active = true
+	quick_groups.clear()
 	blueprint = committed_blueprint.duplicate(true)
 	room_half_size = BlueprintData.half_size(blueprint)
 	world.get_node("Room").apply_blueprint(blueprint)
@@ -1169,12 +1174,63 @@ func finish(apply: bool) -> bool:
 		world.get_node("Room").apply_blueprint(blueprint)
 	active = false
 	group_selection.clear()
+	quick_groups.clear()
 	_clear_group_markers()
 	gizmo.hide()
 	return true
 
 func _group_eligible(role: String) -> bool:
 	return nodes.has(role) and placed_instances.has(role) and is_floor(role) and InventoryData.is_room_furniture_role(Data.base_role(role))
+
+func quick_group_members(slot: int) -> Array[String]:
+	var members: Array[String] = []
+	if not active or slot < 1 or slot > QUICK_GROUP_SLOTS or not quick_groups.has(slot): return members
+	var data: Dictionary = quick_groups[slot]
+	for value in data.roles:
+		var role: String = str(value)
+		if not _group_eligible(role): continue
+		if str(data.uids.get(role,"")) != str(placed_instances.get(role,"")): continue
+		if not members.has(role): members.append(role)
+	return members
+
+func quick_group_size(slot: int) -> int:
+	return quick_group_members(slot).size()
+
+func quick_group_summary(slot: int) -> String:
+	if not quick_groups.has(slot): return "未保存"
+	var members: Array[String] = quick_group_members(slot)
+	if members.size() < 2: return "已失效 · 可清空或重新保存"
+	var labels: Array[String] = []
+	for role: String in members.slice(0,2): labels.append(name_for(role))
+	return "%d 件 · %s%s" % [members.size(),"、".join(labels),"…" if members.size() > 2 else ""]
+
+func save_quick_group(slot: int) -> bool:
+	if not active or slot < 1 or slot > QUICK_GROUP_SLOTS or not gesture.is_empty() or not placing_role.is_empty(): return false
+	if group_selection.size() < 2 or not group_selection.has(selected): return false
+	var uids := {}
+	for role: String in group_selection:
+		if not _group_eligible(role): return false
+		uids[role] = str(placed_instances[role])
+	quick_groups[slot] = {"roles":group_selection.duplicate(), "uids":uids, "primary":selected}
+	changed.emit()
+	return true
+
+func recall_quick_group(slot: int) -> bool:
+	if not active or not gesture.is_empty() or not placing_role.is_empty() or slot < 1 or slot > QUICK_GROUP_SLOTS: return false
+	var members: Array[String] = quick_group_members(slot)
+	if members.size() < 2: return false
+	end_drag()
+	group_selection = members
+	var preferred: String = str(quick_groups[slot].get("primary",""))
+	selected = preferred if members.has(preferred) else members.back()
+	update()
+	return true
+
+func clear_quick_group(slot: int) -> bool:
+	if not active or slot < 1 or slot > QUICK_GROUP_SLOTS or not quick_groups.has(slot): return false
+	quick_groups.erase(slot)
+	changed.emit()
+	return true
 
 func group_pivot() -> Vector2:
 	var center := Vector2.ZERO
