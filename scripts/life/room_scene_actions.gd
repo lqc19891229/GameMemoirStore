@@ -87,7 +87,10 @@ func _build_object_actions(canvas: Control) -> void:
 	action_strip = HBoxContainer.new()
 	action_strip.name = "RoomObjectActions"
 	action_strip.add_theme_constant_override("separation",5)
-	action_strip.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	# Container must participate in hit testing for its real Button children.
+	# Mouse-ignore here made the contextual tools look clickable but allowed
+	# clicks to fall through into the 3D room instead.
+	action_strip.mouse_filter = Control.MOUSE_FILTER_PASS
 	action_strip.visible = false
 	canvas.add_child(action_strip)
 	for spec: Dictionary in ACTIONS:
