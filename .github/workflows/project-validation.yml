@@ -177,3 +177,8 @@ jobs:
         env:
           SDL_AUDIODRIVER: dummy
         run: xvfb-run -a godot --path . --script res://tests/life/test_room_scene_actions_clicks.gd -- --fresh
+
+      - name: Verify real group copy preview and confirmation GUI clicks
+        env:
+          SDL_AUDIODRIVER: dummy
+        run: xvfb-run -a godot --path . --script res://tests/life/test_furniture_copy_preview_clicks.gd -- --fresh
