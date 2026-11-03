@@ -338,12 +338,33 @@ func run() -> void:
 	check(not layout.set_group_furniture_color(-1) and not layout.set_group_furniture_color(999), "invalid group finish indices never modify owned stock")
 	check(layout.placed_instances == placed_before_group, "batch recolor changes per-UID appearance but never relabels inventory")
 
-	# Start from a previously verified valid row, then introduce small offsets.
-	for role: String in group: layout.nodes[role].transform = quick_poses[role]
-	layout.nodes["lamp"].position.z -= .10
-	layout.nodes["lamp_1"].position.z += .15
+	# Search for a fresh collision-free diagonal row, independent of prior
+	# drag, undo, magnet and blueprint subtests. Validate both the offset
+	# starting pose and each sweep to the target aligned centerline.
+	var arrangement_ready := false
+	for candidate_z in [-2.0,-2.3,1.8,2.1,0.0]:
+		for spread in [2.4,2.7,2.1,3.0]:
+			for i in range(group.size()):
+				var fixture_role: String = group[i]
+				layout.nodes[fixture_role].transform = quick_poses[fixture_role]
+				layout.nodes[fixture_role].position = Vector3(float(i-1)*spread,base_y,candidate_z)
+			if not layout._layout_blocker().is_empty(): continue
+			layout.nodes["lamp"].position.z += .08
+			layout.nodes["lamp_1"].position.z += .14
+			if not layout._layout_blocker().is_empty(): continue
+			var swept_ok := true
+			for role: String in group:
+				var target: Transform3D = layout.nodes[role].transform
+				target.origin.z = candidate_z
+				if not layout._sweep_blocker(role,layout.nodes[role].transform,target,group).is_empty():
+					swept_ok = false
+					break
+			if swept_ok:
+				arrangement_ready = true
+				break
+		if arrangement_ready: break
 	layout.update()
-	check(layout.valid and layout._layout_blocker().is_empty(), "group arrangement fixture remains clear after small Z offsets")
+	check(arrangement_ready and layout.valid and layout._layout_blocker().is_empty(), "group alignment fixture starts with a verified collision-free pose and sweep: " + layout._layout_blocker())
 	var before_group_align: Dictionary = layout.snapshot()
 	var align_history: int = layout.undo_stack.size()
 	check(layout.align_group("z"), "group alignment centers each member on the primary lamp's Z position")
