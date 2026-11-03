@@ -16,7 +16,7 @@ func _initialize() -> void:
 func frames() -> void:
 	for i in range(5): await process_frame
 
-func mouse(at: Vector2, down: bool, shift: bool = false, alt: bool = false) -> InputEventMouseButton:
+func mouse(at: Vector2, down: bool, shift: bool = false, alt: bool = false, ctrl: bool = false) -> InputEventMouseButton:
 	var event := InputEventMouseButton.new()
 	event.button_index = MOUSE_BUTTON_LEFT
 	event.position = at
@@ -24,6 +24,7 @@ func mouse(at: Vector2, down: bool, shift: bool = false, alt: bool = false) -> I
 	event.pressed = down
 	event.shift_pressed = shift
 	event.alt_pressed = alt
+	event.ctrl_pressed = ctrl
 	return event
 
 func motion(at: Vector2, shift: bool = false) -> InputEventMouseMotion:
@@ -99,6 +100,44 @@ func run() -> void:
 		check(ui.feedback.visible and ui.feedback_text.text.contains("旋转"), "selected object shows short non-blocking rotation feedback during real drag")
 		desktop._layout_input(mouse(pixel+Vector2(0,14),false,true))
 		check(layout.gesture.is_empty() and not ui.feedback.visible, "releasing rotation clears transient visual feedback")
+
+	# Actual Ctrl+click on two distinct ray-pickable furniture bodies must
+	# change selection membership without starting a drag or undo transaction.
+	if not picked.is_empty():
+		var second_role := ""
+		var second_pixel := Vector2.ZERO
+		for role: String in ["chair","bookcase","plant","lamp","rug"]:
+			if role == picked or not layout.placed_instances.has(role): continue
+			layout.select(role)
+			var furniture: Node3D = layout.nodes[role]
+			var dims: Vector3 = layout.bounds_for(role)
+			for f: float in [0.24,0.48,0.73]:
+				for x: float in [-0.28,0.0,0.28]:
+					var candidate := world.camera.unproject_position(furniture.to_global(Vector3(dims.x*x,dims.y*f,0)))
+					if world.pick_at(candidate) == role and layout.pick_handle(candidate).is_empty():
+						second_role = role
+						second_pixel = candidate
+						break
+				if not second_role.is_empty(): break
+			if not second_role.is_empty(): break
+		check(not second_role.is_empty(), "a second room furniture body can be clicked for additive selection")
+		if not second_role.is_empty():
+			layout.select(picked)
+			var selection_before: Dictionary = layout.snapshot()
+			var history_depth: int = layout.undo_stack.size()
+			desktop._layout_input(mouse(second_pixel,true,false,false,true))
+			desktop._layout_input(mouse(second_pixel,false,false,false,true))
+			check(layout.group_selection.size() == 2 and layout.group_selection.has(picked) and layout.group_selection.has(second_role), "Ctrl+click adds a second real furniture item without clearing first selection")
+			check(layout.gesture.is_empty() and desktop.pending_drag_role.is_empty(), "Ctrl+click does not secretly arm a movement gesture")
+			check(layout.snapshot() == selection_before and layout.undo_stack.size() == history_depth, "Ctrl+click does not transform furniture or write undo history")
+			check(layout.group_markers.size() == 1 and ui.scene_actions.selection_chip.text.contains("已选 2 件"), "multi-selection has both a secondary 3D outline and a contextual furniture-count label")
+			check(ui.scene_actions.action_buttons["store"].disabled and ui.scene_actions.action_buttons["paint"].disabled and ui.scene_actions.action_buttons["arrange"].disabled, "multi-selection disables single-item actions without affecting group transforms")
+			layout.store_selected()
+			check(layout.placed_instances.has(second_role), "storage shortcuts cannot silently remove one member of a multi-selection")
+			desktop._layout_input(mouse(second_pixel,true,false,false,true))
+			desktop._layout_input(mouse(second_pixel,false,false,false,true))
+			check(layout.group_selection.size() == 1, "Ctrl+click on an existing extra member removes it from the current group")
+			layout.select(picked)
 
 	# A close-to-wall probe should snap during direct dragging, but never
 	# mutate an actual furniture transform just by checking a candidate.
