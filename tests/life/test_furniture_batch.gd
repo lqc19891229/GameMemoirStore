@@ -15,6 +15,13 @@ func _initialize() -> void:
 func frames() -> void:
 	for i in range(5): await process_frame
 
+func preview_key(code: Key, fine: bool = false) -> InputEventKey:
+	var event := InputEventKey.new()
+	event.keycode = code
+	event.pressed = true
+	event.shift_pressed = fine
+	return event
+
 func run() -> void:
 	var game = load("res://scenes/main/game_root.tscn").instantiate()
 	root.add_child(game)
@@ -97,6 +104,19 @@ func run() -> void:
 	check(ghost_count > 0 and layout.group_copy_preview_good.albedo_color.a < .5,"copy ghosts use real transparent material overrides")
 	check(layout.placed_instances == before_success.placements and layout.snapshot() == before_success.poses and layout.undo_stack.size() == history_before_copy,"creating transparent copy ghosts writes no layout, UID or undo changes")
 	var initial_offset: Vector2 = layout.group_copy_preview_offset
+	desktop._input(preview_key(KEY_RIGHT,true))
+	check(absf(layout.group_copy_preview_offset.x-initial_offset.x-.01) < .002, "real Shift+Right shortcut nudges preview exactly one centimeter")
+	desktop._input(preview_key(KEY_LEFT,true))
+	check(layout.group_copy_preview_offset.distance_to(initial_offset) < .002, "opposing Shift+arrow shortcuts restore original preview location")
+	desktop._input(preview_key(KEY_E,true))
+	check(absf(rad_to_deg(layout.group_copy_preview_yaw)-1.0) < .01, "real Shift+E preview shortcut rotates by one degree")
+	desktop._input(preview_key(KEY_Q,true))
+	check(absf(layout.group_copy_preview_yaw) < .0001, "real Shift+Q reverses fine rotation without changing originals")
+	var snapping_before: bool = layout.snapping
+	desktop._input(preview_key(KEY_S))
+	check(layout.snapping != snapping_before, "S shortcut toggles preview grid snapping without exiting preview")
+	desktop._input(preview_key(KEY_S))
+	check(layout.snapping == snapping_before, "S shortcut restores original grid setting")
 	check(not layout.set_group_copy_preview_offset(Vector2.ZERO) and not layout.group_copy_preview_valid,"preview at original furniture locations is blocked")
 	check(actions.group_copy_confirm.disabled and actions.group_copy_status.text.contains("无法复制"),"blocked preview disables confirm and explains collision")
 	check(not layout.confirm_group_copy_preview(),"blocked red preview cannot create a partial copied object")
@@ -124,7 +144,14 @@ func run() -> void:
 	layout.rotate_group_copy_preview_step(-1,true)
 	check(absf(layout.group_copy_preview_yaw) < .0001 and layout.group_pivot().distance_to(pivot_before_copy) < .001,"opposite rotations restore yaw and never shift source pivot")
 	layout.set_group_copy_preview_offset(Vector2.ZERO)
-	check(layout.find_group_copy_preview_space() and layout.group_copy_preview_valid and not layout.group_copy_preview_offset.is_zero_approx(),"F-style nearest-free-space search repairs a blocked group without creating inventory")
+	desktop._input(preview_key(KEY_F))
+	check(layout.group_copy_preview_valid and not layout.group_copy_preview_offset.is_zero_approx(),"real F shortcut finds safe free space for a blocked ghost group")
+	var removed_inventory: Dictionary = layout.available_inventory.pop_back()
+	layout.set_group_copy_preview_offset(layout.group_copy_preview_offset,true)
+	check(not layout.group_copy_preview_valid and layout.group_copy_preview_error.contains("库存"),"if pre-reserved stock changes during preview, live confirmation is disabled")
+	check(not layout.confirm_group_copy_preview() and layout.placed_instances == before_success.placements,"stale inventory can never commit a different UID")
+	layout.available_inventory.append(removed_inventory)
+	check(layout.set_group_copy_preview_offset(layout.group_copy_preview_offset,true),"restored stock revalidates original preview identity and landing pose")
 	check(layout.snapshot() == before_success.poses and layout.placed_instances == before_success.placements and layout.undo_stack.size() == history_before_copy,"precision and auto-find actions are transient previews only")
 	var esc := InputEventKey.new()
 	esc.pressed = true
