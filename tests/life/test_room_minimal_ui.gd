@@ -44,6 +44,7 @@ func run() -> void:
 	check(ui.bar.visible and ui.mode == "furniture", "compact icon toolbar appears on entering editing")
 	check(not ui.catalog_open and not ui.dock.visible, "room begins scene-first without a large catalog covering the room")
 	check(not desktop.get_node("%LayoutPanel").visible, "precision inspector stays hidden until requested")
+	check(ui.feedback_pose_text != null and ui.feedback_pose_text.mouse_filter == Control.MOUSE_FILTER_IGNORE, "transform readout shares the existing nonblocking floating feedback")
 	check(tools.rail.visible and tools.category_buttons.size() == 7, "left icon rail exposes all six shared product groups and all-items shortcut")
 	check(not tools.action_strip.visible and not tools.swatches.visible, "object context actions are hidden until real furniture is selected")
 	check(ui.mode_buttons["furniture"].icon != null and ui.mode_buttons["lighting"].icon != null, "compact room toolbar uses scalable icons")
