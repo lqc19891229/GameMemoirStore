@@ -268,7 +268,7 @@ func restore(poses: Dictionary) -> void:
 	_apply_furniture_appearance()
 
 func duplicate_selected() -> void:
-	if not active or not placing_role.is_empty() or not templates.has(Data.base_role(selected)): return
+	if not active or not placing_role.is_empty() or group_selection.size() > 1 or not templates.has(Data.base_role(selected)): return
 	var furniture_id: String = InventoryData.furniture_item_id(Data.base_role(selected))
 	var instance_uid := InventoryData.unused_uid(available_inventory, placed_instances, furniture_id)
 	if instance_uid.is_empty():
@@ -312,7 +312,7 @@ func delete_selected() -> void:
 	store_selected()
 
 func store_selected() -> void:
-	if not active or not InventoryData.is_room_furniture_role(Data.base_role(selected)): return
+	if not active or group_selection.size() > 1 or not InventoryData.is_room_furniture_role(Data.base_role(selected)): return
 	if not placing_role.is_empty() or not placed_instances.has(selected): return
 	end_drag()
 	var before := _draft()
