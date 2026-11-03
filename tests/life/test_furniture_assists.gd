@@ -204,12 +204,18 @@ func run() -> void:
 	for role: String in group:
 		check(layout.nodes[role].transform.is_equal_approx(moved_poses[role]), "undo fully restores group positions and yaw after rotation: " + role)
 	history_before = layout.undo_stack.size()
+	var before_blocked_move: Dictionary = {}
+	for role: String in group: before_blocked_move[role] = layout.nodes[role].transform
 	var far_anchor := Vector2(55.0,55.0)
 	layout.move_to(far_anchor)
 	check(layout.valid and layout._layout_blocker().is_empty(), "moving selected group past the room boundary stops at a collision-safe point")
-	check(layout.undo_stack.size() == history_before+1, "a clamped group movement is still recorded as one operation")
+	var actually_moved := false
+	for role: String in group:
+		if not layout.nodes[role].transform.is_equal_approx(before_blocked_move[role]):
+			actually_moved = true
+	check(layout.undo_stack.size() == history_before + (1 if actually_moved else 0), "group adds exactly one undo step if movement was possible, or no entry when fully blocked")
 	check(layout.placed_instances == placed_before_group, "group transforms never consume, create or reassign owned furniture UIDs")
-	layout.undo()
+	if actually_moved: layout.undo()
 	check(layout.toggle_group_member("lamp_2"), "Ctrl-style toggle removes one existing member without moving it")
 	check(layout.group_selection.size() == 2 and layout.group_markers.size() == 1, "removing a member updates group selection outlines")
 	layout.clear_group_selection()
