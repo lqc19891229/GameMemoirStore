@@ -221,6 +221,7 @@ func _ready() -> void:
 	if session == null: return
 	session.changed.connect(refresh)
 	session.furniture_place_requested.connect(_start_purchased_furniture_placement)
+	session.furniture_focus_requested.connect(_focus_purchased_furniture)
 	session.tick_updated.connect(_update_status)
 	refresh()
 
@@ -266,7 +267,29 @@ func _start_purchased_furniture_placement(item_id: String, uid: String) -> void:
 	if world.layout.active: return
 	set_screen_focused(false, false)
 	begin_layout()
-	if not world.layout.start_place(item_id, uid): finish_layout(false)
+	if not world.layout.start_place(item_id, uid):
+		finish_layout(false)
+		return
+	# The shop's preview finish is committed only with the room edit. Canceling
+	# the placement or editor discards it; no inventory color is written early.
+	var finish: int = session.pending_furniture_finish if session != null else -1
+	if finish >= 0:
+		world.layout.set_furniture_color(finish)
+
+func _focus_purchased_furniture(item_id: String) -> void:
+	if world.layout.active: return
+	var item: MemoirItemDefinition = ItemCatalog.lookup(item_id)
+	if item == null: return
+	var target_role := ""
+	for role: String in world.layout.placed_instances:
+		if world.layout.Data.base_role(role) == item.subcategory:
+			target_role = role
+			break
+	if target_role.is_empty(): return
+	set_screen_focused(false, false)
+	begin_layout()
+	world.layout.select(target_role)
+	world.focus_selected(false)
 
 func _build_furniture_catalog() -> void:
 	%FurnitureCatalogGroup.add_item("全部分类")
