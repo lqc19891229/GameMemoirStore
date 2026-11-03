@@ -24,33 +24,6 @@ func shortcut(code: Key) -> InputEventKey:
 	event.pressed = true
 	return event
 
-func pointer_click(control: Control) -> void:
-	# Use real viewport GUI dispatch, not pressed.emit(), so a visually present
-	# floating action cannot silently become unclickable.
-	var point: Vector2 = control.get_global_rect().get_center()
-	var movement := InputEventMouseMotion.new()
-	movement.position = point
-	movement.global_position = point
-	root.push_input(movement,true)
-	await process_frame
-	var hovered: Control = root.gui_get_hovered_control()
-	print("UI_HIT_TRACE target=",control.name," rect=",control.get_global_rect()," parent_filter=",control.get_parent().mouse_filter," hovered=",hovered.get_path() if hovered != null else "none"," rendered=",control.is_visible_in_tree())
-	if control.name == "Action_paint":
-		for button: Button in control.get_parent().get_children():
-			print("UI_RECT_TRACE ",button.name," ",button.get_global_rect()," visible=",button.is_visible_in_tree())
-		print("UI_VIEW_TRACE final=",root.get_final_transform()," viewport=",root.get_visible_rect().size," strip=",control.get_parent().position)
-	for pressed in [true,false]:
-		var event := InputEventMouseButton.new()
-		event.position = point
-		event.global_position = point
-		event.button_index = MOUSE_BUTTON_LEFT
-		event.pressed = pressed
-		root.push_input(event,true)
-	await frames()
-	print("UI_HIT_TRACE after=",control.name," hovered=",root.gui_get_hovered_control().get_path() if root.gui_get_hovered_control() != null else "none")
-	if control.name == "Action_paint":
-		print("UI_VIEW_TRACE after_click role=",root.get_node("GameRoot/ComputerDesktop").world.layout.selected)
-
 func run() -> void:
 	var game = load("res://scenes/main/game_root.tscn").instantiate()
 	root.add_child(game)
@@ -85,9 +58,9 @@ func run() -> void:
 	check(layout.selected == "chair" and tools.action_strip.visible, "selecting placed 3D furniture replaces the right inspector with a nearby action ribbon")
 	check(not desktop.get_node("%LayoutPanel").visible and tools.action_buttons.size() == 5, "normal edit shows only move, rotate, color, copy and store controls")
 	check(tools.action_buttons["duplicate"].disabled, "copy is unavailable when no unplaced copy exists in inventory")
-	await pointer_click(tools.action_buttons["paint"])
+	tools.action_buttons["paint"].pressed.emit()
 	check(tools.swatches.visible and tools.color_buttons.size() == 9, "a contextual palette reveals the original nine furniture finishes")
-	await pointer_click(tools.color_buttons[2])
+	tools.color_buttons[2].pressed.emit()
 	check(layout.color_for("chair") == 2 and not tools.swatches.visible, "one-click swatch recolors only the selected instance in editor draft")
 	check(not game.session.state.life.furniture_colors.has("starter_chair"), "preview swatch does not write unfinished furniture appearance to game save")
 	tools.action_buttons["rotate"].pressed.emit()

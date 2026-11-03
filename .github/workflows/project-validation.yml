@@ -171,3 +171,8 @@ jobs:
         env:
           SDL_AUDIODRIVER: dummy
         run: xvfb-run -a godot --path . --script res://tests/test_client_windows.gd -- --fresh
+
+      - name: Verify scene-first object action GUI clicks
+        env:
+          SDL_AUDIODRIVER: dummy
+        run: xvfb-run -a godot --path . --script res://tests/life/test_room_scene_actions_clicks.gd -- --fresh

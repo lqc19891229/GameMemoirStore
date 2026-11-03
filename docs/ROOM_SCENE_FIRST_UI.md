@@ -35,3 +35,8 @@ My Dream Setup 官方介绍主打自由无网格摆放，并允许在物体旁�
 - `tests/life/test_room_minimal_ui.gd` 和 `tests/life/test_furniture_direct_interaction.gd`：验证不同视口、真实家具选中、分类、浮动操作、Undo/Redo 可访问性、键盘快捷键、取消编辑和存档安全。
 
 参考：<https://store.steampowered.com/app/2200780/My_Dream_Setup/>，<https://steamcommunity.com/sharedfiles/filedetails/?id=2936731063>。
+
+
+## 真实点击验证
+
+无界面 Godot 的 Root Window 只有约 64×64 物理像素，1280×800 房间 UI 在 headless 测试中会被压缩到约 5%，鼠标坐标与视觉控件矩形并不一一对应。因此常规 headless 自动化只验证控件构建、动作信号与场景数据；新增 `test_room_scene_actions_clicks.gd` 在 `xvfb-run` 图形窗口中用真正的 `Viewport.push_input()` 事件依次点击物体旁颜色、色块、旋转、移动，避免把 headless 的缩放错判为产品 GUI 故障。完整 Godot CI 同时运行两类测试。
