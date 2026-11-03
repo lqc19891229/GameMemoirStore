@@ -52,6 +52,7 @@ func run() -> void:
 	check(not layout.wall_snap and not layout.inner_wall_snap, "advanced persistent wall snap toggles still default to off")
 	check(not ui.feedback.visible and ui.feedback.mouse_filter == Control.MOUSE_FILTER_IGNORE, "visual feedback starts hidden and does not block pointer events")
 	check(ui.feedback_state == "none" and ui._confirmation_timer.one_shot, "placement feedback begins inactive and completion banner is temporary")
+	check(ui.feedback_pose_text.mouse_filter == Control.MOUSE_FILTER_IGNORE, "live transform readout never intercepts 3D mouse picking")
 
 	# Find a genuine ray-pickable body point; never confuse a gizmo hit for an object.
 	var picked := ""
@@ -87,6 +88,8 @@ func run() -> void:
 		desktop._layout_input(motion(pixel+Vector2(14,0)))
 		check(desktop.pending_drag_role.is_empty() and layout.gesture == "move", "drag beyond threshold moves furniture even when rotate tool is selected")
 		check(ui.feedback.visible and ui.feedback_text.text.contains("移动"), "actual drag shows movement cue only after threshold")
+		check(ui.feedback_pose_text.text.contains("X ") and ui.feedback_pose_text.text.contains("Z ") and ui.feedback_pose_text.text.contains("角度"), "freehand dragging shows live local coordinates and yaw")
+		check(ui.feedback_pose_text.text.contains("网格 0.05 m") and ui.feedback_pose_text.text.contains("旋转步长 15°"), "precision readout reflects real grid and angle increments")
 		desktop._layout_input(mouse(pixel+Vector2(14,0),false))
 		check(layout.gesture.is_empty() and layout.tool == "rotate", "release completes movement while preserving selected gizmo tool")
 		desktop._layout_input(mouse(pixel,true,true))
@@ -129,6 +132,7 @@ func run() -> void:
 		check(layout.wall_magnet_active, "magnetic placement reports its active visual state")
 		layout.update()
 		check(ui.feedback_state == "snapped" and ui.feedback_text.text.contains("已吸附"), "magnetic feedback explains snap and Alt bypass beside selected furniture")
+		check(ui.feedback_pose_text.text.contains("墙面已吸附") and ui.feedback_pose_text.text.contains("0.32 m"), "readout distinguishes wall magnets and uses configured attraction radius")
 		layout.snap_bypass = true
 		check(layout._wall_snap_point("lamp",probe).is_equal_approx(probe) and not layout.wall_magnet_active, "holding Alt bypasses wall and partition magnets")
 		layout.snap_bypass = false
@@ -148,6 +152,7 @@ func run() -> void:
 	else:
 		check(ui.feedback_state == "blocked" and ui.feedback_text.text.contains("无法放置"), "initial blocked ghost clearly explains why placement is unavailable")
 	check(ui.feedback.mouse_filter == Control.MOUSE_FILTER_IGNORE, "semantic feedback remains transparent to mouse picking")
+	check(ui.feedback_pose_text.text.contains("X ") and ui.feedback_pose_text.text.contains("Z "), "placement preview exposes actual projected coordinates")
 	var initial_yaw: float = layout.nodes["chair"].rotation.y
 	var scroll := InputEventMouseButton.new()
 	scroll.button_index = MOUSE_BUTTON_WHEEL_UP
@@ -160,7 +165,15 @@ func run() -> void:
 	scroll.ctrl_pressed = true
 	desktop._layout_input(scroll)
 	check(absf(angle_difference(layout.nodes["chair"].rotation.y,after_shift)) > 0.05, "Ctrl+wheel also rotates furniture ghost as in the reference game")
+	var yaw_readout := "角度 %.0f°" % rad_to_deg(layout.nodes["chair"].rotation.y)
+	check(ui.feedback_pose_text.text.contains(yaw_readout), "live orientation changes after Ctrl or Shift wheel rotation")
 	layout.preview_placement(Vector2(50,50))
+	check(ui.feedback_pose_text.text.contains("X 50.00 m") and ui.feedback_pose_text.text.contains("Z 50.00 m"), "rejected out-of-bounds placement shows the actual ghost position, not the last valid pose")
+	layout.snapping = false
+	layout.update()
+	check(ui.feedback_pose_text.text.contains("自由定位") and ui.feedback_pose_text.text.contains("自由旋转"), "disabled grid and angle snapping are reflected immediately")
+	layout.snapping = true
+	layout.update()
 	check(not layout.valid and ui.feedback_text.text.contains("边界"), "invalid furniture preview explicitly communicates the collision boundary")
 	check(ui.feedback_state == "blocked" and ui.feedback_text.text.contains("无法放置"), "out-of-bounds ghost uses distinct collision warning instead of success")
 	check(not layout.confirm_placement() and ui.feedback_state == "blocked", "invalid preview cannot trigger placement-complete confirmation")
@@ -184,6 +197,7 @@ func run() -> void:
 		check(false, "canceled furniture can start another preview with the same UID")
 	desktop.finish_layout(false)
 	check(not layout.active and not ui.feedback.visible, "finishing editor hides feedback")
+	check(ui.feedback_pose_text.get_parent() == ui.feedback_text.get_parent(), "readout stays grouped with nonblocking semantic feedback")
 	check(layout.snapshot() == saved and layout.placed_instances == stock, "canceling layout preserves prior furniture transforms and inventory mappings")
 	for role: String in world.devices:
 		check(layout.surface_for(role) == "desk", "all computer devices remain restricted to the PC desk: "+role)
