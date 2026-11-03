@@ -25,6 +25,10 @@ var _filter_parent: VBoxContainer
 var _inspector: PanelContainer
 var feedback: PanelContainer
 var feedback_text: Label
+var feedback_state := "none"
+var _preview_role := ""
+var _confirmed_role := ""
+var _confirmation_timer: Timer
 var scene_actions: Node
 
 const CORE_INSPECTOR := {
@@ -275,17 +279,68 @@ func _build_feedback(canvas: Control) -> void:
 	feedback_text.add_theme_font_size_override("font_size",12)
 	feedback_text.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	feedback.add_child(feedback_text)
+	_confirmation_timer = Timer.new()
+	_confirmation_timer.name = "PlacementConfirmationTimer"
+	_confirmation_timer.one_shot = true
+	_confirmation_timer.wait_time = 1.8
+	add_child(_confirmation_timer)
+	_confirmation_timer.timeout.connect(func() -> void:
+		_confirmed_role = ""
+		_sync_feedback(host.world.layout.active and host.world.mode == "layout")
+	)
+
+func _clear_confirmation() -> void:
+	_confirmed_role = ""
+	if is_instance_valid(_confirmation_timer): _confirmation_timer.stop()
+
+func _track_placement_completion(active: bool) -> void:
+	if not active:
+		_preview_role = ""
+		_clear_confirmation()
+		return
+	var layout = host.world.layout
+	var preview: String = str(layout.placing_role)
+	if not preview.is_empty():
+		_preview_role = preview
+		_clear_confirmation()
+	elif not _preview_role.is_empty():
+		var completed: String = _preview_role
+		_preview_role = ""
+		# Cancel restores the pre-preview inventory mapping, whereas a real
+		# confirmation keeps the placed UID under this role.
+		if layout.placed_instances.has(completed):
+			_confirmed_role = completed
+			_confirmation_timer.start()
 
 func _sync_feedback(active: bool) -> void:
+	feedback_state = "none"
 	if not active or host.blueprint_mode or mode != "furniture":
 		feedback.hide()
 		return
 	var layout = host.world.layout
 	var message: String = str(layout.message)
-	var relevant: bool = not layout.placing_role.is_empty() or not layout.gesture.is_empty() or not layout.valid or message.begins_with("已阻挡") or layout.wall_magnet_active
+	var confirmed: bool = not _confirmed_role.is_empty() and _confirmed_role == str(layout.selected) and layout.placed_instances.has(_confirmed_role) and layout.gesture.is_empty() and layout.placing_role.is_empty() and layout.valid and not catalog_open
+	if not confirmed and not _confirmed_role.is_empty() and (_confirmed_role != str(layout.selected) or not layout.gesture.is_empty()):
+		_clear_confirmation()
+	var relevant: bool = confirmed or not layout.placing_role.is_empty() or not layout.gesture.is_empty() or not layout.valid or message.begins_with("已阻挡") or layout.wall_magnet_active
 	if not relevant or not layout.nodes.has(layout.selected):
 		feedback.hide()
 		return
+	var display_message := message
+	if not layout.valid or message.begins_with("已阻挡"):
+		feedback_state = "blocked"
+		display_message = "无法放置 · %s" % message if not layout.placing_role.is_empty() else "移动受阻 · %s" % message
+	elif confirmed:
+		feedback_state = "confirmed"
+		display_message = "已放置 · %s  ·  Ctrl+Z 撤销" % layout.name_for(_confirmed_role)
+	elif layout.wall_magnet_active:
+		feedback_state = "snapped"
+		display_message = "已吸附 · Alt 临时关闭吸附  ·  %s" % ("左键确认" if not layout.placing_role.is_empty() else "松开鼠标完成")
+	elif not layout.placing_role.is_empty():
+		feedback_state = "ready"
+		display_message = "可以放置 · 左键确认  ·  右键取消  ·  Q/E 旋转"
+	else:
+		feedback_state = "dragging"
 	var object: Node3D = layout.nodes[layout.selected]
 	var camera: Camera3D = host.world.camera
 	var target: Vector3 = object.global_position + Vector3.UP * maxf(0.25, layout.bounds_for(layout.selected).y + .18)
@@ -293,16 +348,19 @@ func _sync_feedback(active: bool) -> void:
 	var pixel: Vector2 = camera.unproject_position(target)
 	var in_view: bool = not camera.is_position_behind(target) and Rect2(Vector2.ZERO,view).has_point(pixel)
 	if not in_view:
-		# During an invalid out-of-bounds preview the ghost can be outside the
-		# camera entirely. Keep the error notice anchored in view.
-		if layout.valid and layout.placing_role.is_empty():
+		# Invalid ghosts keep a visible warning even outside the camera.
+		if feedback_state not in ["blocked","ready"] and layout.placing_role.is_empty():
+			feedback_state = "none"
 			feedback.hide()
 			return
 		feedback.position = Vector2(maxf(12.0,(view.x-340.0)*0.5),128.0)
 	else:
 		feedback.position = Vector2(clampf(pixel.x + 12.0, 12.0, maxf(12.0,view.x - 310.0)),clampf(pixel.y - 64.0, 127.0, maxf(127.0, view.y - 86.0)))
-	feedback_text.text = message
-	feedback_text.add_theme_color_override("font_color",Color("bd4a45") if not layout.valid or message.begins_with("已阻挡") else Color("29694d") if layout.wall_magnet_active else Color("394f40"))
+	var surface: StyleBoxFlat = feedback.get_theme_stylebox("panel") as StyleBoxFlat
+	surface.border_color = Color("ce8d83") if feedback_state == "blocked" else Color("83b799") if feedback_state in ["ready","snapped","confirmed"] else Color("bac9b9")
+	surface.bg_color = Color("fff1ec",0.96) if feedback_state == "blocked" else Color("f0f7ed",0.96) if feedback_state in ["ready","snapped","confirmed"] else Color("f7f8f3",0.94)
+	feedback_text.text = display_message
+	feedback_text.add_theme_color_override("font_color",Color("a9433d") if feedback_state == "blocked" else Color("29694d") if feedback_state in ["ready","snapped","confirmed"] else Color("394f40"))
 	feedback.show()
 
 func choose_mode(next_mode: String) -> void:
@@ -341,6 +399,7 @@ func sync() -> void:
 	# Scene-first tools are next to the object. The full inspector only appears
 	# for decoration, lighting, blueprint or a deliberate "precise" request.
 	_inspector.visible = active and (host.blueprint_mode or mode != "furniture" or advanced)
+	_track_placement_completion(active)
 	_sync_feedback(active)
 	var show_dock: bool = active and mode == "furniture" and catalog_open and not host.blueprint_mode
 	if show_dock != _last_dock_visible:
