@@ -142,6 +142,33 @@ func set_furniture_color(index: int) -> void:
 	_remember(before)
 	update()
 
+func group_color_index() -> int:
+	# -1 means that selected items have mixed finishes.
+	if group_selection.size() < 2: return color_for(selected)
+	var common := -1
+	for role: String in group_selection:
+		if not _group_eligible(role): return -1
+		var index: int = color_for(role)
+		if common < 0: common = index
+		elif common != index: return -1
+	return common
+
+func set_group_furniture_color(index: int) -> bool:
+	if not active or not gesture.is_empty() or not placing_role.is_empty() or group_selection.size() < 2: return false
+	if index < 0 or index >= FURNITURE_COLOR_LABELS.size(): return false
+	for role: String in group_selection:
+		if not _group_eligible(role): return false
+	var before := _draft()
+	for role: String in group_selection:
+		var uid: String = str(placed_instances[role])
+		if index == 0: furniture_colors.erase(uid)
+		else: furniture_colors[uid] = index
+	if before == _draft(): return false
+	_apply_furniture_appearance()
+	_remember(before)
+	update()
+	return true
+
 func _tint_material(index: int, preview: bool) -> StandardMaterial3D:
 	var key := "ghost_valid" if preview and valid else "ghost_invalid" if preview else str(index)
 	if tint_materials.has(key): return tint_materials[key]
@@ -1014,6 +1041,89 @@ func distribute_matching_furniture(dimension: String) -> bool:
 	_remember(before)
 	update()
 	return true
+
+func _apply_group_arrangement(targets: Dictionary) -> bool:
+	if not active or not placing_role.is_empty() or not gesture.is_empty(): return false
+	if group_selection.size() < 2 or targets.size() != group_selection.size(): return false
+	var original := {}
+	var max_distance := 0.0
+	for role: String in group_selection:
+		if not _group_eligible(role) or not targets.has(role): return false
+		var start: Transform3D = nodes[role].transform
+		var target: Transform3D = targets[role]
+		if not start.basis.is_equal_approx(target.basis): return false
+		original[role] = start
+		max_distance = maxf(max_distance,start.origin.distance_to(target.origin))
+	if max_distance < .002: return false
+	var before: Dictionary = _draft()
+	# Check the whole group at each intermediate pose so members cannot cross
+	# each other, and sweep between poses so external objects cannot be tunneled.
+	var steps := clampi(ceili(max_distance/.12),1,80)
+	var previous := original
+	for step in range(1,steps+1):
+		var fraction := float(step)/float(steps)
+		var next := {}
+		for role: String in group_selection:
+			var pose: Transform3D = original[role]
+			var target: Transform3D = targets[role]
+			pose.origin = pose.origin.lerp(target.origin,fraction)
+			next[role] = pose
+		var contact := ""
+		for role: String in group_selection:
+			contact = _sweep_blocker(role,previous[role],next[role],group_selection)
+			if not contact.is_empty(): break
+		if contact.is_empty():
+			for role: String in group_selection:
+				nodes[role].transform = next[role]
+			contact = _layout_blocker()
+		if not contact.is_empty():
+			for role: String in group_selection:
+				nodes[role].transform = original[role]
+			update()
+			message = "整组排列受阻：" + contact
+			changed.emit()
+			return false
+		previous = next
+	_remember(before)
+	update()
+	return true
+
+func align_group(dimension: String) -> bool:
+	if not active or dimension not in ["x","z"] or group_selection.size() < 2 or not group_selection.has(selected): return false
+	var anchor: Vector3 = nodes[selected].position
+	var targets := {}
+	for role: String in group_selection:
+		if not _group_eligible(role): return false
+		var target: Transform3D = nodes[role].transform
+		if dimension == "x": target.origin.x = anchor.x
+		else: target.origin.z = anchor.z
+		targets[role] = target
+	return _apply_group_arrangement(targets)
+
+func distribute_group(dimension: String) -> bool:
+	if not active or dimension not in ["x","z"] or group_selection.size() < 3: return false
+	var ordered: Array[String] = group_selection.duplicate()
+	for role: String in ordered:
+		if not _group_eligible(role): return false
+	ordered.sort_custom(func(a: String,b: String) -> bool:
+		var left: float = nodes[a].position.x if dimension == "x" else nodes[a].position.z
+		var right: float = nodes[b].position.x if dimension == "x" else nodes[b].position.z
+		return a < b if is_equal_approx(left,right) else left < right
+	)
+	var first: Vector3 = nodes[ordered[0]].position
+	var last: Vector3 = nodes[ordered[-1]].position
+	var start_value: float = first.x if dimension == "x" else first.z
+	var end_value: float = last.x if dimension == "x" else last.z
+	if end_value-start_value < .05: return false
+	var targets := {}
+	for i in range(ordered.size()):
+		var role: String = ordered[i]
+		var target: Transform3D = nodes[role].transform
+		var goal := lerpf(start_value,end_value,float(i)/float(ordered.size()-1))
+		if dimension == "x": target.origin.x = goal
+		else: target.origin.z = goal
+		targets[role] = target
+	return _apply_group_arrangement(targets)
 
 func add_partition(at: Vector2, axis: String, kind: String = "wall") -> bool:
 	if not active or not placing_role.is_empty(): return false
