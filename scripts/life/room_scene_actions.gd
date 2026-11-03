@@ -21,6 +21,7 @@ var category_buttons: Dictionary = {}
 var action_buttons: Dictionary = {}
 var color_buttons: Array[Button] = []
 var _current_selection := ""
+var _current_group_size := 0
 
 const GROUP_KEYS := ["", "tables", "seating", "storage", "lighting", "decor", "hardware"]
 const GROUP_LABELS := ["全部", "桌子", "座椅", "收纳", "灯具", "装饰", "设备"]
@@ -243,6 +244,7 @@ func perform_action(id: String) -> void:
 	if not host.world.layout.active or host.blueprint_mode or room_ui.catalog_open: return
 	var layout = host.world.layout
 	if not layout.placing_role.is_empty() or not layout.gesture.is_empty(): return
+	if layout.group_selection.size() > 1 and id not in ["move","rotate"]: return
 	if id != "arrange": hide_arrange()
 	if id != "paint": hide_colors()
 	match id:
@@ -265,7 +267,7 @@ func perform_arrangement(id: String) -> void:
 	if not arrange_buttons.has(id) or not arrange_panel.visible: return
 	if not host.world.layout.active or host.blueprint_mode or room_ui.mode != "furniture" or room_ui.catalog_open: return
 	var layout = host.world.layout
-	if not layout.placing_role.is_empty() or not layout.gesture.is_empty(): return
+	if not layout.placing_role.is_empty() or not layout.gesture.is_empty() or layout.group_selection.size() > 1: return
 	var role: String = str(layout.selected)
 	if not layout.nodes.has(role) or not layout.placed_instances.has(role): return
 	var is_alignment := id.begins_with("align_")
@@ -307,7 +309,7 @@ func sync(active: bool) -> void:
 	var furniture_mode: bool = active and room_ui.mode == "furniture" and not host.blueprint_mode
 	rail.visible = furniture_mode and host.world.layout.placing_role.is_empty()
 	hint.visible = active and host.get_viewport().get_visible_rect().size.x >= 1060
-	hint.text = "方向键 微调 · Shift+方向键 1cm · Q/E 旋转 · Shift+Q/E 1° · S 网格%s" % ("开" if host.world.layout.snapping else "关")
+	hint.text = ("Ctrl+单击 多选 · 拖动整组 · Shift+拖动 旋转 · Esc 单选" if host.world.layout.group_selection.size() > 1 else "Ctrl+单击 多选 · 方向键 微调 · Shift+方向键 1cm · Q/E 旋转 · S 网格%s" % ("开" if host.world.layout.snapping else "关"))
 	for index in range(GROUP_KEYS.size()):
 		var button: Button = category_buttons[GROUP_KEYS[index]]
 		button.set_pressed_no_signal(host.get_node("%FurnitureCatalogGroup").selected == index and room_ui.catalog_open)
@@ -317,10 +319,12 @@ func sync(active: bool) -> void:
 		return
 	var layout = host.world.layout
 	var role: String = str(layout.selected)
-	if role != _current_selection:
+	var group_size: int = layout.group_selection.size()
+	if role != _current_selection or group_size != _current_group_size:
 		hide_colors()
 		hide_arrange()
 		_current_selection = role
+		_current_group_size = group_size
 	var eligible: bool = layout.nodes.has(role) and layout.placed_instances.has(role) and InventoryData.is_room_furniture_role(layout.Data.base_role(role))
 	if not eligible or not layout.placing_role.is_empty() or not layout.gesture.is_empty():
 		_hide_object_actions()
@@ -330,10 +334,14 @@ func sync(active: bool) -> void:
 	action_buttons["rotate"].set_pressed_no_signal(layout.tool == "rotate")
 	action_buttons["paint"].set_pressed_no_signal(swatches.visible)
 	action_buttons["arrange"].set_pressed_no_signal(arrange_panel.visible)
+	var multi: bool = group_size > 1
+	for action_id in ["paint","arrange","store"]:
+		action_buttons[action_id].disabled = multi
+		action_buttons[action_id].tooltip_text = "多选时仅支持整组移动与旋转 · Esc 返回单选" if multi else str(ACTIONS.filter(func(spec: Dictionary) -> bool: return spec.id == action_id)[0].hint)
 	if arrange_panel.visible: _refresh_arrangement(role)
 	var has_copy: bool = not InventoryData.unused_uid(layout.available_inventory,layout.placed_instances,InventoryData.furniture_item_id(layout.Data.base_role(role))).is_empty()
-	action_buttons["duplicate"].disabled = not has_copy
-	action_buttons["duplicate"].tooltip_text = "复制一件库存中的同款家具 · Ctrl+D" if has_copy else "同款家具没有可用库存 · 请先购买"
+	action_buttons["duplicate"].disabled = multi or not has_copy
+	action_buttons["duplicate"].tooltip_text = "多选时仅支持整组移动与旋转" if multi else "复制一件库存中的同款家具 · Ctrl+D" if has_copy else "同款家具没有可用库存 · 请先购买"
 	_reposition()
 	if swatches.visible:
 		for i in range(color_buttons.size()):
@@ -383,7 +391,8 @@ func _reposition() -> void:
 		return
 	var total_width := float(ACTIONS.size()) * 43.0 + float(ACTIONS.size()-1) * 5.0
 	action_strip.position = Vector2(clampf(pixel.x-total_width*.5,8, maxf(8,view.x-total_width-8)),clampf(pixel.y-76,164,maxf(164,view.y-114)))
-	selection_chip.text = "已选 · %s" % layout.name_for(role)
+	selection_chip.text = "已选 %d 件 · %s" % [layout.group_selection.size(),layout.name_for(role)] if layout.group_selection.size() > 1 else "已选 · %s" % layout.name_for(role)
+	selection_chip.tooltip_text = "整组：" + "、".join(layout.group_selection) if layout.group_selection.size() > 1 else layout.name_for(role)
 	selection_chip.position = Vector2(clampf(action_strip.position.x+(total_width-170.0)*.5,8.0,maxf(8.0,view.x-178.0)),action_strip.position.y-36.0)
 	selection_chip.show()
 	action_strip.show()
