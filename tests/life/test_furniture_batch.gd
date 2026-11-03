@@ -63,6 +63,7 @@ func run() -> void:
 	var before_poses: Dictionary = layout.snapshot()
 	var before_history: int = layout.undo_stack.size()
 	check(layout.group_duplicate_plan().has("error"),"no extra lamp stock disables batch copy")
+	check(not layout.begin_group_copy_preview() and layout.group_copy_preview_nodes.is_empty(),"preview cannot start without fully reserved stock")
 	check(not layout.duplicate_group(),"batch duplication rejects missing stock")
 	check(layout.placed_instances == before_stock and layout.snapshot() == before_poses and layout.undo_stack.size() == before_history,"missing stock never consumes a UID, moves furniture or writes history")
 	layout.available_inventory.append({"uid":"item_97012","item_id":"room_lamp"})
@@ -82,7 +83,34 @@ func run() -> void:
 	layout._apply_furniture_appearance()
 	var before_success: Dictionary = layout._draft()
 	var history_before_copy: int = layout.undo_stack.size()
-	check(layout.duplicate_group(),"two owned spare instances are duplicated together into a safe room location")
+	check(layout.begin_group_copy_preview(),"two owned spare furniture items start a non-destructive group copy preview")
+	var actions = desktop.room_ui.scene_actions
+	check(layout.group_copy_preview_active and layout.group_copy_preview_valid and layout.group_copy_preview_nodes.size() == 2, "preview chooses an initial collision-safe group landing point and shows both ghosts")
+	check(actions.group_copy_panel.visible and not actions.group_copy_confirm.disabled and actions.group_copy_status.text.contains("可复制"),"copy preview displays an enabled confirmation and member-count feedback")
+	check(not actions.action_strip.visible and not actions.rail.visible and not desktop.room_ui.catalog_toggle.visible, "copy preview hides conflicting furniture actions and inventory drawer")
+	var ghost_count := 0
+	for source: String in layout.group_copy_preview_sources:
+		var ghost: Node3D = layout.group_copy_preview_nodes[source]
+		ghost_count += ghost.find_children("*","MeshInstance3D",true,false).size()
+		for collider: CollisionObject3D in ghost.find_children("*","CollisionObject3D",true,false):
+			check(collider.collision_layer == 0 and not collider.input_ray_pickable,"preview meshes have no pickable collider or room physics layer")
+	check(ghost_count > 0 and layout.group_copy_preview_good.albedo_color.a < .5,"copy ghosts use real transparent material overrides")
+	check(layout.placed_instances == before_success.placements and layout.snapshot() == before_success.poses and layout.undo_stack.size() == history_before_copy,"creating transparent copy ghosts writes no layout, UID or undo changes")
+	var initial_offset: Vector2 = layout.group_copy_preview_offset
+	check(not layout.set_group_copy_preview_offset(Vector2.ZERO) and not layout.group_copy_preview_valid,"preview at original furniture locations is blocked")
+	check(actions.group_copy_confirm.disabled and actions.group_copy_status.text.contains("无法复制"),"blocked preview disables confirm and explains collision")
+	check(not layout.confirm_group_copy_preview(),"blocked red preview cannot create a partial copied object")
+	check(layout.placed_instances == before_success.placements and layout.undo_stack.size() == history_before_copy,"invalid preview confirmation does not touch stock or history")
+	check(layout.set_group_copy_preview_offset(initial_offset),"moving the ghost group back to its safe initial offset restores valid confirmation")
+	var esc := InputEventKey.new()
+	esc.pressed = true
+	esc.keycode = KEY_ESCAPE
+	desktop._input(esc)
+	check(not layout.group_copy_preview_active and layout.group_copy_preview_nodes.is_empty() and not actions.group_copy_panel.visible,"Escape discards all preview ghosts and UI without clearing original multiselection")
+	check(layout.group_selection == selected_sources and layout.placed_instances == before_success.placements and layout.undo_stack.size() == history_before_copy,"canceling preview preserves sources, selection, colors and undo")
+	check(layout.begin_group_copy_preview() and layout.group_copy_preview_valid,"group copy preview may restart immediately after cancellation")
+	check(layout.confirm_group_copy_preview(),"explicit confirmation commits both owned spare instances into a safe room location")
+	check(not layout.group_copy_preview_active and layout.group_copy_preview_nodes.is_empty() and not actions.group_copy_panel.visible,"successful confirmation destroys preview ghosts and returns to ordinary furniture edit")
 	var new_roles: Array[String] = layout.group_selection.duplicate()
 	check(new_roles.size() == 2 and layout.selected == str(plan.copies["lamp_1"].role),"newly created pair becomes the active selection with original primary preserved")
 	check(layout.undo_stack.size() == history_before_copy+1 and layout.placed_instances.size() == before_stock.size()+2,"entire batch copy has one history entry and exactly two additional placements")
