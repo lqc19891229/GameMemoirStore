@@ -34,7 +34,7 @@ const SUN_SHADOW_SOFTNESS := [1.6,2.25,3.2,2.8]
 
 signal style_changed(value: Dictionary)
 
-var style := {"wall": 0, "floor": 0, "light": 0, "rgb": 0, "brightness": 70, "effect": 0, "wall_pattern":0, "floor_pattern":0, "atmosphere":0}
+var style := {"wall": 0, "floor": 0, "light": 0, "rgb": 0, "brightness": 70, "effect": 0, "wall_pattern":0, "floor_pattern":0, "atmosphere":0, "ambience_volume":70}
 var _patterns: Dictionary = {}
 var _environment_owned := false
 
@@ -93,6 +93,11 @@ func _update_rain_sound(index: int) -> void:
 		_rain_sound.volume_db = -24.0
 		_rain_sound.stream = _make_rain_loop()
 		add_child(_rain_sound)
+	if int(style.ambience_volume) <= 0:
+		_rain_sound.stop()
+		return
+	# Map the 1-100 control to quiet playback, reserving 0 for silence.
+	_rain_sound.volume_db = -39.0 + float(style.ambience_volume) * .15
 	if not _rain_sound.playing: _rain_sound.play()
 
 
@@ -107,6 +112,9 @@ static func clean_style(raw: Variant) -> Dictionary:
 	var rgb: Variant = raw.get("rgb", 0)
 	if (rgb is int or rgb is float) and is_finite(float(rgb)):
 		result.rgb = clampi(int(rgb), 0, 6)
+	var volume: Variant = raw.get("ambience_volume", 70)
+	if (volume is int or volume is float) and is_finite(float(volume)):
+		result.ambience_volume = clampi(roundi(float(volume)), 0, 100)
 	var brightness: Variant = raw.get("brightness", 70)
 	if (brightness is int or brightness is float) and is_finite(float(brightness)):
 		result.brightness = clampi(roundi(float(brightness)), 0, 100)
