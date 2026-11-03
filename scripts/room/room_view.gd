@@ -37,6 +37,7 @@ signal style_changed(value: Dictionary)
 var style := {"wall": 0, "floor": 0, "light": 0, "rgb": 0, "brightness": 70, "effect": 0, "wall_pattern":0, "floor_pattern":0, "atmosphere":0, "ambience_volume":70}
 var _patterns: Dictionary = {}
 var _environment_owned := false
+var _atmosphere_tween: Tween
 
 # P44: visual rain is animated only while the rain preset is active.
 # Procedural audio is local to this room, not part of the save format.
@@ -182,6 +183,51 @@ func _pattern_texture(kind: String, index: int) -> Texture2D:
 	_patterns[key] = texture
 	return texture
 
+# Visual-only interpolation. Saved style and gameplay state stay discrete.
+# Callers may capture the current state, apply the next preset immediately,
+# then blend just the rendered lighting/sky toward its new values.
+func atmosphere_visual_snapshot() -> Array:
+	var properties: Array = []
+	var world := get_parent() as Node3D
+	if world == null: return properties
+	for name in ["KeyLight", "FillLight", "CeilingLight"]:
+		var light := world.get_node_or_null(name) as Light3D
+		if light != null:
+			for property_name in ["light_energy", "light_color"]:
+				properties.append({"node": light, "property": property_name, "value": light.get(property_name)})
+	for name in ["WindowBounce", "WarmCoveFill"]:
+		var accent := $Shell.get_node_or_null(name) as Light3D
+		if accent != null:
+			for property_name in ["light_energy", "light_color"]:
+				properties.append({"node": accent, "property": property_name, "value": accent.get(property_name)})
+	var env_node := world.get_node_or_null("Environment") as WorldEnvironment
+	if env_node != null and env_node.environment != null:
+		for property_name in ["background_color", "ambient_light_color", "ambient_light_energy", "tonemap_exposure"]:
+			properties.append({"node": env_node.environment, "property": property_name, "value": env_node.environment.get(property_name)})
+		if env_node.environment.sky != null:
+			var gradient := env_node.environment.sky.sky_material as ProceduralSkyMaterial
+			if gradient != null:
+				for property_name in ["sky_top_color", "sky_horizon_color", "ground_bottom_color", "ground_horizon_color"]:
+					properties.append({"node": gradient, "property": property_name, "value": gradient.get(property_name)})
+	var sky_mesh := $Shell.get_node_or_null("Left_Wall/WindowSky") as MeshInstance3D
+	if sky_mesh != null and sky_mesh.material_override != null:
+		properties.append({"node": sky_mesh.material_override, "property": "albedo_color", "value": sky_mesh.material_override.get("albedo_color")})
+	return properties
+
+func animate_atmosphere_from(previous: Array) -> void:
+	if Engine.is_editor_hint() or not is_inside_tree(): return
+	if _atmosphere_tween != null and _atmosphere_tween.is_running():
+		_atmosphere_tween.kill()
+	var fade := create_tween().set_parallel(true).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	for entry: Dictionary in previous:
+		var obj: Object = entry.get("node")
+		if not is_instance_valid(obj): continue
+		var property_name: String = str(entry.get("property", ""))
+		var target: Variant = obj.get(property_name)
+		if target != entry["value"]:
+			fade.tween_property(obj, property_name, target, .55).from(entry["value"])
+	_atmosphere_tween = fade
+
 func _apply_atmosphere() -> void:
 	var index: int = int(style.atmosphere)
 	var world: Node3D = get_parent() as Node3D
@@ -279,6 +325,8 @@ func set_partition_editing(enabled: bool) -> void:
 		freeform.scale.y = .23 if enabled else 1.0
 
 func apply_style(value: Variant) -> void:
+	if _atmosphere_tween != null and _atmosphere_tween.is_running():
+		_atmosphere_tween.kill()
 	style = clean_style(value)
 	if not is_inside_tree():
 		return
