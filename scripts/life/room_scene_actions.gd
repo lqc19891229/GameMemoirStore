@@ -610,6 +610,16 @@ func _build_group_copy_preview(canvas: Control) -> void:
 	group_copy_confirm.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	actions.add_child(group_copy_confirm)
 	group_copy_confirm.pressed.connect(func() -> void: confirm_group_copy_preview())
+	group_copy_cancel = Button.new()
+	group_copy_cancel.name = "CancelGroupCopy"
+	group_copy_cancel.text = "取消 · Esc"
+	group_copy_cancel.custom_minimum_size = Vector2(143,35)
+	group_copy_cancel.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	actions.add_child(group_copy_cancel)
+	group_copy_cancel.pressed.connect(func() -> void:
+		host.world.layout.cancel_group_copy_preview()
+		room_ui.sync()
+	)
 
 func confirm_group_copy_preview() -> void:
 	var layout = host.world.layout
@@ -622,16 +632,6 @@ func confirm_group_copy_preview() -> void:
 			notice = "连续复制已放置 %d 组 · 库存不足，自动结束" % layout.group_copy_preview_placed_count
 		room_ui.show_keyboard_feedback(notice)
 	room_ui.sync()
-	group_copy_cancel = Button.new()
-	group_copy_cancel.name = "CancelGroupCopy"
-	group_copy_cancel.text = "取消 · Esc"
-	group_copy_cancel.custom_minimum_size = Vector2(143,35)
-	group_copy_cancel.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-	actions.add_child(group_copy_cancel)
-	group_copy_cancel.pressed.connect(func() -> void:
-		host.world.layout.cancel_group_copy_preview()
-		room_ui.sync()
-	)
 
 func _sync_group_copy_preview(view: Vector2) -> void:
 	var layout = host.world.layout
