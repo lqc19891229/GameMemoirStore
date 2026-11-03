@@ -24,6 +24,9 @@ var committed: Dictionary = {}
 var saved: Dictionary = {}
 var active := false
 var selected := "desk"
+# Editor-only multi-selection; persisted poses and inventory contracts stay unchanged.
+var group_selection: Array[String] = []
+var group_markers: Dictionary = {}
 var tool := "move"
 var snapping := true
 var valid := true
@@ -197,6 +200,7 @@ func start_place(item_id: String, uid: String) -> bool:
 	var role := _next_furniture_role(base_role, uid)
 	if role.is_empty(): return false
 	end_drag()
+	group_selection.clear()
 	placing_before = _draft()
 	if not nodes.has(role): _create_copy(role)
 	placed_instances[role] = uid
@@ -264,7 +268,7 @@ func restore(poses: Dictionary) -> void:
 	_apply_furniture_appearance()
 
 func duplicate_selected() -> void:
-	if not active or not placing_role.is_empty() or not templates.has(Data.base_role(selected)): return
+	if not active or not placing_role.is_empty() or group_selection.size() > 1 or not templates.has(Data.base_role(selected)): return
 	var furniture_id: String = InventoryData.furniture_item_id(Data.base_role(selected))
 	var instance_uid := InventoryData.unused_uid(available_inventory, placed_instances, furniture_id)
 	if instance_uid.is_empty():
@@ -300,6 +304,8 @@ func duplicate_selected() -> void:
 		return
 	placed_instances[role] = instance_uid
 	selected = role
+	group_selection.clear()
+	group_selection.append(role)
 	_remember(before)
 	update()
 
@@ -307,7 +313,7 @@ func delete_selected() -> void:
 	store_selected()
 
 func store_selected() -> void:
-	if not active or not InventoryData.is_room_furniture_role(Data.base_role(selected)): return
+	if not active or group_selection.size() > 1 or not InventoryData.is_room_furniture_role(Data.base_role(selected)): return
 	if not placing_role.is_empty() or not placed_instances.has(selected): return
 	end_drag()
 	var before := _draft()
@@ -318,6 +324,7 @@ func store_selected() -> void:
 	else:
 		nodes[selected].hide()
 	selected = "desk"
+	group_selection.clear()
 	_apply_furniture_appearance()
 	_remember(before)
 	update()
@@ -1124,6 +1131,8 @@ func begin() -> void:
 	undo_stack.clear()
 	redo_stack.clear()
 	selected = "desk"
+	group_selection.clear()
+	_clear_group_markers()
 	gesture = ""
 	restore(committed)
 	placed_instances = committed_placements.duplicate()
@@ -1157,15 +1166,86 @@ func finish(apply: bool) -> bool:
 		room_half_size = BlueprintData.half_size(blueprint)
 		world.get_node("Room").apply_blueprint(blueprint)
 	active = false
+	group_selection.clear()
+	_clear_group_markers()
 	gizmo.hide()
 	return true
 
-func select(role: String) -> void:
+func _group_eligible(role: String) -> bool:
+	return nodes.has(role) and placed_instances.has(role) and is_floor(role) and InventoryData.is_room_furniture_role(Data.base_role(role))
+
+func select(role: String, preserve_group: bool = false) -> void:
 	if not nodes.has(role) or not placing_role.is_empty(): return
 	if InventoryData.is_room_furniture_role(Data.base_role(role)) and not placed_instances.has(role): return
-	selected = role
 	end_drag()
+	if not preserve_group or not group_selection.has(role):
+		group_selection.clear()
+		if _group_eligible(role): group_selection.append(role)
+	selected = role
 	update()
+
+func toggle_group_member(role: String) -> bool:
+	if not active or not placing_role.is_empty() or not gesture.is_empty() or not _group_eligible(role): return false
+	if group_selection.is_empty() and _group_eligible(selected): group_selection.append(selected)
+	if group_selection.has(role):
+		# Keep one primary piece selected; Ctrl+click removes extra members.
+		if group_selection.size() <= 1: return false
+		group_selection.erase(role)
+		if selected == role: selected = group_selection.back()
+	else:
+		group_selection.append(role)
+		selected = role
+	update()
+	return true
+
+func clear_group_selection() -> void:
+	if group_selection.size() <= 1: return
+	end_drag()
+	group_selection.clear()
+	if _group_eligible(selected): group_selection.append(selected)
+	update()
+
+func _clear_group_markers() -> void:
+	for marker: MeshInstance3D in group_markers.values():
+		if is_instance_valid(marker): marker.queue_free()
+	group_markers.clear()
+
+func _sync_group_markers() -> void:
+	if not active or group_selection.size() <= 1:
+		_clear_group_markers()
+		return
+	# The primary furniture uses the original gizmo. Other selected furniture
+	# receive a screen-independent cyan footprint; these meshes have no collider.
+	for role: String in group_markers.keys():
+		if role == selected or not group_selection.has(role) or not _group_eligible(role):
+			group_markers[role].queue_free()
+			group_markers.erase(role)
+	for role: String in group_selection:
+		if role == selected or not _group_eligible(role): continue
+		if not group_markers.has(role):
+			var size: Vector3 = bounds_for(role)
+			var mesh := ImmediateMesh.new()
+			var material := StandardMaterial3D.new()
+			material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+			material.albedo_color = Color("61d9ff")
+			material.no_depth_test = true
+			mesh.surface_begin(Mesh.PRIMITIVE_LINES,material)
+			var corners := [
+				Vector3(-size.x*.5,0.065,-size.z*.5),
+				Vector3(size.x*.5,0.065,-size.z*.5),
+				Vector3(size.x*.5,0.065,size.z*.5),
+				Vector3(-size.x*.5,0.065,size.z*.5)
+			]
+			for i in range(4):
+				mesh.surface_add_vertex(corners[i])
+				mesh.surface_add_vertex(corners[(i+1)%4])
+			mesh.surface_end()
+			var marker := MeshInstance3D.new()
+			marker.name = "GroupSelection_" + role
+			marker.mesh = mesh
+			world.add_child(marker)
+			group_markers[role] = marker
+		(group_markers[role] as MeshInstance3D).global_transform = nodes[role].global_transform
 
 func set_tool(value: String) -> void:
 	tool = value
@@ -1175,6 +1255,7 @@ func set_tool(value: String) -> void:
 func reset_layout() -> void:
 	if not active: return
 	end_drag()
+	group_selection.clear()
 	var before := _draft()
 	restore(authored)
 	blueprint = BlueprintData.DEFAULT.duplicate(true)
@@ -1228,6 +1309,13 @@ func move_to(position_xz: Vector2) -> void:
 	if not placing_role.is_empty():
 		preview_placement(position_xz)
 		return
+	if group_selection.size() > 1:
+		var before_group := _draft()
+		var target := position_xz.snapped(Vector2.ONE*grid_step) if snapping else position_xz
+		var anchor: Vector3 = nodes[selected].position
+		_transform_group(target-Vector2(anchor.x,anchor.z),0.0)
+		if gesture.is_empty(): _remember(before_group)
+		return
 	var undo_before := _draft()
 	var before: Transform3D = nodes[selected].transform
 	var point := position_xz
@@ -1245,6 +1333,12 @@ func rotate_to(yaw: float) -> void:
 		nodes[placing_role].rotation.y = wrapf(snappedf(yaw, deg_to_rad(angle_step)) if snapping else yaw, -PI, PI)
 		update()
 		return
+	if group_selection.size() > 1:
+		var before_group := _draft()
+		var target_yaw := snappedf(yaw,deg_to_rad(angle_step)) if snapping else yaw
+		_transform_group(Vector2.ZERO,angle_difference(nodes[selected].rotation.y,target_yaw))
+		if gesture.is_empty(): _remember(before_group)
+		return
 	var undo_before := _draft()
 	var before: Transform3D = nodes[selected].transform
 	if snapping: yaw = snappedf(yaw, deg_to_rad(angle_step))
@@ -1253,7 +1347,7 @@ func rotate_to(yaw: float) -> void:
 	_constrain_motion(before, nodes[selected].transform)
 	if gesture.is_empty(): _remember(undo_before)
 
-func _blocker(role: String, polygon: PackedVector2Array) -> String:
+func _blocker(role: String, polygon: PackedVector2Array, ignored: Array[String] = []) -> String:
 	var floor_item := is_floor(role)
 	if floor_item:
 		if not BlueprintData.footprint_inside(blueprint, polygon, edge_margin):
@@ -1268,7 +1362,7 @@ func _blocker(role: String, polygon: PackedVector2Array) -> String:
 			if Data.overlap(polygon, BlueprintData.polygon(part, collision_margin)):
 				return name_for(role) + "碰到内墙"
 	for other: String in nodes:
-		if other == role or is_floor(other) != floor_item or not is_blocking(other): continue
+		if other == role or ignored.has(other) or is_floor(other) != floor_item or not is_blocking(other): continue
 		if InventoryData.is_room_furniture_role(Data.base_role(other)) and not placed_instances.has(other): continue
 		if Data.overlap(polygon, footprint(other, collision_margin)):
 			return name_for(role) + "碰到" + name_for(other)
@@ -1286,13 +1380,69 @@ func _layout_blocker() -> String:
 		if not blocker.is_empty(): return blocker
 	return ""
 
-func _sweep_blocker(role: String, before: Transform3D, after: Transform3D) -> String:
+func _sweep_blocker(role: String, before: Transform3D, after: Transform3D, ignored: Array[String] = []) -> String:
 	var points := _footprint_at(role, before, collision_margin)
 	points.append_array(_footprint_at(role, after, collision_margin))
 	var hull := Geometry2D.convex_hull(points)
 	# Geometry2D closes its hull; SAT expects each corner once.
 	if hull.size() > 1 and hull[0].is_equal_approx(hull[-1]): hull.resize(hull.size() - 1)
-	return _blocker(role, hull)
+	return _blocker(role,hull,ignored)
+
+func _group_pose_targets(start: Dictionary, delta: Vector2, yaw: float, ratio: float, pivot: Vector2) -> Dictionary:
+	var targets := {}
+	var angle := yaw*ratio
+	for role: String in group_selection:
+		var pose: Transform3D = start[role]
+		var planar := Vector2(pose.origin.x,pose.origin.z)
+		var next := (planar-pivot).rotated(-angle)+pivot+delta*ratio
+		pose.origin.x = next.x
+		pose.origin.z = next.y
+		pose.basis = Basis(Vector3.UP,angle)*pose.basis
+		targets[role] = pose
+	return targets
+
+func _group_swept_contact(previous: Dictionary, target: Dictionary) -> String:
+	for role: String in group_selection:
+		var reason := _sweep_blocker(role,previous[role],target[role],group_selection)
+		if not reason.is_empty(): return reason
+	return ""
+
+func _transform_group(delta: Vector2, yaw: float) -> void:
+	if group_selection.size() <= 1 or not _group_eligible(selected): return
+	var initial := {}
+	var pivot := Vector2.ZERO
+	for role: String in group_selection:
+		if not _group_eligible(role): return
+		var pose: Transform3D = nodes[role].transform
+		initial[role] = pose
+		pivot += Vector2(pose.origin.x,pose.origin.z)
+	pivot /= float(group_selection.size())
+	# Evaluate rigid group poses from a shared starting state. Swept collision
+	# tests ignore members of the group but retain walls and all other objects.
+	# Rotate in 1-degree segments to prevent a member from cutting corners.
+	var steps := maxi(1,ceili(absf(yaw)/deg_to_rad(1.0)))
+	var previous := initial
+	var blocker := ""
+	for step in range(1,steps+1):
+		var ratio := float(step)/float(steps)
+		var target := _group_pose_targets(initial,delta,yaw,ratio,pivot)
+		blocker = _group_swept_contact(previous,target)
+		if blocker.is_empty():
+			previous = target
+			continue
+		var low := float(step-1)/float(steps)
+		var high := ratio
+		for attempt in range(12):
+			var mid := (low+high)*.5
+			var candidate := _group_pose_targets(initial,delta,yaw,mid,pivot)
+			if _group_swept_contact(previous,candidate).is_empty(): low = mid
+			else: high = mid
+		previous = _group_pose_targets(initial,delta,yaw,low,pivot)
+		break
+	for role: String in group_selection:
+		nodes[role].transform = previous[role]
+	wall_magnet_active = false
+	update(blocker)
 
 func _constrain_motion(before: Transform3D, target: Transform3D) -> void:
 	var node: Node3D = nodes[selected]
@@ -1411,6 +1561,13 @@ func pick_handle(pixel: Vector2) -> String:
 	return str(result.collider.get_meta("operation", "")) if not result.is_empty() else ""
 
 func update(contact: String = "") -> void:
+	# Undo, storage or preview cancellation may remove a member from the room.
+	for role: String in group_selection.duplicate():
+		if not _group_eligible(role): group_selection.erase(role)
+	if not group_selection.has(selected) and _group_eligible(selected):
+		group_selection.clear()
+		group_selection.append(selected)
+	_sync_group_markers()
 	var blocker := _layout_blocker()
 	valid = blocker.is_empty()
 	if not placing_role.is_empty(): _apply_furniture_appearance()
@@ -1420,8 +1577,8 @@ func update(contact: String = "") -> void:
 	if not valid: message = blocker + "，请选择其他位置" if not placing_role.is_empty() else blocker + "，请调整位置或恢复默认布置"
 	elif not contact.is_empty(): message = "已阻挡：" + contact
 	elif wall_magnet_active: message = "已贴墙吸附 · 按住 Alt 暂时关闭吸附"
-	elif gesture == "rotate": message = "正在旋转 · 松开鼠标完成 · Q/E 微调"
-	elif gesture == "move": message = "正在移动 · Shift＋拖动可旋转 · Alt 关闭吸附"
+	elif gesture == "rotate": message = "正在旋转整组 · 松开鼠标完成" if group_selection.size() > 1 else "正在旋转 · 松开鼠标完成 · Q/E 微调"
+	elif gesture == "move": message = "正在移动整组 · 松开鼠标完成" if group_selection.size() > 1 else "正在移动 · Shift＋拖动可旋转 · Alt 关闭吸附"
 	_update_gizmo(not contact.is_empty())
 	changed.emit()
 

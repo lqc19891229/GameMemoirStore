@@ -157,6 +157,70 @@ func run() -> void:
 	check(not layout.distribute_matching_furniture("invalid"), "unknown distribution axis is rejected")
 	check(layout.nearest_alignment("lamp_1","invalid").is_empty(), "unknown alignment axis is rejected")
 
+	# P33: mixed Ctrl selection is editor-only and its rigid transform is
+	# constrained against the room and other furniture, never against itself.
+	layout.select("lamp")
+	check(layout.group_selection.size() == 1, "ordinary selection begins with exactly one active furniture item")
+	check(layout.toggle_group_member("lamp_1") and layout.toggle_group_member("lamp_2"), "Ctrl-style toggles add two more individually owned instances to the selection")
+	check(layout.group_selection.size() == 3 and layout.selected == "lamp_2", "multi-selection tracks three live roles and a movable primary member")
+	check(layout.group_markers.size() == 2, "each additional selected furniture has a collision-free visual selection outline")
+	var poses_before_group: Dictionary = {}
+	for role: String in group:
+		poses_before_group[role] = layout.nodes[role].transform
+	var placed_before_group: Dictionary = layout.placed_instances.duplicate()
+	history_before = layout.undo_stack.size()
+	check(layout.nudge_selected(Vector2.RIGHT,true), "one-centimeter keyboard nudge moves the entire selected group")
+	for role: String in group:
+		var old_pose: Transform3D = poses_before_group[role]
+		check(absf(layout.nodes[role].position.x-old_pose.origin.x-.01) < .003 and absf(layout.nodes[role].position.z-old_pose.origin.z) < .003, "group nudge preserves every member offset: " + role)
+	check(layout.undo_stack.size() == history_before+1, "all three members moved in exactly one undo transaction")
+	check(layout.valid and layout._layout_blocker().is_empty(), "group translation never violates existing collision checks")
+	var moved_poses: Dictionary = {}
+	for role: String in group: moved_poses[role] = layout.nodes[role].transform
+	layout.undo()
+	for role: String in group:
+		check(layout.nodes[role].transform.is_equal_approx(poses_before_group[role]), "one undo restores the entire selected group: " + role)
+	layout.redo()
+	for role: String in group:
+		check(layout.nodes[role].transform.is_equal_approx(moved_poses[role]), "one redo reapplies the whole group transform: " + role)
+	history_before = layout.undo_stack.size()
+	var angle_before: float = layout.nodes["lamp_2"].rotation.y
+	var group_center := Vector2.ZERO
+	for role: String in group:
+		group_center += Vector2(layout.nodes[role].position.x,layout.nodes[role].position.z)
+	group_center /= float(group.size())
+	var original_separation: float = layout.nodes["lamp"].position.distance_to(layout.nodes["lamp_2"].position)
+	layout.rotate_step(1,true)
+	var actual_angle := angle_difference(angle_before,layout.nodes["lamp_2"].rotation.y)
+	check(absf(actual_angle) > .00001 and absf(actual_angle) <= deg_to_rad(1.01), "fine rotation turns every group member by at most one degree until collision")
+	check(absf(layout.nodes["lamp"].position.distance_to(layout.nodes["lamp_2"].position)-original_separation) < .002, "group rotation preserves relative distances around its shared pivot")
+	var new_center := Vector2.ZERO
+	for role: String in group: new_center += Vector2(layout.nodes[role].position.x,layout.nodes[role].position.z)
+	new_center /= float(group.size())
+	check(new_center.distance_to(group_center) < .002, "group rotation keeps its centroid fixed")
+	check(layout.undo_stack.size() == history_before+1, "the entire pivot rotation makes one undo record")
+	check(layout.valid and layout._layout_blocker().is_empty(), "rotated group remains valid and outside wall geometry")
+	layout.undo()
+	for role: String in group:
+		check(layout.nodes[role].transform.is_equal_approx(moved_poses[role]), "undo fully restores group positions and yaw after rotation: " + role)
+	history_before = layout.undo_stack.size()
+	var before_blocked_move: Dictionary = {}
+	for role: String in group: before_blocked_move[role] = layout.nodes[role].transform
+	var far_anchor := Vector2(55.0,55.0)
+	layout.move_to(far_anchor)
+	check(layout.valid and layout._layout_blocker().is_empty(), "moving selected group past the room boundary stops at a collision-safe point")
+	var actually_moved := false
+	for role: String in group:
+		if not layout.nodes[role].transform.is_equal_approx(before_blocked_move[role]):
+			actually_moved = true
+	check(layout.undo_stack.size() == history_before + (1 if actually_moved else 0), "group adds exactly one undo step if movement was possible, or no entry when fully blocked")
+	check(layout.placed_instances == placed_before_group, "group transforms never consume, create or reassign owned furniture UIDs")
+	if actually_moved: layout.undo()
+	check(layout.toggle_group_member("lamp_2"), "Ctrl-style toggle removes one existing member without moving it")
+	check(layout.group_selection.size() == 2 and layout.group_markers.size() == 1, "removing a member updates group selection outlines")
+	layout.clear_group_selection()
+	check(layout.group_selection.size() == 1 and layout.group_markers.is_empty(), "Esc-style group clearing restores single furniture selection and removes auxiliary outlines")
+
 	desktop.finish_layout(false)
 	check(layout.blueprint == initial.blueprint and layout.snapshot() == initial.poses, "canceling restores original walls, furnishings and all poses")
 	check(not layout.nodes.has("lamp_1") and not layout.nodes.has("lamp_2"), "temporary fixture furniture is removed on cancel")

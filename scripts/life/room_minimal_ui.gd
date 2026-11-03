@@ -366,6 +366,8 @@ func _transform_readout(layout) -> String:
 		precision = "墙面已吸附（范围 %.2f m） · Alt 跳过" % layout.WALL_SNAP_RADIUS
 	elif layout.snap_bypass:
 		precision += "  ·  Alt 已跳过贴墙吸附"
+	if layout.group_selection.size() > 1:
+		precision = "整组 %d 件 · 以组中心旋转 · %s" % [layout.group_selection.size(),precision]
 	return pose + "\n" + precision
 
 func _sync_feedback(active: bool) -> void:
@@ -431,7 +433,9 @@ func choose_mode(next_mode: String) -> void:
 	if next_mode != "furniture" and not host.world.layout.placing_role.is_empty():
 		host.world.layout.cancel_placement()
 	mode = next_mode
-	if next_mode != "furniture": _clear_keyboard_feedback()
+	if next_mode != "furniture":
+		_clear_keyboard_feedback()
+		host.world.layout.clear_group_selection()
 	if scene_actions != null:
 		scene_actions.hide_colors()
 		scene_actions.hide_arrange()
