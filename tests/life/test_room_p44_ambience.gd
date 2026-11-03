@@ -27,6 +27,8 @@ func run() -> void:
 	room.apply_style({"atmosphere":3})
 	var rain: Node3D = room.get_node("Shell/Left_Wall/RainStreaks")
 	check(rain.visible and rain.get_child_count() >= 10, "rain keeps authored exterior geometry")
+	var beads := rain.get_node_or_null("GlassDroplets") as Node3D
+	check(beads != null and beads.get_child_count() == 12, "glass droplets are weather-controlled exterior details")
 	var player := room.get_node_or_null("RainAmbience") as AudioStreamPlayer
 	check(player != null and player.stream is AudioStreamWAV, "rain creates local procedural audio")
 	if player != null:
@@ -51,6 +53,7 @@ func run() -> void:
 	check(player != null and player.playing and player.volume_db < -30.0, "adjusting volume resumes quieter ambience")
 	room.apply_style({"atmosphere":2})
 	check(not rain.visible and player != null and not player.playing, "night stops rain audio and hides droplets")
+	check(beads != null and not beads.is_visible_in_tree(), "glass beads hide with rain and window group")
 	room.apply_style({"atmosphere":3})
 	check(player != null and player.playing, "returning to rain resumes existing audio stream")
 	room.apply_style(original)
