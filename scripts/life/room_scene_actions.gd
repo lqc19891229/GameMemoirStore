@@ -11,6 +11,7 @@ var host
 var room_ui
 var rail: VBoxContainer
 var action_strip: HBoxContainer
+var selection_chip: Label
 var swatches: PanelContainer
 var hint: Label
 var category_buttons: Dictionary = {}
@@ -54,6 +55,16 @@ func _round_button(icon_id: String, tooltip: String, side: int = 43) -> Button:
 	var hover := surface.duplicate()
 	hover.bg_color = Color("d7e7da")
 	button.add_theme_stylebox_override("hover",hover)
+	var pressed := surface.duplicate()
+	pressed.bg_color = Color("cbe3d1")
+	pressed.border_color = Color("317a56")
+	pressed.set_border_width_all(2)
+	button.add_theme_stylebox_override("pressed",pressed)
+	button.add_theme_stylebox_override("hover_pressed",pressed)
+	var disabled := surface.duplicate()
+	disabled.bg_color = Color("eceeeb",0.88)
+	disabled.border_color = Color("d3dad2")
+	button.add_theme_stylebox_override("disabled",disabled)
 	return button
 
 func _build_categories(canvas: Control) -> void:
@@ -97,9 +108,31 @@ func _build_object_actions(canvas: Control) -> void:
 		var key: String = spec.id
 		var button := _round_button(key,str(spec.hint),43)
 		button.name = "Action_" + key
+		button.toggle_mode = key in ["move","rotate","paint"]
 		action_strip.add_child(button)
 		action_buttons[key] = button
 		button.pressed.connect(func() -> void: perform_action(key))
+	# Display the current selection without blocking object picking or buttons.
+	selection_chip = Label.new()
+	selection_chip.name = "SelectedFurnitureChip"
+	selection_chip.visible = false
+	selection_chip.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	selection_chip.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	selection_chip.clip_text = true
+	selection_chip.custom_minimum_size = Vector2(170,31)
+	selection_chip.add_theme_font_size_override("font_size",12)
+	selection_chip.add_theme_color_override("font_color",Color("315341"))
+	var tag_style := StyleBoxFlat.new()
+	tag_style.bg_color = Color("f4f6f2",0.95)
+	tag_style.border_color = Color("b7c9b9",0.86)
+	tag_style.set_border_width_all(1)
+	tag_style.set_corner_radius_all(9)
+	tag_style.content_margin_left = 9.0
+	tag_style.content_margin_right = 9.0
+	tag_style.content_margin_top = 6.0
+	tag_style.content_margin_bottom = 6.0
+	selection_chip.add_theme_stylebox_override("normal",tag_style)
+	canvas.add_child(selection_chip)
 	swatches = PanelContainer.new()
 	swatches.name = "ObjectColorPalette"
 	swatches.visible = false
@@ -180,6 +213,10 @@ func apply_color(index: int) -> void:
 func hide_colors() -> void:
 	if is_instance_valid(swatches): swatches.hide()
 
+func _hide_object_actions() -> void:
+	action_strip.hide()
+	selection_chip.hide()
+
 func sync(active: bool) -> void:
 	var furniture_mode: bool = active and room_ui.mode == "furniture" and not host.blueprint_mode
 	rail.visible = furniture_mode and host.world.layout.placing_role.is_empty()
@@ -188,7 +225,7 @@ func sync(active: bool) -> void:
 		var button: Button = category_buttons[GROUP_KEYS[index]]
 		button.set_pressed_no_signal(host.get_node("%FurnitureCatalogGroup").selected == index and room_ui.catalog_open)
 	if not furniture_mode or room_ui.catalog_open:
-		action_strip.hide()
+		_hide_object_actions()
 		hide_colors()
 		return
 	var layout = host.world.layout
@@ -198,12 +235,15 @@ func sync(active: bool) -> void:
 		_current_selection = role
 	var eligible: bool = layout.nodes.has(role) and layout.placed_instances.has(role) and InventoryData.is_room_furniture_role(layout.Data.base_role(role))
 	if not eligible or not layout.placing_role.is_empty() or not layout.gesture.is_empty():
-		action_strip.hide()
+		_hide_object_actions()
 		hide_colors()
 		return
-	action_buttons["move"].button_pressed = layout.tool == "move" if action_buttons["move"].toggle_mode else false
-	action_buttons["duplicate"].disabled = InventoryData.unused_uid(layout.available_inventory,layout.placed_instances,InventoryData.furniture_item_id(layout.Data.base_role(role))).is_empty()
-	action_strip.show()
+	action_buttons["move"].set_pressed_no_signal(layout.tool == "move")
+	action_buttons["rotate"].set_pressed_no_signal(layout.tool == "rotate")
+	action_buttons["paint"].set_pressed_no_signal(swatches.visible)
+	var has_copy: bool = not InventoryData.unused_uid(layout.available_inventory,layout.placed_instances,InventoryData.furniture_item_id(layout.Data.base_role(role))).is_empty()
+	action_buttons["duplicate"].disabled = not has_copy
+	action_buttons["duplicate"].tooltip_text = "复制一件库存中的同款家具 · Ctrl+D" if has_copy else "同款家具没有可用库存 · 请先购买"
 	_reposition()
 	if swatches.visible:
 		for i in range(color_buttons.size()):
@@ -212,8 +252,16 @@ func sync(active: bool) -> void:
 			style.set_border_width_all(3 if layout.color_for(role) == i else 2)
 
 func _process(_delta: float) -> void:
-	if action_strip != null and action_strip.visible:
-		_reposition()
+	if action_strip == null or not is_instance_valid(host): return
+	if not host.world.layout.active or host.blueprint_mode or room_ui.mode != "furniture" or room_ui.catalog_open: return
+	var layout = host.world.layout
+	var role: String = str(layout.selected)
+	if not layout.nodes.has(role) or not layout.placed_instances.has(role): return
+	if not InventoryData.is_room_furniture_role(layout.Data.base_role(role)): return
+	if not layout.placing_role.is_empty() or not layout.gesture.is_empty(): return
+	# Re-project even while hidden, so orbiting the camera back into view
+	# restores object actions without needing to reselect the furniture.
+	_reposition()
 
 func resize(view: Vector2) -> void:
 	if rail == null: return
@@ -223,11 +271,11 @@ func resize(view: Vector2) -> void:
 	hint.size = Vector2(maxf(0.0,view.x - hint.position.x - 20),30)
 
 func _reposition() -> void:
-	if action_strip == null or not action_strip.visible: return
+	if action_strip == null: return
 	var layout = host.world.layout
 	var role: String = str(layout.selected)
 	if not layout.nodes.has(role):
-		action_strip.hide()
+		_hide_object_actions()
 		hide_colors()
 		return
 	var node: Node3D = layout.nodes[role]
@@ -235,15 +283,19 @@ func _reposition() -> void:
 	var camera: Camera3D = host.world.camera
 	var world_point: Vector3 = node.global_position + Vector3.UP * (layout.bounds_for(role).y + .24)
 	if camera.is_position_behind(world_point):
-		action_strip.hide()
+		_hide_object_actions()
 		hide_colors()
 		return
 	var pixel: Vector2 = camera.unproject_position(world_point)
 	if pixel.x < 0 or pixel.y < 0 or pixel.x > view.x or pixel.y > view.y:
-		action_strip.hide()
+		_hide_object_actions()
 		hide_colors()
 		return
 	var total_width := float(ACTIONS.size()) * 43.0 + float(ACTIONS.size()-1) * 5.0
-	action_strip.position = Vector2(clampf(pixel.x-total_width*.5,8, maxf(8,view.x-total_width-8)),clampf(pixel.y-76,124,maxf(124,view.y-114)))
+	action_strip.position = Vector2(clampf(pixel.x-total_width*.5,8, maxf(8,view.x-total_width-8)),clampf(pixel.y-76,164,maxf(164,view.y-114)))
+	selection_chip.text = "已选 · %s" % layout.name_for(role)
+	selection_chip.position = Vector2(clampf(action_strip.position.x+(total_width-170.0)*.5,8.0,maxf(8.0,view.x-178.0)),action_strip.position.y-36.0)
+	selection_chip.show()
+	action_strip.show()
 	if swatches.visible:
 		swatches.position = Vector2(clampf(action_strip.position.x+35,8,maxf(8,view.x-210)),clampf(action_strip.position.y+55,125,maxf(125,view.y-105)))
