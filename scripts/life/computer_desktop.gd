@@ -922,6 +922,10 @@ func _input(event: InputEvent) -> void:
 		_clear_gesture.call_deferred()
 	if not event is InputEventKey or world.transitioning: return
 	if world.layout.active:
+		# Room-editor search fields must receive printable keys normally.
+		# Preserve Escape so the user can still cancel an in-progress action.
+		if get_viewport().gui_get_focus_owner() is LineEdit and event.keycode != KEY_ESCAPE:
+			return
 		if event.pressed and not event.echo and blueprint_mode and event.keycode == KEY_ESCAPE:
 			set_blueprint_mode(false)
 			get_viewport().set_input_as_handled()
@@ -945,6 +949,10 @@ func _input(event: InputEvent) -> void:
 				KEY_R: world.layout.set_tool("rotate")
 				KEY_Q: world.layout.rotate_step(-1)
 				KEY_E: world.layout.rotate_step(1)
+				KEY_F:
+					# Keep the furniture search box usable while in edit mode.
+					if not blueprint_mode and not get_viewport().gui_get_focus_owner() is LineEdit:
+						world.focus_selected()
 		get_viewport().set_input_as_handled()
 		return
 	if event.pressed and not event.echo and event.keycode == KEY_ESCAPE and world.mode != "overview":

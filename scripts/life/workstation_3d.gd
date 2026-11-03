@@ -59,12 +59,40 @@ func set_mode(value: String, animate: bool = true) -> void:
 
 func reset_overview() -> void:
 	if mode not in ["overview", "layout"] or transitioning: return
+	# A focused item must not change the authored reset/overview framing.
+	orbit_target = Vector3(0, 1.1, 0)
 	overview_view = overview_camera
 	var offset := overview_camera.origin - orbit_target
 	overview_distance = offset.length()
 	overview_yaw = atan2(offset.x, offset.z)
 	overview_pitch = asin(clampf(offset.y / overview_distance, -1.0, 1.0))
 	camera.transform = overview_view
+
+func focus_selected(animate: bool = true) -> bool:
+	# An optional camera-only gesture. Never changes furniture transforms,
+	# inventory, undo history or the blueprint editor's top-down view.
+	if transitioning or mode != "layout" or not layout.placing_role.is_empty():
+		return false
+	var role: String = str(layout.selected)
+	if not layout.nodes.has(role):
+		return false
+	var subject: Node3D = layout.nodes[role] as Node3D
+	if subject == null or not subject.visible:
+		return false
+	var bounds: Vector3 = layout.bounds_for(role)
+	orbit_target = Vector3(subject.global_position.x, clampf(subject.global_position.y + bounds.y * 0.52, 0.5, 1.8), subject.global_position.z)
+	var direction := Vector3(sin(overview_yaw) * cos(overview_pitch), sin(overview_pitch), cos(overview_yaw) * cos(overview_pitch))
+	overview_view = Transform3D(Basis.IDENTITY, orbit_target + direction * overview_distance).looking_at(orbit_target)
+	if motion != null and motion.is_valid():
+		motion.kill()
+	if animate:
+		transitioning = true
+		motion = create_tween().set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+		motion.tween_property(camera, "transform", overview_view, 0.30)
+		motion.finished.connect(func() -> void: transitioning = false)
+	else:
+		camera.transform = overview_view
+	return true
 
 func _update_overview_camera() -> void:
 	var direction := Vector3(sin(overview_yaw) * cos(overview_pitch), sin(overview_pitch), cos(overview_yaw) * cos(overview_pitch))

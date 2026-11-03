@@ -139,6 +139,7 @@ jobs:
             tests/life/test_room_minimal_ui.gd \
             tests/life/test_furniture_showcase.gd \
             tests/life/test_workstation_view.gd \
+            tests/life/test_room_cinematic.gd \
             tests/life/test_workstation_lighting.gd \
             tests/life/test_workstation_layout.gd \
             tests/life/test_workstation_collision.gd \

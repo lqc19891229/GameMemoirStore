@@ -21,6 +21,16 @@ const ATMOSPHERE_ENERGY := [1.0,.72,.28,.55]
 const ATMOSPHERE_SKY := [Color("c6d7d8"), Color("f0b39d"), Color("354767"), Color("899fae")]
 const ATMOSPHERE_BACKGROUND := [Color(.72,.76,.77),Color(.78,.57,.50),Color(.16,.20,.33),Color(.44,.52,.59)]
 const ATMOSPHERE_TINT := [Color(1,1,1),Color(1,.79,.69),Color(.60,.73,1),Color(.75,.83,.90)]
+# Reflection gradient remains independent of the visible background color. The
+# Compatibility renderer can sample sky radiance without Forward+-only SSR.
+const SKY_ZENITH := [Color("849fb8"),Color("d78c80"),Color("1b2d51"),Color("8197a9")]
+const SKY_HORIZON := [Color("f2e3c8"),Color("efaf8d"),Color("677798"),Color("c4d0d2")]
+const SKY_GROUND := [Color("4c5358"),Color("654b48"),Color("1f3042"),Color("4c5a61")]
+const SKY_GROUND_HORIZON := [Color("b3aea3"),Color("c3a08b"),Color("59627b"),Color("9aadb0")]
+const CAMERA_EXPOSURE := [1.02,1.00,1.08,1.01]
+const SUN_ORIENTATION := [Vector3(-43,-30,0),Vector3(-25,-66,0),Vector3(-38,-18,0),Vector3(-54,-38,0)]
+const SUN_SHADOW_STRENGTH := [.68,.74,.30,.42]
+const SUN_SHADOW_SOFTNESS := [1.6,2.25,3.2,2.8]
 
 signal style_changed(value: Dictionary)
 
@@ -85,11 +95,25 @@ func _apply_atmosphere() -> void:
 	var env_node := world.get_node_or_null("Environment") as WorldEnvironment
 	if env_node != null and env_node.environment != null:
 		if not _environment_owned:
-			env_node.environment = env_node.environment.duplicate()
+			var local_environment: Environment = env_node.environment.duplicate() as Environment
+			if local_environment.sky != null:
+				# Both environment and procedural sky are scene resources. Each
+				# room instance must own its sky before switching time of day.
+				local_environment.sky = local_environment.sky.duplicate(true)
+			env_node.environment = local_environment
 			_environment_owned = true
-		env_node.environment.background_color = ATMOSPHERE_BACKGROUND[index]
-		env_node.environment.ambient_light_color = tint
-		env_node.environment.ambient_light_energy = [.34,.27,.14,.27][index]
+		var environment: Environment = env_node.environment
+		environment.background_color = ATMOSPHERE_BACKGROUND[index]
+		environment.ambient_light_color = tint
+		environment.ambient_light_energy = [.34,.27,.14,.27][index]
+		environment.tonemap_exposure = CAMERA_EXPOSURE[index]
+		environment.reflected_light_source = Environment.REFLECTION_SOURCE_SKY
+		var gradient: ProceduralSkyMaterial = environment.sky.sky_material as ProceduralSkyMaterial if environment.sky != null else null
+		if gradient != null:
+			gradient.sky_top_color = SKY_ZENITH[index]
+			gradient.sky_horizon_color = SKY_HORIZON[index]
+			gradient.ground_bottom_color = SKY_GROUND[index]
+			gradient.ground_horizon_color = SKY_GROUND_HORIZON[index]
 	var sky := $Shell.get_node_or_null("Left_Wall/WindowSky") as MeshInstance3D
 	if sky != null and sky.material_override is StandardMaterial3D:
 		(sky.material_override as StandardMaterial3D).albedo_color = ATMOSPHERE_SKY[index]
@@ -99,10 +123,15 @@ func _apply_atmosphere() -> void:
 	if key != null:
 		key.light_color = LIGHTS[style.light] * tint
 		key.light_energy = [0.75,.92,.48][style.light] * atmosphere_energy
+		key.rotation_degrees = SUN_ORIENTATION[index]
+		key.shadow_opacity = SUN_SHADOW_STRENGTH[index]
+		key.shadow_blur = SUN_SHADOW_SOFTNESS[index]
 	var fill := world.get_node_or_null("FillLight") as DirectionalLight3D
 	if fill != null:
 		fill.light_color = FILL_LIGHTS[style.light] * tint
 		fill.light_energy = [.18,.24,.08][style.light] * maxf(.35,atmosphere_energy)
+		# Soft diffuse bounce, no second expensive shadow map.
+		fill.shadow_enabled = false
 	var ceiling := world.get_node_or_null("CeilingLight") as OmniLight3D
 	if ceiling != null:
 		ceiling.light_color = LIGHTS[style.light]
@@ -184,7 +213,7 @@ func _refresh_zone_lights() -> void:
 		lamp.name = "Zone_%d" % zone
 		lamp.position = Vector3(point.x, 2.2, point.y)
 		lamp.light_color = ZONE_LIGHT_COLORS[light_id]
-		lamp.light_energy = ZONE_LIGHT_ENERGY[light_id]
+		lamp.light_energy = ZONE_LIGHT_ENERGY[light_id] * [0.85,1.1,1.6,1.25][int(style.atmosphere)]
 		lamp.omni_range = 3.0
 		lamp.shadow_enabled = false
 		group.add_child(lamp)

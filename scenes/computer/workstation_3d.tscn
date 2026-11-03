@@ -1,4 +1,4 @@
-[gd_scene load_steps=16 format=3]
+[gd_scene load_steps=18 format=3]
 
 [ext_resource type="Script" path="res://scripts/life/workstation_3d.gd" id="1"]
 [ext_resource type="PackedScene" path="res://scenes/computer/hardware/modern_desk.tscn" id="2"]
@@ -15,12 +15,30 @@
 [sub_resource type="BoxShape3D" id="DeskPick"]
 size = Vector3(4.8, 0.1, 2.3)
 
+[sub_resource type="ProceduralSkyMaterial" id="RoomSkyGradient"]
+sky_top_color = Color(0.52, 0.65, 0.76, 1)
+sky_horizon_color = Color(0.93, 0.88, 0.79, 1)
+ground_bottom_color = Color(0.30, 0.33, 0.34, 1)
+ground_horizon_color = Color(0.68, 0.68, 0.64, 1)
+use_debanding = true
+
+[sub_resource type="Sky" id="RoomReflectionSky"]
+sky_material = SubResource("RoomSkyGradient")
+
 [sub_resource type="Environment" id="StudioEnvironment"]
 background_mode = 1
 background_color = Color(0.72, 0.76, 0.77, 1)
 ambient_light_source = 2
 ambient_light_color = Color(0.82, 0.83, 0.81, 1)
 ambient_light_energy = 0.34
+sky = SubResource("RoomReflectionSky")
+reflected_light_source = 2
+tonemap_mode = 2
+tonemap_exposure = 1.02
+ssao_enabled = true
+ssao_radius = 0.55
+ssao_intensity = 1.15
+ssao_power = 1.28
 
 [sub_resource type="BoxMesh" id="PartitionPreviewBox"]
 size = Vector3(1, 0.1, 0.14)
@@ -40,9 +58,11 @@ environment = SubResource("StudioEnvironment")
 rotation_degrees = Vector3(-43, -30, 0)
 light_color = Color(1, 0.94, 0.84, 1)
 light_energy = 0.75
-shadow_opacity = 0.78
+shadow_opacity = 0.68
 shadow_enabled = true
-directional_shadow_max_distance = 16.0
+shadow_blur = 1.6
+directional_shadow_blend_splits = true
+directional_shadow_max_distance = 18.0
 
 [node name="FillLight" type="DirectionalLight3D" parent="."]
 rotation_degrees = Vector3(-25, 140, 0)
