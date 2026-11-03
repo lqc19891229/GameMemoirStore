@@ -60,20 +60,28 @@ func _process(delta: float) -> void:
 		streak.position.y = 1.53 + phase
 
 func _make_rain_loop() -> AudioStreamWAV:
-	# Deterministic, low-volume filtered-noise bed. No external asset or
-	# platform codec dependency; created only on the first rainy preview.
+	# A two-second, seeded broadband rain bed. Crossfade the end to the
+	# beginning so the continuous loop has no once-per-second amplitude dip.
 	const RATE := 11025
-	const SAMPLES := 11025
-	var pcm := PackedByteArray()
-	pcm.resize(SAMPLES * 2)
+	const SAMPLES := 22050
+	const SEAM := 700
+	var values := PackedFloat32Array()
+	values.resize(SAMPLES)
 	var seed_value := 1731
 	var smoothed := 0.0
 	for i in range(SAMPLES):
 		seed_value = int((seed_value * 48271) % 2147483647)
 		var noise := float(seed_value) / 1073741823.5 - 1.0
 		smoothed = smoothed * .82 + noise * .18
-		var fade := minf(1.0, minf(float(i), float(SAMPLES - 1 - i)) / 300.0)
-		var sample := int(clampf(smoothed * fade * 2800.0, -32767.0, 32767.0))
+		values[i] = smoothed
+	for i in range(SEAM):
+		var blend := float(i) / float(SEAM - 1)
+		var tail := SAMPLES - SEAM + i
+		values[tail] = lerpf(values[tail], values[i], blend)
+	var pcm := PackedByteArray()
+	pcm.resize(SAMPLES * 2)
+	for i in range(SAMPLES):
+		var sample := int(clampf(values[i] * 2800.0, -32767.0, 32767.0))
 		pcm[i * 2] = sample & 255
 		pcm[i * 2 + 1] = (sample >> 8) & 255
 	var audio := AudioStreamWAV.new()
