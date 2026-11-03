@@ -413,6 +413,7 @@ func set_blueprint_mode(enabled: bool) -> void:
 		world.layout.end_aperture_drag()
 		dragging_aperture = false
 	if enabled and not world.layout.placing_role.is_empty(): world.layout.cancel_placement()
+	if enabled: world.layout.clear_group_selection()
 	blueprint_mode = enabled
 	wall_drag_button = 0
 	_hide_wall_preview()
@@ -1025,6 +1026,8 @@ func _input(event: InputEvent) -> void:
 					elif room_ui.catalog_open:
 						room_ui.catalog_open = false
 						room_ui.sync()
+					elif world.layout.group_selection.size() > 1:
+						world.layout.clear_group_selection()
 					else:
 						finish_layout(false)
 				KEY_B:
@@ -1114,19 +1117,24 @@ func _layout_input(event: InputEvent) -> void:
 			else:
 				_cancel_pending_furniture_drag()
 				layout.snap_bypass = event.alt_pressed
-				var handle: String = layout.pick_handle(event.position)
-				if not handle.is_empty():
-					# Precision gizmo handles retain their immediate response.
-					layout.begin_drag(event.position,"rotate" if handle == "rotate" else "move",handle,true)
+				if event.ctrl_pressed and not blueprint_mode and room_ui.mode == "furniture":
+					# Ctrl+click is selection-only, never a hidden movement
+					# gesture or an unintended undo record.
+					layout.toggle_group_member(world.pick_at(event.position))
 				else:
-					var role: String = world.pick_at(event.position)
-					if not role.is_empty():
-						layout.select(role)
-						# A click selects without touching the pose. Dragging
-						# starts after a short screen-space movement threshold.
-						pending_drag_role = role
-						pending_drag_start = event.position
-						pending_drag_operation = "rotate" if event.shift_pressed else "move"
+					var handle: String = layout.pick_handle(event.position)
+					if not handle.is_empty():
+						# Gizmo handles move/rotate the entire current selection.
+						layout.begin_drag(event.position,"rotate" if handle == "rotate" else "move",handle,true)
+					else:
+						var role: String = world.pick_at(event.position)
+						if not role.is_empty():
+							layout.select(role,true)
+							# A click selects without touching the pose. Dragging
+							# starts after a short screen-space movement threshold.
+							pending_drag_role = role
+							pending_drag_start = event.position
+							pending_drag_operation = "rotate" if event.shift_pressed else "move"
 		elif event.button_index == MOUSE_BUTTON_RIGHT:
 			if event.pressed: _cancel_pending_furniture_drag()
 			orbiting = event.pressed
