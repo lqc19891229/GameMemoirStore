@@ -12,6 +12,13 @@ var room_ui
 var rail: VBoxContainer
 var action_strip: HBoxContainer
 var selection_chip: Label
+var group_button: Button
+var group_panel: PanelContainer
+var group_summary: Label
+var group_member_list: VBoxContainer
+var group_member_buttons: Dictionary = {}
+var group_solo_button: Button
+var _member_signature := ""
 var swatches: PanelContainer
 var arrange_panel: PanelContainer
 var arrange_summary: Label
@@ -119,6 +126,25 @@ func _build_object_actions(canvas: Control) -> void:
 		action_strip.add_child(button)
 		action_buttons[key] = button
 		button.pressed.connect(func() -> void: perform_action(key))
+	# A small member manager appears only for actual multi-selection; the
+	# existing solo ribbon keeps precisely its original six actions.
+	group_button = Button.new()
+	group_button.name = "GroupMembersToggle"
+	group_button.text = "成员"
+	group_button.tooltip_text = "查看多选家具 · 切换主控 · 移除成员"
+	group_button.toggle_mode = true
+	group_button.custom_minimum_size = Vector2(76,43)
+	group_button.visible = false
+	group_button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	action_strip.add_child(group_button)
+	group_button.pressed.connect(func() -> void:
+		if host.world.layout.group_selection.size() < 2: return
+		hide_colors()
+		hide_arrange()
+		group_panel.visible = not group_panel.visible
+		_refresh_group_members()
+		room_ui.sync()
+	)
 	# Display the current selection without blocking object picking or buttons.
 	selection_chip = Label.new()
 	selection_chip.name = "SelectedFurnitureChip"
@@ -179,6 +205,108 @@ func _build_object_actions(canvas: Control) -> void:
 		color_buttons.append(button)
 		button.pressed.connect(func() -> void: apply_color(color_index))
 	_build_arrangement(canvas)
+	_build_group_members(canvas)
+
+func _build_group_members(canvas: Control) -> void:
+	group_panel = PanelContainer.new()
+	group_panel.name = "SelectedGroupMembersPanel"
+	group_panel.visible = false
+	group_panel.custom_minimum_size = Vector2(296,0)
+	group_panel.mouse_filter = Control.MOUSE_FILTER_PASS
+	var shell := StyleBoxFlat.new()
+	shell.bg_color = Color("f4f6f2",0.98)
+	shell.border_color = Color("9dbbaa")
+	shell.set_border_width_all(1)
+	shell.set_corner_radius_all(10)
+	shell.content_margin_left = 10
+	shell.content_margin_right = 10
+	shell.content_margin_top = 9
+	shell.content_margin_bottom = 9
+	group_panel.add_theme_stylebox_override("panel",shell)
+	canvas.add_child(group_panel)
+	var content := VBoxContainer.new()
+	content.name = "GroupMembersContent"
+	content.add_theme_constant_override("separation",6)
+	group_panel.add_child(content)
+	group_summary = Label.new()
+	group_summary.name = "GroupMembersSummary"
+	group_summary.add_theme_font_size_override("font_size",12)
+	group_summary.add_theme_color_override("font_color",Color("315341"))
+	content.add_child(group_summary)
+	var scroll := ScrollContainer.new()
+	scroll.name = "GroupMembersScroll"
+	scroll.custom_minimum_size = Vector2(274,0)
+	scroll.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+	content.add_child(scroll)
+	group_member_list = VBoxContainer.new()
+	group_member_list.name = "GroupMembersList"
+	group_member_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	group_member_list.add_theme_constant_override("separation",4)
+	scroll.add_child(group_member_list)
+	group_solo_button = Button.new()
+	group_solo_button.name = "GroupRestoreSolo"
+	group_solo_button.text = "仅保留主控家具 · Esc"
+	group_solo_button.tooltip_text = "退出多选，不改变任何家具位置"
+	group_solo_button.custom_minimum_size = Vector2(274,31)
+	content.add_child(group_solo_button)
+	group_solo_button.pressed.connect(func() -> void:
+		host.world.layout.clear_group_selection()
+		hide_group_members()
+		room_ui.sync()
+	)
+
+func _refresh_group_members() -> void:
+	var layout = host.world.layout
+	if layout.group_selection.size() < 2:
+		hide_group_members()
+		return
+	group_summary.text = "已选 %d 件 · 点击“设为主控”或移除成员" % layout.group_selection.size()
+	var signature := "|".join(layout.group_selection)
+	if signature != _member_signature:
+		_member_signature = signature
+		for old_row in group_member_list.get_children():
+			group_member_list.remove_child(old_row)
+			old_row.queue_free()
+		group_member_buttons.clear()
+		for role: String in layout.group_selection:
+			var member_role := role
+			var row := HBoxContainer.new()
+			row.name = "GroupMember_" + member_role
+			row.add_theme_constant_override("separation",5)
+			group_member_list.add_child(row)
+			var name_label := Label.new()
+			name_label.text = layout.name_for(role)
+			name_label.custom_minimum_size = Vector2(106,30)
+			name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			name_label.clip_text = true
+			name_label.tooltip_text = role
+			row.add_child(name_label)
+			var primary := Button.new()
+			primary.text = "设为主控"
+			primary.custom_minimum_size = Vector2(75,30)
+			primary.tooltip_text = "更换手柄的控制对象，不改变整组"
+			row.add_child(primary)
+			primary.pressed.connect(func() -> void:
+				layout.set_primary_group_member(member_role)
+				room_ui.sync()
+			)
+			var remove := Button.new()
+			remove.text = "移除"
+			remove.custom_minimum_size = Vector2(51,30)
+			remove.tooltip_text = "仅从多选中移除，不收纳家具"
+			row.add_child(remove)
+			remove.pressed.connect(func() -> void:
+				layout.remove_group_member(member_role)
+				room_ui.sync()
+			)
+			group_member_buttons[member_role] = {"primary":primary,"remove":remove}
+	for role: String in layout.group_selection:
+		if not group_member_buttons.has(role): continue
+		var primary: Button = group_member_buttons[role].primary
+		primary.disabled = role == layout.selected
+		primary.text = "主控中" if primary.disabled else "设为主控"
+	var scroll: ScrollContainer = group_member_list.get_parent()
+	scroll.custom_minimum_size.y = minf(196.0,float(layout.group_selection.size())*36.0)
 
 func _build_arrangement(canvas: Control) -> void:
 	arrange_panel = PanelContainer.new()
@@ -275,6 +403,7 @@ func perform_action(id: String) -> void:
 	if layout.group_selection.size() > 1 and id not in ["move","rotate"]: return
 	if id != "arrange": hide_arrange()
 	if id != "paint": hide_colors()
+	if id not in ["move","rotate"]: hide_group_members()
 	match id:
 		"move":
 			layout.set_tool("move")
@@ -320,10 +449,15 @@ func hide_colors() -> void:
 func hide_arrange() -> void:
 	if is_instance_valid(arrange_panel): arrange_panel.hide()
 
+func hide_group_members() -> void:
+	if is_instance_valid(group_panel): group_panel.hide()
+	if is_instance_valid(group_button): group_button.set_pressed_no_signal(false)
+
 func _hide_object_actions() -> void:
 	action_strip.hide()
 	selection_chip.hide()
 	hide_arrange()
+	hide_group_members()
 
 func _refresh_arrangement(role: String) -> void:
 	var layout = host.world.layout
@@ -352,6 +486,7 @@ func sync(active: bool) -> void:
 	if role != _current_selection or group_size != _current_group_size:
 		hide_colors()
 		hide_arrange()
+		if group_size < 2: hide_group_members()
 		_current_selection = role
 		_current_group_size = group_size
 	var eligible: bool = layout.nodes.has(role) and layout.placed_instances.has(role) and InventoryData.is_room_furniture_role(layout.Data.base_role(role))
@@ -364,6 +499,10 @@ func sync(active: bool) -> void:
 	action_buttons["paint"].set_pressed_no_signal(swatches.visible)
 	action_buttons["arrange"].set_pressed_no_signal(arrange_panel.visible)
 	var multi: bool = group_size > 1
+	group_button.visible = multi
+	group_button.text = "成员 %d" % group_size if multi else "成员"
+	group_button.set_pressed_no_signal(multi and group_panel.visible)
+	if group_panel.visible: _refresh_group_members()
 	var ordinary_hints := {
 		"paint":"选择单件家具颜色",
 		"arrange":"附近家具对齐 · 同类家具等距排列",
@@ -413,7 +552,9 @@ func _reposition() -> void:
 	var node: Node3D = layout.nodes[role]
 	var view: Vector2 = host.get_viewport().get_visible_rect().size
 	var camera: Camera3D = host.world.camera
-	var world_point: Vector3 = node.global_position + Vector3.UP * (layout.bounds_for(role).y + .24)
+	# The full group ribbon stays above the shared pivot, independent of
+	# which individual item is the primary selection.
+	var world_point: Vector3 = layout.group_center_world_point() if layout.group_selection.size() > 1 else node.global_position + Vector3.UP * (layout.bounds_for(role).y + .24)
 	if camera.is_position_behind(world_point):
 		_hide_object_actions()
 		hide_colors()
@@ -424,6 +565,7 @@ func _reposition() -> void:
 		hide_colors()
 		return
 	var total_width := float(ACTIONS.size()) * 43.0 + float(ACTIONS.size()-1) * 5.0
+	if layout.group_selection.size() > 1: total_width += 76.0 + 5.0
 	action_strip.position = Vector2(clampf(pixel.x-total_width*.5,8, maxf(8,view.x-total_width-8)),clampf(pixel.y-76,164,maxf(164,view.y-114)))
 	selection_chip.text = "已选 %d 件 · %s" % [layout.group_selection.size(),layout.name_for(role)] if layout.group_selection.size() > 1 else "已选 · %s" % layout.name_for(role)
 	selection_chip.tooltip_text = "整组：" + "、".join(layout.group_selection) if layout.group_selection.size() > 1 else layout.name_for(role)
@@ -438,6 +580,15 @@ func _reposition() -> void:
 		var below := action_strip.position.y + 53.0
 		var panel_y := below if below+panel_height+10.0 <= view.y else action_strip.position.y-panel_height-8.0
 		arrange_panel.position = Vector2(
+			clampf(action_strip.position.x + (total_width-panel_width)*.5,8.0,maxf(8.0,view.x-panel_width-8.0)),
+			clampf(panel_y,125.0,maxf(125.0,view.y-panel_height-8.0))
+		)
+	if group_panel.visible:
+		var panel_width := maxf(296.0,group_panel.size.x)
+		var panel_height := maxf(110.0,group_panel.size.y)
+		var panel_y := action_strip.position.y + 53.0
+		if panel_y+panel_height+8.0 > view.y: panel_y = action_strip.position.y-panel_height-8.0
+		group_panel.position = Vector2(
 			clampf(action_strip.position.x + (total_width-panel_width)*.5,8.0,maxf(8.0,view.x-panel_width-8.0)),
 			clampf(panel_y,125.0,maxf(125.0,view.y-panel_height-8.0))
 		)
