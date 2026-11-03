@@ -79,6 +79,11 @@ var group_copy_preview_valid := false
 var group_copy_preview_offset := Vector2.ZERO
 var group_copy_preview_yaw := 0.0
 var group_copy_preview_plan: Dictionary = {}
+var group_copy_repeat := false
+var group_copy_preview_placed_count := 0
+var group_copy_preview_end_reason := ""
+var group_copy_last_roles: Array[String] = []
+var group_copy_last_primary := ""
 var group_copy_preview_error := ""
 var group_copy_preview_nodes: Dictionary = {}
 var group_copy_preview_sources: Array[String] = []
@@ -500,6 +505,11 @@ func begin_group_copy_preview() -> bool:
 	var suggested: Dictionary = _find_group_copy_offset(Vector2.ZERO,0.0)
 	if suggested.has("offset"): offset = suggested.offset
 	group_copy_preview_plan = plan.copies.duplicate(true)
+	group_copy_repeat = false
+	group_copy_preview_placed_count = 0
+	group_copy_preview_end_reason = ""
+	group_copy_last_roles.clear()
+	group_copy_last_primary = ""
 	group_copy_preview_yaw = 0.0
 	group_copy_preview_good = _copy_preview_material(true)
 	group_copy_preview_bad = _copy_preview_material(false)
@@ -519,6 +529,12 @@ func begin_group_copy_preview() -> bool:
 		group_copy_preview_nodes[source] = ghost
 	group_copy_preview_active = true
 	set_group_copy_preview_offset(offset)
+	return true
+
+func set_group_copy_repeat(enabled: bool) -> bool:
+	if not group_copy_preview_active or group_copy_repeat == enabled: return false
+	group_copy_repeat = enabled
+	changed.emit()
 	return true
 
 func set_group_copy_preview_offset(offset: Vector2, fine: bool = false) -> bool:
@@ -579,17 +595,47 @@ func group_copy_preview_at(pixel: Vector2) -> void:
 func confirm_group_copy_preview() -> bool:
 	if not group_copy_preview_active or not group_copy_preview_valid: return false
 	var plan: Dictionary = group_duplicate_plan()
-	# Commit exactly the previewed UIDs and poses; reject stale stock plans.
+	# Each placement independently rechecks the exact pre-reserved stock IDs.
 	if not plan.has("copies") or plan.copies != group_copy_preview_plan:
 		set_group_copy_preview_offset(group_copy_preview_offset,true)
 		return false
+	var original_roles: Array[String] = group_copy_preview_sources.duplicate()
+	var original_primary: String = selected
 	var result: bool = duplicate_group(group_copy_preview_offset,group_copy_preview_yaw)
-	if result: cancel_group_copy_preview()
-	else:
+	if not result:
 		group_copy_preview_valid = false
 		group_copy_preview_error = "落点已失效 · 请重新选择空地"
 		changed.emit()
-	return result
+		return false
+	group_copy_preview_placed_count += 1
+	group_copy_last_roles = group_selection.duplicate()
+	group_copy_last_primary = selected
+	if not group_copy_repeat:
+		cancel_group_copy_preview()
+		return true
+	# Keep copying the *original source group*, not the newly placed copies.
+	# The source selection and its UID/color mapping stay unchanged; each
+	# successful batch has already made its own independent undo record.
+	group_selection = original_roles
+	selected = original_primary
+	var next_plan: Dictionary = group_duplicate_plan()
+	if next_plan.has("error"):
+		cancel_group_copy_preview()
+		group_copy_preview_end_reason = str(next_plan.error)
+		return true
+	group_copy_preview_plan = next_plan.copies.duplicate(true)
+	# The just-placed batch now occupies the old ghost location. Automatically
+	# search from there for a free spot, retaining the player's chosen yaw.
+	var next_spot: Dictionary = _find_group_copy_offset(group_copy_preview_offset,group_copy_preview_yaw)
+	if next_spot.is_empty(): next_spot = _find_group_copy_offset(Vector2.ZERO,group_copy_preview_yaw)
+	if next_spot.has("offset"):
+		set_group_copy_preview_offset(next_spot.offset,true)
+	else:
+		set_group_copy_preview_offset(group_copy_preview_offset,true)
+		group_copy_preview_valid = false
+		group_copy_preview_error = "暂无可用空位 · 移动预览或 Esc 结束连续复制"
+		changed.emit()
+	return true
 
 func cancel_group_copy_preview() -> void:
 	if not group_copy_preview_active and group_copy_preview_nodes.is_empty(): return
@@ -597,6 +643,7 @@ func cancel_group_copy_preview() -> void:
 	group_copy_preview_valid = false
 	group_copy_preview_error = ""
 	group_copy_preview_yaw = 0.0
+	group_copy_repeat = false
 	group_copy_preview_plan.clear()
 	for ghost: Node3D in group_copy_preview_nodes.values():
 		if is_instance_valid(ghost): ghost.queue_free()
@@ -604,6 +651,18 @@ func cancel_group_copy_preview() -> void:
 	group_copy_preview_sources.clear()
 	group_copy_preview_good = null
 	group_copy_preview_bad = null
+	# When the user finishes a continuous placement session, focus their
+	# latest copies. Before the first commit, cancel preserves the sources.
+	if active and group_copy_last_roles.size() > 1:
+		var placed_roles: Array[String] = []
+		for role: String in group_copy_last_roles:
+			if _group_eligible(role): placed_roles.append(role)
+		if placed_roles.size() > 1:
+			group_selection = placed_roles
+			selected = group_copy_last_primary if placed_roles.has(group_copy_last_primary) else placed_roles.back()
+			update()
+	group_copy_last_roles.clear()
+	group_copy_last_primary = ""
 	changed.emit()
 
 func store_group() -> bool:
