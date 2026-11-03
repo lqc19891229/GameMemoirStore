@@ -263,7 +263,7 @@ func _build_left_wall(wall: Material, trim: Material, wood: Material, metal: Mat
 	bead_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	for bead in range(12):
 		var bead_z: float = window_z - .98 + float(bead % 6) * .39
-		var bead_y: float = 1.48 + float(bead / 6) * .76 + float(bead % 3) * .11
+		var bead_y: float = 1.48 + floorf(float(bead) / 6.0) * .76 + float(bead % 3) * .11
 		var size := .012 + float(bead % 3) * .006
 		_sphere(droplets,"GlassBead_%02d" % bead,Vector3(.009,size,size*.70),
 			Vector3(x+.045,bead_y,bead_z),bead_mat)
