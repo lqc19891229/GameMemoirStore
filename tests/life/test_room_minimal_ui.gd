@@ -69,7 +69,7 @@ func run() -> void:
 	check(layout.tool == "move", "object context move restores existing gizmo without replacing direct dragging")
 	ui.advanced_toggle.pressed.emit()
 	check(ui.advanced and desktop.get_node("%LayoutPanel").visible, "precision controls can still be expanded on demand")
-	check(desktop.get_node("%LayoutPose").visible and desktop.get_node("%FurnitureAlignmentTools").visible, "advanced mode keeps real transform and alignment controls")
+	check(desktop.get_node("%LayoutPose").visible and ui.inspector_content.get_node("FurnitureAlignmentTools").visible, "advanced mode keeps real transform and alignment controls")
 	ui.advanced_toggle.pressed.emit()
 	check(not ui.advanced and not desktop.get_node("%LayoutPanel").visible, "returning to direct manipulation hides precision inspector")
 	tools.category_buttons["tables"].pressed.emit()
