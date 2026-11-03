@@ -32,6 +32,9 @@ func run() -> void:
 	if player != null:
 		var stream := player.stream as AudioStreamWAV
 		check(stream.loop_mode == AudioStreamWAV.LOOP_FORWARD and stream.data.size() > 1000, "rain stream is looping PCM")
+		check(stream.data.size() == 44100, "two-second rain loop uses compact 11 kHz 16-bit audio")
+		var pcm: PackedByteArray = stream.data
+		check(pcm[0] == pcm[pcm.size()-2] and pcm[1] == pcm[pcm.size()-1], "loop seam samples are identical")
 		check(player.playing and player.volume_db < -15.0, "rain ambience is low-volume and active")
 	var first_drop := rain.get_child(0) as Node3D
 	var before := first_drop.position.y
