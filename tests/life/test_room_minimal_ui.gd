@@ -31,7 +31,6 @@ func pointer_click(control: Control) -> void:
 	var movement := InputEventMouseMotion.new()
 	movement.position = point
 	movement.global_position = point
-	root.window_input.emit(movement.xformed_by(root.get_final_transform()))
 	root.push_input(movement,true)
 	await process_frame
 	var hovered: Control = root.gui_get_hovered_control()
@@ -46,7 +45,6 @@ func pointer_click(control: Control) -> void:
 		event.global_position = point
 		event.button_index = MOUSE_BUTTON_LEFT
 		event.pressed = pressed
-		root.window_input.emit(event.xformed_by(root.get_final_transform()))
 		root.push_input(event,true)
 	await frames()
 	print("UI_HIT_TRACE after=",control.name," hovered=",root.gui_get_hovered_control().get_path() if root.gui_get_hovered_control() != null else "none")
