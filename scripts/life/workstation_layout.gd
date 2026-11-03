@@ -77,6 +77,8 @@ var placing_before: Dictionary = {}
 var group_copy_preview_active := false
 var group_copy_preview_valid := false
 var group_copy_preview_offset := Vector2.ZERO
+var group_copy_preview_yaw := 0.0
+var group_copy_preview_plan: Dictionary = {}
 var group_copy_preview_error := ""
 var group_copy_preview_nodes: Dictionary = {}
 var group_copy_preview_sources: Array[String] = []
@@ -377,12 +379,20 @@ func group_duplicate_plan() -> Dictionary:
 		copies[source] = available
 	return {"copies":copies}
 
-func _group_duplicate_targets(displacement: Vector2) -> Dictionary:
+func _group_copy_pose(source: String, displacement: Vector2, yaw: float, pivot: Vector2) -> Transform3D:
+	var target: Transform3D = nodes[source].transform
+	var initial := Vector2(target.origin.x,target.origin.z)
+	var rotated: Vector2 = (initial-pivot).rotated(-yaw)+pivot+displacement
+	target.origin.x = rotated.x
+	target.origin.z = rotated.y
+	target.basis = Basis(Vector3.UP,yaw)*target.basis
+	return target
+
+func _group_duplicate_targets(displacement: Vector2, yaw: float = 0.0) -> Dictionary:
 	var targets := {}
+	var pivot: Vector2 = group_pivot()
 	for source: String in group_selection:
-		var target: Transform3D = nodes[source].transform
-		target.origin.x += displacement.x
-		target.origin.z += displacement.y
+		var target: Transform3D = _group_copy_pose(source,displacement,yaw,pivot)
 		var polygon: PackedVector2Array = _footprint_at(source,target,collision_margin)
 		if not _blocker(source,polygon).is_empty(): return {}
 		if is_blocking(source):
@@ -395,7 +405,7 @@ func _group_duplicate_targets(displacement: Vector2) -> Dictionary:
 		targets[source] = target
 	return targets
 
-func duplicate_group(displacement: Variant = null) -> bool:
+func duplicate_group(displacement: Variant = null, yaw: float = 0.0) -> bool:
 	var plan: Dictionary = group_duplicate_plan()
 	if plan.has("error"):
 		message = str(plan.error)
@@ -407,7 +417,7 @@ func duplicate_group(displacement: Variant = null) -> bool:
 	# relative X/Z positions and orientations. No nodes or UIDs are reserved
 	# until the whole constellation passes the placement test.
 	if displacement is Vector2:
-		targets = _group_duplicate_targets(displacement)
+		targets = _group_duplicate_targets(displacement,yaw)
 	else:
 		for ring in range(1,21):
 			for step in range(24):
@@ -468,6 +478,17 @@ func _copy_preview_material(good: bool) -> StandardMaterial3D:
 	material.cull_mode = BaseMaterial3D.CULL_DISABLED
 	return material
 
+func _find_group_copy_offset(near: Vector2, yaw: float) -> Dictionary:
+	# Pure search: does not instantiate copies or touch owned inventory.
+	for ring in range(1,21):
+		for step in range(24):
+			var angle: float = TAU*float(step)/24.0
+			var candidate: Vector2 = near+Vector2(cos(angle),sin(angle))*float(ring)*.25
+			if snapping and not snap_bypass: candidate = candidate.snapped(Vector2.ONE*grid_step)
+			if not _group_duplicate_targets(candidate,yaw).is_empty():
+				return {"offset":candidate}
+	return {}
+
 func begin_group_copy_preview() -> bool:
 	if group_copy_preview_active: return false
 	var plan: Dictionary = group_duplicate_plan()
@@ -476,19 +497,10 @@ func begin_group_copy_preview() -> bool:
 		changed.emit()
 		return false
 	var offset := Vector2(.75,.75)
-	# Start on the same first safe candidate as the original P38 auto-copy.
-	# The player can override it immediately with the pointer.
-	var found := false
-	for ring in range(1,21):
-		for step in range(24):
-			var angle: float = TAU*float(step)/24.0
-			var candidate := Vector2(cos(angle),sin(angle))*float(ring)*.25
-			if snapping: candidate = candidate.snapped(Vector2.ONE*grid_step)
-			if not _group_duplicate_targets(candidate).is_empty():
-				offset = candidate
-				found = true
-				break
-		if found: break
+	var suggested: Dictionary = _find_group_copy_offset(Vector2.ZERO,0.0)
+	if suggested.has("offset"): offset = suggested.offset
+	group_copy_preview_plan = plan.copies.duplicate(true)
+	group_copy_preview_yaw = 0.0
 	group_copy_preview_good = _copy_preview_material(true)
 	group_copy_preview_bad = _copy_preview_material(false)
 	group_copy_preview_sources = group_selection.duplicate()
@@ -509,22 +521,49 @@ func begin_group_copy_preview() -> bool:
 	set_group_copy_preview_offset(offset)
 	return true
 
-func set_group_copy_preview_offset(offset: Vector2) -> bool:
+func set_group_copy_preview_offset(offset: Vector2, fine: bool = false) -> bool:
 	if not group_copy_preview_active: return false
-	group_copy_preview_offset = offset.snapped(Vector2.ONE*grid_step) if snapping and not snap_bypass else offset
-	var targets: Dictionary = _group_duplicate_targets(group_copy_preview_offset)
+	group_copy_preview_offset = offset.snapped(Vector2.ONE*grid_step) if snapping and not snap_bypass and not fine else offset
+	var plan: Dictionary = group_duplicate_plan()
+	var inventory_good: bool = plan.has("copies") and plan.copies == group_copy_preview_plan
+	var targets: Dictionary = _group_duplicate_targets(group_copy_preview_offset,group_copy_preview_yaw) if inventory_good else {}
 	group_copy_preview_valid = targets.size() == group_copy_preview_sources.size()
-	group_copy_preview_error = "" if group_copy_preview_valid else "此处空间不足或家具重叠 · 请移动至空地"
+	group_copy_preview_error = "" if group_copy_preview_valid else "预留库存发生变化 · 请取消并重试" if not inventory_good else "此处空间不足或家具重叠 · 请移动至空地"
+	var pivot: Vector2 = group_pivot()
 	for source: String in group_copy_preview_sources:
 		var ghost: Node3D = group_copy_preview_nodes[source]
-		var pose: Transform3D = nodes[source].transform
-		pose.origin.x += group_copy_preview_offset.x
-		pose.origin.z += group_copy_preview_offset.y
-		ghost.transform = pose
+		ghost.transform = _group_copy_pose(source,group_copy_preview_offset,group_copy_preview_yaw,pivot)
 		for mesh: MeshInstance3D in ghost.find_children("*","MeshInstance3D",true,false):
 			mesh.material_override = group_copy_preview_good if group_copy_preview_valid else group_copy_preview_bad
 	changed.emit()
 	return group_copy_preview_valid
+
+func nudge_group_copy_preview(direction: Vector2, fine: bool = false) -> bool:
+	if not group_copy_preview_active or direction == Vector2.ZERO: return false
+	var unit := .01 if fine else grid_step
+	return set_group_copy_preview_offset(group_copy_preview_offset+direction*unit,fine)
+
+func rotate_group_copy_preview_step(direction: float, fine: bool = false) -> bool:
+	if not group_copy_preview_active or is_zero_approx(direction): return false
+	group_copy_preview_yaw = wrapf(group_copy_preview_yaw+deg_to_rad(1.0 if fine else angle_step)*signf(direction),-PI,PI)
+	# Rotate around the same centroid as P35; preserve fine translation.
+	return set_group_copy_preview_offset(group_copy_preview_offset,true)
+
+func find_group_copy_preview_space() -> bool:
+	if not group_copy_preview_active: return false
+	var plan: Dictionary = group_duplicate_plan()
+	if not plan.has("copies") or plan.copies != group_copy_preview_plan:
+		set_group_copy_preview_offset(group_copy_preview_offset,true)
+		return false
+	var candidate: Dictionary = _find_group_copy_offset(group_copy_preview_offset,group_copy_preview_yaw)
+	if candidate.is_empty():
+		candidate = _find_group_copy_offset(Vector2.ZERO,group_copy_preview_yaw)
+	if candidate.has("offset"):
+		return set_group_copy_preview_offset(candidate.offset,true)
+	group_copy_preview_valid = false
+	group_copy_preview_error = "未找到可容纳当前朝向整组家具的空位"
+	changed.emit()
+	return false
 
 func group_copy_preview_at(pixel: Vector2) -> void:
 	if not group_copy_preview_active: return
@@ -539,9 +578,12 @@ func group_copy_preview_at(pixel: Vector2) -> void:
 
 func confirm_group_copy_preview() -> bool:
 	if not group_copy_preview_active or not group_copy_preview_valid: return false
-	# The stock preflight and collision calculation are run again at commit
-	# time, so a stale preview cannot consume a different inventory UID.
-	var result: bool = duplicate_group(group_copy_preview_offset)
+	var plan: Dictionary = group_duplicate_plan()
+	# Commit exactly the previewed UIDs and poses; reject stale stock plans.
+	if not plan.has("copies") or plan.copies != group_copy_preview_plan:
+		set_group_copy_preview_offset(group_copy_preview_offset,true)
+		return false
+	var result: bool = duplicate_group(group_copy_preview_offset,group_copy_preview_yaw)
 	if result: cancel_group_copy_preview()
 	else:
 		group_copy_preview_valid = false
@@ -554,6 +596,8 @@ func cancel_group_copy_preview() -> void:
 	group_copy_preview_active = false
 	group_copy_preview_valid = false
 	group_copy_preview_error = ""
+	group_copy_preview_yaw = 0.0
+	group_copy_preview_plan.clear()
 	for ghost: Node3D in group_copy_preview_nodes.values():
 		if is_instance_valid(ghost): ghost.queue_free()
 	group_copy_preview_nodes.clear()
