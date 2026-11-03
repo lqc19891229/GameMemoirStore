@@ -943,6 +943,37 @@ func _push_screen_input(event: InputEvent, allow_outside: bool = false) -> bool:
 	%DesktopViewport.push_input(mapped, true)
 	return true
 
+func _handle_room_precision_key(event: InputEventKey) -> bool:
+	# Scene-only hotkeys: preserve inventory navigation, blueprint tools,
+	# text input and browser/desktop app shortcuts.
+	if blueprint_mode or room_ui.mode != "furniture" or room_ui.catalog_open: return false
+	if event.ctrl_pressed or event.alt_pressed or event.meta_pressed: return false
+	var layout = world.layout
+	if not layout.gesture.is_empty() or not pending_drag_role.is_empty(): return false
+	var direction := Vector2.ZERO
+	match event.keycode:
+		KEY_LEFT: direction = Vector2.LEFT
+		KEY_RIGHT: direction = Vector2.RIGHT
+		KEY_UP: direction = Vector2.UP
+		KEY_DOWN: direction = Vector2.DOWN
+	if not direction.is_zero_approx():
+		var moved: bool = layout.nudge_selected(direction,event.shift_pressed)
+		room_ui.show_keyboard_feedback(("已微调 1 cm" if event.shift_pressed else "已移动一个网格") if moved else "已到达边界 · 无法继续移动")
+		return true
+	# Continuous arrow-key nudges are useful, but holding S/Q/E should not
+	# rapidly toggle snapping or cause unexpected multiple rotations.
+	if event.echo: return false
+	match event.keycode:
+		KEY_S:
+			layout.set_snapping(not layout.snapping)
+			room_ui.show_keyboard_feedback("网格吸附：%s · S 切换" % ("开启" if layout.snapping else "关闭"))
+			return true
+		KEY_Q, KEY_E:
+			layout.rotate_step(-1 if event.keycode == KEY_Q else 1,event.shift_pressed)
+			room_ui.show_keyboard_feedback("精细旋转 1°" if event.shift_pressed else "旋转 %.0f°" % layout.angle_step)
+			return true
+	return false
+
 func _input(event: InputEvent) -> void:
 	if modal_input_guard:
 		get_viewport().set_input_as_handled()
@@ -952,12 +983,16 @@ func _input(event: InputEvent) -> void:
 		_clear_gesture.call_deferred()
 	if not event is InputEventKey or world.transitioning: return
 	if world.layout.active:
-		# Room-editor search fields must receive printable keys normally.
-		# Preserve Escape so the user can still cancel an in-progress action.
-		if get_viewport().gui_get_focus_owner() is LineEdit and event.keycode != KEY_ESCAPE:
+		# Focused text, drop-down and numeric controls retain their own keys.
+		# Escape still cancels the current room action.
+		var focused: Control = get_viewport().gui_get_focus_owner()
+		if (focused is LineEdit or focused is TextEdit or focused is OptionButton or focused is Range) and event.keycode != KEY_ESCAPE:
 			return
 		if event.pressed and not event.echo and blueprint_mode and event.keycode == KEY_ESCAPE:
 			set_blueprint_mode(false)
+			get_viewport().set_input_as_handled()
+			return
+		if event.pressed and _handle_room_precision_key(event):
 			get_viewport().set_input_as_handled()
 			return
 		if event.pressed and not event.echo:
@@ -995,8 +1030,6 @@ func _input(event: InputEvent) -> void:
 						room_ui.sync()
 				KEY_G: world.layout.set_tool("move")
 				KEY_R: world.layout.set_tool("rotate")
-				KEY_Q: world.layout.rotate_step(-1)
-				KEY_E: world.layout.rotate_step(1)
 				KEY_F:
 					# Keep the furniture search box usable while in edit mode.
 					if not blueprint_mode and not get_viewport().gui_get_focus_owner() is LineEdit:
