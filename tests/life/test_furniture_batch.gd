@@ -102,6 +102,30 @@ func run() -> void:
 	check(not layout.confirm_group_copy_preview(),"blocked red preview cannot create a partial copied object")
 	check(layout.placed_instances == before_success.placements and layout.undo_stack.size() == history_before_copy,"invalid preview confirmation does not touch stock or history")
 	check(layout.set_group_copy_preview_offset(initial_offset),"moving the ghost group back to its safe initial offset restores valid confirmation")
+	# P40: preview rigid rotation, exact 1 cm movement and a new safe
+	# candidate must not write inventory, transforms or undo state.
+	var pivot_before_copy: Vector2 = layout.group_pivot()
+	var normal_step: float = layout.grid_step
+	var yaw_before: float = layout.group_copy_preview_yaw
+	check(layout.nudge_group_copy_preview(Vector2.RIGHT,true) or not layout.group_copy_preview_valid,"Shift+arrow fine movement updates preview even if the destination is blocked")
+	check(absf(layout.group_copy_preview_offset.x-(initial_offset.x+.01)) < .002 and layout.snapping,"fine movement adds exactly 1 cm without disabling the global grid")
+	var fine_offset: Vector2 = layout.group_copy_preview_offset
+	layout.nudge_group_copy_preview(Vector2(0,-1))
+	check(absf(layout.group_copy_preview_offset.y-(fine_offset.y-normal_step).snappedf(normal_step)) < .003,"normal arrow movement uses configured grid step on the room Z axis")
+	check(layout.rotate_group_copy_preview_step(1,true) or not layout.group_copy_preview_valid,"Shift+E rotates preview by a fine one-degree step")
+	check(absf(rad_to_deg(layout.group_copy_preview_yaw-yaw_before)-1.0) < .01,"fine rotation is precisely 1 degree")
+	check(layout.rotate_group_copy_preview_step(1) or not layout.group_copy_preview_valid,"E rotates the group by another regular 15 degrees")
+	check(absf(rad_to_deg(layout.group_copy_preview_yaw)-16.0) < .01,"regular rotation preserves fine yaw and adds exactly 15 degrees")
+	var preview_pivot: Vector2 = layout.group_pivot()
+	var ghost_lamp: Transform3D = layout.group_copy_preview_nodes["lamp"].transform
+	var expected_ghost: Transform3D = layout._group_copy_pose("lamp",layout.group_copy_preview_offset,layout.group_copy_preview_yaw,preview_pivot)
+	check(ghost_lamp.is_equal_approx(expected_ghost),"3D ghost transform uses rigid rotation about the actual shared center")
+	layout.rotate_group_copy_preview_step(-1)
+	layout.rotate_group_copy_preview_step(-1,true)
+	check(absf(layout.group_copy_preview_yaw) < .0001 and layout.group_pivot().distance_to(pivot_before_copy) < .001,"opposite rotations restore yaw and never shift source pivot")
+	layout.set_group_copy_preview_offset(Vector2.ZERO)
+	check(layout.find_group_copy_preview_space() and layout.group_copy_preview_valid and not layout.group_copy_preview_offset.is_zero_approx(),"F-style nearest-free-space search repairs a blocked group without creating inventory")
+	check(layout.snapshot() == before_success.poses and layout.placed_instances == before_success.placements and layout.undo_stack.size() == history_before_copy,"precision and auto-find actions are transient previews only")
 	var esc := InputEventKey.new()
 	esc.pressed = true
 	esc.keycode = KEY_ESCAPE
@@ -109,7 +133,14 @@ func run() -> void:
 	check(not layout.group_copy_preview_active and layout.group_copy_preview_nodes.is_empty() and not actions.group_copy_panel.visible,"Escape discards all preview ghosts and UI without clearing original multiselection")
 	check(layout.group_selection == selected_sources and layout.placed_instances == before_success.placements and layout.undo_stack.size() == history_before_copy,"canceling preview preserves sources, selection, colors and undo")
 	check(layout.begin_group_copy_preview() and layout.group_copy_preview_valid,"group copy preview may restart immediately after cancellation")
-	check(layout.confirm_group_copy_preview(),"explicit confirmation commits both owned spare instances into a safe room location")
+	var rotated_valid: bool = layout.rotate_group_copy_preview_step(1)
+	if not rotated_valid: rotated_valid = layout.find_group_copy_preview_space()
+	check(rotated_valid and layout.group_copy_preview_valid,"rotated group can be re-positioned into a collision-safe landing pose")
+	var committed_offset: Vector2 = layout.group_copy_preview_offset
+	var committed_yaw: float = layout.group_copy_preview_yaw
+	var committed_pivot: Vector2 = layout.group_pivot()
+	var original_poses: Dictionary = layout.snapshot()
+	check(layout.confirm_group_copy_preview(),"explicit confirmation commits both rotated owned spare instances at the visible ghost poses")
 	check(not layout.group_copy_preview_active and layout.group_copy_preview_nodes.is_empty() and not actions.group_copy_panel.visible,"successful confirmation destroys preview ghosts and returns to ordinary furniture edit")
 	var new_roles: Array[String] = layout.group_selection.duplicate()
 	check(new_roles.size() == 2 and layout.selected == str(plan.copies["lamp_1"].role),"newly created pair becomes the active selection with original primary preserved")
@@ -121,10 +152,10 @@ func run() -> void:
 		var second_new: String = str(plan.copies["lamp_1"].role)
 		check(layout.nodes.has(first_new) and layout.nodes.has(second_new),"each destination role is present as a distinct 3D scene instance")
 		check(str(layout.placed_instances.get(first_new,"")) == str(plan.copies["lamp"].uid) and str(layout.placed_instances.get(second_new,"")) == str(plan.copies["lamp_1"].uid),"copy role and stock UIDs match the complete preflight plan")
-		originals_delta = Vector2(layout.nodes[first_new].position.x-layout.nodes["lamp"].position.x,layout.nodes[first_new].position.z-layout.nodes["lamp"].position.z)
-		var second_delta := Vector2(layout.nodes[second_new].position.x-layout.nodes["lamp_1"].position.x,layout.nodes[second_new].position.z-layout.nodes["lamp_1"].position.z)
-		check(originals_delta.distance_to(second_delta) < .003,"group duplication translates each furniture by the same rigid X/Z offset")
-		check(layout.nodes[first_new].basis.is_equal_approx(layout.nodes["lamp"].basis) and layout.nodes[second_new].basis.is_equal_approx(layout.nodes["lamp_1"].basis),"each duplicate retains its own original yaw")
+		var first_expected: Transform3D = layout._group_copy_pose("lamp",committed_offset,committed_yaw,committed_pivot)
+		var second_expected: Transform3D = layout._group_copy_pose("lamp_1",committed_offset,committed_yaw,committed_pivot)
+		check(layout.nodes[first_new].transform.is_equal_approx(first_expected) and layout.nodes[second_new].transform.is_equal_approx(second_expected),"actual copied poses exactly match the rotated ghost group's rigid X/Z transforms and member yaws")
+		check(original_poses["lamp"].is_equal_approx(layout.nodes["lamp"].transform) and original_poses["lamp_1"].is_equal_approx(layout.nodes["lamp_1"].transform),"preview/confirm rotation never modifies the source furniture poses")
 		check(layout.color_for(first_new) == 0 and layout.color_for(second_new) == 4,"per-member furniture color is copied to each new inventory UID")
 	var copied_poses: Dictionary = layout.snapshot()
 	var copy_inventory: Dictionary = layout.placed_instances.duplicate()
