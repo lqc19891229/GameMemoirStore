@@ -76,8 +76,24 @@ func run() -> void:
 	check(actions.arrange_buttons["space_x"].disabled and actions.arrange_buttons["space_z"].disabled, "equal-spacing buttons are disabled without three same-type furniture items")
 	await click(actions.action_buttons["arrange"])
 	check(not actions.arrange_panel.visible and not actions.action_buttons["arrange"].button_pressed, "second real click dismisses the arrangement popup")
+	var group_history: int = layout.undo_stack.size()
+	var chair_pose: Transform3D = layout.nodes["chair"].transform
+	var plant_pose: Transform3D = layout.nodes["plant"].transform
+	check(layout.toggle_group_member("plant") and layout.group_selection.size() == 2, "graphical group manager starts with two real placed furniture items")
+	await frames()
+	check(actions.group_button.is_visible_in_tree() and actions.action_strip.is_visible_in_tree(), "contextual member button is reachable next to actual multi-selection")
+	await click(actions.group_button)
+	check(actions.group_panel.is_visible_in_tree() and actions.group_member_buttons.size() == 2, "real mouse click opens the contextual group members list")
+	if actions.group_panel.is_visible_in_tree():
+		await click(actions.group_member_buttons["chair"].primary)
+	check(layout.selected == "chair" and layout.group_selection.size() == 2 and actions.group_panel.visible, "real member-row click changes primary without hiding the group manager")
+	if actions.group_panel.is_visible_in_tree():
+		await click(actions.group_member_buttons["plant"].remove)
+	check(layout.group_selection.size() == 1 and not actions.group_panel.visible and not actions.group_button.visible, "real remove click drops only the selected membership")
+	check(layout.nodes["chair"].transform.is_equal_approx(chair_pose) and layout.nodes["plant"].transform.is_equal_approx(plant_pose), "group manager click controls never move the actual 3D furniture")
+	check(layout.undo_stack.size() == group_history and layout.placed_instances.has("chair") and layout.placed_instances.has("plant"), "group manager click controls do not add undo entries or alter inventory UIDs")
 	desktop.finish_layout(false)
-	check(not actions.action_strip.is_visible_in_tree() and not actions.selection_chip.is_visible_in_tree() and not actions.arrange_panel.is_visible_in_tree(), "context buttons, arrangement and selection label are hidden again outside editor")
+	check(not actions.action_strip.is_visible_in_tree() and not actions.selection_chip.is_visible_in_tree() and not actions.arrange_panel.is_visible_in_tree() and not actions.group_panel.is_visible_in_tree(), "context buttons, member manager and selection label are hidden again outside editor")
 	check(not game.session.state.life.furniture_colors.has("starter_chair"), "GUI selection and swatches remain draft-only until room is saved")
 	game.queue_free()
 	await frames()
