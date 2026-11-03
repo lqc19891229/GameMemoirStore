@@ -945,6 +945,10 @@ func _input(event: InputEvent) -> void:
 				KEY_R: world.layout.set_tool("rotate")
 				KEY_Q: world.layout.rotate_step(-1)
 				KEY_E: world.layout.rotate_step(1)
+				KEY_F:
+					# Keep the furniture search box usable while in edit mode.
+					if not blueprint_mode and not get_viewport().gui_get_focus_owner() is LineEdit:
+						world.focus_selected()
 		get_viewport().set_input_as_handled()
 		return
 	if event.pressed and not event.echo and event.keycode == KEY_ESCAPE and world.mode != "overview":

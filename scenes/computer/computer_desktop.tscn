@@ -125,7 +125,7 @@ theme_override_font_sizes/font_size = 14
 [node name="Controls" type="Label" parent="HUD/Interface/OverviewHelp"]
 layout_mode = 2
 mouse_filter = 2
-text = "拖动查看 · 滚轮缩放 · 点击家具选中 · 编辑房间开始设计"
+text = "拖动查看 · 滚轮缩放 · 编辑后按 F 聚焦家具 · 点击屏幕使用电脑"
 theme_override_font_sizes/font_size = 12
 
 [node name="LayoutPanel" type="PanelContainer" parent="HUD/Interface"]
