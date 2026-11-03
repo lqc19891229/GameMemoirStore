@@ -135,6 +135,8 @@ func run() -> void:
 		check(ui.feedback_pose_text.text.contains("墙面已吸附") and ui.feedback_pose_text.text.contains("0.32 m"), "readout distinguishes wall magnets and uses configured attraction radius")
 		layout.snap_bypass = true
 		check(layout._wall_snap_point("lamp",probe).is_equal_approx(probe) and not layout.wall_magnet_active, "holding Alt bypasses wall and partition magnets")
+		layout.update()
+		check(ui.feedback_pose_text.text.contains("Alt 已跳过贴墙吸附"), "Alt bypass is explicitly visible in the live precision readout")
 		layout.snap_bypass = false
 	check(layout.nodes["lamp"].transform.is_equal_approx(lamp_before), "magnetic candidate checks never mutate existing furniture")
 	layout.end_drag()
