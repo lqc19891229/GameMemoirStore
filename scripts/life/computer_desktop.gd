@@ -999,6 +999,16 @@ func _input(event: InputEvent) -> void:
 			set_blueprint_mode(false)
 			get_viewport().set_input_as_handled()
 			return
+		if event.pressed and not event.echo and event.keycode in [KEY_1,KEY_2,KEY_3] and not event.meta_pressed:
+			var slot: int = int(event.keycode)-int(KEY_1)+1
+			if event.ctrl_pressed and event.shift_pressed and not event.alt_pressed:
+				if room_ui.scene_actions.perform_quick_slot("save",slot):
+					get_viewport().set_input_as_handled()
+					return
+			elif event.alt_pressed and not event.ctrl_pressed and not event.shift_pressed:
+				if room_ui.scene_actions.perform_quick_slot("recall",slot):
+					get_viewport().set_input_as_handled()
+					return
 		if event.pressed and _handle_room_precision_key(event):
 			get_viewport().set_input_as_handled()
 			return
@@ -1031,6 +1041,9 @@ func _input(event: InputEvent) -> void:
 						room_ui.sync()
 					elif room_ui.scene_actions.group_panel.visible:
 						room_ui.scene_actions.hide_group_members()
+						room_ui.sync()
+					elif room_ui.scene_actions.quick_groups_panel.visible:
+						room_ui.scene_actions.hide_quick_groups()
 						room_ui.sync()
 					elif room_ui.catalog_open:
 						room_ui.catalog_open = false
