@@ -29,6 +29,10 @@ var arrange_summary: Label
 var arrange_buttons: Dictionary = {}
 var hint: Label
 var marquee_box: Panel
+var group_copy_panel: PanelContainer
+var group_copy_status: Label
+var group_copy_confirm: Button
+var group_copy_cancel: Button
 var category_buttons: Dictionary = {}
 var action_buttons: Dictionary = {}
 var color_buttons: Array[Button] = []
@@ -54,6 +58,7 @@ func setup(owner: Node3D, controller: Node, canvas: Control) -> void:
 	_build_object_actions(canvas)
 	_build_hint(canvas)
 	_build_marquee(canvas)
+	_build_group_copy_preview(canvas)
 	set_process(true)
 
 func _round_button(icon_id: String, tooltip: String, side: int = 43) -> Button:
@@ -504,6 +509,82 @@ func show_marquee(start: Vector2, finish: Vector2) -> void:
 func hide_marquee() -> void:
 	if is_instance_valid(marquee_box): marquee_box.hide()
 
+func _build_group_copy_preview(canvas: Control) -> void:
+	group_copy_panel = PanelContainer.new()
+	group_copy_panel.name = "GroupCopyConfirmPanel"
+	group_copy_panel.custom_minimum_size = Vector2(424,0)
+	group_copy_panel.visible = false
+	group_copy_panel.mouse_filter = Control.MOUSE_FILTER_STOP
+	var surface := StyleBoxFlat.new()
+	surface.bg_color = Color("f4f8f3",.98)
+	surface.border_color = Color("82bba4")
+	surface.set_border_width_all(2)
+	surface.set_corner_radius_all(10)
+	surface.content_margin_left = 12
+	surface.content_margin_right = 12
+	surface.content_margin_top = 10
+	surface.content_margin_bottom = 10
+	group_copy_panel.add_theme_stylebox_override("panel",surface)
+	canvas.add_child(group_copy_panel)
+	var stack := VBoxContainer.new()
+	stack.add_theme_constant_override("separation",7)
+	group_copy_panel.add_child(stack)
+	var title := Label.new()
+	title.name = "GroupCopyPreviewTitle"
+	title.text = "整组复制预览 · 移动鼠标选择落点"
+	title.add_theme_font_size_override("font_size",14)
+	title.add_theme_color_override("font_color",Color("315341"))
+	stack.add_child(title)
+	group_copy_status = Label.new()
+	group_copy_status.name = "GroupCopyPreviewStatus"
+	group_copy_status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	group_copy_status.custom_minimum_size = Vector2(395,33)
+	group_copy_status.add_theme_font_size_override("font_size",12)
+	stack.add_child(group_copy_status)
+	var actions := HBoxContainer.new()
+	actions.add_theme_constant_override("separation",9)
+	stack.add_child(actions)
+	group_copy_confirm = Button.new()
+	group_copy_confirm.name = "ConfirmGroupCopy"
+	group_copy_confirm.text = "确认复制 · 左键 / Enter"
+	group_copy_confirm.custom_minimum_size = Vector2(240,35)
+	group_copy_confirm.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	actions.add_child(group_copy_confirm)
+	group_copy_confirm.pressed.connect(func() -> void:
+		var layout = host.world.layout
+		if layout.confirm_group_copy_preview():
+			room_ui.show_keyboard_feedback("整组复制成功 · Ctrl+Z 撤销")
+		room_ui.sync()
+	)
+	group_copy_cancel = Button.new()
+	group_copy_cancel.name = "CancelGroupCopy"
+	group_copy_cancel.text = "取消 · Esc"
+	group_copy_cancel.custom_minimum_size = Vector2(143,35)
+	group_copy_cancel.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	actions.add_child(group_copy_cancel)
+	group_copy_cancel.pressed.connect(func() -> void:
+		host.world.layout.cancel_group_copy_preview()
+		room_ui.sync()
+	)
+
+func _sync_group_copy_preview(view: Vector2) -> void:
+	var layout = host.world.layout
+	group_copy_panel.visible = layout.active and layout.group_copy_preview_active and not host.blueprint_mode and room_ui.mode == "furniture"
+	if not group_copy_panel.visible: return
+	group_copy_confirm.disabled = not layout.group_copy_preview_valid
+	group_copy_status.text = (
+		"可复制 %d 件 · 左键放置 · 右键取消 · Alt 暂时关闭网格" % layout.group_copy_preview_sources.size()
+		if layout.group_copy_preview_valid else
+		"无法复制 · " + str(layout.group_copy_preview_error)
+	)
+	group_copy_status.add_theme_color_override("font_color",Color("2a7253") if layout.group_copy_preview_valid else Color("b24f49"))
+	var surface: StyleBoxFlat = group_copy_panel.get_theme_stylebox("panel") as StyleBoxFlat
+	surface.border_color = Color("82bba4") if layout.group_copy_preview_valid else Color("ce8d83")
+	group_copy_panel.position = Vector2(
+		clampf((view.x-424.0)*.5,8.0,maxf(8.0,view.x-432.0)),
+		maxf(130.0,view.y-maxf(group_copy_panel.size.y,122.0)-20.0)
+	)
+
 func _build_hint(canvas: Control) -> void:
 	hint = Label.new()
 	hint.name = "RoomInteractionHint"
@@ -518,7 +599,7 @@ func _build_hint(canvas: Control) -> void:
 func perform_action(id: String) -> void:
 	if not host.world.layout.active or host.blueprint_mode or room_ui.catalog_open: return
 	var layout = host.world.layout
-	if not layout.placing_role.is_empty() or not layout.gesture.is_empty(): return
+	if not layout.placing_role.is_empty() or not layout.gesture.is_empty() or layout.group_copy_preview_active: return
 	if layout.group_selection.size() > 1 and id not in ["move","rotate","paint","arrange","duplicate","store"]: return
 	if id != "arrange": hide_arrange()
 	if id != "paint": hide_colors()
@@ -535,9 +616,8 @@ func perform_action(id: String) -> void:
 			arrange_panel.visible = not arrange_panel.visible
 		"duplicate":
 			if layout.group_selection.size() > 1:
-				var count: int = layout.group_selection.size()
-				var copied: bool = layout.duplicate_group()
-				room_ui.show_keyboard_feedback("已批量复制 %d 件 · Ctrl+Z 撤销" % count if copied else "复制失败 · " + str(layout.message))
+				var started: bool = layout.begin_group_copy_preview()
+				if not started: room_ui.show_keyboard_feedback("无法预览 · " + str(layout.message))
 			else:
 				layout.duplicate_selected()
 		"store":
@@ -632,18 +712,20 @@ func _refresh_arrangement(role: String) -> void:
 
 func sync(active: bool) -> void:
 	var furniture_mode: bool = active and room_ui.mode == "furniture" and not host.blueprint_mode
-	rail.visible = furniture_mode and host.world.layout.placing_role.is_empty()
+	var preview: bool = host.world.layout.group_copy_preview_active
+	_sync_group_copy_preview(host.get_viewport().get_visible_rect().size)
+	rail.visible = furniture_mode and host.world.layout.placing_role.is_empty() and not preview
 	quick_groups_button.set_pressed_no_signal(quick_groups_panel.visible)
-	if not furniture_mode or room_ui.catalog_open or not host.world.layout.gesture.is_empty() or not host.world.layout.placing_role.is_empty():
+	if not furniture_mode or room_ui.catalog_open or preview or not host.world.layout.gesture.is_empty() or not host.world.layout.placing_role.is_empty():
 		hide_quick_groups()
 	elif quick_groups_panel.visible:
 		_refresh_quick_groups()
-	hint.visible = active and host.get_viewport().get_visible_rect().size.x >= 1060
+	hint.visible = active and not preview and host.get_viewport().get_visible_rect().size.x >= 1060
 	hint.text = ("Ctrl+框选追加 · Alt+1～3 重选组合 · 拖动整组 · Esc 单选" if host.world.layout.group_selection.size() > 1 else "空白框选 · Ctrl+单击/框选 · Alt+1～3 重选组合 · Q/E 旋转 · S 网格%s" % ("开" if host.world.layout.snapping else "关"))
 	for index in range(GROUP_KEYS.size()):
 		var button: Button = category_buttons[GROUP_KEYS[index]]
 		button.set_pressed_no_signal(host.get_node("%FurnitureCatalogGroup").selected == index and room_ui.catalog_open)
-	if not furniture_mode or room_ui.catalog_open:
+	if not furniture_mode or room_ui.catalog_open or preview:
 		_hide_object_actions()
 		hide_colors()
 		hide_marquee()
@@ -681,7 +763,7 @@ func sync(active: bool) -> void:
 	if multi:
 		var plan: Dictionary = layout.group_duplicate_plan()
 		action_buttons["duplicate"].disabled = plan.has("error")
-		action_buttons["duplicate"].tooltip_text = str(plan.error) if plan.has("error") else "批量复制 %d 件家具 · Ctrl+D · 一次撤销" % group_size
+		action_buttons["duplicate"].tooltip_text = str(plan.error) if plan.has("error") else "预览 %d 件家具的复制落点 · Ctrl+D · 确认后一次撤销" % group_size
 	else:
 		var has_copy: bool = not InventoryData.unused_uid(layout.available_inventory,layout.placed_instances,InventoryData.furniture_item_id(layout.Data.base_role(role))).is_empty()
 		action_buttons["duplicate"].disabled = not has_copy
@@ -696,7 +778,7 @@ func sync(active: bool) -> void:
 
 func _process(_delta: float) -> void:
 	if action_strip == null or not is_instance_valid(host): return
-	if not host.world.layout.active or host.blueprint_mode or room_ui.mode != "furniture" or room_ui.catalog_open: return
+	if not host.world.layout.active or host.blueprint_mode or room_ui.mode != "furniture" or room_ui.catalog_open or host.world.layout.group_copy_preview_active: return
 	var layout = host.world.layout
 	var role: String = str(layout.selected)
 	if not layout.nodes.has(role) or not layout.placed_instances.has(role): return
@@ -708,6 +790,7 @@ func _process(_delta: float) -> void:
 
 func resize(view: Vector2) -> void:
 	if rail == null: return
+	_sync_group_copy_preview(view)
 	rail.position = Vector2(10 if view.x < 800 else 15,139 if view.y < 660 else 149)
 	hint.visible = host.world.layout.active and view.x >= 1060
 	hint.position = Vector2(maxf(510,view.x-740),84)

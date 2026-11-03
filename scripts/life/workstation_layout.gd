@@ -73,6 +73,15 @@ var furniture_colors: Dictionary = {}
 var committed_colors: Dictionary = {}
 var placing_role := ""
 var placing_before: Dictionary = {}
+# P39 preview is transient visual state: never enters nodes, inventory or undo.
+var group_copy_preview_active := false
+var group_copy_preview_valid := false
+var group_copy_preview_offset := Vector2.ZERO
+var group_copy_preview_error := ""
+var group_copy_preview_nodes: Dictionary = {}
+var group_copy_preview_sources: Array[String] = []
+var group_copy_preview_good: StandardMaterial3D
+var group_copy_preview_bad: StandardMaterial3D
 var preview_original_materials: Dictionary = {}
 var tint_materials: Dictionary = {}
 
@@ -220,7 +229,7 @@ func _next_furniture_role(base_role: String, uid: String) -> String:
 	return Data.instance_role(base_role, uid)
 
 func start_place(item_id: String, uid: String) -> bool:
-	if not active or not placing_role.is_empty(): return false
+	if not active or not placing_role.is_empty() or group_copy_preview_active: return false
 	var item: MemoirItemDefinition = ItemCatalog.lookup(item_id)
 	if item == null or item.category != "furniture" or item.placement_surface != "floor": return false
 	var base_role := item.subcategory
@@ -386,7 +395,7 @@ func _group_duplicate_targets(displacement: Vector2) -> Dictionary:
 		targets[source] = target
 	return targets
 
-func duplicate_group() -> bool:
+func duplicate_group(displacement: Variant = null) -> bool:
 	var plan: Dictionary = group_duplicate_plan()
 	if plan.has("error"):
 		message = str(plan.error)
@@ -397,14 +406,17 @@ func duplicate_group() -> bool:
 	# Every member receives the exact same offset, retaining all their
 	# relative X/Z positions and orientations. No nodes or UIDs are reserved
 	# until the whole constellation passes the placement test.
-	for ring in range(1,21):
-		for step in range(24):
-			var angle: float = TAU*float(step)/24.0
-			var offset := Vector2(cos(angle),sin(angle))*float(ring)*.25
-			if snapping: offset = offset.snapped(Vector2.ONE*grid_step)
-			targets = _group_duplicate_targets(offset)
+	if displacement is Vector2:
+		targets = _group_duplicate_targets(displacement)
+	else:
+		for ring in range(1,21):
+			for step in range(24):
+				var angle: float = TAU*float(step)/24.0
+				var offset := Vector2(cos(angle),sin(angle))*float(ring)*.25
+				if snapping: offset = offset.snapped(Vector2.ONE*grid_step)
+				targets = _group_duplicate_targets(offset)
+				if not targets.is_empty(): break
 			if not targets.is_empty(): break
-		if not targets.is_empty(): break
 	if targets.is_empty():
 		message = "附近没有能容纳整组家具的空闲位置"
 		changed.emit()
@@ -447,6 +459,108 @@ func duplicate_group() -> bool:
 	_remember(before)
 	update()
 	return true
+
+func _copy_preview_material(good: bool) -> StandardMaterial3D:
+	var material := StandardMaterial3D.new()
+	material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	material.albedo_color = Color("54d5a0",.43) if good else Color("ff7770",.43)
+	material.cull_mode = BaseMaterial3D.CULL_DISABLED
+	return material
+
+func begin_group_copy_preview() -> bool:
+	if group_copy_preview_active: return false
+	var plan: Dictionary = group_duplicate_plan()
+	if plan.has("error"):
+		message = str(plan.error)
+		changed.emit()
+		return false
+	var offset := Vector2(.75,.75)
+	# Start on the same first safe candidate as the original P38 auto-copy.
+	# The player can override it immediately with the pointer.
+	var found := false
+	for ring in range(1,21):
+		for step in range(24):
+			var angle: float = TAU*float(step)/24.0
+			var candidate := Vector2(cos(angle),sin(angle))*float(ring)*.25
+			if snapping: candidate = candidate.snapped(Vector2.ONE*grid_step)
+			if not _group_duplicate_targets(candidate).is_empty():
+				offset = candidate
+				found = true
+				break
+		if found: break
+	group_copy_preview_good = _copy_preview_material(true)
+	group_copy_preview_bad = _copy_preview_material(false)
+	group_copy_preview_sources = group_selection.duplicate()
+	for source: String in group_copy_preview_sources:
+		var ghost: Node3D = templates[Data.base_role(source)].instantiate()
+		ghost.name = "GroupCopyPreview_" + source
+		world.get_node("Room/Furniture").add_child(ghost)
+		# These copies must not enter layout.nodes and must not intercept
+		# the room's pick ray or any collision/drag gesture.
+		for collider: CollisionObject3D in ghost.find_children("*","CollisionObject3D",true,false):
+			collider.collision_layer = 0
+			collider.collision_mask = 0
+			collider.input_ray_pickable = false
+		for mesh: MeshInstance3D in ghost.find_children("*","MeshInstance3D",true,false):
+			mesh.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		group_copy_preview_nodes[source] = ghost
+	group_copy_preview_active = true
+	set_group_copy_preview_offset(offset)
+	return true
+
+func set_group_copy_preview_offset(offset: Vector2) -> bool:
+	if not group_copy_preview_active: return false
+	group_copy_preview_offset = offset.snapped(Vector2.ONE*grid_step) if snapping and not snap_bypass else offset
+	var targets: Dictionary = _group_duplicate_targets(group_copy_preview_offset)
+	group_copy_preview_valid = targets.size() == group_copy_preview_sources.size()
+	group_copy_preview_error = "" if group_copy_preview_valid else "此处空间不足或家具重叠 · 请移动至空地"
+	for source: String in group_copy_preview_sources:
+		var ghost: Node3D = group_copy_preview_nodes[source]
+		var pose: Transform3D = nodes[source].transform
+		pose.origin.x += group_copy_preview_offset.x
+		pose.origin.z += group_copy_preview_offset.y
+		ghost.transform = pose
+		for mesh: MeshInstance3D in ghost.find_children("*","MeshInstance3D",true,false):
+			mesh.material_override = group_copy_preview_good if group_copy_preview_valid else group_copy_preview_bad
+	changed.emit()
+	return group_copy_preview_valid
+
+func group_copy_preview_at(pixel: Vector2) -> void:
+	if not group_copy_preview_active: return
+	var plane := Plane(world.global_basis.y.normalized(),world.to_global(Vector3.ZERO))
+	var hit: Variant = plane.intersects_ray(world.camera.project_ray_origin(pixel),world.camera.project_ray_normal(pixel))
+	if hit == null: return
+	var local: Vector3 = world.to_local(hit)
+	var origin: Vector3 = nodes[selected].position
+	var destination := Vector2(local.x,local.z)
+	if snapping and not snap_bypass: destination = destination.snapped(Vector2.ONE*grid_step)
+	set_group_copy_preview_offset(destination-Vector2(origin.x,origin.z))
+
+func confirm_group_copy_preview() -> bool:
+	if not group_copy_preview_active or not group_copy_preview_valid: return false
+	# The stock preflight and collision calculation are run again at commit
+	# time, so a stale preview cannot consume a different inventory UID.
+	var result: bool = duplicate_group(group_copy_preview_offset)
+	if result: cancel_group_copy_preview()
+	else:
+		group_copy_preview_valid = false
+		group_copy_preview_error = "落点已失效 · 请重新选择空地"
+		changed.emit()
+	return result
+
+func cancel_group_copy_preview() -> void:
+	if not group_copy_preview_active and group_copy_preview_nodes.is_empty(): return
+	group_copy_preview_active = false
+	group_copy_preview_valid = false
+	group_copy_preview_error = ""
+	for ghost: Node3D in group_copy_preview_nodes.values():
+		if is_instance_valid(ghost): ghost.queue_free()
+	group_copy_preview_nodes.clear()
+	group_copy_preview_sources.clear()
+	group_copy_preview_good = null
+	group_copy_preview_bad = null
+	changed.emit()
 
 func store_group() -> bool:
 	if not active or group_selection.size() < 2 or not gesture.is_empty() or not placing_role.is_empty(): return false
@@ -1335,6 +1449,9 @@ func _remember(before: Dictionary) -> void:
 
 func undo() -> void:
 	if not active: return
+	if group_copy_preview_active:
+		cancel_group_copy_preview()
+		return
 	end_wall_stroke()
 	end_aperture_drag()
 	end_custom_edge_drag()
@@ -1346,6 +1463,9 @@ func undo() -> void:
 
 func redo() -> void:
 	if not active: return
+	if group_copy_preview_active:
+		cancel_group_copy_preview()
+		return
 	end_wall_stroke()
 	end_aperture_drag()
 	end_custom_edge_drag()
@@ -1365,6 +1485,7 @@ func set_style(key: String, value: int) -> void:
 	update()
 
 func begin() -> void:
+	cancel_group_copy_preview()
 	active = true
 	quick_groups.clear()
 	blueprint = committed_blueprint.duplicate(true)
@@ -1386,6 +1507,8 @@ func begin() -> void:
 
 func finish(apply: bool) -> bool:
 	if not active: return false
+	# An unfinished copy preview is never part of an applied room layout.
+	cancel_group_copy_preview()
 	end_wall_stroke(not apply)
 	end_aperture_drag(not apply)
 	end_custom_edge_drag(not apply)

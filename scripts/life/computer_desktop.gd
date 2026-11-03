@@ -263,6 +263,7 @@ func begin_layout() -> void:
 func finish_layout(apply: bool) -> void:
 	_cancel_pending_furniture_drag()
 	_cancel_marquee()
+	if world.layout.group_copy_preview_active: world.layout.cancel_group_copy_preview()
 	if not world.layout.finish(apply): return
 	if blueprint_mode: set_blueprint_mode(false)
 	_set_mode("overview", false)
@@ -419,6 +420,7 @@ func set_blueprint_mode(enabled: bool) -> void:
 		world.layout.end_aperture_drag()
 		dragging_aperture = false
 	if enabled and not world.layout.placing_role.is_empty(): world.layout.cancel_placement()
+	if enabled and world.layout.group_copy_preview_active: world.layout.cancel_group_copy_preview()
 	if enabled: world.layout.clear_group_selection()
 	blueprint_mode = enabled
 	wall_drag_button = 0
@@ -995,6 +997,15 @@ func _input(event: InputEvent) -> void:
 		var focused: Control = get_viewport().gui_get_focus_owner()
 		if (focused is LineEdit or focused is TextEdit or focused is OptionButton or focused is Range) and event.keycode != KEY_ESCAPE:
 			return
+		if world.layout.group_copy_preview_active:
+			if event.pressed and not event.echo:
+				if event.keycode == KEY_ESCAPE or event.ctrl_pressed and event.keycode in [KEY_Z,KEY_Y]:
+					world.layout.cancel_group_copy_preview()
+				elif event.keycode in [KEY_ENTER,KEY_KP_ENTER]:
+					if world.layout.confirm_group_copy_preview():
+						room_ui.show_keyboard_feedback("整组复制成功 · Ctrl+Z 撤销")
+			get_viewport().set_input_as_handled()
+			return
 		if event.pressed and not event.echo and blueprint_mode and event.keycode == KEY_ESCAPE:
 			set_blueprint_mode(false)
 			get_viewport().set_input_as_handled()
@@ -1145,6 +1156,22 @@ func _finish_marquee(point: Vector2) -> void:
 
 func _layout_input(event: InputEvent) -> void:
 	var layout = world.layout
+	if layout.group_copy_preview_active:
+		if event is InputEventMouseButton:
+			if event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
+				layout.snap_bypass = event.alt_pressed
+				layout.group_copy_preview_at(event.position)
+				if layout.confirm_group_copy_preview():
+					room_ui.show_keyboard_feedback("整组复制成功 · Ctrl+Z 撤销")
+			elif event.button_index == MOUSE_BUTTON_RIGHT and event.pressed:
+				layout.cancel_group_copy_preview()
+			elif event.pressed and event.button_index in [MOUSE_BUTTON_WHEEL_UP,MOUSE_BUTTON_WHEEL_DOWN]:
+				world.zoom_overview(0.9 if event.button_index == MOUSE_BUTTON_WHEEL_UP else 1.1)
+		elif event is InputEventMouseMotion:
+			layout.snap_bypass = event.alt_pressed
+			layout.group_copy_preview_at(event.position)
+		get_viewport().set_input_as_handled()
+		return
 	if event is InputEventMouseButton:
 		if not layout.placing_role.is_empty():
 			if event.button_index == MOUSE_BUTTON_LEFT and event.pressed:

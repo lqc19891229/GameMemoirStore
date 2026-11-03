@@ -372,6 +372,11 @@ func _transform_readout(layout) -> String:
 
 func _sync_feedback(active: bool) -> void:
 	feedback_state = "none"
+	if host.world.layout.group_copy_preview_active:
+		# Preview has its own fixed confirm/blocked panel; never anchor a
+		# second feedback bubble to the original furniture.
+		feedback.hide()
+		return
 	if not active or host.blueprint_mode or mode != "furniture":
 		feedback.hide()
 		return
@@ -432,6 +437,8 @@ func choose_mode(next_mode: String) -> void:
 	# mode switches discard only the unfinished preview, not purchased stock.
 	if next_mode != "furniture" and not host.world.layout.placing_role.is_empty():
 		host.world.layout.cancel_placement()
+	if next_mode != "furniture" and host.world.layout.group_copy_preview_active:
+		host.world.layout.cancel_group_copy_preview()
 	mode = next_mode
 	if next_mode != "furniture":
 		_clear_keyboard_feedback()
@@ -456,7 +463,7 @@ func sync() -> void:
 	if active:
 		# A pending placement needs an unobstructed 3D canvas. Do not let a
 		# second category click or a mode refresh reopen the drawer over it.
-		if not host.world.layout.placing_role.is_empty():
+		if not host.world.layout.placing_role.is_empty() or host.world.layout.group_copy_preview_active:
 			catalog_open = false
 		var selected: String = str(host.world.layout.selected)
 		# Once the player selects an object, free the central viewport for
@@ -482,7 +489,7 @@ func sync() -> void:
 			if host.furniture_cards != null:
 				host.furniture_cards.request_visible.call_deferred()
 		_last_dock_visible = show_dock
-	catalog_toggle.visible = active and mode == "furniture" and host.world.layout.placing_role.is_empty()
+	catalog_toggle.visible = active and mode == "furniture" and host.world.layout.placing_role.is_empty() and not host.world.layout.group_copy_preview_active
 	catalog_toggle.text = "" if _last_dimensions.x < 640 else "收起" if catalog_open else "物品"
 	advanced_toggle.text = "" if _last_dimensions.x < 640 else "收起" if advanced else "精细"
 	for id: String in mode_buttons:
