@@ -23,7 +23,7 @@ func setup(desktop: Node3D) -> void:
 		if button == null: continue
 		button.text = ""
 		button.alignment = HORIZONTAL_ALIGNMENT_CENTER
-		button.custom_minimum_size = Vector2(174, 152)
+		button.custom_minimum_size = Vector2(132, 138)
 		button.clip_text = true
 		var body := VBoxContainer.new()
 		body.name = "VisualCard"
@@ -34,7 +34,7 @@ func setup(desktop: Node3D) -> void:
 		body.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 		var thumb := TextureRect.new()
 		thumb.name = "FurniturePreview"
-		thumb.custom_minimum_size = Vector2(150, 91)
+		thumb.custom_minimum_size = Vector2(116, 82)
 		thumb.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		thumb.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		thumb.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -59,7 +59,7 @@ func setup(desktop: Node3D) -> void:
 	for role: String in host.catalog_special_buttons:
 		var entry: Dictionary = host.catalog_special_buttons[role]
 		var special: Button = entry.button
-		special.custom_minimum_size = Vector2(174, 50)
+		special.custom_minimum_size = Vector2(132, 47)
 		special.clip_text = true
 		special.icon = Icons.texture(role)
 	refresh_counts()

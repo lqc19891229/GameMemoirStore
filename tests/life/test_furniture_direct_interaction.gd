@@ -126,6 +126,11 @@ func run() -> void:
 	scroll.shift_pressed = true
 	desktop._layout_input(scroll)
 	check(absf(angle_difference(layout.nodes["chair"].rotation.y,initial_yaw)) > 0.05, "Shift+wheel rotates ghost without zooming the camera")
+	var after_shift: float = layout.nodes["chair"].rotation.y
+	scroll.shift_pressed = false
+	scroll.ctrl_pressed = true
+	desktop._layout_input(scroll)
+	check(absf(angle_difference(layout.nodes["chair"].rotation.y,after_shift)) > 0.05, "Ctrl+wheel also rotates furniture ghost as in the reference game")
 	layout.preview_placement(Vector2(50,50))
 	check(not layout.valid and ui.feedback_text.text.contains("边界"), "invalid furniture preview explicitly communicates the collision boundary")
 	layout.cancel_placement()

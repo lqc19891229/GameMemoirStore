@@ -1,6 +1,16 @@
 extends RefCounted
 ## Lightweight vector line icons for the room editor. No imported icon fonts.
 const STROKES := {
+	"all": '<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>',
+	"tables": '<path d="M3 9h18v3H3zM5 12v9M19 12v9"/>',
+	"seating": '<path d="M5 13v-3a3 3 0 0 1 3-3h8a3 3 0 0 1 3 3v3M4 13h16v6H4zM6 19v2m12-2v2"/>',
+	"storage": '<rect x="5" y="2" width="14" height="20" rx="1"/><path d="M5 9h14M5 15h14M12 4v3M12 11v2"/>',
+	"hardware": '<rect x="3" y="5" width="18" height="12" rx="2"/><path d="M12 17v4M7 21h10"/>',
+	"move": '<path d="M12 2v20M2 12h20M9 5l3-3 3 3M9 19l3 3 3-3M5 9l-3 3 3 3M19 9l3 3-3 3"/>',
+	"rotate": '<path d="M20 11a8 8 0 1 0-2 6M20 5v6h-6"/>',
+	"paint": '<path d="M4 16 16 4l4 4-12 12H4zM13 7l4 4M4 21h16"/>',
+	"duplicate": '<rect x="8" y="8" width="13" height="13" rx="2"/><path d="M5 16H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v1"/>',
+	"store": '<path d="M3 8h18v13H3zM2 4h20v4H2zM9 13h6"/>',
 	"furniture": '<path d="M4 12V7a3 3 0 0 1 3-3h10a3 3 0 0 1 3 3v5M4 13h16M4 13v6m16-6v6M7 9v4m10-4v4M4 18h16"/>',
 	"decor": '<path d="M4 19h16M7 17l10-10 3 3-10 10H7zM14 10l3 3M5 6h4M7 4v4"/>',
 	"lighting": '<circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M4.9 4.9l1.4 1.4m11.4 11.4 1.4 1.4M19.1 4.9l-1.4 1.4M6.3 17.7l-1.4 1.4"/>',

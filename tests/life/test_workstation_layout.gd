@@ -65,7 +65,7 @@ func run() -> void:
 	check(layout.valid and not layout.active, "layout initially inactive")
 	await click(desktop.get_node("%EditLayout"))
 	check(layout.active and world.mode == "layout", "edit layout button enters arrangement mode")
-	check(desktop.get_node("%LayoutPanel").visible and not desktop.get_node("%FocusToggle").visible, "arrangement shows dedicated controls and hides screen actions")
+	check(not desktop.get_node("%LayoutPanel").visible and not desktop.get_node("%FocusToggle").visible, "scene-first editor hides precision inspector and screen actions until requested")
 	var point: Vector2 = desktop.canvas_point_for_screen(Vector2(640,400))
 	button(point,true)
 	button(point,false)
