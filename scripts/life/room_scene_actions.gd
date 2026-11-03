@@ -35,6 +35,7 @@ var group_copy_readout: Label
 var group_copy_rotate_left: Button
 var group_copy_rotate_right: Button
 var group_copy_find_space: Button
+var group_copy_repeat_button: Button
 var group_copy_confirm: Button
 var group_copy_cancel: Button
 var category_buttons: Dictionary = {}
@@ -587,6 +588,18 @@ func _build_group_copy_preview(canvas: Control) -> void:
 	precision_hint.add_theme_font_size_override("font_size",10)
 	precision_hint.add_theme_color_override("font_color",Color("667c6d"))
 	stack.add_child(precision_hint)
+	group_copy_repeat_button = Button.new()
+	group_copy_repeat_button.name = "GroupCopyRepeatToggle"
+	group_copy_repeat_button.text = "连续复制：关闭 · 每次确认只复制一组"
+	group_copy_repeat_button.toggle_mode = true
+	group_copy_repeat_button.custom_minimum_size = Vector2(400,32)
+	group_copy_repeat_button.tooltip_text = "开启后每次确认继续预览原来的家具组合；每组各占独立库存并分别可撤销"
+	stack.add_child(group_copy_repeat_button)
+	group_copy_repeat_button.pressed.connect(func() -> void:
+		var layout = host.world.layout
+		layout.set_group_copy_repeat(not layout.group_copy_repeat)
+		room_ui.sync()
+	)
 	var actions := HBoxContainer.new()
 	actions.add_theme_constant_override("separation",9)
 	stack.add_child(actions)
@@ -596,12 +609,19 @@ func _build_group_copy_preview(canvas: Control) -> void:
 	group_copy_confirm.custom_minimum_size = Vector2(240,35)
 	group_copy_confirm.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	actions.add_child(group_copy_confirm)
-	group_copy_confirm.pressed.connect(func() -> void:
-		var layout = host.world.layout
-		if layout.confirm_group_copy_preview():
-			room_ui.show_keyboard_feedback("整组复制成功 · Ctrl+Z 撤销")
-		room_ui.sync()
-	)
+	group_copy_confirm.pressed.connect(func() -> void: confirm_group_copy_preview())
+
+func confirm_group_copy_preview() -> void:
+	var layout = host.world.layout
+	if not layout.active or not layout.group_copy_preview_active: return
+	if layout.confirm_group_copy_preview():
+		var notice := "整组复制成功 · Ctrl+Z 撤销"
+		if layout.group_copy_preview_active:
+			notice = "已复制 %d 组 · 继续选择下一落点" % layout.group_copy_preview_placed_count
+		elif not layout.group_copy_preview_end_reason.is_empty():
+			notice = "连续复制已放置 %d 组 · 库存不足，自动结束" % layout.group_copy_preview_placed_count
+		room_ui.show_keyboard_feedback(notice)
+	room_ui.sync()
 	group_copy_cancel = Button.new()
 	group_copy_cancel.name = "CancelGroupCopy"
 	group_copy_cancel.text = "取消 · Esc"
@@ -618,11 +638,16 @@ func _sync_group_copy_preview(view: Vector2) -> void:
 	group_copy_panel.visible = layout.active and layout.group_copy_preview_active and not host.blueprint_mode and room_ui.mode == "furniture"
 	if not group_copy_panel.visible: return
 	group_copy_confirm.disabled = not layout.group_copy_preview_valid
+	group_copy_repeat_button.set_pressed_no_signal(layout.group_copy_repeat)
+	group_copy_repeat_button.text = "连续复制：开启 · 每组独立库存和撤销" if layout.group_copy_repeat else "连续复制：关闭 · 每次只放一组"
+	group_copy_confirm.text = "确认并继续 · 左键 / Enter" if layout.group_copy_repeat else "确认复制 · 左键 / Enter"
 	var pivot: Vector2 = layout.group_pivot()+layout.group_copy_preview_offset
 	group_copy_readout.text = "组中心 X %.2f m · Z %.2f m · 旋转 %.0f° · 网格%s" % [
 		pivot.x,pivot.y,rad_to_deg(layout.group_copy_preview_yaw),"开" if layout.snapping else "关"
 	]
 	group_copy_status.text = (
+		"已放置 %d 组 · 下一组 %d 件 · 左键确认 · Esc 结束" % [layout.group_copy_preview_placed_count,layout.group_copy_preview_sources.size()]
+		if layout.group_copy_repeat and layout.group_copy_preview_valid else
 		"可复制 %d 件 · 左键放置 · 右键取消 · Alt 暂时关闭网格" % layout.group_copy_preview_sources.size()
 		if layout.group_copy_preview_valid else
 		"无法复制 · " + str(layout.group_copy_preview_error)
