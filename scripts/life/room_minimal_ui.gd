@@ -1,11 +1,12 @@
 extends Node
 const Icons = preload("res://scripts/life/room_ui_icons.gd")
+const SceneActions = preload("res://scripts/life/room_scene_actions.gd")
 ## Room-only presentation layer. Existing controls keep their unique Godot names,
 ## signals, item IDs and save contracts. PC apps retain the original client theme.
 var host # Dynamic controller: the room desktop owns its custom world/layout API.
 var mode := "furniture"
 var advanced := false
-var catalog_open := true
+var catalog_open := false
 var last_selected := "desk"
 var was_active := false
 var dock: PanelContainer
@@ -24,6 +25,7 @@ var _filter_parent: VBoxContainer
 var _inspector: PanelContainer
 var feedback: PanelContainer
 var feedback_text: Label
+var scene_actions: Node
 
 const CORE_INSPECTOR := {
 	"furniture": ["LayoutSelection","Tools","Copies","FurniturePaletteLabel","FurniturePalette","LayoutMessage"],
@@ -60,6 +62,10 @@ func setup(owner_node: Node3D) -> void:
 	blueprint_content = host.get_node("%BlueprintPanel")
 	_build_bar(canvas)
 	_build_dock(canvas)
+	scene_actions = SceneActions.new()
+	scene_actions.name = "RoomSceneActions"
+	add_child(scene_actions)
+	scene_actions.setup(host,self,canvas)
 	_build_feedback(canvas)
 	host.get_viewport().size_changed.connect(_resize_layout)
 	_resize_layout()
@@ -76,9 +82,9 @@ func _button(text_value: String, tooltip: String = "") -> Button:
 func _build_bar(canvas: Control) -> void:
 	bar = HBoxContainer.new()
 	bar.name = "RoomModeBar"
-	bar.position = Vector2(27, 79)
-	bar.size = Vector2(775, 45)
-	bar.add_theme_constant_override("separation", 8)
+	bar.position = Vector2(16,76)
+	bar.size = Vector2(510,45)
+	bar.add_theme_constant_override("separation", 5)
 	canvas.add_child(bar)
 	for entry: Dictionary in [
 		{"id":"furniture","label":"家具"},
@@ -87,25 +93,26 @@ func _build_bar(canvas: Control) -> void:
 		{"id":"build","label":"建造"}
 	]:
 		var id: String = entry.id
-		var button := _button(str(entry.label))
+		var button := _button("")
 		button.toggle_mode = true
 		button.icon = Icons.texture(id)
-		button.custom_minimum_size.x = 69
+		button.tooltip_text = "%s模式" % str(entry.label)
+		button.custom_minimum_size = Vector2(44,42)
 		button.pressed.connect(func() -> void: choose_mode(id))
 		bar.add_child(button)
 		mode_buttons[id] = button
 	var space := Control.new()
-	space.custom_minimum_size.x = 15
+	space.custom_minimum_size.x = 7
 	space.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	bar.add_child(space)
-	catalog_toggle = _button("收起目录", "显示或隐藏底部家具目录")
+	catalog_toggle = _button("物品", "显示或收起左侧家具目录 · B")
 	catalog_toggle.icon = Icons.texture("catalog")
 	catalog_toggle.pressed.connect(func() -> void:
 		catalog_open = not catalog_open
 		sync()
 	)
 	bar.add_child(catalog_toggle)
-	advanced_toggle = _button("高级", "展开完整坐标、吸附、对齐、蓝图等精细选项")
+	advanced_toggle = _button("精细", "展开完整坐标、吸附、对齐、蓝图等精细选项")
 	advanced_toggle.icon = Icons.texture("advanced")
 	advanced_toggle.pressed.connect(func() -> void:
 		advanced = not advanced
@@ -117,7 +124,7 @@ func _build_bar(canvas: Control) -> void:
 	var history: HBoxContainer = inspector_content.get_node("History")
 	history.reparent(bar)
 	for child: Control in history.get_children():
-		child.custom_minimum_size.x = 60
+		child.custom_minimum_size.x = 44
 		if child is Button:
 			child.icon = Icons.texture("undo" if child.name == "UndoLayout" else "redo")
 
@@ -128,13 +135,13 @@ func _build_dock(canvas: Control) -> void:
 	# Initialize hidden to avoid swallowing pointer events over the monitor taskbar.
 	dock.visible = false
 	dock.anchor_left = 0.0
-	dock.anchor_top = 1.0
-	dock.anchor_right = 1.0
+	dock.anchor_top = 0.0
+	dock.anchor_right = 0.0
 	dock.anchor_bottom = 1.0
-	dock.offset_left = 27.0
-	dock.offset_top = -296.0
-	dock.offset_right = -348.0
-	dock.offset_bottom = -18.0
+	dock.offset_left = 73.0
+	dock.offset_top = 151.0
+	dock.offset_right = 418.0
+	dock.offset_bottom = -24.0
 	canvas.add_child(dock)
 	var margin := MarginContainer.new()
 	margin.add_theme_constant_override("margin_left", 15)
@@ -148,6 +155,7 @@ func _build_dock(canvas: Control) -> void:
 	var inventory: VBoxContainer = host.get_node("HUD/Interface/LayoutPanel/Margin/Scroll/Content/FurnitureInventory")
 	inventory.reparent(body)
 	inventory.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	inventory.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	# A compact single-line filter row replaces stacked filters.
 	var controls: VBoxContainer = inventory.get_node("FurnitureCatalogControls")
 	_filter_parent = controls
@@ -159,13 +167,15 @@ func _build_dock(canvas: Control) -> void:
 		var control: Control = host.get_node("%"+key)
 		control.reparent(filter_row)
 		control.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		control.custom_minimum_size.x = 156 if key == "FurnitureCatalogSearch" else 110
+		control.custom_minimum_size.x = 150 if key == "FurnitureCatalogSearch" else 98
+		if key == "FurnitureCatalogGroup": control.hide()
 	host.get_node("%FurnitureCatalogStatus").hide()
 	var list: GridContainer = host.get_node("%FurnitureCatalogItems")
 	var scroller := ScrollContainer.new()
 	scroller.name = "RoomCatalogScroll"
-	scroller.custom_minimum_size = Vector2(0, 162)
+	scroller.custom_minimum_size = Vector2(0, 120)
 	scroller.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroller.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	scroller.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	_catalog_scroller = scroller
 	inventory.add_child(scroller)
@@ -173,7 +183,7 @@ func _build_dock(canvas: Control) -> void:
 	list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	for item: Button in list.get_children():
 		if item.visible:
-			item.custom_minimum_size = Vector2(174, 152) if item.name.begins_with("Catalog_room_") else Vector2(174, 46)
+			item.custom_minimum_size = Vector2(132, 138) if item.name.begins_with("Catalog_room_") else Vector2(132, 46)
 			item.clip_text = true
 	# The room's individual finish selection belongs to the right inspector,
 	# not to the all-products catalog drawer.
@@ -182,7 +192,7 @@ func _build_dock(canvas: Control) -> void:
 	var palette: OptionButton = host.get_node("%FurniturePalette")
 	palette.reparent(inspector_content)
 	var catalog_label: Label = inventory.get_node("FurnitureCatalogLabel")
-	catalog_label.text = "家居目录 · 已拥有的物品"
+	catalog_label.text = "家具物品 · 点击开始摆放"
 	catalog_label.add_theme_font_size_override("font_size", 16)
 
 func _resize_layout() -> void:
@@ -192,33 +202,32 @@ func _resize_layout() -> void:
 func _apply_layout_size(area: Vector2) -> void:
 	if area == _last_dimensions: return
 	_last_dimensions = area
-	var compact := area.x < 890.0
-	var tiny := area.x < 600.0
-	bar.position = Vector2(16,77) if compact else Vector2(27,79)
-	bar.size = Vector2(maxf(320.0,area.x - 30.0),43) if compact else Vector2(785,45)
-	bar.add_theme_constant_override("separation",3 if tiny else 6 if compact else 8)
+	var compact: bool = area.x < 980.0
+	var tiny: bool = area.x < 640.0
+	bar.position = Vector2(12,75) if compact else Vector2(16,76)
+	bar.size = Vector2(maxf(315.0,area.x-24.0),43) if compact else Vector2(520,45)
+	bar.add_theme_constant_override("separation",2 if tiny else 4 if compact else 5)
 	for id: String in mode_buttons:
 		var button: Button = mode_buttons[id]
-		var long_names := {"furniture":"家具","decor":"装修","lighting":"灯光","build":"建造"}
-		var short_names := {"furniture":"家","decor":"装","lighting":"光","build":"建"}
-		button.text = str(short_names[id] if tiny else long_names[id])
-		button.custom_minimum_size.x = 46 if tiny else 58 if compact else 69
-		button.tooltip_text = str(long_names[id])
-	catalog_toggle.custom_minimum_size.x = 48 if tiny else 70 if compact else 91
-	advanced_toggle.custom_minimum_size.x = 48 if tiny else 70 if compact else 66
+		button.text = ""
+		button.custom_minimum_size.x = 40 if tiny else 43 if compact else 44
+	catalog_toggle.text = "" if tiny else "物品"
+	catalog_toggle.custom_minimum_size.x = 41 if tiny else 64
+	advanced_toggle.text = "" if tiny else "精细"
+	advanced_toggle.custom_minimum_size.x = 41 if tiny else 64
 	for action: Button in bar.get_node("History").get_children():
-		action.custom_minimum_size.x = 42 if tiny else 50 if compact else 60
-		action.text = "" if tiny else ("撤销" if action.name == "UndoLayout" else "重做")
+		action.text = ""
+		action.custom_minimum_size.x = 39 if tiny else 44
 	var list: GridContainer = host.get_node("%FurnitureCatalogItems")
-	list.columns = 2 if area.x < 970.0 else 3 if area.x < 1480.0 else 4
-	dock.offset_left = 14.0 if compact else 27.0
-	dock.offset_right = -14.0 if compact else -348.0
-	dock.offset_top = -317.0 if tiny else -296.0
-	dock.offset_bottom = -12.0 if compact else -18.0
-	_inspector.offset_left = -minf(304.0,area.x - 32.0)
-	_inspector.offset_right = -14.0 if compact else -22.0
-	_inspector.offset_top = 130.0 if compact else 137.0
-	_inspector.offset_bottom = -333.0 if tiny else -310.0 if compact else -18.0
+	list.columns = 1 if compact else 2
+	dock.offset_left = 59.0 if compact else 73.0
+	dock.offset_right = minf(area.x - 9.0,321.0) if compact else 418.0
+	dock.offset_top = 134.0 if area.y < 660.0 else 151.0
+	dock.offset_bottom = -12.0 if compact else -24.0
+	_inspector.offset_left = -minf(326.0,area.x - 24.0)
+	_inspector.offset_right = -10.0 if compact else -22.0
+	_inspector.offset_top = 128.0 if compact else 137.0
+	_inspector.offset_bottom = -14.0
 	if tiny and _filter_row.get_child_count() > 0:
 		for control: Control in _filter_row.get_children():
 			control.reparent(_filter_parent)
@@ -228,14 +237,17 @@ func _apply_layout_size(area: Vector2) -> void:
 		for key: String in ["FurnitureCatalogGroup","FurnitureCatalogType","FurnitureCatalogSearch"]:
 			var control: Control = host.get_node("%"+key)
 			control.reparent(_filter_row)
-			control.custom_minimum_size.x = 156 if key == "FurnitureCatalogSearch" else 110
+			control.custom_minimum_size.x = 150 if key == "FurnitureCatalogSearch" else 98
 		_filter_row.show()
+		host.get_node("%FurnitureCatalogGroup").hide()
 	if area.x < 780:
 		host.get_node("%ResetView").hide()
 		host.get_node("%FocusToggle").text = "电脑"
 	else:
 		host.get_node("%ResetView").visible = host.world.mode in ["overview","layout"]
 		host.get_node("%FocusToggle").text = "使用电脑  >"
+	if scene_actions != null:
+		scene_actions.resize(area)
 	if host.furniture_cards != null:
 		host.furniture_cards.request_visible.call_deferred()
 
@@ -296,6 +308,8 @@ func _sync_feedback(active: bool) -> void:
 func choose_mode(next_mode: String) -> void:
 	if not mode_buttons.has(next_mode): return
 	mode = next_mode
+	if scene_actions != null: scene_actions.hide_colors()
+	if next_mode == "furniture": catalog_open = true
 	host.set_blueprint_mode(mode == "build")
 	sync()
 
@@ -305,7 +319,7 @@ func sync() -> void:
 	if active and not was_active:
 		mode = "furniture"
 		advanced = false
-		catalog_open = true
+		catalog_open = false
 		last_selected = "desk"
 	if active:
 		var selected: String = str(host.world.layout.selected)
@@ -316,6 +330,9 @@ func sync() -> void:
 		last_selected = selected
 	was_active = active
 	bar.visible = active
+	# Scene-first tools are next to the object. The full inspector only appears
+	# for decoration, lighting, blueprint or a deliberate "precise" request.
+	_inspector.visible = active and (host.blueprint_mode or mode != "furniture" or advanced)
 	_sync_feedback(active)
 	var show_dock: bool = active and mode == "furniture" and catalog_open and not host.blueprint_mode
 	if show_dock != _last_dock_visible:
@@ -329,10 +346,11 @@ func sync() -> void:
 				host.furniture_cards.request_visible.call_deferred()
 		_last_dock_visible = show_dock
 	catalog_toggle.visible = active and mode == "furniture"
-	catalog_toggle.text = ("−" if catalog_open else "+") if _last_dimensions.x < 600 else "收起目录" if catalog_open else "显示目录"
-	advanced_toggle.text = ("−" if advanced else "+") if _last_dimensions.x < 600 else "收起高级" if advanced else "高级"
+	catalog_toggle.text = "" if _last_dimensions.x < 640 else "收起" if catalog_open else "物品"
+	advanced_toggle.text = "" if _last_dimensions.x < 640 else "收起" if advanced else "精细"
 	for id: String in mode_buttons:
 		mode_buttons[id].set_pressed_no_signal(mode == id)
+	if scene_actions != null: scene_actions.sync(active)
 	if not active: return
 	if mode != _last_mode and not host.blueprint_mode:
 		_inspector.modulate.a = 0.65
