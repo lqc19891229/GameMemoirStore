@@ -20,7 +20,7 @@ func frames(count: int = 5) -> void:
 
 func find_row(browser: Control, action_name: String) -> Control:
 	for row: Node in browser.get_node("%Rows").get_children():
-		var action: Button = row.get_node_or_null("%Action")
+		var action: Button = row.get_node_or_null("Row/" + action_name)
 		if action != null and action.name == action_name:
 			return row as Control
 	return null
@@ -53,7 +53,7 @@ func run() -> void:
 	var row: Control = find_row(browser,"Buy_room_sofa")
 	check(row != null, "sofa shop row exists")
 	if row != null:
-		check(row.get_node("%QuickAction").visible, "shop exposes the explicit combined action")
+		check(row.get_node("Row/BuyPlace_room_sofa").visible, "shop exposes the explicit combined action")
 		check(row.get_node("%StockStatus").text.contains("可摆放 0"), "shop shows the same stock summary as the room editor")
 		var expand: Button = row.get_node("Row/Text/PreviewToggle")
 		var large: TextureRect = row.get_node("Row/Text/LargePreview")
@@ -84,9 +84,9 @@ func run() -> void:
 	picker.select(5)
 	browser.refresh()
 	var free_row: Control = find_row(browser,"Equip_room_sofa")
-	check(free_row != null and free_row.get_node("%Action").text == "摆放", "inventory offers one-click placement for a stored sofa")
+	check(free_row != null and free_row.get_node("Row/Equip_room_sofa").text == "摆放", "inventory offers one-click placement for a stored sofa")
 	check(free_row.get_node("%StockStatus").text.contains("可摆放 1"), "inventory displays actual available UID count")
-	free_row.get_node("%Action").pressed.emit()
+	free_row.get_node("Row/Equip_room_sofa").pressed.emit()
 	check(layout.active and not layout.placing_role.is_empty(), "inventory placement routes into existing 3D editor")
 	check(str(layout.placed_instances.get(layout.placing_role,"")) == first_uid, "stored copy preserves its distinct identity")
 	check(layout.color_for(layout.placing_role) == 5, "inventory's selected preview finish becomes the editable object's finish")
@@ -102,9 +102,9 @@ func run() -> void:
 	browser.set_tab("inventory")
 	browser.refresh()
 	var placed_row: Control = find_row(browser,"Equip_room_sofa")
-	check(placed_row != null and placed_row.get_node("%Action").text == "查看已摆放", "inventory replaces disabled already-placed button with a navigation action")
+	check(placed_row != null and placed_row.get_node("Row/Equip_room_sofa").text == "查看已摆放", "inventory replaces disabled already-placed button with a navigation action")
 	var saved_layout: Dictionary = layout.snapshot()
-	placed_row.get_node("%Action").pressed.emit()
+	placed_row.get_node("Row/Equip_room_sofa").pressed.emit()
 	check(layout.active and layout.Data.base_role(layout.selected) == "sofa", "clicking placed sofa selects and enters room editor")
 	check(desktop.world.orbit_target.x > -4 and desktop.world.orbit_target.z > 0, "inventory navigation focuses the selected 3D furniture")
 	check(layout.snapshot() == saved_layout, "navigating to an owned furniture never alters transforms")
