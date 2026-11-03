@@ -1019,6 +1019,9 @@ func _input(event: InputEvent) -> void:
 					elif room_ui.scene_actions.swatches.visible:
 						room_ui.scene_actions.hide_colors()
 						room_ui.sync()
+					elif room_ui.scene_actions.arrange_panel.visible:
+						room_ui.scene_actions.hide_arrange()
+						room_ui.sync()
 					elif room_ui.catalog_open:
 						room_ui.catalog_open = false
 						room_ui.sync()
