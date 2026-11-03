@@ -97,6 +97,7 @@ func _build() -> void:
 	_build_left_wall(wall, trim, wood, metal, linen, glass)
 	_build_back_wall(wall, trim, wood, dark_wood, metal, canvas, art_blue, art_sage, art_ochre)
 	_build_ceiling_trim(trim, metal)
+	_build_lighting_accents()
 	_build_notch_walls(wall, trim)
 	_build_custom_exterior(wall, trim)
 	_build_partitions(wall, trim)
@@ -144,6 +145,8 @@ func _build_left_wall(wall: Material, trim: Material, wood: Material, metal: Mat
 	_box(left, "WallSurface_WindowRight", Vector3(.12, 1.44, upper_z - right_start), Vector3(x, 2.0, (right_start + upper_z) * .5), wall, "wall")
 	_box(left, "WindowGlass", Vector3(.025, 1.43, 2.25), Vector3(x + .07, 1.99, window_z), glass)
 	_box(left, "WindowSill", Vector3(.2, .065, 2.48), Vector3(x + .18, 1.245, window_z), wood)
+	_box(left, "WindowSillApron", Vector3(.09,.10,2.36), Vector3(x+.25,1.166,window_z), trim)
+	_box(left, "WindowSillHighlight", Vector3(.26,.018,2.49), Vector3(x+.18,1.283,window_z), _material(Color("e9ddcb"),.48))
 	for z in [window_z - 1.16, window_z + 1.16]:
 		_box(left, "WindowFrame", Vector3(.10, 1.55, .075), Vector3(x + .15, 1.99, z), trim)
 	for y in [1.22, 2.76]:
@@ -154,6 +157,7 @@ func _build_left_wall(wall: Material, trim: Material, wood: Material, metal: Mat
 	rail.rotation.x = PI / 2.0
 	for panel_center in [window_z - .92, window_z + .92]:
 		_box(left, "CurtainPanel", Vector3(.075, 1.62, .42), Vector3(x + .23, 1.98, panel_center), linen)
+		_box(left, "CurtainHem", Vector3(.085,.055,.45),Vector3(x+.235,1.19,panel_center),trim)
 		for fold in range(5):
 			_box(left, "CurtainFold", Vector3(.018, 1.55, .025), Vector3(x + .275, 1.98, float(panel_center) - .16 + float(fold) * .08), trim)
 	var sky := _material(Color("c6d7d8"), 1.0)
@@ -175,6 +179,23 @@ func _build_left_wall(wall: Material, trim: Material, wood: Material, metal: Mat
 	_box(left, "DistantBuilding", Vector3(.08, .58, .62), Vector3(x - .66, 1.58, window_z - .68), distant)
 	_box(left, "DistantBuilding", Vector3(.08, .90, .48), Vector3(x - .66, 1.73, window_z + .08), near_building)
 	_box(left, "DistantBuilding", Vector3(.08, .48, .58), Vector3(x - .66, 1.52, window_z + .92), distant)
+	# Three simple facade silhouettes and a handful of lit windows add depth
+	# behind the pane without a texture atlas, imported meshes or weather DLC.
+	var facade_lights := _group(left,"ExteriorWindows")
+	var warm_panes := _material(Color("ffd9a0"),.76)
+	warm_panes.emission_enabled = true
+	warm_panes.emission = Color("ffd9a0")
+	warm_panes.emission_energy_multiplier = .35
+	for section in range(3):
+		var section_z: float = window_z + [-.68,.08,.92][section]
+		var section_height: int = [2,3,2][section]
+		for level in range(section_height):
+			for column in range(2):
+				var pane_z: float = section_z + (float(column)-.5)*.21
+				var pane_y: float = 1.46+float(level)*.19
+				_box(facade_lights,"WarmWindow_%d_%d_%d" % [section,level,column],Vector3(.012,.075,.063),
+					Vector3(x-.601,pane_y,pane_z),warm_panes)
+	facade_lights.visible = false
 	_box(left, "Left_Skirting", Vector3(.10, .16, blueprint.depth + .05), Vector3(x + .12, .08, 0), trim)
 	_box(left, "Left_CapTrim", Vector3(.16, .055, blueprint.depth + .12), Vector3(x + .06, 3.19, 0), trim)
 
@@ -202,6 +223,7 @@ func _build_back_wall(wall: Material, trim: Material, wood: Material, dark_wood:
 	if art_available > 1.8:
 		_box(back, "WallArtFrame", Vector3(1.58, 1.08, .07), Vector3(art_x, 2.08, z + .105), dark_wood)
 		_box(back, "WallArtCanvas", Vector3(1.47, .97, .025), Vector3(art_x, 2.08, z + .15), canvas)
+		_box(back, "WallArtInnerBevel",Vector3(1.52,1.02,.012),Vector3(art_x,2.08,z+.132),metal)
 		_box(back, "WallArtBlue", Vector3(.48, .72, .025), Vector3(art_x - .32, 2.08, z + .175), art_blue)
 		_box(back, "WallArtSage", Vector3(.48, .30, .026), Vector3(art_x + .17, 1.86, z + .178), art_sage)
 		_box(back, "WallArtOchre", Vector3(.28, .28, .028), Vector3(art_x + .33, 2.35, z + .18), art_ochre)
@@ -215,6 +237,30 @@ func _build_ceiling_trim(trim: Material, metal: Material) -> void:
 	_box(ceiling, "Left_CeilingCove", Vector3(.20, .11, blueprint.depth + .2), Vector3(-half_x + .01, 3.16, 0), trim)
 	_box(ceiling, "Back_CeilingCove", Vector3(blueprint.width + .2, .11, .20), Vector3(0, 3.16, -half_z + .01), trim)
 	_cylinder(ceiling, "RecessedSpotTrim", .12, .12, .035, Vector3(.1, 3.08, -half_z + .28), metal, 32)
+
+func _build_lighting_accents() -> void:
+	# Renderer-compatible, unshadowed diffuse bounce fills the dark half of
+	# a cutaway room. They are separate from wall geometry so camera cutaway
+	# never turns the actual lighting off.
+	var bounce := OmniLight3D.new()
+	bounce.name = "WindowBounce"
+	bounce.position = Vector3(-float(blueprint.width)*.5+.72,2.05,float(blueprint.window_z))
+	bounce.omni_range = 3.8
+	bounce.light_energy = .24
+	bounce.light_color = Color("ffe8c5")
+	bounce.shadow_enabled = false
+	bounce.distance_fade_enabled = true
+	bounce.distance_fade_begin = 5.0
+	bounce.distance_fade_length = 3.0
+	add_child(bounce)
+	var cove := OmniLight3D.new()
+	cove.name = "WarmCoveFill"
+	cove.position = Vector3(.15,2.83,-float(blueprint.depth)*.5+.42)
+	cove.omni_range = 3.3
+	cove.light_energy = .12
+	cove.light_color = Color("ffdfb3")
+	cove.shadow_enabled = false
+	add_child(cove)
 
 func _build_partitions(wall: Material, trim: Material) -> void:
 	var pieces := _group(self, "Partitions")
