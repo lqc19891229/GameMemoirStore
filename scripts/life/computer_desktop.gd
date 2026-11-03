@@ -20,6 +20,11 @@ var orbiting := false
 var pointer_origin := Vector2.ZERO
 var camera_dragged := false
 const DRAG_THRESHOLD := 6.0
+# Click-select begins immediately, while freehand movement only activates once
+# the pointer has travelled far enough to distinguish a drag from a click.
+var pending_drag_role := ""
+var pending_drag_start := Vector2.ZERO
+var pending_drag_operation := ""
 var screen_mouse_down := false
 var last_screen_point := Vector2.ZERO
 var furniture_buttons: Dictionary = {}
@@ -252,6 +257,7 @@ func begin_layout() -> void:
 	_sync_layout()
 
 func finish_layout(apply: bool) -> void:
+	_cancel_pending_furniture_drag()
 	if not world.layout.finish(apply): return
 	if blueprint_mode: set_blueprint_mode(false)
 	_set_mode("overview", false)
@@ -397,6 +403,7 @@ func _start_inventory_placement(item_id: String) -> void:
 
 func set_blueprint_mode(enabled: bool) -> void:
 	if enabled and not world.layout.active: return
+	_cancel_pending_furniture_drag()
 	if dragging_custom_edge:
 		world.layout.end_custom_edge_drag()
 		dragging_custom_edge = false
@@ -1043,6 +1050,10 @@ func _unhandled_input(event: InputEvent) -> void:
 		if (dragging and camera_dragged) or orbiting: world.orbit_overview(event.relative)
 		if dragging or orbiting: get_viewport().set_input_as_handled()
 
+func _cancel_pending_furniture_drag() -> void:
+	pending_drag_role = ""
+	pending_drag_operation = ""
+
 func _layout_input(event: InputEvent) -> void:
 	var layout = world.layout
 	if event is InputEventMouseButton:
@@ -1062,20 +1073,27 @@ func _layout_input(event: InputEvent) -> void:
 			return
 		if event.button_index == MOUSE_BUTTON_LEFT:
 			if not event.pressed:
+				_cancel_pending_furniture_drag()
 				layout.end_drag()
 			else:
+				_cancel_pending_furniture_drag()
 				layout.snap_bypass = event.alt_pressed
 				var handle: String = layout.pick_handle(event.position)
 				if not handle.is_empty():
+					# Precision gizmo handles retain their immediate response.
 					layout.begin_drag(event.position,"rotate" if handle == "rotate" else "move",handle,true)
 				else:
 					var role: String = world.pick_at(event.position)
 					if not role.is_empty():
 						layout.select(role)
-						# Clicking the object itself always means moving it.
-						# Shift + click-and-drag rotates without changing tools.
-						layout.begin_drag(event.position,"rotate" if event.shift_pressed else "move")
-		elif event.button_index == MOUSE_BUTTON_RIGHT: orbiting = event.pressed
+						# A click selects without touching the pose. Dragging
+						# starts after a short screen-space movement threshold.
+						pending_drag_role = role
+						pending_drag_start = event.position
+						pending_drag_operation = "rotate" if event.shift_pressed else "move"
+		elif event.button_index == MOUSE_BUTTON_RIGHT:
+			if event.pressed: _cancel_pending_furniture_drag()
+			orbiting = event.pressed
 		elif event.pressed and event.button_index in [MOUSE_BUTTON_WHEEL_UP,MOUSE_BUTTON_WHEEL_DOWN]:
 			world.zoom_overview(0.9 if event.button_index == MOUSE_BUTTON_WHEEL_UP else 1.1)
 		else: return
@@ -1086,10 +1104,19 @@ func _layout_input(event: InputEvent) -> void:
 			layout.preview_at(event.position)
 			get_viewport().set_input_as_handled()
 		elif orbiting: world.orbit_overview(event.relative)
+		elif not pending_drag_role.is_empty():
+			if pending_drag_start.distance_to(event.position) >= DRAG_THRESHOLD:
+				var selected_role: String = pending_drag_role
+				var operation: String = pending_drag_operation
+				_cancel_pending_furniture_drag()
+				if layout.selected == selected_role and layout.nodes.has(selected_role):
+					layout.begin_drag(pending_drag_start,operation)
+					layout.drag_to(event.position)
 		else: layout.drag_to(event.position)
-		if orbiting or not layout.gesture.is_empty(): get_viewport().set_input_as_handled()
+		if orbiting or not layout.gesture.is_empty() or not pending_drag_role.is_empty(): get_viewport().set_input_as_handled()
 
 func _clear_gesture() -> void:
+	_cancel_pending_furniture_drag()
 	world.layout.end_wall_stroke()
 	if dragging_custom_edge:
 		world.layout.end_custom_edge_drag()
