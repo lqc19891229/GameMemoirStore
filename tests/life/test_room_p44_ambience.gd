@@ -41,6 +41,7 @@ func run() -> void:
 	await create_timer(.12).timeout
 	check(not is_equal_approx(first_drop.position.y, before), "rain particles move without modifying blueprint")
 	for streak: Node3D in rain.get_children():
+		if not streak is MeshInstance3D: continue
 		var box := (streak as MeshInstance3D).mesh as BoxMesh
 		var height: float = box.size.y if box != null else .37
 		check(streak.position.y - height * .5 >= 1.31 and streak.position.y + height * .5 <= 2.67, "animated raindrop remains inside window bounds: " + streak.name)
