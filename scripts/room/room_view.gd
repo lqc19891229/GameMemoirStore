@@ -74,10 +74,14 @@ func _make_rain_loop() -> AudioStreamWAV:
 		var noise := float(seed_value) / 1073741823.5 - 1.0
 		smoothed = smoothed * .82 + noise * .18
 		values[i] = smoothed
+	# Fade the final samples toward the very first sample. The last PCM
+	# value then equals the first exactly, without a wraparound click.
+	# A 63 ms crossfade is long enough to suppress a sudden noise jump.
+	var first_value: float = values[0]
 	for i in range(SEAM):
 		var blend := float(i) / float(SEAM - 1)
 		var tail := SAMPLES - SEAM + i
-		values[tail] = lerpf(values[tail], values[i], blend)
+		values[tail] = lerpf(values[tail], first_value, blend)
 	var pcm := PackedByteArray()
 	pcm.resize(SAMPLES * 2)
 	for i in range(SAMPLES):
