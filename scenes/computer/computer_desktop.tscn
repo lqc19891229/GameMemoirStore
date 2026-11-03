@@ -487,6 +487,19 @@ unique_name_in_owner = true
 layout_mode = 2
 tooltip_text = "晴昼 / 日落 / 夜晚 / 雨天"
 
+[node name="AmbienceVolumeLabel" type="Label" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content"]
+layout_mode = 2
+text = "雨声音量（0 为静音）"
+
+[node name="Style_ambience_volume" type="HSlider" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+min_value = 0.0
+max_value = 100.0
+step = 1.0
+value = 70.0
+tooltip_text = "雨天的环境音量；随装修方案保存，其他天气无雨声"
+
 [node name="Layout_sofa" type="Button" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content"]
 unique_name_in_owner = true
 layout_mode = 2
