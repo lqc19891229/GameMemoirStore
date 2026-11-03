@@ -38,6 +38,64 @@ var style := {"wall": 0, "floor": 0, "light": 0, "rgb": 0, "brightness": 70, "ef
 var _patterns: Dictionary = {}
 var _environment_owned := false
 
+# P44: visual rain is animated only while the rain preset is active.
+# Procedural audio is local to this room, not part of the save format.
+var _rain_elapsed := 0.0
+var _rain_sound: AudioStreamPlayer
+
+func _process(delta: float) -> void:
+	if Engine.is_editor_hint() or int(style.atmosphere) != 3:
+		return
+	var rain := $Shell.get_node_or_null("Left_Wall/RainStreaks") as Node3D
+	if rain == null or not rain.visible:
+		return
+	_rain_elapsed = fmod(_rain_elapsed + minf(delta, .1), 60.0)
+	for i in range(rain.get_child_count()):
+		var streak := rain.get_child(i) as Node3D
+		if streak == null: continue
+		# Independent looping drops, constrained to the existing window pane.
+		var phase := fposmod(float(i) * .37 + _rain_elapsed * (1.35 + float(i % 5) * .13), 1.55)
+		streak.position.y = 1.38 + phase
+
+func _make_rain_loop() -> AudioStreamWAV:
+	# Deterministic, low-volume filtered-noise bed. No external asset or
+	# platform codec dependency; created only on the first rainy preview.
+	const RATE := 11025
+	const SAMPLES := 11025
+	var pcm := PackedByteArray()
+	pcm.resize(SAMPLES * 2)
+	var seed_value := 1731
+	var smoothed := 0.0
+	for i in range(SAMPLES):
+		seed_value = int((seed_value * 48271) % 2147483647)
+		var noise := float(seed_value) / 1073741823.5 - 1.0
+		smoothed = smoothed * .82 + noise * .18
+		var fade := minf(1.0, minf(float(i), float(SAMPLES - 1 - i)) / 300.0)
+		var sample := int(clampf(smoothed * fade * 2800.0, -32767.0, 32767.0))
+		pcm[i * 2] = sample & 255
+		pcm[i * 2 + 1] = (sample >> 8) & 255
+	var audio := AudioStreamWAV.new()
+	audio.format = AudioStreamWAV.FORMAT_16_BITS
+	audio.mix_rate = RATE
+	audio.stereo = false
+	audio.loop_mode = AudioStreamWAV.LOOP_FORWARD
+	audio.data = pcm
+	return audio
+
+func _update_rain_sound(index: int) -> void:
+	if Engine.is_editor_hint(): return
+	if index != 3:
+		if _rain_sound != null: _rain_sound.stop()
+		return
+	if _rain_sound == null:
+		_rain_sound = AudioStreamPlayer.new()
+		_rain_sound.name = "RainAmbience"
+		_rain_sound.volume_db = -24.0
+		_rain_sound.stream = _make_rain_loop()
+		add_child(_rain_sound)
+	if not _rain_sound.playing: _rain_sound.play()
+
+
 static func clean_style(raw: Variant) -> Dictionary:
 	var result := {"wall": 0, "floor": 0, "light": 0, "rgb": 0, "brightness": 70, "effect": 0, "wall_pattern":0, "floor_pattern":0, "atmosphere":0}
 	if not raw is Dictionary:
@@ -134,6 +192,7 @@ func _apply_atmosphere() -> void:
 		(sky.material_override as StandardMaterial3D).albedo_color = ATMOSPHERE_SKY[index]
 	var rain := $Shell.get_node_or_null("Left_Wall/RainStreaks") as Node3D
 	if rain != null: rain.visible = index == 3
+	_update_rain_sound(index)
 	var windows := $Shell.get_node_or_null("Left_Wall/ExteriorWindows") as Node3D
 	if windows != null: windows.visible = index in [1,2,3]
 	# Daylight must read as window light; moonlight and rain become less warm.
