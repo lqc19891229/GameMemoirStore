@@ -335,9 +335,14 @@ func sync(active: bool) -> void:
 	action_buttons["paint"].set_pressed_no_signal(swatches.visible)
 	action_buttons["arrange"].set_pressed_no_signal(arrange_panel.visible)
 	var multi: bool = group_size > 1
+	var ordinary_hints := {
+		"paint":"选择单件家具颜色",
+		"arrange":"附近家具对齐 · 同类家具等距排列",
+		"store":"收纳这件家具 · Delete"
+	}
 	for action_id in ["paint","arrange","store"]:
 		action_buttons[action_id].disabled = multi
-		action_buttons[action_id].tooltip_text = "多选时仅支持整组移动与旋转 · Esc 返回单选" if multi else str(ACTIONS.filter(func(spec: Dictionary) -> bool: return spec.id == action_id)[0].hint)
+		action_buttons[action_id].tooltip_text = "多选时仅支持整组移动与旋转 · Esc 返回单选" if multi else str(ordinary_hints[action_id])
 	if arrange_panel.visible: _refresh_arrangement(role)
 	var has_copy: bool = not InventoryData.unused_uid(layout.available_inventory,layout.placed_instances,InventoryData.furniture_item_id(layout.Data.base_role(role))).is_empty()
 	action_buttons["duplicate"].disabled = multi or not has_copy
