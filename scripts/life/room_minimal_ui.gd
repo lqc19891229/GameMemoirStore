@@ -38,7 +38,7 @@ var scene_actions: Node
 const CORE_INSPECTOR := {
 	"furniture": ["LayoutSelection","Tools","Copies","FurniturePaletteLabel","FurniturePalette","LayoutMessage"],
 	"decor": ["StyleLabel","Style_wall","Style_floor","Style_wall_pattern","Style_floor_pattern"],
-	"lighting": ["StyleLabel","Style_light","Style_rgb","Style_effect","Style_brightness","Style_atmosphere"]
+	"lighting": ["StyleLabel","Style_light","Style_rgb","Style_effect","Style_brightness","Style_atmosphere","AmbienceVolumeLabel","Style_ambience_volume"]
 }
 const ADVANCED_INSPECTOR := ["Objects","Angles","SnapLayout","LayoutPose","LayoutSize","WallSnapToggle","FurnitureAssistsTitle","InnerWallSnapToggle","FurnitureAssistHint","FurnitureAlignmentTools","FurnitureDistributeTools","RestoreLayout","Layout_sofa","Layout_stool"]
 const CORE_BLUEPRINT := ["BlueprintTitle","BlueprintQuickTools","BlueprintGridToggle","BlueprintFloorTool","BlueprintShapeLabel","BlueprintShape","BlueprintStatus"]
