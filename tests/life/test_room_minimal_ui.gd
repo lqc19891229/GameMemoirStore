@@ -19,10 +19,12 @@ func frames() -> void:
 	for i in range(5):
 		await process_frame
 
-func shortcut(code: Key) -> InputEventKey:
+func shortcut(code: Key, shift: bool = false, ctrl: bool = false) -> InputEventKey:
 	var event := InputEventKey.new()
 	event.keycode = code
 	event.pressed = true
+	event.shift_pressed = shift
+	event.ctrl_pressed = ctrl
 	return event
 
 func run() -> void:
@@ -154,6 +156,55 @@ func run() -> void:
 	check(desktop.blueprint_mode and ui.mode == "build", "Tab toggles directly to blueprint mode")
 	desktop._input(shortcut(KEY_TAB))
 	check(not desktop.blueprint_mode and ui.mode == "furniture", "second Tab returns to furniture editing")
+
+	# Scene hotkeys use the same constrained movement, rotation and undo stack
+	# as dragging. Keep them independent of the catalog and blueprint inputs.
+	ui.catalog_open = false
+	ui.sync()
+	layout.select("rug")
+	layout.move_to(Vector2.ZERO)
+	check(layout.selected == "rug" and layout.valid, "floor rug is available for safe X/Z keyboard placement checks")
+	var original_rug: Transform3D = layout.nodes["rug"].transform
+	var undo_depth: int = layout.undo_stack.size()
+	desktop._input(shortcut(KEY_RIGHT))
+	var after_grid: Transform3D = layout.nodes["rug"].transform
+	check(absf(after_grid.origin.x - original_rug.origin.x - layout.grid_step) < 0.003, "right arrow moves exactly one configured X grid step")
+	check(layout.undo_stack.size() == undo_depth + 1 and ui.feedback_state == "keyboard", "keyboard nudge creates one undo record and a temporary in-scene transform readout")
+	check(ui.feedback_pose_text.text.contains("X ") and ui.feedback_pose_text.text.contains("Z "), "keyboard feedback displays the actual nudge coordinates")
+	check(ui.scene_actions.hint.text.contains("网格开"), "keyboard shortcut hint reflects enabled grid snapping")
+	desktop._input(shortcut(KEY_UP,true))
+	var after_fine: Transform3D = layout.nodes["rug"].transform
+	check(absf(after_fine.origin.z - after_grid.origin.z + 0.01) < 0.003, "Shift+Up moves one centimeter even while the grid is enabled")
+	check(layout.snapping and ui.feedback_text.text.contains("1 cm"), "fine nudge temporarily bypasses grid rounding without switching the global snap mode")
+	desktop._input(shortcut(KEY_Z,false,true))
+	check(layout.nodes["rug"].transform.is_equal_approx(after_grid), "Ctrl+Z reverts a fine nudge without undoing the earlier grid step")
+	desktop._input(shortcut(KEY_Q))
+	var after_turn: float = layout.nodes["rug"].rotation.y
+	check(absf(angle_difference(original_rug.basis.get_euler().y,after_turn) + deg_to_rad(layout.angle_step)) < 0.02, "Q rotates by the configured snapped angle step")
+	desktop._input(shortcut(KEY_Q,true))
+	var after_fine_turn: float = layout.nodes["rug"].rotation.y
+	check(absf(angle_difference(after_turn,after_fine_turn) + deg_to_rad(1.0)) < 0.02, "Shift+Q rotates by one degree without being rounded to 15 degrees")
+	check(layout.snapping and ui.feedback_text.text.contains("1°"), "fine rotation retains snapping mode and displays its precision")
+	desktop._input(shortcut(KEY_S))
+	check(not layout.snapping and ui.feedback_text.text.contains("网格吸附：关闭") and ui.feedback_pose_text.text.contains("自由定位"), "S turns grid snapping off and updates the scene precision readout")
+	check(ui.scene_actions.hint.text.contains("网格关"), "shortcut hint displays current grid-off state")
+	desktop._input(shortcut(KEY_S))
+	check(layout.snapping and ui.scene_actions.hint.text.contains("网格开"), "S restores grid snapping with an updated hint")
+	var pose_before_catalog: Transform3D = layout.nodes["rug"].transform
+	ui.catalog_open = true
+	ui.sync()
+	desktop._input(shortcut(KEY_LEFT))
+	desktop._input(shortcut(KEY_S))
+	check(layout.nodes["rug"].transform.is_equal_approx(pose_before_catalog) and layout.snapping, "open inventory drawer keeps arrow navigation and S from editing room furniture")
+	ui.catalog_open = false
+	ui.sync()
+	desktop._input(shortcut(KEY_TAB))
+	var pose_before_blueprint: Transform3D = layout.nodes["rug"].transform
+	desktop._input(shortcut(KEY_LEFT))
+	desktop._input(shortcut(KEY_S))
+	check(desktop.blueprint_mode and layout.snapping and layout.nodes["rug"].transform.is_equal_approx(pose_before_blueprint), "blueprint mode rejects furniture movement and grid-switch hotkeys")
+	desktop._input(shortcut(KEY_TAB))
+	check(not desktop.blueprint_mode, "after precision-key checks Tab returns to furniture mode")
 	desktop.finish_layout(false)
 	check(not ui.bar.visible and not ui.dock.visible and not tools.rail.visible and not tools.action_strip.visible and not tools.selection_chip.visible, "leaving editing restores an unobstructed room view")
 	check(game.session.state.life.workstation_layout == Life.defaults().workstation_layout, "UI-only actions never change saved workstation poses")
