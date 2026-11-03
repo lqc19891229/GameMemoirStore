@@ -2,6 +2,75 @@
 extends Node3D
 ## Runtime-authored architectural shell for the modern sample room.
 ## Dimensions are in metres; the front and right sides remain open for the showcase camera.
+## P42: architectural finish improvements reuse the same room dimensions and
+## have no physics or layout_role metadata, preserving free furniture editing.
+
+var _sky_gradient_cache: Texture2D
+var _linen_weave_cache: Texture2D
+
+func _sky_gradient_texture() -> Texture2D:
+	if _sky_gradient_cache != null: return _sky_gradient_cache
+	var image := Image.create(128,128,false,Image.FORMAT_RGBA8)
+	for y in range(128):
+		for x in range(128):
+			var u := float(x)/127.0
+			var v := float(y)/127.0
+			# Slight horizon brightness and thin wispy clouds. This grayscale
+			# texture is tinted by the existing four weather palettes.
+			var cloud_level := .36+.023*sin(u*TAU*2.0)+.014*sin(u*TAU*5.0)
+			var cloud := exp(-pow((v-cloud_level)/.065,2.0))
+			var value := clampf(.885+.075*(1.0-v)+.032*cloud,.86,1.0)
+			image.set_pixel(x,y,Color(value,value,value))
+	image.generate_mipmaps()
+	_sky_gradient_cache = ImageTexture.create_from_image(image)
+	return _sky_gradient_cache
+
+func _linen_weave_texture() -> Texture2D:
+	if _linen_weave_cache != null: return _linen_weave_cache
+	var image := Image.create(64,64,false,Image.FORMAT_RGBA8)
+	for y in range(64):
+		for x in range(64):
+			var warp := .030 if x % 5 == 0 else .009 if x % 5 == 1 else 0.0
+			var weft := .025 if y % 7 == 0 else 0.0
+			var shade := .925+warp+weft+.011*sin(float(x)*.74+float(y)*.23)
+			image.set_pixel(x,y,Color(shade,shade,shade))
+	image.generate_mipmaps()
+	_linen_weave_cache = ImageTexture.create_from_image(image)
+	return _linen_weave_cache
+
+func _curtain_point(u: float, v: float, width: float, height: float) -> Vector3:
+	# Pleats are actual shaded folds rather than 2D lines on a flat box.
+	var swell := .030*sin(u*TAU*4.0)*(.48+.52*(1.0-v))
+	var ripple := .006*sin(u*TAU*8.0+v*3.0)
+	return Vector3(swell+ripple,(v-.5)*height,(u-.5)*width)
+
+func _add_curtain_vertex(tool: SurfaceTool, u: float, v: float, width: float, height: float) -> void:
+	tool.set_uv(Vector2(u*2.0,v*2.0))
+	tool.add_vertex(_curtain_point(u,v,width,height))
+
+func _curtain_panel(parent: Node, at: Vector3, width: float, height: float, fabric: Material, label: String) -> MeshInstance3D:
+	var tool := SurfaceTool.new()
+	tool.begin(Mesh.PRIMITIVE_TRIANGLES)
+	for iy in range(10):
+		for ix in range(32):
+			var u0 := float(ix)/32.0
+			var u1 := float(ix+1)/32.0
+			var v0 := float(iy)/10.0
+			var v1 := float(iy+1)/10.0
+			_add_curtain_vertex(tool,u0,v0,width,height)
+			_add_curtain_vertex(tool,u1,v0,width,height)
+			_add_curtain_vertex(tool,u0,v1,width,height)
+			_add_curtain_vertex(tool,u1,v0,width,height)
+			_add_curtain_vertex(tool,u1,v1,width,height)
+			_add_curtain_vertex(tool,u0,v1,width,height)
+	tool.generate_normals()
+	var panel := MeshInstance3D.new()
+	panel.name = label
+	panel.mesh = tool.commit()
+	panel.position = at
+	panel.material_override = fabric
+	parent.add_child(panel)
+	return panel
 
 func _ready() -> void:
 	if not has_node("Floor"):
@@ -86,6 +155,9 @@ func _build() -> void:
 	var dark_wood := _material(Color("795b43"), 0.68)
 	var metal := _material(Color("555e61"), 0.38, 0.72)
 	var linen := _material(Color("ded5c5"), 0.96)
+	linen.albedo_texture = _linen_weave_texture()
+	linen.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
+	linen.cull_mode = BaseMaterial3D.CULL_DISABLED
 	var canvas := _material(Color("e8e1d6"), 0.92)
 	var art_blue := _material(Color("7d9ca6"), 0.82)
 	var art_sage := _material(Color("9eaa91"), 0.86)
@@ -155,12 +227,19 @@ func _build_left_wall(wall: Material, trim: Material, wood: Material, metal: Mat
 	_box(left, "WindowMullion", Vector3(.055, .045, 2.25), Vector3(x + .135, 1.99, window_z), trim)
 	var rail := _cylinder(left, "CurtainRail", .025, .025, 2.72, Vector3(x + .24, 2.84, window_z), metal, 20)
 	rail.rotation.x = PI / 2.0
-	for panel_center in [window_z - .92, window_z + .92]:
-		_box(left, "CurtainPanel", Vector3(.075, 1.62, .42), Vector3(x + .23, 1.98, panel_center), linen)
-		_box(left, "CurtainHem", Vector3(.085,.055,.45),Vector3(x+.235,1.19,panel_center),trim)
-		for fold in range(5):
-			_box(left, "CurtainFold", Vector3(.018, 1.55, .025), Vector3(x + .275, 1.98, float(panel_center) - .16 + float(fold) * .08), trim)
+	for panel_index in range(2):
+		var center_z: float = window_z+(-.92 if panel_index == 0 else .92)
+		_curtain_panel(left,Vector3(x+.25,2.01,center_z),.45,1.50,linen,"CurtainPanel" if panel_index == 0 else "CurtainPanel_%d" % panel_index)
+		_box(left,"CurtainHeader" if panel_index == 0 else "CurtainHeader_%d" % panel_index,Vector3(.042,.055,.45),Vector3(x+.25,2.781,center_z),linen)
+		_box(left,"CurtainHem" if panel_index == 0 else "CurtainHem_%d" % panel_index,Vector3(.048,.028,.46),Vector3(x+.25,1.27,center_z),linen)
+		for hook in range(4):
+			var hook_z := center_z-.165+float(hook)*.11
+			_box(left,"CurtainHook_%d_%d" % [panel_index,hook],
+				Vector3(.045,.070,.026),Vector3(x+.25,2.814,hook_z),metal)
 	var sky := _material(Color("c6d7d8"), 1.0)
+	sky.albedo_texture = _sky_gradient_texture()
+	sky.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
+	sky.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	var distant := _material(Color("a8b8b5"), 1.0)
 	var near_building := _material(Color("899d9b"), .96)
 	_box(left, "WindowSky", Vector3(.04, 1.34, 2.18), Vector3(x - .94, 1.99, window_z), sky)
