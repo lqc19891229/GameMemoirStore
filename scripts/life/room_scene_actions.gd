@@ -200,11 +200,12 @@ func perform_quick_slot(action: String, slot: int) -> bool:
 		"clear": ok = layout.clear_quick_group(slot)
 		_: return false
 	if ok:
-		room_ui.show_keyboard_feedback(
-			"已保存快捷编组 %d · %d 件" % [slot,layout.quick_group_size(slot)] if action == "save" else
-			"已重选快捷编组 %d · %d 件" % [slot,layout.group_selection.size()] if action == "recall" else
-			"已清空快捷编组 %d" % slot
-		)
+		var notice := ""
+		match action:
+			"save": notice = "已保存快捷编组 %d · %d 件" % [slot,layout.quick_group_size(slot)]
+			"recall": notice = "已重选快捷编组 %d · %d 件" % [slot,layout.group_selection.size()]
+			"clear": notice = "已清空快捷编组 %d" % slot
+		room_ui.show_keyboard_feedback(notice)
 		if action == "recall": hide_quick_groups()
 	_refresh_quick_groups()
 	room_ui.sync()
