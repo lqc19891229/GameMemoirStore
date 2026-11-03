@@ -12,6 +12,7 @@ const Data = preload("res://scripts/life/life_data.gd")
 const ItemCatalog: MemoirItemCatalog = preload("res://data/items/_catalog.tres")
 const InventoryData = preload("res://scripts/items/inventory_data.gd")
 const Finishes = preload("res://scripts/items/furniture_finishes.gd")
+const LayoutData = preload("res://scripts/life/workstation_layout_data.gd")
 var state = State.new()
 var timer: Timer
 # Passing preview finish through the existing two-argument placement signal
@@ -111,7 +112,7 @@ func focus_placed_furniture(id: String) -> String:
 	var item: MemoirItemDefinition = ItemCatalog.lookup(id)
 	if item == null or item.category != "furniture" or item.retired: return "此物品不能在房间中查看。"
 	for role: String in state.life["placements"]:
-		if ItemCatalog.item_for_placement_role(role.get_slice("__instance__",0).get_slice("_",0)) == item:
+		if ItemCatalog.item_for_placement_role(LayoutData.base_role(role)) == item:
 			furniture_focus_requested.emit(id)
 			return "正在房间中查看 %s。" % item.name
 	return "没有已摆放的这类家具。"
