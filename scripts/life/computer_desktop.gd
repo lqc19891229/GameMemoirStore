@@ -1019,7 +1019,10 @@ func _input(event: InputEvent) -> void:
 				get_viewport().set_input_as_handled()
 				return
 			if event.ctrl_pressed and event.keycode == KEY_D:
-				world.layout.duplicate_selected()
+				if not blueprint_mode and room_ui.mode == "furniture" and not room_ui.catalog_open and world.layout.group_selection.size() > 1:
+					room_ui.scene_actions.perform_action("duplicate")
+				elif world.layout.group_selection.size() <= 1:
+					world.layout.duplicate_selected()
 				get_viewport().set_input_as_handled()
 				return
 			# Same low-friction blueprint switching as common room builders.
@@ -1029,7 +1032,11 @@ func _input(event: InputEvent) -> void:
 				get_viewport().set_input_as_handled()
 				return
 			match event.keycode:
-				KEY_DELETE: world.layout.delete_selected()
+				KEY_DELETE:
+					if not blueprint_mode and room_ui.mode == "furniture" and not room_ui.catalog_open and world.layout.group_selection.size() > 1:
+						room_ui.scene_actions.perform_action("store")
+					elif world.layout.group_selection.size() <= 1:
+						world.layout.delete_selected()
 				KEY_ESCAPE:
 					if not world.layout.placing_role.is_empty():
 						world.layout.cancel_placement()

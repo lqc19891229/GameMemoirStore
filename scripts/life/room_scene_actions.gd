@@ -519,7 +519,7 @@ func perform_action(id: String) -> void:
 	if not host.world.layout.active or host.blueprint_mode or room_ui.catalog_open: return
 	var layout = host.world.layout
 	if not layout.placing_role.is_empty() or not layout.gesture.is_empty(): return
-	if layout.group_selection.size() > 1 and id not in ["move","rotate","paint","arrange"]: return
+	if layout.group_selection.size() > 1 and id not in ["move","rotate","paint","arrange","duplicate","store"]: return
 	if id != "arrange": hide_arrange()
 	if id != "paint": hide_colors()
 	if id not in ["move","rotate"]: hide_group_members()
@@ -534,9 +534,18 @@ func perform_action(id: String) -> void:
 			hide_colors()
 			arrange_panel.visible = not arrange_panel.visible
 		"duplicate":
-			layout.duplicate_selected()
+			if layout.group_selection.size() > 1:
+				var count: int = layout.group_selection.size()
+				var copied: bool = layout.duplicate_group()
+				room_ui.show_keyboard_feedback("已批量复制 %d 件 · Ctrl+Z 撤销" % count if copied else "复制失败 · " + str(layout.message))
+			else:
+				layout.duplicate_selected()
 		"store":
-			layout.store_selected()
+			if layout.group_selection.size() > 1:
+				var count: int = layout.group_selection.size()
+				if layout.store_group(): room_ui.show_keyboard_feedback("已收纳 %d 件 · Ctrl+Z 撤销" % count)
+			else:
+				layout.store_selected()
 	room_ui.sync()
 
 func perform_arrangement(id: String) -> void:
@@ -664,14 +673,19 @@ func sync(active: bool) -> void:
 	if group_panel.visible: _refresh_group_members()
 	action_buttons["paint"].disabled = false
 	action_buttons["arrange"].disabled = false
-	action_buttons["store"].disabled = multi
+	action_buttons["store"].disabled = false
 	action_buttons["paint"].tooltip_text = "统一修改 %d 件家具的颜色" % group_size if multi else "选择单件家具颜色"
 	action_buttons["arrange"].tooltip_text = "当前多选对齐与等距排列" if multi else "附近家具对齐 · 同类家具等距排列"
-	action_buttons["store"].tooltip_text = "多选不支持直接收纳 · Esc 返回单选" if multi else "收纳这件家具 · Delete"
+	action_buttons["store"].tooltip_text = "收纳全部 %d 件家具 · Delete · 可撤销" % group_size if multi else "收纳这件家具 · Delete"
 	if arrange_panel.visible: _refresh_arrangement(role)
-	var has_copy: bool = not InventoryData.unused_uid(layout.available_inventory,layout.placed_instances,InventoryData.furniture_item_id(layout.Data.base_role(role))).is_empty()
-	action_buttons["duplicate"].disabled = multi or not has_copy
-	action_buttons["duplicate"].tooltip_text = "多选时仅支持整组移动与旋转" if multi else "复制一件库存中的同款家具 · Ctrl+D" if has_copy else "同款家具没有可用库存 · 请先购买"
+	if multi:
+		var plan: Dictionary = layout.group_duplicate_plan()
+		action_buttons["duplicate"].disabled = plan.has("error")
+		action_buttons["duplicate"].tooltip_text = str(plan.error) if plan.has("error") else "批量复制 %d 件家具 · Ctrl+D · 一次撤销" % group_size
+	else:
+		var has_copy: bool = not InventoryData.unused_uid(layout.available_inventory,layout.placed_instances,InventoryData.furniture_item_id(layout.Data.base_role(role))).is_empty()
+		action_buttons["duplicate"].disabled = not has_copy
+		action_buttons["duplicate"].tooltip_text = "复制一件库存中的同款家具 · Ctrl+D" if has_copy else "同款家具没有可用库存 · 请先购买"
 	_reposition()
 	if swatches.visible:
 		for i in range(color_buttons.size()):
