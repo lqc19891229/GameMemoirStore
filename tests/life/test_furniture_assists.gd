@@ -164,6 +164,13 @@ func run() -> void:
 	check(layout.toggle_group_member("lamp_1") and layout.toggle_group_member("lamp_2"), "Ctrl-style toggles add two more individually owned instances to the selection")
 	check(layout.group_selection.size() == 3 and layout.selected == "lamp_2", "multi-selection tracks three live roles and a movable primary member")
 	check(layout.group_markers.size() == 2, "each additional selected furniture has a collision-free visual selection outline")
+	check(is_instance_valid(layout.group_bounds_marker) and layout.group_bounds_marker.mesh != null, "multi-selection draws a room-space group boundary and rotation-center cross")
+	check(layout.group_bounds_marker.find_children("*","CollisionShape3D",true,false).is_empty(), "group boundary marker never intercepts physics ray picks")
+	var group_box: Rect2 = layout.group_world_bounds()
+	check(group_box.has_area() and group_box.has_point(layout.group_pivot()), "group bounding box contains actual shared rotation pivot")
+	for role: String in group:
+		for corner: Vector2 in layout.footprint(role):
+			check(group_box.grow(.002).has_point(corner), "group bounding guide encloses all member footprint corners: " + role)
 	var poses_before_group: Dictionary = {}
 	for role: String in group:
 		poses_before_group[role] = layout.nodes[role].transform
@@ -175,6 +182,7 @@ func run() -> void:
 		check(absf(layout.nodes[role].position.x-old_pose.origin.x-.01) < .003 and absf(layout.nodes[role].position.z-old_pose.origin.z) < .003, "group nudge preserves every member offset: " + role)
 	check(layout.undo_stack.size() == history_before+1, "all three members moved in exactly one undo transaction")
 	check(layout.valid and layout._layout_blocker().is_empty(), "group translation never violates existing collision checks")
+	check(layout.group_world_bounds().position.distance_to(group_box.position+Vector2(.01,0)) < .003, "group bounding outline follows every translated member")
 	var moved_poses: Dictionary = {}
 	for role: String in group: moved_poses[role] = layout.nodes[role].transform
 	layout.undo()
@@ -197,7 +205,7 @@ func run() -> void:
 	var new_center := Vector2.ZERO
 	for role: String in group: new_center += Vector2(layout.nodes[role].position.x,layout.nodes[role].position.z)
 	new_center /= float(group.size())
-	check(new_center.distance_to(group_center) < .002, "group rotation keeps its centroid fixed")
+	check(new_center.distance_to(group_center) < .002 and layout.group_pivot().distance_to(new_center) < .002, "visible center cross matches the exact pivot used by rigid group rotation")
 	check(layout.undo_stack.size() == history_before+1, "the entire pivot rotation makes one undo record")
 	check(layout.valid and layout._layout_blocker().is_empty(), "rotated group remains valid and outside wall geometry")
 	layout.undo()
@@ -216,10 +224,49 @@ func run() -> void:
 	check(layout.undo_stack.size() == history_before + (1 if actually_moved else 0), "group adds exactly one undo step if movement was possible, or no entry when fully blocked")
 	check(layout.placed_instances == placed_before_group, "group transforms never consume, create or reassign owned furniture UIDs")
 	if actually_moved: layout.undo()
+	# Group wall magnet uses full group extents and validates each member's
+	# swept path, while Alt bypass leaves the requested delta unchanged.
+	var magnet_probe := Vector2.ZERO
+	var group_snap_found := false
+	var current_box: Rect2 = layout.group_world_bounds()
+	layout.gesture = "move"
+	for axis_id in range(2):
+		for direction in [-1.0,1.0]:
+			var adjust: float
+			if axis_id == 0:
+				adjust = (-layout.room_half_size.x+layout.edge_margin+layout.collision_margin+.015-current_box.position.x) if direction < 0 else (layout.room_half_size.x-layout.edge_margin-layout.collision_margin-.015-current_box.end.x)
+			else:
+				adjust = (-layout.room_half_size.y+layout.edge_margin+layout.collision_margin+.015-current_box.position.y) if direction < 0 else (layout.room_half_size.y-layout.edge_margin-layout.collision_margin-.015-current_box.end.y)
+			var trial: Vector2 = (Vector2(adjust-direction*.12,0) if axis_id == 0 else Vector2(0,adjust-direction*.12))
+			var magnetic: Vector2 = layout._group_wall_snap_delta(trial)
+			if magnetic.distance_to(trial) > .005:
+				magnet_probe = trial
+				group_snap_found = true
+				break
+		if group_snap_found: break
+	check(group_snap_found, "at least one room edge offers a collision-safe whole-group magnet")
+	if group_snap_found:
+		var before_magnet: Dictionary = {}
+		for role: String in group: before_magnet[role] = layout.nodes[role].transform
+		var magnet_target: Vector3 = layout.nodes[layout.selected].position
+		layout.move_to(Vector2(magnet_target.x,magnet_target.z)+magnet_probe)
+		check(layout.wall_magnet_active and layout.valid, "dragging whole selection toward a wall shows active magnet only for a valid group destination")
+		var xz_delta: Vector2 = Vector2(layout.nodes[layout.selected].position.x-magnet_target.x,layout.nodes[layout.selected].position.z-magnet_target.z)
+		for role: String in group:
+			var old_pose: Transform3D = before_magnet[role]
+			var actual: Vector2 = Vector2(layout.nodes[role].position.x-old_pose.origin.x,layout.nodes[role].position.z-old_pose.origin.z)
+			check(actual.distance_to(xz_delta) < .003, "magnet pulls every group member by exactly the same displacement: " + role)
+		layout.snap_bypass = true
+		check(layout._group_wall_snap_delta(magnet_probe).is_equal_approx(magnet_probe), "Alt disables group magnets without changing grid settings")
+		for role: String in group: layout.nodes[role].transform = before_magnet[role]
+		layout.snap_bypass = false
+		layout.update()
+	layout.gesture = ""
+	layout.end_drag()
 	check(layout.toggle_group_member("lamp_2"), "Ctrl-style toggle removes one existing member without moving it")
 	check(layout.group_selection.size() == 2 and layout.group_markers.size() == 1, "removing a member updates group selection outlines")
 	layout.clear_group_selection()
-	check(layout.group_selection.size() == 1 and layout.group_markers.is_empty(), "Esc-style group clearing restores single furniture selection and removes auxiliary outlines")
+	check(layout.group_selection.size() == 1 and layout.group_markers.is_empty() and not is_instance_valid(layout.group_bounds_marker), "Esc-style group clearing removes group boundary, center marker and auxiliary outlines")
 
 	desktop.finish_layout(false)
 	check(layout.blueprint == initial.blueprint and layout.snapshot() == initial.poses, "canceling restores original walls, furnishings and all poses")

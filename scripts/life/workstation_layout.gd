@@ -27,6 +27,7 @@ var selected := "desk"
 # Editor-only multi-selection; persisted poses and inventory contracts stay unchanged.
 var group_selection: Array[String] = []
 var group_markers: Dictionary = {}
+var group_bounds_marker: MeshInstance3D
 var tool := "move"
 var snapping := true
 var valid := true
@@ -1174,6 +1175,76 @@ func finish(apply: bool) -> bool:
 func _group_eligible(role: String) -> bool:
 	return nodes.has(role) and placed_instances.has(role) and is_floor(role) and InventoryData.is_room_furniture_role(Data.base_role(role))
 
+func group_pivot() -> Vector2:
+	var center := Vector2.ZERO
+	var count := 0
+	for role: String in group_selection:
+		if not _group_eligible(role): continue
+		center += Vector2(nodes[role].position.x,nodes[role].position.z)
+		count += 1
+	return center/float(count) if count > 0 else Vector2.ZERO
+
+func group_world_bounds(roles: Array[String] = []) -> Rect2:
+	var members: Array[String] = group_selection if roles.is_empty() else roles
+	var minimum := Vector2(INF,INF)
+	var maximum := Vector2(-INF,-INF)
+	for role: String in members:
+		if not _group_eligible(role): continue
+		for corner: Vector2 in footprint(role):
+			minimum = minimum.min(corner)
+			maximum = maximum.max(corner)
+	return Rect2(minimum,maximum-minimum) if minimum.x != INF else Rect2()
+
+func marquee_candidates(window: Rect2, crossing: bool = false) -> Array[String]:
+	var matches: Array[String] = []
+	if not active or not placing_role.is_empty() or not gesture.is_empty() or not window.has_area(): return matches
+	var camera: Camera3D = world.camera
+	var view: Rect2 = Rect2(Vector2.ZERO,world.get_viewport().get_visible_rect().size)
+	for role: String in nodes:
+		if not _group_eligible(role): continue
+		var node: Node3D = nodes[role]
+		var half: Vector3 = bounds_for(role)*.5
+		var minimum := Vector2(INF,INF)
+		var maximum := Vector2(-INF,-INF)
+		var behind := false
+		for x in [-1.0,1.0]:
+			for z in [-1.0,1.0]:
+				for y in [0.0,1.0]:
+					var corner: Vector3 = node.to_global(Vector3(half.x*x,half.y*y*2.0,half.z*z))
+					if camera.is_position_behind(corner):
+						behind = true
+						break
+					var point: Vector2 = camera.unproject_position(corner)
+					minimum = minimum.min(point)
+					maximum = maximum.max(point)
+				if behind: break
+			if behind: break
+		if behind: continue
+		var footprint_rect := Rect2(minimum,maximum-minimum)
+		if not view.intersects(footprint_rect): continue
+		if crossing and window.intersects(footprint_rect) or not crossing and window.encloses(footprint_rect):
+			matches.append(role)
+	return matches
+
+func marquee_select(window: Rect2, crossing: bool = false, additive: bool = false) -> int:
+	if not active or not gesture.is_empty() or not placing_role.is_empty(): return 0
+	var roles: Array[String] = marquee_candidates(window,crossing)
+	if roles.is_empty() and additive: return 0
+	var chosen: Array[String] = []
+	if additive:
+		for role: String in group_selection:
+			if _group_eligible(role): chosen.append(role)
+	for role: String in roles:
+		if not chosen.has(role): chosen.append(role)
+	end_drag()
+	if chosen.is_empty():
+		clear_group_selection()
+		return 0
+	group_selection = chosen
+	selected = roles.back() if not roles.is_empty() else chosen.back()
+	update()
+	return roles.size()
+
 func select(role: String, preserve_group: bool = false) -> void:
 	if not nodes.has(role) or not placing_role.is_empty(): return
 	if InventoryData.is_room_furniture_role(Data.base_role(role)) and not placed_instances.has(role): return
@@ -1209,6 +1280,44 @@ func _clear_group_markers() -> void:
 	for marker: MeshInstance3D in group_markers.values():
 		if is_instance_valid(marker): marker.queue_free()
 	group_markers.clear()
+	if is_instance_valid(group_bounds_marker): group_bounds_marker.queue_free()
+	group_bounds_marker = null
+
+func _sync_group_bounds() -> void:
+	var rect: Rect2 = group_world_bounds()
+	if not rect.has_area(): return
+	if not is_instance_valid(group_bounds_marker):
+		group_bounds_marker = MeshInstance3D.new()
+		group_bounds_marker.name = "GroupBoundsAndPivot"
+		group_bounds_marker.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		world.add_child(group_bounds_marker)
+	var lines := ImmediateMesh.new()
+	var material := StandardMaterial3D.new()
+	material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	material.no_depth_test = true
+	material.albedo_color = Color("61d9ff")
+	lines.surface_begin(Mesh.PRIMITIVE_LINES,material)
+	var minimum: Vector2 = rect.position
+	var maximum: Vector2 = rect.end
+	var y := .085
+	var corners := [
+		Vector3(minimum.x,y,minimum.y),
+		Vector3(maximum.x,y,minimum.y),
+		Vector3(maximum.x,y,maximum.y),
+		Vector3(minimum.x,y,maximum.y)
+	]
+	for i in range(4):
+		lines.surface_add_vertex(corners[i])
+		lines.surface_add_vertex(corners[(i+1)%4])
+	# This cross is the actual rotation pivot (mean of member centers),
+	# rather than the potentially different bounding-box midpoint.
+	var pivot: Vector2 = group_pivot()
+	var radius := .14
+	for displacement in [Vector2(radius,0),Vector2(0,radius)]:
+		lines.surface_add_vertex(Vector3(pivot.x-displacement.x,y,pivot.y-displacement.y))
+		lines.surface_add_vertex(Vector3(pivot.x+displacement.x,y,pivot.y+displacement.y))
+	lines.surface_end()
+	group_bounds_marker.mesh = lines
 
 func _sync_group_markers() -> void:
 	if not active or group_selection.size() <= 1:
@@ -1246,6 +1355,7 @@ func _sync_group_markers() -> void:
 			world.add_child(marker)
 			group_markers[role] = marker
 		(group_markers[role] as MeshInstance3D).global_transform = nodes[role].global_transform
+	_sync_group_bounds()
 
 func set_tool(value: String) -> void:
 	tool = value
@@ -1313,7 +1423,10 @@ func move_to(position_xz: Vector2) -> void:
 		var before_group := _draft()
 		var target := position_xz.snapped(Vector2.ONE*grid_step) if snapping else position_xz
 		var anchor: Vector3 = nodes[selected].position
-		_transform_group(target-Vector2(anchor.x,anchor.z),0.0)
+		var desired: Vector2 = target-Vector2(anchor.x,anchor.z)
+		var magnet_delta: Vector2 = _group_wall_snap_delta(desired)
+		var snapped: bool = not magnet_delta.is_equal_approx(desired)
+		_transform_group(magnet_delta,0.0,snapped)
 		if gesture.is_empty(): _remember(before_group)
 		return
 	var undo_before := _draft()
@@ -1407,16 +1520,65 @@ func _group_swept_contact(previous: Dictionary, target: Dictionary) -> String:
 		if not reason.is_empty(): return reason
 	return ""
 
-func _transform_group(delta: Vector2, yaw: float) -> void:
+func _group_wall_snap_delta(delta: Vector2) -> Vector2:
+	wall_magnet_active = false
+	var temporary: bool = smart_snap and gesture == "move" and not snap_bypass
+	var exterior: bool = not snap_bypass and (wall_snap or temporary)
+	var interior: bool = not snap_bypass and (inner_wall_snap or temporary)
+	if not exterior and not interior: return delta
+	var minimum := Vector2(INF,INF)
+	var maximum := Vector2(-INF,-INF)
+	var initial := {}
+	for role: String in group_selection:
+		var pose: Transform3D = nodes[role].transform
+		initial[role] = pose
+		pose.origin.x += delta.x
+		pose.origin.z += delta.y
+		for point: Vector2 in _footprint_at(role,pose,0.0):
+			minimum = minimum.min(point)
+			maximum = maximum.max(point)
+	var candidates: Array[Vector2] = []
+	if exterior:
+		var half: Vector2 = BlueprintData.half_size(blueprint)
+		var safety := edge_margin+collision_margin+.015
+		for axis_id in range(2):
+			for direction in [-1.0,1.0]:
+				var adjustment: float
+				if axis_id == 0:
+					adjustment = -half.x+safety-minimum.x if direction < 0 else half.x-safety-maximum.x
+				else:
+					adjustment = -half.y+safety-minimum.y if direction < 0 else half.y-safety-maximum.y
+				if absf(adjustment) <= WALL_SNAP_RADIUS:
+					candidates.append(delta+(Vector2(adjustment,0) if axis_id == 0 else Vector2(0,adjustment)))
+	if interior:
+		for part: Dictionary in blueprint.partitions:
+			if str(part.kind) == "door": continue
+			var extents: Vector2 = BlueprintData.extents(part)
+			for direction in [-1.0,1.0]:
+				var adjustment: float
+				if part.axis == "x":
+					if maximum.x < float(part.x)-extents.x or minimum.x > float(part.x)+extents.x: continue
+					adjustment = float(part.z)-extents.y-WALL_SAFE_GAP-maximum.y if direction < 0 else float(part.z)+extents.y+WALL_SAFE_GAP-minimum.y
+					if absf(adjustment) <= WALL_SNAP_RADIUS: candidates.append(delta+Vector2(0,adjustment))
+				else:
+					if maximum.y < float(part.z)-extents.y or minimum.y > float(part.z)+extents.y: continue
+					adjustment = float(part.x)-extents.x-WALL_SAFE_GAP-maximum.x if direction < 0 else float(part.x)+extents.x+WALL_SAFE_GAP-minimum.x
+					if absf(adjustment) <= WALL_SNAP_RADIUS: candidates.append(delta+Vector2(adjustment,0))
+	candidates.sort_custom(func(a: Vector2,b: Vector2) -> bool: return a.distance_to(delta) < b.distance_to(delta))
+	var pivot: Vector2 = group_pivot()
+	for candidate: Vector2 in candidates:
+		var target: Dictionary = _group_pose_targets(initial,candidate,0.0,1.0,pivot)
+		if _group_swept_contact(initial,target).is_empty(): return candidate
+	return delta
+
+func _transform_group(delta: Vector2, yaw: float, magnet: bool = false) -> void:
 	if group_selection.size() <= 1 or not _group_eligible(selected): return
 	var initial := {}
-	var pivot := Vector2.ZERO
+	var pivot: Vector2 = group_pivot()
 	for role: String in group_selection:
 		if not _group_eligible(role): return
 		var pose: Transform3D = nodes[role].transform
 		initial[role] = pose
-		pivot += Vector2(pose.origin.x,pose.origin.z)
-	pivot /= float(group_selection.size())
 	# Evaluate rigid group poses from a shared starting state. Swept collision
 	# tests ignore members of the group but retain walls and all other objects.
 	# Rotate in 1-degree segments to prevent a member from cutting corners.
@@ -1441,7 +1603,7 @@ func _transform_group(delta: Vector2, yaw: float) -> void:
 		break
 	for role: String in group_selection:
 		nodes[role].transform = previous[role]
-	wall_magnet_active = false
+	wall_magnet_active = magnet and blocker.is_empty()
 	update(blocker)
 
 func _constrain_motion(before: Transform3D, target: Transform3D) -> void:

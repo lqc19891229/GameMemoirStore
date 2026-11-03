@@ -53,6 +53,11 @@ func run() -> void:
 	check(actions.action_strip.is_visible_in_tree(), "selected furniture has a visible compact context ribbon")
 	check(actions.selection_chip.is_visible_in_tree() and actions.selection_chip.mouse_filter == Control.MOUSE_FILTER_IGNORE, "visible selection label does not intercept contextual GUI input")
 	check(not desktop.get_node("%LayoutPanel").is_visible_in_tree(), "right inspector does not block the primary 3D pointer target")
+	actions.show_marquee(Vector2(250,280),Vector2(520,450))
+	check(actions.marquee_box.is_visible_in_tree() and actions.marquee_box.mouse_filter == Control.MOUSE_FILTER_IGNORE, "graphical marquee renders while allowing genuine pointer controls underneath")
+	check(actions.marquee_box.position.distance_to(Vector2(250,280)) < 1.0 and actions.marquee_box.size.distance_to(Vector2(270,170)) < 1.0, "marquee geometry matches start/end screen coordinates")
+	actions.hide_marquee()
+	check(not actions.marquee_box.visible, "screen-space selection overlay clears before ordinary contextual GUI click tests")
 	var paint: Button = actions.action_buttons["paint"]
 	check(paint.get_global_rect().has_point(paint.get_global_rect().get_center()), "color button has a valid screen-space input rectangle")
 	await click(paint)

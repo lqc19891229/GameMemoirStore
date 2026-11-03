@@ -17,6 +17,7 @@ var arrange_panel: PanelContainer
 var arrange_summary: Label
 var arrange_buttons: Dictionary = {}
 var hint: Label
+var marquee_box: Panel
 var category_buttons: Dictionary = {}
 var action_buttons: Dictionary = {}
 var color_buttons: Array[Button] = []
@@ -40,6 +41,7 @@ func setup(owner: Node3D, controller: Node, canvas: Control) -> void:
 	_build_categories(canvas)
 	_build_object_actions(canvas)
 	_build_hint(canvas)
+	_build_marquee(canvas)
 	set_process(true)
 
 func _round_button(icon_id: String, tooltip: String, side: int = 43) -> Button:
@@ -229,6 +231,32 @@ func _build_arrangement(canvas: Control) -> void:
 		arrange_buttons[id] = button
 		button.pressed.connect(func() -> void: perform_arrangement(id))
 
+func _build_marquee(canvas: Control) -> void:
+	marquee_box = Panel.new()
+	marquee_box.name = "FurnitureMarqueeBox"
+	marquee_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	marquee_box.visible = false
+	var border := StyleBoxFlat.new()
+	border.bg_color = Color("61d9ff",0.13)
+	border.border_color = Color("35c4ed",0.92)
+	border.set_border_width_all(2)
+	border.set_corner_radius_all(3)
+	marquee_box.add_theme_stylebox_override("panel",border)
+	canvas.add_child(marquee_box)
+
+func show_marquee(start: Vector2, finish: Vector2) -> void:
+	if not is_instance_valid(marquee_box): return
+	var rect := Rect2(start,finish-start).abs()
+	var viewport: Vector2 = host.get_viewport().get_visible_rect().size
+	var minimum: Vector2 = rect.position.max(Vector2.ZERO)
+	var maximum: Vector2 = rect.end.min(viewport)
+	marquee_box.position = minimum
+	marquee_box.size = (maximum-minimum).max(Vector2.ONE)
+	marquee_box.show()
+
+func hide_marquee() -> void:
+	if is_instance_valid(marquee_box): marquee_box.hide()
+
 func _build_hint(canvas: Control) -> void:
 	hint = Label.new()
 	hint.name = "RoomInteractionHint"
@@ -309,13 +337,14 @@ func sync(active: bool) -> void:
 	var furniture_mode: bool = active and room_ui.mode == "furniture" and not host.blueprint_mode
 	rail.visible = furniture_mode and host.world.layout.placing_role.is_empty()
 	hint.visible = active and host.get_viewport().get_visible_rect().size.x >= 1060
-	hint.text = ("Ctrl+单击 多选 · 拖动整组 · Shift+拖动 旋转 · Esc 单选" if host.world.layout.group_selection.size() > 1 else "Ctrl+单击 多选 · 方向键 微调 · Shift+方向键 1cm · Q/E 旋转 · S 网格%s" % ("开" if host.world.layout.snapping else "关"))
+	hint.text = ("空白拖动框选 · Ctrl+框选追加 · 拖动整组 · Shift+拖动旋转 · Esc 单选" if host.world.layout.group_selection.size() > 1 else "空白拖动框选 · Ctrl+单击/框选追加 · 方向键微调 · Q/E旋转 · S 网格%s" % ("开" if host.world.layout.snapping else "关"))
 	for index in range(GROUP_KEYS.size()):
 		var button: Button = category_buttons[GROUP_KEYS[index]]
 		button.set_pressed_no_signal(host.get_node("%FurnitureCatalogGroup").selected == index and room_ui.catalog_open)
 	if not furniture_mode or room_ui.catalog_open:
 		_hide_object_actions()
 		hide_colors()
+		hide_marquee()
 		return
 	var layout = host.world.layout
 	var role: String = str(layout.selected)
