@@ -51,6 +51,7 @@ func run() -> void:
 	check(layout.active and layout.smart_snap, "contextual magnetic assistance is available without enabling advanced options")
 	check(not layout.wall_snap and not layout.inner_wall_snap, "advanced persistent wall snap toggles still default to off")
 	check(not ui.feedback.visible and ui.feedback.mouse_filter == Control.MOUSE_FILTER_IGNORE, "visual feedback starts hidden and does not block pointer events")
+	check(ui.feedback_state == "none" and ui._confirmation_timer.one_shot, "placement feedback begins inactive and completion banner is temporary")
 
 	# Find a genuine ray-pickable body point; never confuse a gizmo hit for an object.
 	var picked := ""
@@ -126,6 +127,8 @@ func run() -> void:
 	if candidate_found:
 		check(destination.distance_to(probe) <= layout.WALL_SNAP_RADIUS + .001, "automatic wall magnet never pulls more than configured radius")
 		check(layout.wall_magnet_active, "magnetic placement reports its active visual state")
+		layout.update()
+		check(ui.feedback_state == "snapped" and ui.feedback_text.text.contains("已吸附"), "magnetic feedback explains snap and Alt bypass beside selected furniture")
 		layout.snap_bypass = true
 		check(layout._wall_snap_point("lamp",probe).is_equal_approx(probe) and not layout.wall_magnet_active, "holding Alt bypasses wall and partition magnets")
 		layout.snap_bypass = false
@@ -140,6 +143,11 @@ func run() -> void:
 	var uid: String = Inventory.unused_uid(layout.available_inventory,layout.placed_instances,"room_chair")
 	check(not uid.is_empty() and layout.start_place("room_chair",uid), "owned furniture can enter its transient ghost placement")
 	check(ui.feedback.visible and not ui.feedback_text.text.is_empty(), "new ghost uses in-world textual placement feedback")
+	if layout.valid:
+		check(ui.feedback_state == "ready" and ui.feedback_text.text.contains("左键确认"), "collision-free ghost clearly marks it as ready for placement")
+	else:
+		check(ui.feedback_state == "blocked" and ui.feedback_text.text.contains("无法放置"), "initial blocked ghost clearly explains why placement is unavailable")
+	check(ui.feedback.mouse_filter == Control.MOUSE_FILTER_IGNORE, "semantic feedback remains transparent to mouse picking")
 	var initial_yaw: float = layout.nodes["chair"].rotation.y
 	var scroll := InputEventMouseButton.new()
 	scroll.button_index = MOUSE_BUTTON_WHEEL_UP
@@ -154,8 +162,26 @@ func run() -> void:
 	check(absf(angle_difference(layout.nodes["chair"].rotation.y,after_shift)) > 0.05, "Ctrl+wheel also rotates furniture ghost as in the reference game")
 	layout.preview_placement(Vector2(50,50))
 	check(not layout.valid and ui.feedback_text.text.contains("边界"), "invalid furniture preview explicitly communicates the collision boundary")
+	check(ui.feedback_state == "blocked" and ui.feedback_text.text.contains("无法放置"), "out-of-bounds ghost uses distinct collision warning instead of success")
+	check(not layout.confirm_placement() and ui.feedback_state == "blocked", "invalid preview cannot trigger placement-complete confirmation")
 	layout.cancel_placement()
+	check(ui.feedback_state != "confirmed" and ui._confirmed_role.is_empty(), "canceling an invalid placement never displays a success banner")
 	check(layout.placing_role.is_empty() and layout.placed_instances == stock or layout.placing_role.is_empty() and not layout.placed_instances.has("chair"), "canceling placement never creates an extra owned instance")
+	if layout.start_place("room_chair",uid):
+		if layout.valid:
+			check(layout.confirm_placement(), "collision-free furniture preview confirms placement")
+			check(ui.feedback_state == "confirmed" and ui.feedback_text.text.contains("已放置"), "confirmed furniture shows a nearby success cue")
+			check(ui._confirmation_timer.time_left > 0.0, "completion cue has a finite lifetime")
+			ui._confirmation_timer.stop()
+			ui._confirmation_timer.timeout.emit()
+			check(ui.feedback_state == "none" and not ui.feedback.visible, "completion cue dismisses without affecting furniture data")
+			layout.undo()
+			check(not layout.placed_instances.has("chair"), "undo still restores inventory after confirming furniture")
+		else:
+			layout.cancel_placement()
+			check(false, "restored default chair position must be valid for placement")
+	else:
+		check(false, "canceled furniture can start another preview with the same UID")
 	desktop.finish_layout(false)
 	check(not layout.active and not ui.feedback.visible, "finishing editor hides feedback")
 	check(layout.snapshot() == saved and layout.placed_instances == stock, "canceling layout preserves prior furniture transforms and inventory mappings")
