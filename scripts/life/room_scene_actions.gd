@@ -13,6 +13,9 @@ var rail: VBoxContainer
 var action_strip: HBoxContainer
 var selection_chip: Label
 var swatches: PanelContainer
+var arrange_panel: PanelContainer
+var arrange_summary: Label
+var arrange_buttons: Dictionary = {}
 var hint: Label
 var category_buttons: Dictionary = {}
 var action_buttons: Dictionary = {}
@@ -25,6 +28,7 @@ const ACTIONS := [
 	{"id":"move", "hint":"拖拽移动 · G 切换移动手柄"},
 	{"id":"rotate", "hint":"旋转家具 · Shift+拖动 / Q/E 微调"},
 	{"id":"paint", "hint":"选择单件家具颜色"},
+	{"id":"arrange", "hint":"附近家具对齐 · 同类家具等距排列"},
 	{"id":"duplicate", "hint":"复制一件库存中的同款家具 · Ctrl+D"},
 	{"id":"store", "hint":"收纳这件家具 · Delete"}
 ]
@@ -108,7 +112,7 @@ func _build_object_actions(canvas: Control) -> void:
 		var key: String = spec.id
 		var button := _round_button(key,str(spec.hint),43)
 		button.name = "Action_" + key
-		button.toggle_mode = key in ["move","rotate","paint"]
+		button.toggle_mode = key in ["move","rotate","paint","arrange"]
 		action_strip.add_child(button)
 		action_buttons[key] = button
 		button.pressed.connect(func() -> void: perform_action(key))
@@ -171,6 +175,58 @@ func _build_object_actions(canvas: Control) -> void:
 		grid.add_child(button)
 		color_buttons.append(button)
 		button.pressed.connect(func() -> void: apply_color(color_index))
+	_build_arrangement(canvas)
+
+func _build_arrangement(canvas: Control) -> void:
+	arrange_panel = PanelContainer.new()
+	arrange_panel.name = "ObjectArrangementPanel"
+	arrange_panel.visible = false
+	arrange_panel.mouse_filter = Control.MOUSE_FILTER_PASS
+	arrange_panel.custom_minimum_size = Vector2(294,0)
+	var surface := StyleBoxFlat.new()
+	surface.bg_color = Color("f4f6f2",0.97)
+	surface.border_color = Color("b3c6b5",0.96)
+	surface.set_border_width_all(1)
+	surface.set_corner_radius_all(10)
+	surface.content_margin_left = 10
+	surface.content_margin_top = 10
+	surface.content_margin_right = 10
+	surface.content_margin_bottom = 10
+	arrange_panel.add_theme_stylebox_override("panel",surface)
+	canvas.add_child(arrange_panel)
+	var column := VBoxContainer.new()
+	column.name = "ArrangementContent"
+	column.add_theme_constant_override("separation",7)
+	arrange_panel.add_child(column)
+	arrange_summary = Label.new()
+	arrange_summary.name = "ArrangementSummary"
+	arrange_summary.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	arrange_summary.custom_minimum_size = Vector2(268,38)
+	arrange_summary.add_theme_font_size_override("font_size",12)
+	arrange_summary.add_theme_color_override("font_color",Color("315341"))
+	column.add_child(arrange_summary)
+	var grid := GridContainer.new()
+	grid.name = "ArrangementButtons"
+	grid.columns = 2
+	grid.add_theme_constant_override("h_separation",6)
+	grid.add_theme_constant_override("v_separation",6)
+	column.add_child(grid)
+	for spec: Dictionary in [
+		{"id":"align_x","label":"X 轴对齐","hint":"将选中家具与附近家具沿 X 中心线对齐"},
+		{"id":"align_z","label":"Z 轴对齐","hint":"将选中家具与附近家具沿 Z 中心线对齐"},
+		{"id":"space_x","label":"X 轴等距","hint":"将三件以上同类家具沿 X 方向等间距排列"},
+		{"id":"space_z","label":"Z 轴等距","hint":"将三件以上同类家具沿 Z 方向等间距排列"}
+	]:
+		var id: String = str(spec.id)
+		var button := Button.new()
+		button.name = "Arrange_" + id
+		button.text = str(spec.label)
+		button.tooltip_text = str(spec.hint)
+		button.custom_minimum_size = Vector2(130,34)
+		button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+		grid.add_child(button)
+		arrange_buttons[id] = button
+		button.pressed.connect(func() -> void: perform_arrangement(id))
 
 func _build_hint(canvas: Control) -> void:
 	hint = Label.new()
@@ -184,24 +240,42 @@ func _build_hint(canvas: Control) -> void:
 	canvas.add_child(hint)
 
 func perform_action(id: String) -> void:
-	if not host.world.layout.active or host.blueprint_mode: return
+	if not host.world.layout.active or host.blueprint_mode or room_ui.catalog_open: return
 	var layout = host.world.layout
-	if not layout.placing_role.is_empty(): return
+	if not layout.placing_role.is_empty() or not layout.gesture.is_empty(): return
+	if id != "arrange": hide_arrange()
+	if id != "paint": hide_colors()
 	match id:
 		"move":
 			layout.set_tool("move")
-			hide_colors()
 		"rotate":
 			layout.set_tool("rotate")
-			hide_colors()
 		"paint":
 			swatches.visible = not swatches.visible
+		"arrange":
+			hide_colors()
+			arrange_panel.visible = not arrange_panel.visible
 		"duplicate":
 			layout.duplicate_selected()
-			hide_colors()
 		"store":
 			layout.store_selected()
-			hide_colors()
+	room_ui.sync()
+
+func perform_arrangement(id: String) -> void:
+	if not arrange_buttons.has(id) or not arrange_panel.visible: return
+	if not host.world.layout.active or host.blueprint_mode or room_ui.mode != "furniture" or room_ui.catalog_open: return
+	var layout = host.world.layout
+	if not layout.placing_role.is_empty() or not layout.gesture.is_empty(): return
+	var role: String = str(layout.selected)
+	if not layout.nodes.has(role) or not layout.placed_instances.has(role): return
+	var is_alignment := id.begins_with("align_")
+	var axis := "x" if id.ends_with("_x") else "z"
+	var changed: bool = layout.align_selected(axis) if is_alignment else layout.distribute_matching_furniture(axis)
+	if changed:
+		room_ui.show_keyboard_feedback("%s 轴%s完成 · Ctrl+Z 撤销" % [axis.to_upper(),"对齐" if is_alignment else "等距排列"])
+	else:
+		var reason := "附近没有可安全对齐的家具" if is_alignment else "至少需要 3 件已摆放的同类家具" if layout._matching_furniture(role).size() < 3 else "位置已均匀或移动受到阻挡"
+		room_ui.show_keyboard_feedback("未改变布局 · " + reason)
 	room_ui.sync()
 
 func apply_color(index: int) -> void:
@@ -213,9 +287,21 @@ func apply_color(index: int) -> void:
 func hide_colors() -> void:
 	if is_instance_valid(swatches): swatches.hide()
 
+func hide_arrange() -> void:
+	if is_instance_valid(arrange_panel): arrange_panel.hide()
+
 func _hide_object_actions() -> void:
 	action_strip.hide()
 	selection_chip.hide()
+	hide_arrange()
+
+func _refresh_arrangement(role: String) -> void:
+	var layout = host.world.layout
+	var matching: Array[String] = layout._matching_furniture(role)
+	arrange_summary.text = "附近家具对齐 · %d 件同类家具可等距排列" % matching.size()
+	for axis in ["x","z"]:
+		arrange_buttons["align_" + axis].disabled = layout.nearest_alignment(role,axis).is_empty()
+		arrange_buttons["space_" + axis].disabled = matching.size() < 3
 
 func sync(active: bool) -> void:
 	var furniture_mode: bool = active and room_ui.mode == "furniture" and not host.blueprint_mode
@@ -233,6 +319,7 @@ func sync(active: bool) -> void:
 	var role: String = str(layout.selected)
 	if role != _current_selection:
 		hide_colors()
+		hide_arrange()
 		_current_selection = role
 	var eligible: bool = layout.nodes.has(role) and layout.placed_instances.has(role) and InventoryData.is_room_furniture_role(layout.Data.base_role(role))
 	if not eligible or not layout.placing_role.is_empty() or not layout.gesture.is_empty():
@@ -242,6 +329,8 @@ func sync(active: bool) -> void:
 	action_buttons["move"].set_pressed_no_signal(layout.tool == "move")
 	action_buttons["rotate"].set_pressed_no_signal(layout.tool == "rotate")
 	action_buttons["paint"].set_pressed_no_signal(swatches.visible)
+	action_buttons["arrange"].set_pressed_no_signal(arrange_panel.visible)
+	if arrange_panel.visible: _refresh_arrangement(role)
 	var has_copy: bool = not InventoryData.unused_uid(layout.available_inventory,layout.placed_instances,InventoryData.furniture_item_id(layout.Data.base_role(role))).is_empty()
 	action_buttons["duplicate"].disabled = not has_copy
 	action_buttons["duplicate"].tooltip_text = "复制一件库存中的同款家具 · Ctrl+D" if has_copy else "同款家具没有可用库存 · 请先购买"
@@ -300,3 +389,12 @@ func _reposition() -> void:
 	action_strip.show()
 	if swatches.visible:
 		swatches.position = Vector2(clampf(action_strip.position.x+35,8,maxf(8,view.x-210)),clampf(action_strip.position.y+55,125,maxf(125,view.y-105)))
+	if arrange_panel.visible:
+		var panel_width := maxf(294.0,arrange_panel.size.x)
+		var panel_height := maxf(174.0,arrange_panel.size.y)
+		var below := action_strip.position.y + 53.0
+		var panel_y := below if below+panel_height+10.0 <= view.y else action_strip.position.y-panel_height-8.0
+		arrange_panel.position = Vector2(
+			clampf(action_strip.position.x + (total_width-panel_width)*.5,8.0,maxf(8.0,view.x-panel_width-8.0)),
+			clampf(panel_y,125.0,maxf(125.0,view.y-panel_height-8.0))
+		)
