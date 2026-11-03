@@ -51,7 +51,7 @@ func _process(delta: float) -> void:
 		return
 	_rain_elapsed = fmod(_rain_elapsed + minf(delta, .1), 60.0)
 	for i in range(rain.get_child_count()):
-		var streak := rain.get_child(i) as Node3D
+		var streak := rain.get_child(i) as MeshInstance3D
 		if streak == null: continue
 		# Independent looping drops, constrained to the existing window pane.
 		# Keep every streak center inside the 1.34 m tall window sky.
