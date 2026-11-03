@@ -33,6 +33,9 @@ func pointer_click(control: Control) -> void:
 	movement.global_position = point
 	root.window_input.emit(movement.xformed_by(root.get_final_transform()))
 	root.push_input(movement,true)
+	await process_frame
+	var hovered: Control = root.gui_get_hovered_control()
+	print("UI_HIT_TRACE target=",control.name," rect=",control.get_global_rect()," parent_filter=",control.get_parent().mouse_filter," hovered=",hovered.get_path() if hovered != null else "none"," rendered=",control.is_visible_in_tree())
 	for pressed in [true,false]:
 		var event := InputEventMouseButton.new()
 		event.position = point
@@ -42,6 +45,7 @@ func pointer_click(control: Control) -> void:
 		root.window_input.emit(event.xformed_by(root.get_final_transform()))
 		root.push_input(event,true)
 	await frames()
+	print("UI_HIT_TRACE after=",control.name," hovered=",root.gui_get_hovered_control().get_path() if root.gui_get_hovered_control() != null else "none")
 
 func run() -> void:
 	var game = load("res://scenes/main/game_root.tscn").instantiate()
