@@ -488,8 +488,9 @@ layout_mode = 2
 tooltip_text = "晴昼 / 日落 / 夜晚 / 雨天"
 
 [node name="AmbienceVolumeLabel" type="Label" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content"]
+unique_name_in_owner = true
 layout_mode = 2
-text = "雨声音量（0 为静音）"
+text = "雨声音量 · 70%（0 为静音）"
 
 [node name="Style_ambience_volume" type="HSlider" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content"]
 unique_name_in_owner = true
