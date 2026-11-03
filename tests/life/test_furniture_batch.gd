@@ -111,7 +111,7 @@ func run() -> void:
 	check(absf(layout.group_copy_preview_offset.x-(initial_offset.x+.01)) < .002 and layout.snapping,"fine movement adds exactly 1 cm without disabling the global grid")
 	var fine_offset: Vector2 = layout.group_copy_preview_offset
 	layout.nudge_group_copy_preview(Vector2(0,-1))
-	check(absf(layout.group_copy_preview_offset.y-(fine_offset.y-normal_step).snappedf(normal_step)) < .003,"normal arrow movement uses configured grid step on the room Z axis")
+	check(absf(layout.group_copy_preview_offset.y-snappedf(fine_offset.y-normal_step,normal_step)) < .003,"normal arrow movement uses configured grid step on the room Z axis")
 	check(layout.rotate_group_copy_preview_step(1,true) or not layout.group_copy_preview_valid,"Shift+E rotates preview by a fine one-degree step")
 	check(absf(rad_to_deg(layout.group_copy_preview_yaw-yaw_before)-1.0) < .01,"fine rotation is precisely 1 degree")
 	check(layout.rotate_group_copy_preview_step(1) or not layout.group_copy_preview_valid,"E rotates the group by another regular 15 degrees")
