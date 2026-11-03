@@ -255,6 +255,19 @@ func _build_left_wall(wall: Material, trim: Material, wood: Material, metal: Mat
 		_box(streaks,"Rain_%02d" % index,Vector3(.008,.27 + float(index % 3)*.05,.009),
 			Vector3(x-.45,y,window_z+offset),water)
 
+	# P44: subtle beads on the outside of the glass give rainfall depth.
+	# They belong to RainStreaks so all existing weather/cutaway toggles
+	# still control the entire effect. Never add collision or picking.
+	var droplets := _group(streaks, "GlassDroplets")
+	var bead_mat := _material(Color(.76,.88,.96,.32), .16)
+	bead_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	for bead in range(12):
+		var bead_z: float = window_z - .98 + float(bead % 6) * .39
+		var bead_y: float = 1.48 + float(bead / 6) * .76 + float(bead % 3) * .11
+		var size := .012 + float(bead % 3) * .006
+		_sphere(droplets,"GlassBead_%02d" % bead,Vector3(.009,size,size*.70),
+			Vector3(x+.045,bead_y,bead_z),bead_mat)
+
 	_box(left, "DistantBuilding", Vector3(.08, .58, .62), Vector3(x - .66, 1.58, window_z - .68), distant)
 	_box(left, "DistantBuilding", Vector3(.08, .90, .48), Vector3(x - .66, 1.73, window_z + .08), near_building)
 	_box(left, "DistantBuilding", Vector3(.08, .48, .58), Vector3(x - .66, 1.52, window_z + .92), distant)
