@@ -201,7 +201,10 @@ func _ready() -> void:
 		for label: String in styles[key]: selector.add_item(label)
 		selector.item_selected.connect(func(index: int) -> void: world.layout.set_style(key, index))
 	%Style_brightness.value_changed.connect(func(value: float) -> void: world.layout.set_style("brightness", roundi(value)))
-	%Style_ambience_volume.value_changed.connect(func(value: float) -> void: world.layout.set_style("ambience_volume", roundi(value)))
+	%Style_ambience_volume.value_changed.connect(func(value: float) -> void:
+		world.layout.set_style("ambience_volume", roundi(value))
+		%AmbienceVolumeLabel.text = "雨声音量 · %d%%（0 为静音）" % roundi(value)
+	)
 	%MoveTool.pressed.connect(func() -> void: world.layout.set_tool("move"))
 	%RotateTool.pressed.connect(func() -> void: world.layout.set_tool("rotate"))
 	%SnapLayout.toggled.connect(func(enabled: bool) -> void: world.layout.snapping = enabled)
@@ -883,6 +886,7 @@ func _sync_layout() -> void:
 		(get_node("%Style_" + key) as OptionButton).select(int(style.get(key, 0)))
 	(%Style_brightness as HSlider).set_value_no_signal(float(style.get("brightness", 70)))
 	(%Style_ambience_volume as HSlider).set_value_no_signal(float(style.get("ambience_volume", 70)))
+	%AmbienceVolumeLabel.text = "雨声音量 · %d%%（0 为静音）" % int(style.get("ambience_volume", 70))
 	for role: String in layout.NAMES: get_node("%Layout_" + role).set_pressed_no_signal(layout.selected == role)
 	for role: String in catalog_special_buttons:
 		var info: Dictionary = catalog_special_buttons[role]
