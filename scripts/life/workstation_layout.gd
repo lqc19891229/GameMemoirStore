@@ -346,6 +346,7 @@ func group_duplicate_plan() -> Dictionary:
 	if not active or group_selection.size() < 2 or not gesture.is_empty() or not placing_role.is_empty():
 		return {"error":"请先选择至少 2 件已摆放家具"}
 	var reserved: Dictionary = {}
+	var reserved_roles: Dictionary = {}
 	var copies: Dictionary = {}
 	for source: String in group_selection:
 		if not _group_eligible(source) or not templates.has(Data.base_role(source)):
@@ -357,12 +358,13 @@ func group_duplicate_plan() -> Dictionary:
 			if str(entry.get("item_id","")) != furniture_id or uid.is_empty(): continue
 			if placed_instances.values().has(uid) or reserved.has(uid): continue
 			var target: String = _next_furniture_role(Data.base_role(source),uid)
-			if target.is_empty() or (nodes.has(target) and placed_instances.has(target)) or copies.values().has(target): continue
+			if target.is_empty() or reserved_roles.has(target) or (nodes.has(target) and placed_instances.has(target)): continue
 			available = {"uid":uid,"role":target}
 			break
 		if available.is_empty():
 			return {"error":"%s 的空闲库存不足，请先购买" % name_for(source)}
 		reserved[str(available.uid)] = true
+		reserved_roles[str(available.role)] = true
 		copies[source] = available
 	return {"copies":copies}
 
