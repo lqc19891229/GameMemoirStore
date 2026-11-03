@@ -25,6 +25,10 @@ const DRAG_THRESHOLD := 6.0
 var pending_drag_role := ""
 var pending_drag_start := Vector2.ZERO
 var pending_drag_operation := ""
+var marquee_origin := Vector2.ZERO
+var marquee_pending := false
+var marquee_active := false
+var marquee_additive := false
 var screen_mouse_down := false
 var last_screen_point := Vector2.ZERO
 var furniture_buttons: Dictionary = {}
@@ -258,6 +262,7 @@ func begin_layout() -> void:
 
 func finish_layout(apply: bool) -> void:
 	_cancel_pending_furniture_drag()
+	_cancel_marquee()
 	if not world.layout.finish(apply): return
 	if blueprint_mode: set_blueprint_mode(false)
 	_set_mode("overview", false)
@@ -404,6 +409,7 @@ func _start_inventory_placement(item_id: String) -> void:
 func set_blueprint_mode(enabled: bool) -> void:
 	if enabled and not world.layout.active: return
 	_cancel_pending_furniture_drag()
+	_cancel_marquee()
 	if dragging_custom_edge:
 		world.layout.end_custom_edge_drag()
 		dragging_custom_edge = false
@@ -1093,6 +1099,27 @@ func _cancel_pending_furniture_drag() -> void:
 	pending_drag_role = ""
 	pending_drag_operation = ""
 
+func _begin_marquee(point: Vector2, additive: bool) -> void:
+	marquee_origin = point
+	marquee_pending = true
+	marquee_active = false
+	marquee_additive = additive
+
+func _cancel_marquee() -> void:
+	marquee_pending = false
+	marquee_active = false
+	marquee_additive = false
+	if room_ui != null and room_ui.scene_actions != null:
+		room_ui.scene_actions.hide_marquee()
+
+func _finish_marquee(point: Vector2) -> void:
+	if marquee_active:
+		var window: Rect2 = Rect2(marquee_origin,point-marquee_origin).abs()
+		# Left-to-right selects whole projected objects; right-to-left selects
+		# every object that crosses the selection window.
+		world.layout.marquee_select(window,point.x < marquee_origin.x,marquee_additive)
+	_cancel_marquee()
+
 func _layout_input(event: InputEvent) -> void:
 	var layout = world.layout
 	if event is InputEventMouseButton:
@@ -1112,15 +1139,23 @@ func _layout_input(event: InputEvent) -> void:
 			return
 		if event.button_index == MOUSE_BUTTON_LEFT:
 			if not event.pressed:
-				_cancel_pending_furniture_drag()
-				layout.end_drag()
+				if marquee_pending:
+					_finish_marquee(event.position)
+				else:
+					_cancel_pending_furniture_drag()
+					layout.end_drag()
 			else:
 				_cancel_pending_furniture_drag()
+				_cancel_marquee()
 				layout.snap_bypass = event.alt_pressed
 				if event.ctrl_pressed and not blueprint_mode and room_ui.mode == "furniture":
-					# Ctrl+click is selection-only, never a hidden movement
-					# gesture or an unintended undo record.
-					layout.toggle_group_member(world.pick_at(event.position))
+					# Ctrl+click on furniture toggles it; Ctrl+drag blank floor
+					# adds screen-rectangle members without moving objects.
+					var clicked: String = world.pick_at(event.position)
+					if not clicked.is_empty():
+						layout.toggle_group_member(clicked)
+					else:
+						_begin_marquee(event.position,true)
 				else:
 					var handle: String = layout.pick_handle(event.position)
 					if not handle.is_empty():
@@ -1135,8 +1170,12 @@ func _layout_input(event: InputEvent) -> void:
 							pending_drag_role = role
 							pending_drag_start = event.position
 							pending_drag_operation = "rotate" if event.shift_pressed else "move"
+						elif room_ui.mode == "furniture":
+							_begin_marquee(event.position,false)
 		elif event.button_index == MOUSE_BUTTON_RIGHT:
-			if event.pressed: _cancel_pending_furniture_drag()
+			if event.pressed:
+				_cancel_pending_furniture_drag()
+				_cancel_marquee()
 			orbiting = event.pressed
 		elif event.pressed and event.button_index in [MOUSE_BUTTON_WHEEL_UP,MOUSE_BUTTON_WHEEL_DOWN]:
 			world.zoom_overview(0.9 if event.button_index == MOUSE_BUTTON_WHEEL_UP else 1.1)
@@ -1148,6 +1187,10 @@ func _layout_input(event: InputEvent) -> void:
 			layout.preview_at(event.position)
 			get_viewport().set_input_as_handled()
 		elif orbiting: world.orbit_overview(event.relative)
+		elif marquee_pending:
+			if not marquee_active and marquee_origin.distance_to(event.position) >= DRAG_THRESHOLD:
+				marquee_active = true
+			if marquee_active: room_ui.scene_actions.show_marquee(marquee_origin,event.position)
 		elif not pending_drag_role.is_empty():
 			if pending_drag_start.distance_to(event.position) >= DRAG_THRESHOLD:
 				var selected_role: String = pending_drag_role
@@ -1157,10 +1200,11 @@ func _layout_input(event: InputEvent) -> void:
 					layout.begin_drag(pending_drag_start,operation)
 					layout.drag_to(event.position)
 		else: layout.drag_to(event.position)
-		if orbiting or not layout.gesture.is_empty() or not pending_drag_role.is_empty(): get_viewport().set_input_as_handled()
+		if orbiting or marquee_pending or not layout.gesture.is_empty() or not pending_drag_role.is_empty(): get_viewport().set_input_as_handled()
 
 func _clear_gesture() -> void:
 	_cancel_pending_furniture_drag()
+	_cancel_marquee()
 	world.layout.end_wall_stroke()
 	if dragging_custom_edge:
 		world.layout.end_custom_edge_drag()
