@@ -9,6 +9,7 @@ const STROKES := {
 	"move": '<path d="M12 2v20M2 12h20M9 5l3-3 3 3M9 19l3 3 3-3M5 9l-3 3 3 3M19 9l3 3-3 3"/>',
 	"rotate": '<path d="M20 11a8 8 0 1 0-2 6M20 5v6h-6"/>',
 	"paint": '<path d="M4 16 16 4l4 4-12 12H4zM13 7l4 4M4 21h16"/>',
+	"arrange": '<path d="M3 3v18M3 7h18M3 17h18M8 4v6m8-6v6M8 14v6m8-6v6"/>',
 	"duplicate": '<rect x="8" y="8" width="13" height="13" rx="2"/><path d="M5 16H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v1"/>',
 	"store": '<path d="M3 8h18v13H3zM2 4h20v4H2zM9 13h6"/>',
 	"furniture": '<path d="M4 12V7a3 3 0 0 1 3-3h10a3 3 0 0 1 3 3v5M4 13h16M4 13v6m16-6v6M7 9v4m10-4v4M4 18h16"/>',
