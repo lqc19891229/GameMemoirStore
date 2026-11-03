@@ -48,7 +48,7 @@ func _add_curtain_vertex(tool: SurfaceTool, u: float, v: float, width: float, he
 	tool.set_uv(Vector2(u*2.0,v*2.0))
 	tool.add_vertex(_curtain_point(u,v,width,height))
 
-func _curtain_panel(parent: Node, at: Vector3, width: float, height: float, fabric: Material) -> MeshInstance3D:
+func _curtain_panel(parent: Node, at: Vector3, width: float, height: float, fabric: Material, label: String) -> MeshInstance3D:
 	var tool := SurfaceTool.new()
 	tool.begin(Mesh.PRIMITIVE_TRIANGLES)
 	for iy in range(10):
@@ -65,7 +65,7 @@ func _curtain_panel(parent: Node, at: Vector3, width: float, height: float, fabr
 			_add_curtain_vertex(tool,u0,v1,width,height)
 	tool.generate_normals()
 	var panel := MeshInstance3D.new()
-	panel.name = "CurtainPanel"
+	panel.name = label
 	panel.mesh = tool.commit()
 	panel.position = at
 	panel.material_override = fabric
@@ -227,14 +227,15 @@ func _build_left_wall(wall: Material, trim: Material, wood: Material, metal: Mat
 	_box(left, "WindowMullion", Vector3(.055, .045, 2.25), Vector3(x + .135, 1.99, window_z), trim)
 	var rail := _cylinder(left, "CurtainRail", .025, .025, 2.72, Vector3(x + .24, 2.84, window_z), metal, 20)
 	rail.rotation.x = PI / 2.0
-	for panel_center in [window_z - .92, window_z + .92]:
-		var center_z: float = float(panel_center)
-		_curtain_panel(left,Vector3(x+.25,2.01,center_z),.45,1.50,linen)
-		_box(left,"CurtainHeader",Vector3(.042,.055,.45),Vector3(x+.25,2.781,center_z),linen)
-		_box(left,"CurtainHem",Vector3(.048,.028,.46),Vector3(x+.25,1.27,center_z),linen)
+	for panel_index in range(2):
+		var center_z: float = window_z+(-.92 if panel_index == 0 else .92)
+		_curtain_panel(left,Vector3(x+.25,2.01,center_z),.45,1.50,linen,"CurtainPanel_%d" % panel_index)
+		_box(left,"CurtainHeader_%d" % panel_index,Vector3(.042,.055,.45),Vector3(x+.25,2.781,center_z),linen)
+		_box(left,"CurtainHem_%d" % panel_index,Vector3(.048,.028,.46),Vector3(x+.25,1.27,center_z),linen)
 		for hook in range(4):
 			var hook_z := center_z-.165+float(hook)*.11
-			_box(left,"CurtainHook",Vector3(.045,.070,.026),Vector3(x+.25,2.814,hook_z),metal)
+			_box(left,"CurtainHook_%d_%d" % [panel_index,hook],
+				Vector3(.045,.070,.026),Vector3(x+.25,2.814,hook_z),metal)
 	var sky := _material(Color("c6d7d8"), 1.0)
 	sky.albedo_texture = _sky_gradient_texture()
 	sky.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
