@@ -85,6 +85,13 @@ func run() -> void:
 	await create_timer(.37).timeout
 	check(world.orbit_target.is_equal_approx(expected) and not world.transitioning, "F key gently frames the selected object and completes camera animation")
 	world.reset_overview()
+	var search: LineEdit = desktop.get_node("%FurnitureCatalogSearch")
+	desktop.room_ui.catalog_open = true
+	desktop.room_ui.sync()
+	search.grab_focus()
+	desktop._input(hotkey)
+	check(world.orbit_target.is_equal_approx(Vector3(0,1.1,0)), "typing F in the furniture search does not steal camera focus")
+	search.release_focus()
 	desktop.finish_layout(false)
 	check(layout.snapshot() == original_layout and room.style == original_style, "cancel preserves room layout and lighting state")
 	check(not world.focus_selected(false), "camera focus is disabled outside editing to protect monitor interactions")

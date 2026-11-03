@@ -922,6 +922,10 @@ func _input(event: InputEvent) -> void:
 		_clear_gesture.call_deferred()
 	if not event is InputEventKey or world.transitioning: return
 	if world.layout.active:
+		# Room-editor search fields must receive printable keys normally.
+		# Preserve Escape so the user can still cancel an in-progress action.
+		if get_viewport().gui_get_focus_owner() is LineEdit and event.keycode != KEY_ESCAPE:
+			return
 		if event.pressed and not event.echo and blueprint_mode and event.keycode == KEY_ESCAPE:
 			set_blueprint_mode(false)
 			get_viewport().set_input_as_handled()
