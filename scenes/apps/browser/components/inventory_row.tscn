@@ -1,6 +1,6 @@
 [gd_scene load_steps=5 format=3]
 
-[ext_resource type="Theme" path="res://assets/client_theme.tres" id="1"]
+[ext_resource type="Theme" path="res://assets/room_minimal_theme.tres" id="1"]
 
 [sub_resource type="StyleBoxFlat" id="Style0"]
 bg_color = Color(0.12549019607843137, 0.1843137254901961, 0.25098039215686274, 1)
@@ -80,7 +80,7 @@ layout_mode = 2
 size_flags_horizontal = 3
 custom_minimum_size = Vector2(0, 34)
 text = "物品名称"
-theme_override_font_sizes/font_size = 24
+theme_override_font_sizes/font_size = 18
 theme_override_colors/font_color = Color(0.19215686274509805, 0.27450980392156865, 0.30980392156862746, 1)
 vertical_alignment = 1
 mouse_filter = 2
@@ -92,6 +92,14 @@ custom_minimum_size = Vector2(0, 18)
 text = "分类 / 类型"
 theme_override_font_sizes/font_size = 12
 theme_override_colors/font_color = Color(0.35, 0.44, 0.38, 1)
+mouse_filter = 2
+
+[node name="StockStatus" type="Label" parent="Row/Text"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "已拥有 0 · 可摆放 0 · 已摆放 0"
+theme_override_font_sizes/font_size = 12
+theme_override_colors/font_color = Color(0.28, 0.44, 0.34, 1)
 mouse_filter = 2
 
 [node name="Description" type="Label" parent="Row/Text"]
@@ -121,6 +129,14 @@ mouse_filter = 2
 unique_name_in_owner = true
 layout_mode = 2
 text = "购买"
-custom_minimum_size = Vector2(140, 32)
+custom_minimum_size = Vector2(96, 34)
 mouse_default_cursor_shape = 2
-theme_type_variation = "GreenButton"
+theme_type_variation = "MinimalAccentButton"
+
+[node name="QuickAction" type="Button" parent="Row"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+text = "购买并摆放"
+custom_minimum_size = Vector2(120, 34)
+mouse_default_cursor_shape = 2
