@@ -6,12 +6,18 @@ signal tick_updated
 signal notice(message: String)
 signal play_requested(game_id: String)
 signal furniture_place_requested(item_id: String, instance_uid: String)
+signal furniture_focus_requested(item_id: String)
 const State = preload("res://scripts/store_state.gd")
 const Data = preload("res://scripts/life/life_data.gd")
 const ItemCatalog: MemoirItemCatalog = preload("res://data/items/_catalog.tres")
 const InventoryData = preload("res://scripts/items/inventory_data.gd")
+const Finishes = preload("res://scripts/items/furniture_finishes.gd")
+const LayoutData = preload("res://scripts/life/workstation_layout_data.gd")
 var state = State.new()
 var timer: Timer
+# Passing preview finish through the existing two-argument placement signal
+# keeps other subscribers and old saves compatible.
+var pending_furniture_finish := -1
 
 func _ready() -> void:
 	state.persistence_enabled = not OS.get_cmdline_user_args().has("--fresh")
@@ -74,14 +80,43 @@ func unequip_item(slot: String) -> String:
 	state.save_state()
 	return "设备已卸载。"
 
-func request_place_furniture(id: String) -> String:
+func _request_furniture_uid(id: String, uid: String, finish: int = -1) -> String:
+	if uid.is_empty(): return "没有尚未摆放的库存物品。"
+	pending_furniture_finish = finish if Finishes.valid(finish) else -1
+	furniture_place_requested.emit(id, uid)
+	pending_furniture_finish = -1
+	return "已进入房间布置，请确认摆放位置。"
+
+func request_place_furniture(id: String, finish: int = -1) -> String:
 	var item: MemoirItemDefinition = ItemCatalog.lookup(id)
 	if item == null or item.category != "furniture" or item.retired or item.placement_surface != "floor":
 		return "此物品不能摆放在房间地面。"
 	var uid := InventoryData.unused_uid(state.life["inventory"], state.life["placements"], id)
-	if uid.is_empty(): return "没有尚未摆放的库存物品。"
-	furniture_place_requested.emit(id, uid)
-	return "已进入房间布置，请确认摆放位置。"
+	return _request_furniture_uid(id, uid, finish)
+
+func buy_and_place_furniture(id: String, finish: int = 0) -> String:
+	var item: MemoirItemDefinition = ItemCatalog.lookup(id)
+	if item == null or item.category != "furniture" or item.retired or item.placement_surface != "floor":
+		return "此商品不能直接摆放在房间。"
+	if not Finishes.valid(finish): return "无效的家具外观。"
+	# Buy exactly one new owned instance; do not spend points twice and do not
+	# accidentally place an older copy when the player has several in storage.
+	if state.wallet < item.price: return "预算不足，还差 %d 点。" % (item.price - state.wallet)
+	var receipt: String = buy_item(id)
+	if not receipt.begins_with("已购买"): return receipt
+	var purchased: Dictionary = state.life["inventory"].back()
+	if str(purchased.get("item_id","")) != id: return "购买已完成，请从物品栏摆放。"
+	return _request_furniture_uid(id, str(purchased.uid), finish)
+
+func focus_placed_furniture(id: String) -> String:
+	var item: MemoirItemDefinition = ItemCatalog.lookup(id)
+	if item == null or item.category != "furniture" or item.retired: return "此物品不能在房间中查看。"
+	for role: String in state.life["placements"]:
+		if ItemCatalog.item_for_placement_role(LayoutData.base_role(role)) == item:
+			furniture_focus_requested.emit(id)
+			return "正在房间中查看 %s。" % item.name
+	return "没有已摆放的这类家具。"
+
 
 func start_play(game_id: String) -> String:
 	if not state.owned.has(game_id) or not state.installed.has(game_id): return "请先购买并安装这款游戏。"
