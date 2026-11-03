@@ -342,6 +342,131 @@ func duplicate_selected() -> void:
 	_remember(before)
 	update()
 
+func group_duplicate_plan() -> Dictionary:
+	if not active or group_selection.size() < 2 or not gesture.is_empty() or not placing_role.is_empty():
+		return {"error":"请先选择至少 2 件已摆放家具"}
+	var reserved: Dictionary = {}
+	var copies: Dictionary = {}
+	for source: String in group_selection:
+		if not _group_eligible(source) or not templates.has(Data.base_role(source)):
+			return {"error":"选择中包含不可复制的家具"}
+		var furniture_id: String = InventoryData.furniture_item_id(Data.base_role(source))
+		var available := {}
+		for entry: Dictionary in available_inventory:
+			var uid: String = str(entry.get("uid",""))
+			if str(entry.get("item_id","")) != furniture_id or uid.is_empty(): continue
+			if placed_instances.values().has(uid) or reserved.has(uid): continue
+			var target: String = _next_furniture_role(Data.base_role(source),uid)
+			if target.is_empty() or (nodes.has(target) and placed_instances.has(target)) or copies.values().has(target): continue
+			available = {"uid":uid,"role":target}
+			break
+		if available.is_empty():
+			return {"error":"%s 的空闲库存不足，请先购买" % name_for(source)}
+		reserved[str(available.uid)] = true
+		copies[source] = available
+	return {"copies":copies}
+
+func _group_duplicate_targets(displacement: Vector2) -> Dictionary:
+	var targets := {}
+	for source: String in group_selection:
+		var target: Transform3D = nodes[source].transform
+		target.origin.x += displacement.x
+		target.origin.z += displacement.y
+		var polygon: PackedVector2Array = _footprint_at(source,target,collision_margin)
+		if not _blocker(source,polygon).is_empty(): return {}
+		if is_blocking(source):
+			# _blocker deliberately ignores its own role; a duplicate must not
+			# occupy its source, any other source or another proposed copy.
+			for original: String in group_selection:
+				if is_blocking(original) and Data.overlap(polygon,footprint(original,collision_margin)): return {}
+			for other: String in targets:
+				if is_blocking(other) and Data.overlap(polygon,_footprint_at(other,targets[other],collision_margin)): return {}
+		targets[source] = target
+	return targets
+
+func duplicate_group() -> bool:
+	var plan: Dictionary = group_duplicate_plan()
+	if plan.has("error"):
+		message = str(plan.error)
+		changed.emit()
+		return false
+	var chosen: Dictionary = plan.copies
+	var targets := {}
+	# Every member receives the exact same offset, retaining all their
+	# relative X/Z positions and orientations. No nodes or UIDs are reserved
+	# until the whole constellation passes the placement test.
+	for ring in range(1,21):
+		for step in range(24):
+			var angle: float = TAU*float(step)/24.0
+			var offset := Vector2(cos(angle),sin(angle))*float(ring)*.25
+			if snapping: offset = offset.snapped(Vector2.ONE*grid_step)
+			targets = _group_duplicate_targets(offset)
+			if not targets.is_empty(): break
+		if not targets.is_empty(): break
+	if targets.is_empty():
+		message = "附近没有能容纳整组家具的空闲位置"
+		changed.emit()
+		return false
+	var before: Dictionary = _draft()
+	var old_selection: Array[String] = group_selection.duplicate()
+	var old_primary: String = selected
+	var copied_roles: Array[String] = []
+	for source: String in old_selection:
+		var spec: Dictionary = chosen[source]
+		var target_role: String = str(spec.role)
+		var uid: String = str(spec.uid)
+		_create_copy(target_role)
+		if not nodes.has(target_role):
+			_restore_draft(before)
+			group_selection = old_selection
+			selected = old_primary
+			update()
+			message = "整组复制失败：无法创建家具实例"
+			changed.emit()
+			return false
+		nodes[target_role].transform = targets[source]
+		placed_instances[target_role] = uid
+		var finish: int = color_for(source)
+		if finish == 0: furniture_colors.erase(uid)
+		else: furniture_colors[uid] = finish
+		copied_roles.append(target_role)
+	_apply_furniture_appearance()
+	var contact: String = _layout_blocker()
+	if not contact.is_empty():
+		_restore_draft(before)
+		group_selection = old_selection
+		selected = old_primary
+		update()
+		message = "整组复制受阻：" + contact
+		changed.emit()
+		return false
+	group_selection = copied_roles
+	selected = str(chosen[old_primary].role)
+	_remember(before)
+	update()
+	return true
+
+func store_group() -> bool:
+	if not active or group_selection.size() < 2 or not gesture.is_empty() or not placing_role.is_empty(): return false
+	for role: String in group_selection:
+		if not _group_eligible(role): return false
+	var before: Dictionary = _draft()
+	var to_store: Array[String] = group_selection.duplicate()
+	selected = "desk"
+	group_selection.clear()
+	_clear_group_markers()
+	for role: String in to_store:
+		placed_instances.erase(role)
+		if Data.is_copy(role):
+			nodes[role].free()
+			nodes.erase(role)
+		else:
+			nodes[role].hide()
+	_apply_furniture_appearance()
+	_remember(before)
+	update()
+	return true
+
 func delete_selected() -> void:
 	store_selected()
 
