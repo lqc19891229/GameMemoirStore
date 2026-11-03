@@ -22,6 +22,7 @@ func run() -> void:
 	var desktop = game.desktop
 	var layout = desktop.world.layout
 	desktop.begin_layout()
+	var tools = desktop.room_ui.scene_actions
 	check(desktop.get_node("%InnerWallSnapToggle") != null, "inner-wall snap is an authored, independent toggle")
 	check(desktop.get_node("%AlignFurnitureX") != null and desktop.get_node("%AlignFurnitureZ") != null, "X/Z alignment buttons are authored")
 	check(desktop.get_node("%DistributeFurnitureX") != null and desktop.get_node("%DistributeFurnitureZ") != null, "X/Z equal spacing tools are authored")
@@ -108,8 +109,12 @@ func run() -> void:
 		quit(1)
 		return
 	check(align.axis == "z", "nearby furniture provides an exact Z alignment guide")
+	tools._refresh_arrangement("lamp_1")
+	check(not tools.arrange_buttons["align_z"].disabled and not tools.arrange_buttons["space_x"].disabled, "scene arrangement exposes safe Z alignment and three-piece X distribution")
 	var history_before: int = layout.undo_stack.size()
-	check(layout.align_selected("z"), "selected furniture can align with its neighbor's Z position")
+	tools.arrange_panel.show()
+	tools.perform_arrangement("align_z")
+	check(layout.nodes["lamp_1"].position.z == common_z, "contextual Z alignment delegates to the existing collision-checked layout action")
 	check(is_equal_approx(layout.nodes["lamp_1"].position.z,common_z), "alignment moves furniture to a shared center line")
 	check(layout.undo_stack.size() == history_before+1, "single alignment produces exactly one undo step")
 	layout.undo()
@@ -137,7 +142,9 @@ func run() -> void:
 		quit(1)
 		return
 	history_before = layout.undo_stack.size()
-	check(layout.distribute_matching_furniture("x"), "three similar floor items can be evenly distributed")
+	tools.arrange_panel.show()
+	tools.perform_arrangement("space_x")
+	check(is_equal_approx(layout.nodes["lamp_1"].position.x,expected), "contextual X distribution delegates to existing same-type grouping")
 	check(is_equal_approx(layout.nodes["lamp_1"].position.x,expected), "equal-spacing action moves only the interior item to midpoint")
 	check(is_equal_approx(layout.nodes["lamp"].position.x,first_x) and is_equal_approx(layout.nodes["lamp_2"].position.x,last_x), "distribution keeps both endpoint furniture unmoved")
 	check(layout.undo_stack.size() == history_before+1, "an entire arrangement is a single undo entry")
