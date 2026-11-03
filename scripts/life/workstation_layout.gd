@@ -1578,12 +1578,15 @@ func redo() -> void:
 	_restore_draft(redo_stack.pop_back())
 	update()
 
-func set_style(key: String, value: int) -> void:
+func set_style(key: String, value: int, animate_weather: bool = false) -> void:
 	if not active or not committed_style.has(key): return
 	var before := _draft()
-	var next: Dictionary = world.get_node("Room").style.duplicate()
+	var room: MemoirRoomView = world.get_node("Room")
+	var previous: Array = room.atmosphere_visual_snapshot() if animate_weather and key == "atmosphere" and int(room.style.atmosphere) != value else []
+	var next: Dictionary = room.style.duplicate()
 	next[key] = value
-	world.get_node("Room").apply_style(next)
+	room.apply_style(next)
+	if not previous.is_empty(): room.animate_atmosphere_from(previous)
 	_remember(before)
 	update()
 
