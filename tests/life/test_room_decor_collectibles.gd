@@ -92,7 +92,7 @@ func run() -> void:
 	saved.save_path = state.save_path
 	saved.load_state()
 	for role: String in placed:
-		check(saved.life.placements.has(role) and saved.life.layout.has(role),"P43 decor placement and stock UID survive actual JSON persistence: "+role)
+		check(saved.life.placements.has(role) and saved.life.workstation_layout.has(role),"P43 decor placement and stock UID survive actual JSON persistence: "+role)
 	state.persistence_enabled = false
 	game.queue_free()
 	await frames()
