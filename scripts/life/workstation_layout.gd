@@ -1322,8 +1322,33 @@ func _constrain_motion(before: Transform3D, target: Transform3D) -> void:
 	if not blocker.is_empty(): wall_magnet_active = false
 	update(blocker)
 
-func rotate_step(direction: float) -> void:
-	rotate_to(nodes[selected].rotation.y + deg_to_rad(angle_step) * direction)
+func set_snapping(enabled: bool) -> void:
+	if not active or snapping == enabled: return
+	snapping = enabled
+	update()
+
+func nudge_selected(direction: Vector2, fine: bool = false) -> bool:
+	# Keyboard nudges share mouse placement constraints and normal undo records.
+	# Fine adjustment temporarily skips grid rounding for a genuine 1 cm step.
+	if not active or not gesture.is_empty() or not nodes.has(selected): return false
+	if direction.is_zero_approx(): return false
+	var previous: Transform3D = nodes[selected].transform
+	var step: float = 0.01 if fine else grid_step
+	var previous_snap: bool = snapping
+	if fine: snapping = false
+	move_to(Vector2(previous.origin.x,previous.origin.z) + direction.normalized() * step)
+	snapping = previous_snap
+	if fine: update()
+	return not previous.is_equal_approx(nodes[selected].transform)
+
+func rotate_step(direction: float, fine: bool = false) -> void:
+	if not active or not nodes.has(selected): return
+	# 1-degree rotation must not be rounded back to the normal 15-degree grid.
+	var previous_snap: bool = snapping
+	if fine: snapping = false
+	rotate_to(nodes[selected].rotation.y + deg_to_rad(1.0 if fine else angle_step) * direction)
+	snapping = previous_snap
+	if fine: update()
 
 func _plane_point(pixel: Vector2) -> Variant:
 	var frame: Node3D = world if is_floor(selected) else group

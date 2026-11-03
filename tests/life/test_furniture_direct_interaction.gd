@@ -155,6 +155,15 @@ func run() -> void:
 		check(ui.feedback_state == "blocked" and ui.feedback_text.text.contains("无法放置"), "initial blocked ghost clearly explains why placement is unavailable")
 	check(ui.feedback.mouse_filter == Control.MOUSE_FILTER_IGNORE, "semantic feedback remains transparent to mouse picking")
 	check(ui.feedback_pose_text.text.contains("X ") and ui.feedback_pose_text.text.contains("Z "), "placement preview exposes actual projected coordinates")
+	# Arrow nudges must reposition the temporary ghost, not confirm or consume it.
+	layout.preview_placement(Vector2(0,2))
+	var ghost_start: Vector3 = layout.nodes["chair"].position
+	var arrow := InputEventKey.new()
+	arrow.keycode = KEY_RIGHT
+	arrow.pressed = true
+	desktop._input(arrow)
+	check(absf(layout.nodes["chair"].position.x - ghost_start.x - layout.grid_step) < 0.003, "arrow-key placement preview advances by one grid cell")
+	check(layout.placing_role == "chair" and layout.placed_instances["chair"] == uid, "nudge leaves preview active and preserves the owned furniture UID")
 	var initial_yaw: float = layout.nodes["chair"].rotation.y
 	var scroll := InputEventMouseButton.new()
 	scroll.button_index = MOUSE_BUTTON_WHEEL_UP

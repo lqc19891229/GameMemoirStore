@@ -30,6 +30,9 @@ var feedback_state := "none"
 var _preview_role := ""
 var _confirmed_role := ""
 var _confirmation_timer: Timer
+var _keyboard_notice := ""
+var _keyboard_role := ""
+var _keyboard_notice_timer: Timer
 var scene_actions: Node
 
 const CORE_INSPECTOR := {
@@ -301,6 +304,28 @@ func _build_feedback(canvas: Control) -> void:
 		_confirmed_role = ""
 		_sync_feedback(host.world.layout.active and host.world.mode == "layout")
 	)
+	_keyboard_notice_timer = Timer.new()
+	_keyboard_notice_timer.name = "KeyboardPrecisionFeedbackTimer"
+	_keyboard_notice_timer.one_shot = true
+	_keyboard_notice_timer.wait_time = 1.4
+	add_child(_keyboard_notice_timer)
+	_keyboard_notice_timer.timeout.connect(func() -> void:
+		_keyboard_notice = ""
+		_keyboard_role = ""
+		_sync_feedback(host.world.layout.active and host.world.mode == "layout")
+	)
+
+func show_keyboard_feedback(message: String) -> void:
+	if not host.world.layout.active or host.blueprint_mode or mode != "furniture": return
+	_keyboard_notice = message
+	_keyboard_role = str(host.world.layout.selected)
+	_keyboard_notice_timer.start()
+	_sync_feedback(true)
+
+func _clear_keyboard_feedback() -> void:
+	_keyboard_notice = ""
+	_keyboard_role = ""
+	if is_instance_valid(_keyboard_notice_timer): _keyboard_notice_timer.stop()
 
 func _clear_confirmation() -> void:
 	_confirmed_role = ""
@@ -310,8 +335,11 @@ func _track_placement_completion(active: bool) -> void:
 	if not active:
 		_preview_role = ""
 		_clear_confirmation()
+		_clear_keyboard_feedback()
 		return
 	var layout = host.world.layout
+	if not _keyboard_role.is_empty() and (_keyboard_role != str(layout.selected) or not layout.gesture.is_empty()):
+		_clear_keyboard_feedback()
 	var preview: String = str(layout.placing_role)
 	if not preview.is_empty():
 		_preview_role = preview
@@ -319,6 +347,7 @@ func _track_placement_completion(active: bool) -> void:
 	elif not _preview_role.is_empty():
 		var completed: String = _preview_role
 		_preview_role = ""
+		_clear_keyboard_feedback()
 		# Cancel restores the pre-preview inventory mapping, whereas a real
 		# confirmation keeps the placed UID under this role.
 		if layout.placed_instances.has(completed):
@@ -349,7 +378,8 @@ func _sync_feedback(active: bool) -> void:
 	var confirmed: bool = not _confirmed_role.is_empty() and _confirmed_role == str(layout.selected) and layout.placed_instances.has(_confirmed_role) and layout.gesture.is_empty() and layout.placing_role.is_empty() and layout.valid and not catalog_open
 	if not confirmed and not _confirmed_role.is_empty() and (_confirmed_role != str(layout.selected) or not layout.gesture.is_empty()):
 		_clear_confirmation()
-	var relevant: bool = confirmed or not layout.placing_role.is_empty() or not layout.gesture.is_empty() or not layout.valid or message.begins_with("已阻挡") or layout.wall_magnet_active
+	var keyboard_notice: bool = not _keyboard_notice.is_empty() and _keyboard_role == str(layout.selected) and not catalog_open
+	var relevant: bool = confirmed or keyboard_notice or not layout.placing_role.is_empty() or not layout.gesture.is_empty() or not layout.valid or message.begins_with("已阻挡") or layout.wall_magnet_active
 	if not relevant or not layout.nodes.has(layout.selected):
 		feedback.hide()
 		return
@@ -366,6 +396,9 @@ func _sync_feedback(active: bool) -> void:
 	elif not layout.placing_role.is_empty():
 		feedback_state = "ready"
 		display_message = "可以放置 · 左键确认  ·  右键取消  ·  Q/E 旋转"
+	elif keyboard_notice and layout.gesture.is_empty():
+		feedback_state = "keyboard"
+		display_message = _keyboard_notice
 	else:
 		feedback_state = "dragging"
 	var object: Node3D = layout.nodes[layout.selected]
@@ -398,6 +431,7 @@ func choose_mode(next_mode: String) -> void:
 	if next_mode != "furniture" and not host.world.layout.placing_role.is_empty():
 		host.world.layout.cancel_placement()
 	mode = next_mode
+	if next_mode != "furniture": _clear_keyboard_feedback()
 	if scene_actions != null: scene_actions.hide_colors()
 	if next_mode == "furniture": catalog_open = host.world.layout.placing_role.is_empty()
 	host.set_blueprint_mode(mode == "build")

@@ -221,6 +221,7 @@ func sync(active: bool) -> void:
 	var furniture_mode: bool = active and room_ui.mode == "furniture" and not host.blueprint_mode
 	rail.visible = furniture_mode and host.world.layout.placing_role.is_empty()
 	hint.visible = active and host.get_viewport().get_visible_rect().size.x >= 1060
+	hint.text = "方向键 微调 · Shift+方向键 1cm · Q/E 旋转 · Shift+Q/E 1° · S 网格%s" % ("开" if host.world.layout.snapping else "关")
 	for index in range(GROUP_KEYS.size()):
 		var button: Button = category_buttons[GROUP_KEYS[index]]
 		button.set_pressed_no_signal(host.get_node("%FurnitureCatalogGroup").selected == index and room_ui.catalog_open)
