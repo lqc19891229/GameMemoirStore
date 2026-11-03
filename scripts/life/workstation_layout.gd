@@ -304,7 +304,8 @@ func duplicate_selected() -> void:
 		return
 	placed_instances[role] = instance_uid
 	selected = role
-	group_selection = [role]
+	group_selection.clear()
+	group_selection.append(role)
 	_remember(before)
 	update()
 
@@ -1178,7 +1179,8 @@ func select(role: String, preserve_group: bool = false) -> void:
 	if InventoryData.is_room_furniture_role(Data.base_role(role)) and not placed_instances.has(role): return
 	end_drag()
 	if not preserve_group or not group_selection.has(role):
-		group_selection = [role] if _group_eligible(role) else []
+		group_selection.clear()
+		if _group_eligible(role): group_selection.append(role)
 	selected = role
 	update()
 
@@ -1199,7 +1201,8 @@ func toggle_group_member(role: String) -> bool:
 func clear_group_selection() -> void:
 	if group_selection.size() <= 1: return
 	end_drag()
-	group_selection = [selected] if _group_eligible(selected) else []
+	group_selection.clear()
+	if _group_eligible(selected): group_selection.append(selected)
 	update()
 
 func _clear_group_markers() -> void:
@@ -1562,7 +1565,8 @@ func update(contact: String = "") -> void:
 	for role: String in group_selection.duplicate():
 		if not _group_eligible(role): group_selection.erase(role)
 	if not group_selection.has(selected) and _group_eligible(selected):
-		group_selection = [selected]
+		group_selection.clear()
+		group_selection.append(selected)
 	_sync_group_markers()
 	var blocker := _layout_blocker()
 	valid = blocker.is_empty()
