@@ -58,6 +58,22 @@ func run() -> void:
 	check(player != null and player.playing, "returning to rain resumes existing audio stream")
 	room.apply_style(original)
 	check(room.style == original and game.desktop.world.layout.snapshot() == layout, "ambient preview preserves original style and furniture layout")
+	# Live weather selector blends rendered lighting while committed style
+	# changes immediately and remains compatible with cancel/undo.
+	var env: Environment = (game.desktop.world.get_node("Environment") as WorldEnvironment).environment
+	var before_color: Color = env.background_color
+	game.desktop.begin_layout()
+	game.desktop.world.layout.set_style("atmosphere", 1, true)
+	check(int(room.style.atmosphere) == 1, "weather style updates immediately for editor state and save")
+	check(env.background_color.is_equal_approx(before_color), "weather transition begins from previous sky backdrop")
+	await create_timer(.67).timeout
+	check(env.background_color.is_equal_approx(MemoirRoomView.ATMOSPHERE_BACKGROUND[1]), "weather transition completes at sunset color")
+	game.desktop.world.layout.set_style("atmosphere", 2, true)
+	game.desktop.world.layout.set_style("atmosphere", 3, true)
+	await create_timer(.67).timeout
+	check(env.background_color.is_equal_approx(MemoirRoomView.ATMOSPHERE_BACKGROUND[3]), "rapid weather selection ends at last chosen preset")
+	game.desktop.finish_layout(false)
+	check(room.style == original and game.desktop.world.layout.snapshot() == layout, "cancel restores appearance and furniture after animation")
 	game.queue_free()
 	for i in range(3): await process_frame
 	print("ROOM_P44_AMBIENCE_CHECKS: %d / %d passed" % [checks - failures, checks])
