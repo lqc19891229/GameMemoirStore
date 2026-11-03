@@ -432,7 +432,9 @@ func choose_mode(next_mode: String) -> void:
 		host.world.layout.cancel_placement()
 	mode = next_mode
 	if next_mode != "furniture": _clear_keyboard_feedback()
-	if scene_actions != null: scene_actions.hide_colors()
+	if scene_actions != null:
+		scene_actions.hide_colors()
+		scene_actions.hide_arrange()
 	if next_mode == "furniture": catalog_open = host.world.layout.placing_role.is_empty()
 	host.set_blueprint_mode(mode == "build")
 	sync()
