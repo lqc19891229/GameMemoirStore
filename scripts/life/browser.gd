@@ -11,6 +11,7 @@ var message: Label
 var pending := false
 var wallet_label: Label
 var purchase_buttons: Dictionary = {}
+var quick_buttons: Dictionary = {}
 var catalog_group_ids: Array[String] = [""]
 var catalog_type_ids: Array[String] = [""]
 var thumbnail_cache
@@ -81,6 +82,7 @@ func refresh() -> void:
 		box.remove_child(child)
 		child.queue_free()
 	purchase_buttons.clear()
+	quick_buttons.clear()
 	thumbnail_cache.forget_requests()
 	_tick()
 	var inventory: Array = session.state.life["inventory"]
@@ -88,7 +90,8 @@ func refresh() -> void:
 	for item in Catalog.items:
 		if not Catalog.matches_filters(item,_category(),_item_type(),%ShopCatalogSearch.text): continue
 		var id := item.item_id
-		var count := InventoryData.count(inventory, id)
+		var summary: Dictionary = InventoryData.stock_summary(inventory,placements,id)
+		var count: int = int(summary.owned)
 		if tab == "shop" and (item.price <= 0 or item.retired): continue
 		if tab == "inventory" and count == 0: continue
 		var row = preload("res://scenes/apps/browser/components/inventory_row.tscn").instantiate()
@@ -98,6 +101,11 @@ func refresh() -> void:
 		var category_name := Taxonomy.group_name(Taxonomy.group_for(item))
 		var type_name := Taxonomy.type_name(Taxonomy.type_for(item))
 		var meta: Label = row.get_node("%FurnitureMeta")
+		var stock_label: Label = row.get_node("%StockStatus")
+		if item.category == "furniture":
+			stock_label.text = "已拥有 %d · 可摆放 %d · 已摆放 %d" % [count,int(summary.available),int(summary.placed)]
+		else:
+			stock_label.text = "已拥有 %d" % count
 		var preview_frame: Control = row.get_node("%ThumbnailBackdrop")
 		preview_frame.visible = item.category == "furniture" and item.furniture_scene != null and not item.retired
 		if preview_frame.visible:
@@ -107,9 +115,33 @@ func refresh() -> void:
 			meta.text = "%s / %s · %.2f × %.2f × %.2f m" % [category_name, type_name, bounds.x, bounds.y, bounds.z]
 			row.get_node("%ThumbnailPlaceholder").text = type_name
 			thumbnail_cache.request(item, row.get_node("%Thumbnail"), %ShopPreviewFinish.selected)
+			# Expand the same real 3D preview with the selected finish on demand;
+			# it shares a single render cache with all product thumbnails.
+			var preview_toggle := Button.new()
+			preview_toggle.name = "PreviewToggle"
+			preview_toggle.text = "查看 3D 大图"
+			preview_toggle.custom_minimum_size = Vector2(0,28)
+			preview_toggle.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+			var enlarged := TextureRect.new()
+			enlarged.name = "LargePreview"
+			enlarged.visible = false
+			enlarged.custom_minimum_size = Vector2(260,192)
+			enlarged.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+			enlarged.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+			enlarged.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			var details: VBoxContainer = row.get_node("%Text")
+			details.add_child(preview_toggle)
+			details.add_child(enlarged)
+			preview_toggle.pressed.connect(func() -> void:
+				enlarged.visible = not enlarged.visible
+				preview_toggle.text = "收起 3D 大图" if enlarged.visible else "查看 3D 大图"
+				if enlarged.visible: thumbnail_cache.request(item,enlarged,%ShopPreviewFinish.selected)
+			)
 		else:
 			meta.text = "%s / %s" % [category_name, type_name]
 		var button: Button = row.get_node("%Action")
+		var quick: Button = row.get_node("%QuickAction")
+		quick.visible = false
 		var key := id
 		row.get_node("%Price").visible = tab == "shop"
 		if tab == "shop":
@@ -117,6 +149,13 @@ func refresh() -> void:
 			var repeatable := item.category == "furniture"
 			button.text = "购买" if repeatable or count == 0 else "已拥有"
 			button.pressed.connect(func() -> void: message.text = session.buy_item(key))
+			if item.category == "furniture" and item.placement_surface == "floor":
+				quick.visible = true
+				quick.text = "购买并摆放"
+				quick.name = "BuyPlace_" + id
+				quick.disabled = session.state.wallet < item.price
+				quick.pressed.connect(func() -> void: message.text = session.buy_and_place_furniture(key,%ShopPreviewFinish.selected))
+				quick_buttons[id] = quick
 			purchase_buttons[id] = button
 			button.name = "Buy_" + id
 			button.disabled = (count > 0 and not repeatable) or session.state.wallet < item.price
@@ -127,10 +166,17 @@ func refresh() -> void:
 				button.disabled = true
 				row.get_node("%Description").text = "保留的历史物品记录。"
 			elif item.category == "furniture":
-				var available := InventoryData.unused_uid(inventory, placements, id) != ""
-				button.text = "摆放" if available else "已摆放"
-				button.disabled = not available
-				button.pressed.connect(func() -> void: message.text = session.request_place_furniture(key))
+				var available: bool = int(summary.available) > 0
+				var placed: bool = int(summary.placed) > 0
+				button.text = "摆放" if available else "查看已摆放" if placed else "暂无库存"
+				button.disabled = not available and not placed
+				if available:
+					button.pressed.connect(func() -> void:
+						var finish: int = %ShopPreviewFinish.selected
+						message.text = session.request_place_furniture(key,finish if finish > 0 else -1)
+					)
+				elif placed:
+					button.pressed.connect(func() -> void: message.text = session.focus_placed_furniture(key))
 			else:
 				var equipped: bool = session.state.life["equipped"].get(item.slot, "") == id
 				button.text = "使用中" if equipped else "安装"
@@ -146,3 +192,7 @@ func _tick() -> void:
 		var item: MemoirItemDefinition = Catalog.lookup(id)
 		var owned := InventoryData.owns(session.state.life["inventory"], id)
 		purchase_buttons[id].disabled = (owned and item.category != "furniture") or session.state.wallet < item.price
+	for id: String in quick_buttons:
+		if not is_instance_valid(quick_buttons[id]): continue
+		var item: MemoirItemDefinition = Catalog.lookup(id)
+		quick_buttons[id].disabled = session.state.wallet < item.price
