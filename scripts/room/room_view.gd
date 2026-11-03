@@ -102,7 +102,7 @@ func _update_rain_sound(index: int) -> void:
 
 
 static func clean_style(raw: Variant) -> Dictionary:
-	var result := {"wall": 0, "floor": 0, "light": 0, "rgb": 0, "brightness": 70, "effect": 0, "wall_pattern":0, "floor_pattern":0, "atmosphere":0}
+	var result := {"wall": 0, "floor": 0, "light": 0, "rgb": 0, "brightness": 70, "effect": 0, "wall_pattern":0, "floor_pattern":0, "atmosphere":0, "ambience_volume":70}
 	if not raw is Dictionary:
 		return result
 	for key: String in ["wall", "floor", "light", "effect", "wall_pattern", "floor_pattern", "atmosphere"]:
