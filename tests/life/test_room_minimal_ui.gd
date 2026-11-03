@@ -36,6 +36,10 @@ func pointer_click(control: Control) -> void:
 	await process_frame
 	var hovered: Control = root.gui_get_hovered_control()
 	print("UI_HIT_TRACE target=",control.name," rect=",control.get_global_rect()," parent_filter=",control.get_parent().mouse_filter," hovered=",hovered.get_path() if hovered != null else "none"," rendered=",control.is_visible_in_tree())
+	if control.name == "Action_paint":
+		for button: Button in control.get_parent().get_children():
+			print("UI_RECT_TRACE ",button.name," ",button.get_global_rect()," visible=",button.is_visible_in_tree())
+		print("UI_VIEW_TRACE final=",root.get_final_transform()," viewport=",root.get_visible_rect().size," strip=",control.get_parent().position)
 	for pressed in [true,false]:
 		var event := InputEventMouseButton.new()
 		event.position = point
@@ -46,6 +50,8 @@ func pointer_click(control: Control) -> void:
 		root.push_input(event,true)
 	await frames()
 	print("UI_HIT_TRACE after=",control.name," hovered=",root.gui_get_hovered_control().get_path() if root.gui_get_hovered_control() != null else "none")
+	if control.name == "Action_paint":
+		print("UI_VIEW_TRACE after_click role=",root.get_node("GameRoot/ComputerDesktop").world.layout.selected)
 
 func run() -> void:
 	var game = load("res://scenes/main/game_root.tscn").instantiate()
