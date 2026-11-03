@@ -67,8 +67,9 @@ func setup(desktop: Node3D) -> void:
 func refresh_counts() -> void:
 	if not is_instance_valid(host): return
 	for id: String in cards:
-		var count: int = InventoryData.count(host.world.layout.available_inventory, id)
-		var free: int = host._count_unused(id)
+		var summary: Dictionary = InventoryData.stock_summary(host.world.layout.available_inventory,host.world.layout.placed_instances,id)
+		var count: int = int(summary.owned)
+		var free: int = int(summary.available)
 		var info: Dictionary = cards[id]
 		var badge: Label = info.stock
 		if count == 0:

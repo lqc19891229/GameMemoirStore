@@ -41,6 +41,24 @@ static func count(inventory: Array, item_id: String) -> int:
 		if entry is Dictionary and entry.get("item_id", "") == item_id: total += 1
 	return total
 
+## One stock summary shared by shop, inventory and 3D room cards.
+## Ignores non-matching IDs and counts each persisted UID only once.
+static func stock_summary(inventory: Array, placements: Dictionary, item_id: String) -> Dictionary:
+	var owned := 0
+	var placed := 0
+	var seen: Dictionary = {}
+	var placed_uids: Dictionary = {}
+	for role: String in placements:
+		placed_uids[str(placements[role])] = true
+	for entry: Variant in inventory:
+		if not entry is Dictionary or str(entry.get("item_id","")) != item_id: continue
+		var uid: String = str(entry.get("uid",""))
+		if uid.is_empty() or seen.has(uid): continue
+		seen[uid] = true
+		owned += 1
+		if placed_uids.has(uid): placed += 1
+	return {"owned":owned,"available":owned-placed,"placed":placed}
+
 static func next_uid(inventory: Array) -> String:
 	var used: Dictionary = {}
 	for entry: Variant in inventory:
