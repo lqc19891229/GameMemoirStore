@@ -5,7 +5,6 @@ const STROKES := {
 	"tables": '<path d="M3 9h18v3H3zM5 12v9M19 12v9"/>',
 	"seating": '<path d="M5 13v-3a3 3 0 0 1 3-3h8a3 3 0 0 1 3 3v3M4 13h16v6H4zM6 19v2m12-2v2"/>',
 	"storage": '<rect x="5" y="2" width="14" height="20" rx="1"/><path d="M5 9h14M5 15h14M12 4v3M12 11v2"/>',
-	"decor": '<path d="M4 20h16M7 20V9a5 5 0 0 1 10 0v11M9 12h6M9 16h6"/>',
 	"hardware": '<rect x="3" y="5" width="18" height="12" rx="2"/><path d="M12 17v4M7 21h10"/>',
 	"move": '<path d="M12 2v20M2 12h20M9 5l3-3 3 3M9 19l3 3 3-3M5 9l-3 3 3 3M19 9l3 3-3 3"/>',
 	"rotate": '<path d="M20 11a8 8 0 1 0-2 6M20 5v6h-6"/>',
