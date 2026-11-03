@@ -119,6 +119,18 @@ func _apply_atmosphere() -> void:
 		(sky.material_override as StandardMaterial3D).albedo_color = ATMOSPHERE_SKY[index]
 	var rain := $Shell.get_node_or_null("Left_Wall/RainStreaks") as Node3D
 	if rain != null: rain.visible = index == 3
+	var windows := $Shell.get_node_or_null("Left_Wall/ExteriorWindows") as Node3D
+	if windows != null: windows.visible = index in [1,2,3]
+	# Daylight must read as window light; moonlight and rain become less warm.
+	# No shadow maps are added, so these accents work in Compatibility mode.
+	var bounce := $Shell.get_node_or_null("WindowBounce") as OmniLight3D
+	if bounce != null:
+		bounce.light_energy = [.24,.34,.065,.13][index]
+		bounce.light_color = [Color("ffe8c5"),Color("ffbb8c"),Color("a7c1df"),Color("d0dce2")][index]
+	var cove := $Shell.get_node_or_null("WarmCoveFill") as OmniLight3D
+	if cove != null:
+		cove.light_energy = [.09,.16,.24,.19][index]
+		cove.light_color = [Color("ffe7d0"),Color("ffc3a1"),Color("ffdab2"),Color("eedac4")][index]
 	var key := world.get_node_or_null("KeyLight") as DirectionalLight3D
 	if key != null:
 		key.light_color = LIGHTS[style.light] * tint
