@@ -59,14 +59,28 @@ func _ready() -> void:
 	apply_style(style)
 
 func _pattern_texture(kind: String, index: int) -> Texture2D:
-	if index <= 0: return null
+	# P42 makes the existing default oak floor a finished material rather
+	# than an untextured flat color. Default walls stay matte and quiet.
+	if index < 0 or index == 0 and kind != "floor": return null
 	var key := kind + str(index)
 	if _patterns.has(key): return _patterns[key]
-	var image := Image.create(64,64,false,Image.FORMAT_RGBA8)
-	for y in range(64):
-		for x in range(64):
+	var dimension := 128 if kind == "floor" and index == 0 else 64
+	var image := Image.create(dimension,dimension,false,Image.FORMAT_RGBA8)
+	for y in range(dimension):
+		for x in range(dimension):
 			var shade := 1.0
-			if kind == "wall":
+			if kind == "floor" and index == 0:
+				# Continuous, subtle oak fibers, not opaque painted stripes.
+				# Two frequencies introduce believable lengthwise variation
+				# without disturbing the player's floor finish color.
+				var along := float(x)/float(dimension)
+				var across := float(y)/float(dimension)
+				var bend := .018*sin(across*TAU*3.0) + .008*sin(across*TAU*9.0)
+				var wide := sin(TAU*(along*7.0+bend))
+				var narrow := sin(TAU*(along*29.0+bend*2.6))
+				var pores := sin(TAU*(along*45.0+across*5.0))
+				shade = clampf(.947+.032*wide+.013*narrow+.005*pores,.88,.997)
+			elif kind == "wall":
 				if index == 1:
 					# Woven linen: alternating fine vertical and horizontal fibers.
 					shade = .90 + .035 * float(x % 4 == 0) + .04 * float(y % 7 == 0)
@@ -83,6 +97,7 @@ func _pattern_texture(kind: String, index: int) -> Texture2D:
 					# Matte stone tile with subtly varied squares and joints.
 					shade = .76 if x % 16 == 0 or y % 16 == 0 else .90 + float((x/16+y/16) % 3) * .026
 			image.set_pixel(x,y,Color(shade,shade,shade))
+	if kind == "floor" and index == 0: image.generate_mipmaps()
 	var texture := ImageTexture.create_from_image(image)
 	_patterns[key] = texture
 	return texture
@@ -119,6 +134,18 @@ func _apply_atmosphere() -> void:
 		(sky.material_override as StandardMaterial3D).albedo_color = ATMOSPHERE_SKY[index]
 	var rain := $Shell.get_node_or_null("Left_Wall/RainStreaks") as Node3D
 	if rain != null: rain.visible = index == 3
+	var windows := $Shell.get_node_or_null("Left_Wall/ExteriorWindows") as Node3D
+	if windows != null: windows.visible = index in [1,2,3]
+	# Daylight must read as window light; moonlight and rain become less warm.
+	# No shadow maps are added, so these accents work in Compatibility mode.
+	var bounce := $Shell.get_node_or_null("WindowBounce") as OmniLight3D
+	if bounce != null:
+		bounce.light_energy = [.24,.34,.065,.13][index]
+		bounce.light_color = [Color("ffe8c5"),Color("ffbb8c"),Color("a7c1df"),Color("d0dce2")][index]
+	var cove := $Shell.get_node_or_null("WarmCoveFill") as OmniLight3D
+	if cove != null:
+		cove.light_energy = [.09,.16,.24,.19][index]
+		cove.light_color = [Color("ffe7d0"),Color("ffc3a1"),Color("ffdab2"),Color("eedac4")][index]
 	var key := world.get_node_or_null("KeyLight") as DirectionalLight3D
 	if key != null:
 		key.light_color = LIGHTS[style.light] * tint
@@ -191,6 +218,7 @@ func apply_style(value: Variant) -> void:
 			material.albedo_color = (FLOOR_FINISHES[finish] if finish > 0 and finish < FLOOR_FINISHES.size() else FLOORS[style.floor]) * tone
 			material.albedo_texture = _pattern_texture("floor",int(style.floor_pattern))
 			material.uv1_scale = Vector3(3,3,1)
+			material.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
 			material.roughness = .71 if int(style.floor_pattern) == 1 else .87 if int(style.floor_pattern) == 2 else .68
 
 	_apply_atmosphere()

@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="MemoirItemCatalog" load_steps=67 format=3]
+[gd_resource type="Resource" script_class="MemoirItemCatalog" load_steps=83 format=3]
 
 [ext_resource type="Script" path="res://scripts/items/item_catalog.gd" id="1"]
 [ext_resource type="Script" path="res://scripts/items/item_definition.gd" id="2"]
@@ -29,6 +29,13 @@
 [ext_resource type="PackedScene" path="res://scenes/room/plant_palm.tscn" id="exp_plant_palm"]
 [ext_resource type="PackedScene" path="res://scenes/room/rug_geometric.tscn" id="exp_rug_geometric"]
 [ext_resource type="PackedScene" path="res://scenes/room/rug_round.tscn" id="exp_rug_round"]
+
+[ext_resource type="PackedScene" path="res://scenes/room/vinyl_crate.tscn" id="exp_vinyl_crate"]
+[ext_resource type="PackedScene" path="res://scenes/room/collectible_podium.tscn" id="exp_collectible_podium"]
+[ext_resource type="PackedScene" path="res://scenes/room/poster_floor_frame.tscn" id="exp_poster_floor_frame"]
+[ext_resource type="PackedScene" path="res://scenes/room/game_display_shelf.tscn" id="exp_game_display_shelf"]
+[ext_resource type="PackedScene" path="res://scenes/room/lounge_cushion_pair.tscn" id="exp_lounge_cushion_pair"]
+[ext_resource type="PackedScene" path="res://scenes/room/retro_speaker_tower.tscn" id="exp_retro_speaker_tower"]
 
 [sub_resource type="Resource" id="item_0"]
 script = ExtResource("2")
@@ -767,6 +774,120 @@ capacity = 0
 retired = false
 furniture_scene = ExtResource("exp_rug_round")
 
+[sub_resource type="Resource" id="item_41"]
+script = ExtResource("2")
+item_id = "room_vinyl_crate"
+catalog_group = "decor"
+catalog_type = "ornament"
+name = "黑胶唱片收纳箱"
+category = "furniture"
+subcategory = "vinyl_crate"
+slot = ""
+price = 48
+description = "带实木箱体、独立封套和金属提手的黑胶唱片收藏。"
+placement_surface = "floor"
+visual_id = ""
+speed = 1
+income = 0
+capacity = 0
+retired = false
+furniture_scene = ExtResource("exp_vinyl_crate")
+
+[sub_resource type="Resource" id="item_42"]
+script = ExtResource("2")
+item_id = "room_collectible_podium"
+catalog_group = "decor"
+catalog_type = "ornament"
+name = "游戏收藏品展示座"
+category = "furniture"
+subcategory = "collectible_podium"
+slot = ""
+price = 72
+description = "带铭牌的手办展台；可摆在游戏房间的空余地面。"
+placement_surface = "floor"
+visual_id = ""
+speed = 1
+income = 0
+capacity = 0
+retired = false
+furniture_scene = ExtResource("exp_collectible_podium")
+
+[sub_resource type="Resource" id="item_43"]
+script = ExtResource("2")
+item_id = "room_poster_floor_frame"
+catalog_group = "decor"
+catalog_type = "poster"
+name = "落地游戏主题画框"
+category = "furniture"
+subcategory = "poster_floor_frame"
+slot = ""
+price = 58
+description = "胡桃木画框与抽象游戏风景插画，靠墙落地摆放。"
+placement_surface = "floor"
+visual_id = ""
+speed = 1
+income = 0
+capacity = 0
+retired = false
+furniture_scene = ExtResource("exp_poster_floor_frame")
+
+[sub_resource type="Resource" id="item_44"]
+script = ExtResource("2")
+item_id = "room_game_display_shelf"
+catalog_group = "storage"
+catalog_type = "shelf"
+name = "游戏收藏展示架"
+category = "furniture"
+subcategory = "game_display_shelf"
+slot = ""
+price = 118
+description = "内置游戏盒、艺术设定集与装饰小主机的收藏展示架。"
+placement_surface = "floor"
+visual_id = ""
+speed = 1
+income = 0
+capacity = 0
+retired = false
+furniture_scene = ExtResource("exp_game_display_shelf")
+
+[sub_resource type="Resource" id="item_45"]
+script = ExtResource("2")
+item_id = "room_lounge_cushion_pair"
+catalog_group = "seating"
+catalog_type = "cushion"
+name = "双拼休闲坐垫"
+category = "furniture"
+subcategory = "lounge_cushion_pair"
+slot = ""
+price = 38
+description = "鼠尾草绿与米白色厚织坐垫，适合低矮休息角落。"
+placement_surface = "floor"
+visual_id = ""
+speed = 1
+income = 0
+capacity = 0
+retired = false
+furniture_scene = ExtResource("exp_lounge_cushion_pair")
+
+[sub_resource type="Resource" id="item_46"]
+script = ExtResource("2")
+item_id = "room_retro_speaker_tower"
+catalog_group = "decor"
+catalog_type = "audio"
+name = "复古落地游戏音箱"
+category = "furniture"
+subcategory = "retro_speaker_tower"
+slot = ""
+price = 94
+description = "木质机身、金属扬声器环和复古音响面板。"
+placement_surface = "floor"
+visual_id = ""
+speed = 1
+income = 0
+capacity = 0
+retired = false
+furniture_scene = ExtResource("exp_retro_speaker_tower")
+
 [resource]
 script = ExtResource("1")
-items = Array[ExtResource("2")]([SubResource("item_0"), SubResource("item_1"), SubResource("item_2"), SubResource("item_3"), SubResource("item_4"), SubResource("item_5"), SubResource("item_6"), SubResource("item_7"), SubResource("item_8"), SubResource("item_9"), SubResource("item_10"), SubResource("item_11"), SubResource("item_12"), SubResource("item_13"), SubResource("item_14"), SubResource("item_15"), SubResource("item_16"), SubResource("item_17"), SubResource("item_18"), SubResource("item_19"), SubResource("item_20"), SubResource("item_21"), SubResource("item_22"), SubResource("item_23"), SubResource("item_24"), SubResource("item_25"), SubResource("item_26"), SubResource("item_27"), SubResource("item_28"), SubResource("item_29"), SubResource("item_30"), SubResource("item_31"), SubResource("item_32"), SubResource("item_33"), SubResource("item_34"), SubResource("item_35"), SubResource("item_36"), SubResource("item_37"), SubResource("item_38"), SubResource("item_39"), SubResource("item_40")])
+items = Array[ExtResource("2")]([SubResource("item_0"), SubResource("item_1"), SubResource("item_2"), SubResource("item_3"), SubResource("item_4"), SubResource("item_5"), SubResource("item_6"), SubResource("item_7"), SubResource("item_8"), SubResource("item_9"), SubResource("item_10"), SubResource("item_11"), SubResource("item_12"), SubResource("item_13"), SubResource("item_14"), SubResource("item_15"), SubResource("item_16"), SubResource("item_17"), SubResource("item_18"), SubResource("item_19"), SubResource("item_20"), SubResource("item_21"), SubResource("item_22"), SubResource("item_23"), SubResource("item_24"), SubResource("item_25"), SubResource("item_26"), SubResource("item_27"), SubResource("item_28"), SubResource("item_29"), SubResource("item_30"), SubResource("item_31"), SubResource("item_32"), SubResource("item_33"), SubResource("item_34"), SubResource("item_35"), SubResource("item_36"), SubResource("item_37"), SubResource("item_38"), SubResource("item_39"), SubResource("item_40"), SubResource("item_41"), SubResource("item_42"), SubResource("item_43"), SubResource("item_44"), SubResource("item_45"), SubResource("item_46")])

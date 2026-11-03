@@ -19,7 +19,7 @@ func frames() -> void:
 
 func run() -> void:
 	var items: Array[MemoirItemDefinition] = Catalog.room_furniture()
-	check(items.size() == 27, "27 purchasable furniture SKUs: seven original plus twenty new")
+	check(items.size() == 33, "33 purchasable furniture SKUs: 27 established plus six P43 collectible decor pieces")
 	check(Inventory.initial_placements().size() == 5, "existing five starter pieces remain unchanged")
 	check(Inventory.initial().size() == 10, "new furniture is not granted in starter inventory")
 	var unique_roles := {}
@@ -58,8 +58,8 @@ func run() -> void:
 		if group == "decor" and Taxonomy.type_for(item) == "rug" and item.item_id != "room_rug":
 			check(not node.blocking, "new thin rugs can overlap floor furniture")
 		node.free()
-	check(group_sizes.get("tables",0) == 5 and group_sizes.get("seating",0) == 7, "tables and seating have varied models")
-	check(group_sizes.get("storage",0) == 5 and group_sizes.get("lighting",0) == 4 and group_sizes.get("decor",0) == 6, "storage, lighting and decoration include new SKUs")
+	check(group_sizes.get("tables",0) == 5 and group_sizes.get("seating",0) == 8, "tables and seating have varied models")
+	check(group_sizes.get("storage",0) == 6 and group_sizes.get("lighting",0) == 4 and group_sizes.get("decor",0) == 10, "storage, lighting and decoration include new SKUs")
 	check(Data.is_copy("side_table_oak_1") and Data.base_role("side_table_oak_1") == "side_table_oak", "multiword placement role can be copied safely")
 	check(not Data.is_copy("side_table_oak_9") and not Data.valid_role("unknown_furniture"), "unknown and unused historical numbered roles remain rejected")
 	check(Data.valid_role("side_table_oak__instance__item_999") and Data.base_role("side_table_oak__instance__item_999") == "side_table_oak", "unlimited new UID-based room roles are valid")
@@ -74,7 +74,7 @@ func run() -> void:
 	var desktop = game.desktop
 	var layout = desktop.world.layout
 	check(layout.nodes.size() == 10, "new catalog entries do not spawn unpaid furniture into a starter room")
-	check(desktop.furniture_buttons.size() == 27, "every furniture SKU appears in the shared room catalog")
+	check(desktop.furniture_buttons.size() == 33, "every furniture SKU appears in the shared room catalog")
 	check(desktop.get_node("%FurnitureCatalogGroup").item_count == 7, "all furniture groups remain available after bulk catalog expansion")
 
 	var chosen := ["side_table_oak","lamp_cylinder","plant_cactus","side_table_oak"]

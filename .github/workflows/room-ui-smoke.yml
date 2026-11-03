@@ -12,8 +12,10 @@ on:
       - "scripts/life/workstation_layout.gd"
       - "scripts/life/workstation_3d.gd"
       - "scripts/room/room_view.gd"
+      - "scripts/room/modern_room_shell.gd"
       - "scenes/computer/workstation_3d.tscn"
       - "tests/life/test_room_cinematic.gd"
+      - "tests/life/test_room_art_direction.gd"
       - "tests/life/test_furniture_direct_interaction.gd"
       - "tests/life/test_furniture_batch.gd"
       - "tests/life/test_furniture_batch_repeat.gd"
@@ -21,6 +23,7 @@ on:
       - "assets/room_minimal_theme.tres"
       - "tests/life/test_room_minimal_ui.gd"
       - "assets/models/room/catalog/*.glb"
+      - "tests/life/test_room_decor_collectibles.gd"
       - "tests/life/test_furniture_pbr.gd"
       - "tests/life/test_workstation_view.gd"
       - ".github/workflows/room-ui-smoke.yml"
@@ -45,7 +48,9 @@ jobs:
           for test in \
             tests/life/test_room_minimal_ui.gd \
             tests/life/test_room_cinematic.gd \
+            tests/life/test_room_art_direction.gd \
             tests/life/test_furniture_catalog.gd \
+            tests/life/test_room_decor_collectibles.gd \
             tests/life/test_shop_room_flow.gd \
             tests/life/test_furniture_pbr.gd \
             tests/life/test_furniture_showcase.gd \
