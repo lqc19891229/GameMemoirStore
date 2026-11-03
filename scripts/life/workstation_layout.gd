@@ -38,6 +38,7 @@ var start_hit := Vector3.ZERO
 var start_position := Vector3.ZERO
 var start_yaw := 0.0
 var start_angle := 0.0
+var start_group_pivot := Vector2.ZERO
 var start_axis := Vector3.ZERO
 var drag_height := 0.78
 var committed_style: Dictionary = {}
@@ -1184,6 +1185,24 @@ func group_pivot() -> Vector2:
 		count += 1
 	return center/float(count) if count > 0 else Vector2.ZERO
 
+func group_center_world_point() -> Vector3:
+	var pivot: Vector2 = group_pivot()
+	var height := 0.0
+	for role: String in group_selection:
+		if _group_eligible(role):
+			height = maxf(height,nodes[role].position.y + bounds_for(role).y)
+	return world.to_global(Vector3(pivot.x,height+.24,pivot.y))
+
+func set_primary_group_member(role: String) -> bool:
+	if not active or not gesture.is_empty() or group_selection.size() < 2 or not group_selection.has(role): return false
+	if selected == role: return false
+	select(role,true)
+	return true
+
+func remove_group_member(role: String) -> bool:
+	if group_selection.size() < 2 or not group_selection.has(role): return false
+	return toggle_group_member(role)
+
 func group_world_bounds(roles: Array[String] = []) -> Rect2:
 	var members: Array[String] = group_selection if roles.is_empty() else roles
 	var minimum := Vector2(INF,INF)
@@ -1685,8 +1704,10 @@ func begin_drag(pixel: Vector2, operation: String = "move", direction: String = 
 	start_hit = hit
 	start_position = nodes[selected].position
 	start_yaw = nodes[selected].rotation.y
-	start_axis = (nodes[selected].basis.x if axis == "x" else nodes[selected].basis.z).normalized()
-	start_angle = atan2(hit.z - start_position.z, hit.x - start_position.x)
+	start_group_pivot = group_pivot() if group_selection.size() > 1 else Vector2(start_position.x,start_position.z)
+	# Group gizmo is world-aligned even when the primary item's own yaw differs.
+	start_axis = (Vector3.RIGHT if axis == "x" else Vector3.BACK) if group_selection.size() > 1 else (nodes[selected].basis.x if axis == "x" else nodes[selected].basis.z).normalized()
+	start_angle = atan2(hit.z - start_group_pivot.y, hit.x - start_group_pivot.x)
 	# Show the contextual gesture cue immediately on pointer-down, not only
 	# after the first mouse motion event.
 	update()
@@ -1700,7 +1721,7 @@ func drag_to(pixel: Vector2) -> void:
 		if axis in ["x", "z"]: delta = start_axis * delta.dot(start_axis)
 		move_to(Vector2(start_position.x + delta.x, start_position.z + delta.z))
 	else:
-		var current := atan2(hit.z - start_position.z, hit.x - start_position.x)
+		var current := atan2(hit.z - start_group_pivot.y, hit.x - start_group_pivot.x)
 		rotate_to(start_yaw - angle_difference(start_angle,current))
 
 func end_drag() -> void:
@@ -1748,16 +1769,29 @@ func _update_gizmo(contact: bool = false) -> void:
 	if not active or not gizmo.is_inside_tree(): return
 	gizmo.show()
 	var node: Node3D = nodes[selected]
+	var multi: bool = group_selection.size() > 1
 	var size := bounds_for(selected) * node.scale.abs()
-	# Raise floor outlines above rugs so selected furniture remains readable.
+	# Solo mode retains the familiar local gizmo. In group mode both tools
+	# share the P34 centroid and world-aligned X/Z axes, not the primary yaw.
 	var base_height := .06 if is_floor(selected) else .02
 	var center: Vector3 = node.to_global(Vector3(0,tabletop_height,0)) if selected == "desk" else node.to_global(Vector3(0,base_height,0))
-	gizmo.global_position = center
-	gizmo.global_rotation.y = node.global_rotation.y
-	var outline: MeshInstance3D = gizmo.get_node("Outline")
-	outline.scale = Vector3(size.x + .06,size.z + .06,1)
-	outline.material_override.set_shader_parameter("line_color",Color("ff756a") if not valid else Color("ffc563") if contact else Color("82c6a3") if wall_magnet_active else Color("61d9ff"))
 	var handle_height := 0.0 if selected == "desk" else size.y + .08
+	if multi:
+		var pivot: Vector2 = group_pivot()
+		center = world.to_global(Vector3(pivot.x,.06,pivot.y))
+		var peak := 0.0
+		for role: String in group_selection:
+			if _group_eligible(role):
+				peak = maxf(peak,nodes[role].position.y + bounds_for(role).y)
+		handle_height = maxf(.18,peak+.08)
+	gizmo.global_position = center
+	gizmo.global_rotation.y = 0.0 if multi else node.global_rotation.y
+	var outline: MeshInstance3D = gizmo.get_node("Outline")
+	# P34 already outlines the full group footprint without a physics collider.
+	outline.visible = not multi
+	if not multi:
+		outline.scale = Vector3(size.x + .06,size.z + .06,1)
+		outline.material_override.set_shader_parameter("line_color",Color("ff756a") if not valid else Color("ffc563") if contact else Color("82c6a3") if wall_magnet_active else Color("61d9ff"))
 	gizmo.get_node("MoveHandles").position.y = handle_height
 	gizmo.get_node("RotateHandles").position.y = handle_height
 	gizmo.get_node("MoveHandles").visible = tool == "move"
