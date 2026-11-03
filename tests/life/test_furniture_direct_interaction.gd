@@ -35,6 +35,19 @@ func motion(at: Vector2, shift: bool = false) -> InputEventMouseMotion:
 	event.button_mask = MOUSE_BUTTON_MASK_LEFT
 	return event
 
+func screen_bounds(layout, role: String, camera: Camera3D) -> Rect2:
+	var node: Node3D = layout.nodes[role]
+	var half: Vector3 = layout.bounds_for(role)*.5
+	var minimum := Vector2(INF,INF)
+	var maximum := Vector2(-INF,-INF)
+	for x in [-1.0,1.0]:
+		for z in [-1.0,1.0]:
+			for y in [0.0,1.0]:
+				var point: Vector2 = camera.unproject_position(node.to_global(Vector3(half.x*x,half.y*y*2,half.z*z)))
+				minimum = minimum.min(point)
+				maximum = maximum.max(point)
+	return Rect2(minimum,maximum-minimum)
+
 func run() -> void:
 	var game = load("res://scenes/main/game_root.tscn").instantiate()
 	root.add_child(game)
@@ -137,7 +150,57 @@ func run() -> void:
 			desktop._layout_input(mouse(second_pixel,true,false,false,true))
 			desktop._layout_input(mouse(second_pixel,false,false,false,true))
 			check(layout.group_selection.size() == 1, "Ctrl+click on an existing extra member removes it from the current group")
-			layout.select(picked)
+			# Whole-body projected bounds make marquee selection camera-aware.
+			# A tiny crossing window hits the second item but cannot fully
+			# enclose it: left-to-right versus right-to-left are distinct.
+			var second_bounds: Rect2 = screen_bounds(layout,second_role,world.camera)
+			var small_window := Rect2(second_bounds.get_center()-Vector2(3,3),Vector2(6,6))
+			check(layout.marquee_candidates(small_window,true).has(second_role), "right-to-left crossing selection finds an intersected room object")
+			check(not layout.marquee_candidates(small_window,false).has(second_role), "left-to-right box requires the complete projected furniture bounds")
+			var whole_window: Rect2 = screen_bounds(layout,picked,world.camera).merge(second_bounds).grow(24.0)
+			var whole_candidates: Array[String] = layout.marquee_candidates(whole_window)
+			check(whole_candidates.has(picked) and whole_candidates.has(second_role), "room marquee finds two 3D furniture footprints without selecting hardware")
+			for role: String in whole_candidates:
+				check(layout._group_eligible(role), "screen-space marquee excludes desk devices and unplaced inventory furniture")
+			var blank_start := Vector2(INF,INF)
+			var blank_finish := Vector2.ZERO
+			for corner_id in range(4):
+				var test_start: Vector2
+				var test_end: Vector2
+				match corner_id:
+					0:
+						test_start = whole_window.position
+						test_end = whole_window.end
+					1:
+						test_start = whole_window.end
+						test_end = whole_window.position
+					2:
+						test_start = Vector2(whole_window.position.x,whole_window.end.y)
+						test_end = Vector2(whole_window.end.x,whole_window.position.y)
+					_:
+						test_start = Vector2(whole_window.end.x,whole_window.position.y)
+						test_end = Vector2(whole_window.position.x,whole_window.end.y)
+				if world.pick_at(test_start).is_empty() and layout.pick_handle(test_start).is_empty():
+					blank_start = test_start
+					blank_finish = test_end
+					break
+			check(blank_start.x != INF, "box selection begins in blank screen space rather than dragging a furniture body")
+			if blank_start.x != INF:
+				layout.select(picked)
+				var poses_before_marquee: Dictionary = layout.snapshot()
+				var history_before_marquee: int = layout.undo_stack.size()
+				desktop._layout_input(mouse(blank_start,true))
+				desktop._layout_input(motion(blank_finish))
+				check(desktop.marquee_active and ui.scene_actions.marquee_box.visible and ui.scene_actions.marquee_box.mouse_filter == Control.MOUSE_FILTER_IGNORE, "dragging blank floor reveals a transparent screen-space selection rectangle")
+				check(layout.gesture.is_empty() and desktop.pending_drag_role.is_empty(), "marquee never arms furniture transform gestures")
+				desktop._layout_input(mouse(blank_finish,false))
+				check(not desktop.marquee_pending and not ui.scene_actions.marquee_box.visible, "marquee rectangle disappears immediately after pointer release")
+				check(layout.group_selection.has(picked) and layout.group_selection.has(second_role) and layout.group_selection.size() >= 2, "screen-space drag selects the intended furniture as one group")
+				check(layout.snapshot() == poses_before_marquee and layout.undo_stack.size() == history_before_marquee, "marquee selection does not change poses, owned stock or undo history")
+				layout.select(picked)
+				layout.marquee_select(second_bounds.grow(24),false,true)
+				check(layout.group_selection.has(picked) and layout.group_selection.has(second_role), "Ctrl-style marquee adds furniture while keeping existing selected members")
+				layout.select(picked)
 
 	# A close-to-wall probe should snap during direct dragging, but never
 	# mutate an actual furniture transform just by checking a candidate.
