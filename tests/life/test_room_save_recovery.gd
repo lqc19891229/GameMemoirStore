@@ -10,13 +10,13 @@ func _initialize() -> void:
 
 
 func _run() -> void:
-	var game := load("res://scenes/main/game_root.tscn").instantiate()
+	var game: Variant = load("res://scenes/main/game_root.tscn").instantiate()
 	root.add_child(game)
 	for i in range(5):
 		await process_frame
 	game.session.timer.stop()
 	game.session.state.persistence_enabled = false
-	var layout = game.desktop.world.layout
+	var layout: Variant = game.desktop.world.layout
 	var uid := "item_999"
 	var copy_role := LayoutData.instance_role("chair", uid)
 	_check(not copy_role.is_empty(), "test purchased instance role exists")
