@@ -53,11 +53,11 @@ func run() -> void:
 	check(not uid.is_empty() and layout.start_place(sku,uid),"purchased frame starts the standard placement workflow")
 	var frame_role: String = Roles.instance_role("poster_floor_frame",uid)
 	var floor_found := false
-	for z_step in range(-5,6):
+	# Prefer a north-facing wall segment away from the door/window and corners.
+	for z in [-2.2,-1.7,-1.2,-0.7,0.0]:
 		if floor_found: break
-		for x_step in range(-7,8):
-			var candidate := Vector2(float(x_step)*.5,float(z_step)*.5)
-			layout.preview_placement(candidate)
+		for x in [0.0,-.5,.5,-1.0,1.0,-1.5,1.5,-2.0,2.0]:
+			layout.preview_placement(Vector2(x,z))
 			if layout.valid:
 				floor_found = true
 				break
