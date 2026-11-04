@@ -26,3 +26,7 @@ _catalog.tres 将库存 ID 映射到 MemoirDeviceModel 资源，分别管理显�
 设备默认位置位于 scenes/computer/workstation_3d.tscn 的 TableGroup/Equipment 下。运行时切换型号只替换模型，不改变设备槽位；总览、布置和屏幕操作之间切换会保留位置。
 
 设备位置、旋转、大小和相机可以在 scenes/computer/computer_desktop.tscn 的 Workstation3D 子树编辑。模型制作说明见 tools/models/README.md。游戏运行只加载 GLB，不需要 Blender。
+
+## 房间摆放的职责边界
+
+硬件槽位和桌面设备继续受 `workstation_layout.gd` 的桌面限制，不能放到房间任意地面；普通家具和装饰则使用自由装修与承载表面规则，详见 [data/items/README.md](../items/README.md)。取消“工作区／游戏区／休息区”不会改变实体设备的桌面约束。
