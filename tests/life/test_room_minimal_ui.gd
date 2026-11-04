@@ -199,7 +199,7 @@ func run() -> void:
 	check(not desktop.get_node("%Style_wall").visible, "lighting mode hides unrelated wall finishes")
 	ui.choose_mode("build")
 	check(desktop.blueprint_mode and desktop.get_node("%BlueprintPanel").visible, "build mode opens existing blueprint tools")
-	check(ui.blueprint_content.get_node("BlueprintQuickTools").visible and not desktop.get_node("%BlueprintSchemeSave").visible, "build mode opens with only its main tools")
+	check(ui.blueprint_content.get_node("BlueprintQuickTools").visible and not desktop.get_node("%BlueprintWallFinish").visible, "build mode opens with only its main tools")
 	ui.advanced_toggle.pressed.emit()
 	check(desktop.get_node("%BlueprintWallFinish").visible, "precision mode restores direct wall finish controls")
 	ui.advanced_toggle.pressed.emit()
