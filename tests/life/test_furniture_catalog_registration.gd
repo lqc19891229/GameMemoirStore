@@ -13,7 +13,7 @@ func _initialize() -> void:
 func _run() -> void:
 	var fields := {
 		"item_id": "test_furniture_approval", "name": "审核测试家具",
-		"role": "side_table", "group": "tables", "type": "side_table",
+		"role": "side_table_oak", "group": "tables", "type": "side_table",
 		"price": 100, "description": "仅用于校验"
 	}
 	var empty_catalog := MemoirItemCatalog.new()
@@ -27,6 +27,20 @@ func _run() -> void:
 	var wrong_role := fields.duplicate()
 	wrong_role.role = ""
 	_check(not Registrar.validate_registration(SCENE, wrong_role, empty_catalog).is_empty(), "reject missing placement role")
+	var mismatched_scene_role := fields.duplicate()
+	mismatched_scene_role.role = "unrelated_role"
+	_check(not Registrar.validate_registration(SCENE, mismatched_scene_role, empty_catalog).is_empty(), "reject scene root role mismatch")
+	var reserved_role := fields.duplicate()
+	reserved_role.role = "chair__instance__item_1"
+	_check(not Registrar.validate_registration(SCENE, reserved_role, empty_catalog).is_empty(), "reject reserved role separator")
+	var role_collision_catalog := MemoirItemCatalog.new()
+	var role_collision := MemoirItemDefinition.new()
+	role_collision.item_id = "another_furniture_sku"
+	role_collision.category = "furniture"
+	role_collision.subcategory = "side_table_oak"
+	role_collision_catalog.items.append(role_collision)
+	var role_errors := Registrar.validate_registration(SCENE, fields, role_collision_catalog)
+	_check("摆放角色已被其他家具商品占用" in role_errors, "reject distinct SKU with duplicate placement role")
 	var duplicate := MemoirItemDefinition.new()
 	duplicate.item_id = fields.item_id
 	duplicate.furniture_scene = load(SCENE)

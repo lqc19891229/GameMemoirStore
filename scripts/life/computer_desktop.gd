@@ -212,6 +212,15 @@ func _update_equipment() -> void:
 	world.layout.load_placements(session.state.life.get("placements", {}), session.state.life.get("inventory", []))
 	world.layout.load_blueprint(session.state.life.get("room_blueprint", {}))
 	world.layout.load_saved(session.state.life.get("workstation_layout", {}),session.state.life.get("furniture_mounts", {}),session.state.life.get("wall_mounts", {}))
+	# Loading an invalid legacy layout may remove scene instances. Persist the
+	# matching placement/pose state immediately; otherwise the shop would still
+	# consider their inventory UIDs occupied until the user edits the room.
+	if not world.layout.active and session.state.life.get("placements", {}) != world.layout.committed_placements:
+		session.state.life["placements"] = world.layout.committed_placements.duplicate()
+		session.state.life["workstation_layout"] = world.layout.export_layout()
+		session.state.life["furniture_mounts"] = world.layout.export_mounts()
+		session.state.life["wall_mounts"] = world.layout.export_wall_mounts()
+		session.state.save_state(false)
 	world.layout.load_colors(session.state.life.get("furniture_colors", {}))
 	world.layout.load_style(session.state.life.get("room_style", {}))
 	if world.layout.active: world.layout.update()
