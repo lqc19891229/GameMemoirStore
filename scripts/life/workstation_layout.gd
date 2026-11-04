@@ -212,7 +212,6 @@ func mount_selected_on_nearest_surface() -> bool:
 	if not active or not placing_role.is_empty() or not gesture.is_empty() or group_selection.size() > 1: return false
 	if not placed_instances.has(selected) or surface_mounts.has(selected): return false
 	var role := selected
-	var bounds: Vector3 = bounds_for(role)
 	var original: Transform3D = nodes[role].transform
 	var original_pose := {"x":original.origin.x,"z":original.origin.z,"yaw":original.basis.get_euler().y}
 	var best := {}
@@ -857,7 +856,9 @@ func load_saved(raw: Variant, raw_mounts: Variant = {}) -> void:
 		for role: String in world.devices: nodes[role].transform = authored[role]
 	# Imported legacy table poses may intersect new room furniture or walls.
 	# Recover the complete authored room rather than keeping a partially invalid save.
-	if not _layout_blocker().is_empty(): restore(authored)
+	if not _layout_blocker().is_empty():
+		restore(authored)
+		surface_mounts.clear()
 	saved = cleaned
 	committed_mounts = surface_mounts.duplicate(true)
 	committed = snapshot()
@@ -2357,7 +2358,7 @@ func _plane_point(pixel: Vector2) -> Variant:
 	return frame.to_local(hit) if hit != null else null
 
 func begin_drag(pixel: Vector2, operation: String = "move", direction: String = "plane", from_handle: bool = false) -> void:
-	if not active: return
+	if not active or surface_mounts.has(selected): return
 	var node: Node3D = nodes[selected]
 	drag_height = node.position.y + bounds_for(selected).y * .5
 	if from_handle:
