@@ -98,7 +98,8 @@ static func create_scene(model_path: String, target_path: String = "") -> Dictio
 		model_instance.free()
 		return {"ok": false, "error": "模型根节点不是 Node3D"}
 
-	var box := geometry_bounds(model_instance as Node3D)
+	var imported := model_instance as Node3D
+	var box := geometry_bounds(imported)
 	if box.size.length_squared() < 0.000001:
 		model_instance.free()
 		return {"ok": false, "error": "没有可测量的 MeshInstance3D"}
@@ -118,7 +119,7 @@ static func create_scene(model_path: String, target_path: String = "") -> Dictio
 	# Mesh may be exported with an arbitrary origin. Normalize at the model
 	# child only; the furniture root stays on the floor at (0, 0, 0).
 	model_instance.name = "Model"
-	model_instance.position -= Vector3(box.get_center().x, box.position.y, box.get_center().z)
+	imported.position -= Vector3(box.get_center().x, box.position.y, box.get_center().z)
 	root.add_child(model_instance)
 	model_instance.owner = root
 
