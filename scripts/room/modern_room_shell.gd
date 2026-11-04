@@ -407,9 +407,8 @@ func _build_grid_floor() -> void:
 				continue
 			var begin := ix
 			var first_cell := {"ix":begin,"iz":iz}
-			var zone: int = Blueprint.zone_at(blueprint, first_cell)
 			var finish: int = Blueprint.effective_floor_finish(blueprint, first_cell)
-			while ix < size.x and not removed.has(Vector2i(ix, iz)) and Blueprint.effective_floor_finish(blueprint, {"ix":ix,"iz":iz}) == finish and Blueprint.zone_at(blueprint, {"ix":ix,"iz":iz}) == zone:
+			while ix < size.x and not removed.has(Vector2i(ix, iz)) and Blueprint.effective_floor_finish(blueprint, {"ix":ix,"iz":iz}) == finish:
 				ix += 1
 			var length := float(ix - begin) * Blueprint.FLOOR_GRID
 			var center_x := -float(blueprint.width) * .5 + (float(ix + begin) * .5) * Blueprint.FLOOR_GRID
@@ -417,14 +416,12 @@ func _build_grid_floor() -> void:
 			var floor_mesh := _finish_box(self, "Floor" if index == 0 else "FloorSegment_%03d" % index,
 				Vector3(length + .008, .2, Blueprint.FLOOR_GRID + .008),
 				Vector3(center_x, -.1, center_z), material, finish, "floor")
-			if zone > 0: floor_mesh.set_meta("zone_id", zone)
 			var tone: float = tones[iz % tones.size()]
 			var plank := _material(Color("b99572") * tone, .61)
 			var board := _finish_box(self, "FloorBoard_%02d_%02d" % [iz,begin],
 				Vector3(length, .014, Blueprint.FLOOR_GRID - .014),
 				Vector3(center_x, .006, center_z), plank, finish, "floor")
 			board.set_meta("tone", tone)
-			if zone > 0: board.set_meta("zone_id", zone)
 			index += 1
 
 func _build_custom_exterior(wall: Material, trim: Material) -> void:

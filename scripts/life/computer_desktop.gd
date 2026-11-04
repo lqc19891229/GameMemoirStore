@@ -73,58 +73,18 @@ func _ready() -> void:
 	%BlueprintFloorTool.add_item("地板材质画笔")
 	%BlueprintFloorTool.add_item("自定义外墙装修 / 门窗")
 	%BlueprintFloorTool.add_item("内墙独立改色")
-	%BlueprintFloorTool.add_item("功能分区画笔")
-	%BlueprintFloorTool.add_item("自动识别整区填充")
 	%BlueprintFloorTool.add_item("拖动原有门窗位置")
 	%BlueprintFloorTool.add_item("移动自定义外墙门窗")
 	%BlueprintQuickWall.pressed.connect(func() -> void: _select_blueprint_tool(0))
 	%BlueprintQuickFloor.pressed.connect(func() -> void: _select_blueprint_tool(1))
-	%BlueprintQuickZone.pressed.connect(func() -> void: _select_blueprint_tool(6))
-	%BlueprintQuickRegion.pressed.connect(func() -> void: _select_blueprint_tool(7))
-	%BlueprintQuickOpening.pressed.connect(func() -> void: _select_blueprint_tool(8))
-	%BlueprintQuickEdgeMove.pressed.connect(func() -> void: _select_blueprint_tool(9))
+	%BlueprintQuickOpening.pressed.connect(func() -> void: _select_blueprint_tool(6))
+	%BlueprintQuickEdgeMove.pressed.connect(func() -> void: _select_blueprint_tool(7))
 	%BlueprintGridToggle.toggled.connect(func(enabled: bool) -> void:
 		world.get_node("BlueprintOverlay").set_grid_visible(enabled)
 	)
 	%BlueprintApertureTarget.add_item("后墙门")
 	%BlueprintApertureTarget.add_item("左墙窗")
 	%BlueprintApertureTarget.item_selected.connect(func(_index: int) -> void: _hide_wall_preview())
-	for slot in range(BlueprintData.MAX_SCHEMES):
-		%BlueprintSchemeSlot.add_item("方案 %d" % (slot+1))
-	%BlueprintSchemeSave.pressed.connect(func() -> void:
-		if blueprint_mode: world.layout.save_decor_scheme(%BlueprintSchemeSlot.selected)
-	)
-	%BlueprintSchemeLoad.pressed.connect(func() -> void:
-		if blueprint_mode: world.layout.load_decor_scheme(%BlueprintSchemeSlot.selected)
-	)
-	%BlueprintSchemeClear.pressed.connect(func() -> void:
-		if blueprint_mode: world.layout.clear_decor_scheme(%BlueprintSchemeSlot.selected)
-	)
-	%BlueprintSchemeSlot.item_selected.connect(func(_index: int) -> void: _sync_scheme_controls())
-	for label: String in BlueprintData.ZONE_NAMES:
-		%BlueprintZoneSelect.add_item(label)
-		%BlueprintZonePreset.add_item(label + " · 默认预设")
-	for label: String in ["跟随房间","奶油白","鼠尾草绿","雾蓝 / 深胡桃"]:
-		%BlueprintZoneFloor.add_item(label)
-		%BlueprintZoneWall.add_item(label)
-	for label: String in ["冷色游戏氛围","暖色工作照明","柔和休息照明"]:
-		%BlueprintZoneLight.add_item(label)
-	%BlueprintZoneSelect.item_selected.connect(func(_index: int) -> void:
-		_sync_zone_controls()
-		_hide_wall_preview()
-	)
-	%BlueprintZoneFloor.item_selected.connect(func(index: int) -> void:
-		if blueprint_mode: world.layout.set_zone_style(%BlueprintZoneSelect.selected+1,"floor",index)
-	)
-	%BlueprintZoneWall.item_selected.connect(func(index: int) -> void:
-		if blueprint_mode: world.layout.set_zone_style(%BlueprintZoneSelect.selected+1,"wall",index)
-	)
-	%BlueprintZoneLight.item_selected.connect(func(index: int) -> void:
-		if blueprint_mode: world.layout.set_zone_style(%BlueprintZoneSelect.selected+1,"light",index)
-	)
-	%BlueprintZoneApplyPreset.pressed.connect(func() -> void:
-		if blueprint_mode: world.layout.apply_zone_preset(%BlueprintZoneSelect.selected+1,%BlueprintZonePreset.selected)
-	)
 	for label: String in ["跟随房间材质", "奶油白 / 浅石砖", "鼠尾草绿", "雾蓝 / 胡桃木"]:
 		%BlueprintWallFinish.add_item(label)
 		%BlueprintTileFinish.add_item(label)
@@ -470,32 +430,9 @@ func _sync_blueprint_ui() -> void:
 		var label: Label = get_node("%" + label_key)
 		var display: String = {"width":"房间宽度", "depth":"房间深度", "door_x":"后墙门位置", "window_z":"左墙窗位置", "notch_width":"缺口宽度", "notch_depth":"缺口深度"}[key]
 		label.text = "%s：%.2f 米" % [display, float(blueprint[key])]
-	_sync_zone_controls()
-	_sync_scheme_controls()
 	_sync_quick_tools()
 	if blueprint_mode: world.get_node("BlueprintOverlay").configure(blueprint)
 	%BlueprintStatus.text = world.layout.message if world.layout.message.begins_with("调整失败") or world.layout.message.begins_with("建造失败") or world.layout.message.begins_with("绘制失败") else "%s · %.1f × %.1f 米 · 内墙 %d 段 · 缺口 %d 格" % ["自由轮廓" if blueprint.shape == "custom" else "L 型" if blueprint.shape == "l" else "矩形", blueprint.width, blueprint.depth, blueprint.partitions.size(), blueprint.removed_cells.size()]
-
-func _sync_zone_controls() -> void:
-	if not is_instance_valid(world): return
-	var current: Dictionary = world.layout.blueprint
-	var selected: int = clampi(%BlueprintZoneSelect.selected+1,1,BlueprintData.ZONE_PRESETS.size())
-	var preset: Dictionary = BlueprintData.zone_style(current,selected)
-	%BlueprintZoneFloor.select(int(preset.floor))
-	%BlueprintZoneWall.select(int(preset.wall))
-	%BlueprintZoneLight.select(int(preset.light))
-	var count := 0
-	for entry: Dictionary in current.zone_cells:
-		if int(entry.zone) == selected: count += 1
-	%BlueprintZoneCount.text = "%s · %d 格 · %.2f 平方米" % [BlueprintData.ZONE_NAMES[selected-1],count,float(count)*BlueprintData.FLOOR_GRID*BlueprintData.FLOOR_GRID]
-
-func _sync_scheme_controls() -> void:
-	var slot: int = maxi(0,%BlueprintSchemeSlot.selected)
-	var stored: Dictionary = BlueprintData.scheme_for_slot(world.layout.blueprint,slot)
-	var exists := not stored.is_empty()
-	%BlueprintSchemeInfo.text = "方案 %d：%s" % [slot+1, "已保存（%d 格分区）" % stored.zone_cells.size() if exists else "空槽位"]
-	%BlueprintSchemeLoad.disabled = not exists
-	%BlueprintSchemeClear.disabled = not exists
 
 func _select_blueprint_tool(index: int) -> void:
 	if not blueprint_mode: return
@@ -511,9 +448,9 @@ func _select_blueprint_tool(index: int) -> void:
 	_sync_quick_tools()
 
 func _sync_quick_tools() -> void:
-	for key: String in {"BlueprintQuickWall":0,"BlueprintQuickFloor":1,"BlueprintQuickZone":6,"BlueprintQuickRegion":7,"BlueprintQuickOpening":8,"BlueprintQuickEdgeMove":9}:
+	for key: String in {"BlueprintQuickWall":0,"BlueprintQuickFloor":1,"BlueprintQuickOpening":6,"BlueprintQuickEdgeMove":7}:
 		var button: Button = get_node("%" + key)
-		button.set_pressed_no_signal(%BlueprintFloorTool.selected == int({"BlueprintQuickWall":0,"BlueprintQuickFloor":1,"BlueprintQuickZone":6,"BlueprintQuickRegion":7,"BlueprintQuickOpening":8,"BlueprintQuickEdgeMove":9}[key]))
+		button.set_pressed_no_signal(%BlueprintFloorTool.selected == int({"BlueprintQuickWall":0,"BlueprintQuickFloor":1,"BlueprintQuickOpening":6,"BlueprintQuickEdgeMove":7}[key]))
 
 func _aperture_key() -> String:
 	return "window_z" if %BlueprintApertureTarget.selected == 1 else "door_x"
@@ -704,10 +641,6 @@ func _paint_action(at: Vector2, button: int) -> void:
 				world.layout.paint_exterior_span(at, %BlueprintOpeningWidth.selected+1, kind, %BlueprintWallFinish.selected)
 		5:
 			world.layout.paint_partition_finish(at, 0 if erase else %BlueprintWallFinish.selected)
-		6:
-			world.layout.paint_zone_cell(at, 0 if erase else %BlueprintZoneSelect.selected+1)
-		7:
-			world.layout.fill_room_region(at,0 if erase else %BlueprintZoneSelect.selected+1)
 
 func _paint_hover(pixel: Vector2) -> void:
 	var ghost: MeshInstance3D = world.get_node("WallPreview")
@@ -720,13 +653,10 @@ func _paint_hover(pixel: Vector2) -> void:
 	var good := false
 	var center := Vector2.ZERO
 	var size := Vector3(BlueprintData.FLOOR_GRID,.07,BlueprintData.FLOOR_GRID)
-	if tool == 3 or tool == 6 or tool == 7:
+	if tool == 3:
 		var cell: Dictionary = BlueprintData.cell_at(world.layout.blueprint, at)
 		good = world.layout.blueprint.shape == "custom" and BlueprintData.valid_cell(world.layout.blueprint,cell) and not BlueprintData.has_cell(world.layout.blueprint,cell)
 		if good: center = BlueprintData.cell_center(world.layout.blueprint,cell)
-		if tool == 7:
-			var count: int = world.get_node("BlueprintOverlay").preview_region(world.layout.blueprint,at)
-			%BlueprintRegionInfo.text = "连通区域：%d 格 / %.2f 平方米（门洞可连通）" % [count,float(count)*.25]
 	elif tool == 4:
 		var edge: Dictionary = BlueprintData.nearest_edge(world.layout.blueprint,at)
 		good = not edge.is_empty()
@@ -750,7 +680,6 @@ func _paint_hover(pixel: Vector2) -> void:
 	if not good:
 		ghost.hide()
 		world.get_node("BlueprintOverlay").clear_region()
-		if tool == 7: %BlueprintRegionInfo.text = "连通区域：无可选地板"
 		return
 	ghost.position = Vector3(center.x,.08,center.y)
 	(ghost.mesh as BoxMesh).size = size
@@ -771,7 +700,7 @@ func _brush_action(at: Vector2, button: int) -> void:
 	match %BlueprintFloorTool.selected:
 		0: _wall_action(at,button)
 		1,2: _floor_action(at,button)
-		3,4,5,6,7: _paint_action(at,button)
+		3,4,5: _paint_action(at,button)
 
 func _wall_hover(pixel: Vector2) -> void:
 	var ghost: MeshInstance3D = world.get_node("WallPreview")
@@ -789,10 +718,10 @@ func _wall_hover(pixel: Vector2) -> void:
 	ghost.show()
 
 func _blueprint_input(event: InputEvent) -> void:
-	if %BlueprintFloorTool.selected == 9:
+	if %BlueprintFloorTool.selected == 7:
 		_edge_move_input(event)
 		return
-	if %BlueprintFloorTool.selected == 8:
+	if %BlueprintFloorTool.selected == 6:
 		_aperture_input(event)
 		return
 	if event is InputEventMouseButton:
@@ -804,7 +733,7 @@ func _blueprint_input(event: InputEvent) -> void:
 				world.layout.end_wall_stroke()
 				%BlueprintStrokeInfo.text = "完成：有效 %d 段 / 阻挡 %d 段" % [wall_stroke_good.size(),wall_stroke_bad.size()]
 				_reset_wall_stroke()
-			wall_drag_button = event.button_index if event.pressed and %BlueprintFloorTool.selected != 7 else 0
+			wall_drag_button = event.button_index if event.pressed else 0
 			last_wall_cell = Vector2(INF,INF)
 			if event.pressed:
 				if %BlueprintFloorTool.selected == 0:
