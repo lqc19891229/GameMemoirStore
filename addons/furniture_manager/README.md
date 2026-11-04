@@ -106,3 +106,10 @@ scenes/room/
 4. 模型导入面板默认从 `res://assets/models/room/` 递归扫描，自动为新场景生成对应 `scenes/room/<type>/` 路径；商品注册面板递归查找所有分类目录。
 
 **不要直接在操作系统文件管理器里批量拖动模型或场景**，否则项目中的 `res://` 引用可能失效。此迁移工具默认仅预览；必须明确使用 `--apply` 才会更改项目文件。若资源依赖二进制或自定义动态路径，应先额外检查；脚本不会尝试修改存档或不可解析的二进制文件。
+
+
+### 现有资源分类迁移（PR #93）
+
+历史家具模型、配套贴图与 `.import` 配置已实际移动到 `assets/models/room/{tables,seating,storage,lighting,decor}/`；对应独立家具场景已移动到 `scenes/room/` 的同名分类目录。商品目录、场景、脚本及测试中的 `res://` 引用已同步更新。房间主体 `room.tscn`、`modern_room_shell.tscn` 与 `room_shell.glb` 不参与家具迁移。
+
+对于已经包含此次实际迁移提交的分支，**不需要再运行** `tools/migrate_furniture_folders.py --apply`。检出分支后请让 Godot 完成资源重新导入，再执行项目回归测试。

@@ -2,11 +2,11 @@
 
 [ext_resource type="Script" path="res://scripts/room/room_view.gd" id="1"]
 [ext_resource type="PackedScene" path="res://scenes/room/modern_room_shell.tscn" id="2"]
-[ext_resource type="PackedScene" path="res://scenes/room/chair.tscn" id="3"]
-[ext_resource type="PackedScene" path="res://scenes/room/bookcase.tscn" id="4"]
-[ext_resource type="PackedScene" path="res://scenes/room/lamp.tscn" id="5"]
-[ext_resource type="PackedScene" path="res://scenes/room/rug.tscn" id="6"]
-[ext_resource type="PackedScene" path="res://scenes/room/plant.tscn" id="7"]
+[ext_resource type="PackedScene" path="res://scenes/room/seating/chair.tscn" id="3"]
+[ext_resource type="PackedScene" path="res://scenes/room/storage/bookcase.tscn" id="4"]
+[ext_resource type="PackedScene" path="res://scenes/room/lighting/lamp.tscn" id="5"]
+[ext_resource type="PackedScene" path="res://scenes/room/decor/rug.tscn" id="6"]
+[ext_resource type="PackedScene" path="res://scenes/room/decor/plant.tscn" id="7"]
 
 [node name="Room" type="Node3D"]
 script = ExtResource("1")

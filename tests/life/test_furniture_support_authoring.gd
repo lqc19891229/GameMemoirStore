@@ -10,7 +10,7 @@ func _initialize() -> void:
 
 
 func _run() -> void:
-	var scene: PackedScene = load("res://scenes/room/bookcase.tscn")
+	var scene: PackedScene = load("res://scenes/room/storage/bookcase.tscn")
 	var bookcase := scene.instantiate() as Node3D
 	root.add_child(bookcase)
 	await process_frame

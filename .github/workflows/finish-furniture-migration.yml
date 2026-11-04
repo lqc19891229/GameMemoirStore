@@ -1,0 +1,46 @@
+name: Complete furniture folder migration
+
+on:
+  push:
+    branches:
+      - feature/actually-migrate-furniture-assets
+    paths:
+      - "tools/finish_furniture_migration.py"
+      - ".github/workflows/finish-furniture-migration.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  rewrite-and-commit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout migration branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+      - name: Fetch baseline branch
+        run: git fetch origin main:refs/heads/main
+      - name: Rewrite relocated resource references
+        run: python3 tools/finish_furniture_migration.py
+      - name: Check scene and model destinations
+        run: |
+          test -f scenes/room/tables/side_table_oak.tscn
+          test -f assets/models/room/tables/side_table_oak.glb
+          test -f scenes/room/seating/chair.tscn
+          test -f scenes/room/storage/bookcase.tscn
+          test -f scenes/room/lighting/lamp.tscn
+          test -f scenes/room/decor/rug.tscn
+          test -f scenes/room/room.tscn
+          test ! -d assets/models/room/catalog
+      - name: Commit rewritten paths
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if ! git diff --cached --quiet; then
+            git commit -m "fix(assets): update all furniture resource paths after folder migration"
+            git push origin HEAD:feature/actually-migrate-furniture-assets
+          fi

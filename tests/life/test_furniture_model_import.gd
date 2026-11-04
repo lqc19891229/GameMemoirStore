@@ -2,7 +2,7 @@ extends SceneTree
 ## Import tool regression: scanning, non-overwrite, scene creation and cleanup.
 const Importer = preload("res://addons/furniture_manager/furniture_importer.gd")
 const ImportPanel = preload("res://addons/furniture_manager/furniture_import_panel.gd")
-const SOURCE := "res://assets/models/room/catalog/side_table_oak.glb"
+const SOURCE := "res://assets/models/room/tables/side_table_oak.glb"
 const TEMP_SCENE := "res:" + "//scenes/room/__furniture_import_regression__.tscn"
 var failures := 0
 

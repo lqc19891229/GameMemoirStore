@@ -2,7 +2,7 @@ extends SceneTree
 ## Non-destructive catalog registration checks (never writes the real catalog).
 const Registrar = preload("res://addons/furniture_manager/furniture_catalog_registrar.gd")
 const RegistrationPanel = preload("res://addons/furniture_manager/furniture_registration_panel.gd")
-const SCENE := "res://scenes/room/side_table_oak.tscn"
+const SCENE := "res://scenes/room/tables/side_table_oak.tscn"
 var failures := 0
 
 
@@ -33,7 +33,7 @@ func _run() -> void:
 	empty_catalog.items.append(duplicate)
 	_check(not Registrar.validate_registration(SCENE, fields, empty_catalog).is_empty(), "reject duplicate ID and reused scene")
 	_check(not Registrar.validate_registration("res://data/items/_catalog.tres", fields, empty_catalog).is_empty(), "reject catalog file as furniture scene")
-	_check(not Registrar.validate_registration("res://scenes/room/../room/side_table_oak.tscn", fields, empty_catalog).is_empty(), "reject path traversal")
+	_check(not Registrar.validate_registration("res:" + "//scenes/room/../room/side_table_oak.tscn", fields, empty_catalog).is_empty(), "reject path traversal")
 	_check(not Registrar.register(SCENE, fields, false).get("ok", false), "registration requires explicit confirmation")
 	var original_bytes := FileAccess.get_file_as_bytes(Registrar.CATALOG_PATH)
 	_check(not original_bytes.is_empty(), "existing authoritative catalog has bytes")

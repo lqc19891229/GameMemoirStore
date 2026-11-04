@@ -109,7 +109,7 @@ static func register(scene_path: String, fields: Dictionary, confirmed: bool = f
 	item.furniture_scene = scene
 	# Serialize a candidate on the same filesystem. Never truncate the live
 	# catalog: a failed rename must leave its original bytes intact.
-	var pending := "res://data/items/__furniture_catalog_pending__.tres"
+	var pending := "res:" + "//data/items/__furniture_catalog_pending__.tres"
 	if FileAccess.file_exists(pending):
 		return {"ok": false, "error": "发现未清理的候选目录文件，请人工检查"}
 	var original := FileAccess.get_file_as_bytes(CATALOG_PATH)
