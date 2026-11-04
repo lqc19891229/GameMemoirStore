@@ -10,6 +10,8 @@ script = ExtResource("1")
 role = "bookcase"
 bounds = Vector3(1.46, 2.57, 0.58)
 blocking = true
+use_custom_support_surfaces = true
+custom_support_surfaces = [{"id": "shelf_0", "center": Vector3(0, 0.2575, 0), "size": Vector2(1.16, 0.42)}, {"id": "shelf_1", "center": Vector3(0, 0.8375, 0), "size": Vector2(1.16, 0.42)}, {"id": "shelf_2", "center": Vector3(0, 1.4175, 0), "size": Vector2(1.16, 0.42)}, {"id": "shelf_3", "center": Vector3(0, 1.9975, 0), "size": Vector2(1.16, 0.42)}]
 
 [node name="PickArea" type="Area3D" parent="."]
 position = Vector3(0, 1.285, 0)
