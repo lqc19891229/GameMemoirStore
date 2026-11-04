@@ -40,7 +40,7 @@ func run() -> void:
 		# The first two support-mount collectibles use explicit, testable
 		# procedural meshes until their final authored GLBs are ready.
 		if item.item_id not in ["room_chair","room_bookcase","room_lamp","room_rug","room_plant","room_sofa","room_stool","room_desk_memento","room_mini_book_stack","room_wall_sconce"]:
-			var glb_path := "res://assets/models/room/catalog/%s.glb" % item.subcategory
+			var glb_path := "res://assets/models/room/%s/%s.glb" % [group, item.subcategory]
 			check(ResourceLoader.exists(glb_path), "new furniture GLB exists: " + glb_path)
 			check(node.get_node("Model").scene_file_path == glb_path, "new furniture instances its imported GLB rather than procedural geometry: " + item.item_id)
 		var mesh_nodes: Array = node.get_node("Model").find_children("*","MeshInstance3D",true,false)
