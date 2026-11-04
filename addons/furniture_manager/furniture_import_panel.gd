@@ -59,7 +59,8 @@ func scan_models() -> void:
 		var already_exists := FileAccess.file_exists(target) or ResourceLoader.exists(target)
 		var duplicates := unique_targets.has(target)
 		unique_targets[target] = true
-		var index := model_list.add_item("%s  →  %s%s" % [
+		var index := model_list.item_count
+		model_list.add_item("%s  →  %s%s" % [
 			path.get_file(), target.get_file(),
 			" （已存在）" if already_exists else (" （名称冲突）" if duplicates else "")
 		])
