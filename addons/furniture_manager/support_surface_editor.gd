@@ -3,6 +3,7 @@ extends VBoxContainer
 ## A small staged editor. Only the Apply signal can mutate the opened furniture scene.
 signal apply_requested(anchors: Array[Dictionary])
 signal preview_changed(anchors: Array[Dictionary])
+signal selection_changed(index: int)
 
 const Surfaces = preload("res://scripts/room/furniture_support_surfaces.gd")
 var anchors: Array[Dictionary] = []
@@ -22,6 +23,7 @@ func _ready() -> void:
 	list.custom_minimum_size.y = 90
 	list.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	list.item_selected.connect(_select_anchor)
+	list.item_selected.connect(func(index: int) -> void: selection_changed.emit(index))
 	add_child(list)
 
 	var fields := GridContainer.new()
@@ -115,6 +117,26 @@ func _select_anchor(index: int) -> void:
 		center_inputs[i].value = c[i]
 	size_inputs[0].value = sz.x
 	size_inputs[1].value = sz.y
+
+
+func select_anchor_index(index: int) -> void:
+	if index < 0 or index >= anchors.size():
+		return
+	list.select(index)
+	_select_anchor(index)
+
+
+func update_from_preview(index: int, anchor: Dictionary) -> void:
+	# Keep the numeric fields synchronized with dragging, but do not emit
+	# preview_changed (the viewport has already applied this staged change).
+	if index < 0 or index >= anchors.size():
+		return
+	var cleaned := Surfaces.clean_anchor(anchor)
+	if cleaned.is_empty():
+		return
+	anchors[index] = cleaned
+	list.set_item_text(index, str(cleaned.id))
+	select_anchor_index(index)
 
 
 func _build_anchor() -> Dictionary:
