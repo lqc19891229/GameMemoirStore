@@ -1,0 +1,135 @@
+@tool
+extends RefCounted
+## Explicit, single-item registration into the one authoritative catalog.
+const CATALOG_PATH := "res://data/items/_catalog.tres"
+const SCENE_ROOT := "res://scenes/room/"
+const Taxonomy = preload("res://scripts/items/item_taxonomy.gd")
+
+static func list_unregistered_scenes() -> PackedStringArray:
+	var output := PackedStringArray()
+	var catalog := ResourceLoader.load(CATALOG_PATH, "", ResourceLoader.CACHE_MODE_REPLACE) as MemoirItemCatalog
+	if catalog == null:
+		return output
+	var registered := {}
+	for item in catalog.items:
+		if item != null and item.furniture_scene != null:
+			registered[item.furniture_scene.resource_path] = true
+	var dir := DirAccess.open(SCENE_ROOT)
+	if dir == null:
+		return output
+	dir.list_dir_begin()
+	var entry := dir.get_next()
+	while not entry.is_empty():
+		if not dir.current_is_dir() and entry.ends_with(".tscn"):
+			var path := SCENE_ROOT + entry
+			if not registered.has(path):
+				output.append(path)
+		entry = dir.get_next()
+	dir.list_dir_end()
+	output.sort()
+	return output
+
+
+static func validate_registration(scene_path: String, fields: Dictionary, catalog: MemoirItemCatalog = null) -> PackedStringArray:
+	var errors := PackedStringArray()
+	var id := str(fields.get("item_id", "")).strip_edges()
+	var display_name := str(fields.get("name", "")).strip_edges()
+	var role := str(fields.get("role", "")).strip_edges()
+	var group := str(fields.get("group", "")).strip_edges()
+	var kind := str(fields.get("type", "")).strip_edges()
+	var price: Variant = fields.get("price", -1)
+	if id.is_empty() or not id.is_valid_identifier():
+		errors.append("商品 ID 只能使用非空的字母、数字和下划线，且不能以数字开头")
+	if display_name.is_empty():
+		errors.append("需要商品名称")
+	if role.is_empty():
+		errors.append("需要摆放角色")
+	if group.is_empty() or group == "hardware" or not Taxonomy.valid_group(group):
+		errors.append("需要有效的家具一级分类")
+	if kind.is_empty() or not Taxonomy.TYPES.has(kind):
+		errors.append("需要有效的二级分类")
+	if not (price is int or price is float) or price < 0 or price > 10000000:
+		errors.append("价格必须在 0 至 10000000 之间")
+	if not scene_path.begins_with(SCENE_ROOT) or scene_path.contains("..") or not scene_path.ends_with(".tscn"):
+		errors.append("只能注册 scenes/room/ 内的独立家具场景")
+	elif not ResourceLoader.exists(scene_path):
+		errors.append("家具场景不存在")
+	else:
+		var scene := ResourceLoader.load(scene_path) as PackedScene
+		if scene == null:
+			errors.append("家具场景不是 PackedScene")
+		else:
+			var instance := scene.instantiate()
+			if not instance is Node3D or not instance.get("bounds") is Vector3 or not instance.get("role") is String:
+				errors.append("场景必须是包含 bounds 和 role 的家具根节点")
+			else:
+				var bounds: Variant = instance.get("bounds")
+				if not bounds is Vector3 or bounds.x <= 0 or bounds.y <= 0 or bounds.z <= 0:
+					errors.append("家具摆放边界无效")
+			instance.free()
+	if catalog == null:
+		catalog = ResourceLoader.load(CATALOG_PATH, "", ResourceLoader.CACHE_MODE_REPLACE) as MemoirItemCatalog
+	if catalog == null:
+		errors.append("无法读取唯一商品目录")
+	else:
+		for item in catalog.items:
+			if item == null:
+				continue
+			if item.item_id == id:
+				errors.append("商品 ID 已存在，禁止覆盖")
+			if item.furniture_scene != null and item.furniture_scene.resource_path == scene_path:
+				errors.append("场景已被商品引用，禁止重复注册")
+	return errors
+
+
+static func register(scene_path: String, fields: Dictionary, confirmed: bool = false) -> Dictionary:
+	if not confirmed:
+		return {"ok": false, "error": "请先审核场景并明确确认注册"}
+	var catalog := ResourceLoader.load(CATALOG_PATH, "", ResourceLoader.CACHE_MODE_REPLACE) as MemoirItemCatalog
+	var errors := validate_registration(scene_path, fields, catalog)
+	if not errors.is_empty():
+		return {"ok": false, "error": "；".join(errors)}
+	var scene := ResourceLoader.load(scene_path) as PackedScene
+	var item := MemoirItemDefinition.new()
+	item.item_id = str(fields.item_id).strip_edges()
+	item.name = str(fields.name).strip_edges()
+	item.category = "furniture"
+	item.subcategory = str(fields.role).strip_edges()
+	item.catalog_group = str(fields.group).strip_edges()
+	item.catalog_type = str(fields.type).strip_edges()
+	item.price = int(fields.price)
+	item.description = str(fields.get("description", "")).strip_edges()
+	item.placement_surface = "floor"
+	item.furniture_scene = scene
+	# Save a candidate first; do not touch the live catalog until serialization
+	# succeeds. Preserve a byte-for-byte user:// backup for recovery.
+	var pending := "res://data/items/__furniture_catalog_pending__.tres"
+	if FileAccess.file_exists(pending):
+		return {"ok": false, "error": "发现未清理的候选目录文件，请人工检查"}
+	catalog.items.append(item)
+	var save_err := ResourceSaver.save(catalog, pending)
+	if save_err != OK:
+		return {"ok": false, "error": "候选商品目录保存失败 (%d)" % save_err}
+	var original := FileAccess.get_file_as_bytes(CATALOG_PATH)
+	if original.is_empty():
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(pending))
+		return {"ok": false, "error": "读取原商品目录失败"}
+	var backup := FileAccess.open("user://furniture_catalog_before_registration.tres", FileAccess.WRITE)
+	if backup == null:
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(pending))
+		return {"ok": false, "error": "无法创建备份，未修改商品目录"}
+	backup.store_buffer(original)
+	backup.close()
+	var replacement := FileAccess.get_file_as_bytes(pending)
+	if replacement.is_empty():
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(pending))
+		return {"ok": false, "error": "候选文件无内容，未修改商品目录"}
+	var writer := FileAccess.open(CATALOG_PATH, FileAccess.WRITE)
+	if writer == null:
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(pending))
+		return {"ok": false, "error": "无法写入商品目录"}
+	writer.store_buffer(replacement)
+	writer.close()
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(pending))
+	ResourceLoader.load(CATALOG_PATH, "", ResourceLoader.CACHE_MODE_REPLACE)
+	return {"ok": true, "item_id": item.item_id, "backup": "user://furniture_catalog_before_registration.tres"}
