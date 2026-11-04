@@ -5,9 +5,26 @@ extends Node3D
 @export var blocking := true
 @export var role := "chair"
 
+const SupportSurfaces = preload("res://scripts/room/furniture_support_surfaces.gd")
+
 func _ready() -> void:
+	_register_support_surfaces()
 	if not has_node("Model"):
 		_build_visual()
+
+func _register_support_surfaces() -> void:
+	# Authored safe contact areas; no automatic stacking on chairs/lamps.
+	var anchors: Array = []
+	match role:
+		"bookcase":
+			for level in range(4):
+				anchors.append({"id": "shelf_%d" % level, "center": Vector3(0, [0.2575, 0.8375, 1.4175, 1.9975][level], 0), "size": Vector2(1.16, 0.42)})
+		"writing_table", "side_table_oak", "coffee_table_round", "coffee_table_glass", "shelf_low":
+			var top := SupportSurfaces.from_bounds(bounds, 0.08)
+			if not top.is_empty():
+				anchors.append(top)
+	if not anchors.is_empty():
+		set_meta("support_surfaces", anchors)
 
 func _material(color: Color, roughness: float = 0.78, metallic: float = 0.0) -> StandardMaterial3D:
 	var material := StandardMaterial3D.new()
