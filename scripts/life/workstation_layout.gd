@@ -2230,7 +2230,19 @@ func rotate_to(yaw: float) -> void:
 		edit_selected_mount(Vector2(float(mounted.x),float(mounted.z)),yaw)
 		return
 	if not placing_role.is_empty():
-		nodes[placing_role].rotation.y = wrapf(snappedf(yaw, deg_to_rad(angle_step)) if snapping else yaw, -PI, PI)
+		var target: float = wrapf(snappedf(yaw,deg_to_rad(angle_step)) if snapping else yaw,-PI,PI)
+		if surface_mounts.has(placing_role):
+			var mount: Dictionary = surface_mounts[placing_role].duplicate(true)
+			var support: Node3D = nodes[mount.support]
+			mount["yaw"] = wrapf(target-support.global_rotation.y,-PI,PI)
+			if not _mount_collision(placing_role,mount).is_empty():
+				message = "旋转会超出陈列表面或碰到其他物品"
+				changed.emit()
+				return
+			surface_mounts[placing_role] = mount
+			_sync_mount_poses()
+		else:
+			nodes[placing_role].rotation.y = target
 		update()
 		return
 	if group_selection.size() > 1:
