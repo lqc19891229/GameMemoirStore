@@ -16,3 +16,5 @@ enabled=1 才导出，0 或空白保留为草稿。
     python tools/catalog/import_games.py --project . --check
 
 data/games/README.txt 由导入器生成，修改目录说明时请同步修改 import_games.py 的 GENERATED_README。
+
+本目录的 Excel 导入器只更新游戏资料；家具和壁灯商品定义位于 data/items/，请参阅 data/items/README.md。

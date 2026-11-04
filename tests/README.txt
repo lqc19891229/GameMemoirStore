@@ -1,30 +1,25 @@
-自动化检查目录
+项目自动化检查
 
-Python：
-- test_catalog_importer.py：Excel 读取、字段校验、素材解析、资源生成、清单一致性和文件保护。
-- test_showcase_models.py：电脑硬件与房间 GLB 的文件结构、模型包围盒、进阶设备发光材质和嵌入依赖检查。
+- Python：游戏资料导入校验（tests/test_catalog_importer.py）、GLB 模型质量及依赖检查（tests/test_showcase_models.py）。
+- Godot Headless：客户端、商店、状态、时间线、设备和房间的无界面回归（根目录 tests/*.gd 与 tests/life/*.gd）。
+- 图形界面：需要真实窗口交互、3D 拾取和鼠标点击的 Godot 测试；CI 在 Linux 上使用 Xvfb。
+- fixtures/：旧版固定游戏数据和资源样本，不加入正式商店。
 
-Godot Headless：
-- test_catalog_resources.gd：当前游戏资源字段、图片加载和时间线。
-- test_catalog_integration.gd：资源接入商品页、展示图切换和交易流程。
-- test_client.gd：游戏平台导航、搜索、购买、游戏库和存档。
-- test_store.gd：交易规则、时间线和存档流程。
-- test_editor_scenes.gd：场景预加载、编辑器节点、静态布局和设备位置保留。
-- life/test_life_flow.gd：桌面到购买、安装、游玩、直播、攻略和存档恢复。
-- life/test_workstation_view.gd：原生 3D 视角、设备拾取、屏幕输入和窗口操作。
-- life/test_workstation_lighting.gd：RGB 材质发现、辅助灯、六枚风扇转子、颜色 / 亮度 / 灯效和进阶设备可见性。
-- life/test_workstation_layout.gd：布置手柄、吸附、碰撞、应用、取消和存档恢复。
-- life/test_workstation_collision.gd：模型边界、快速拖动防穿透、旋转碰撞和旧布局恢复。
-- life/test_pixel_room.gd：房间模型、家具复制、外观与 RGB 设置、墙体遮挡和存档往返。
-- life/test_audit_regressions.gd：独立预览、屏幕投影、显示器背面输入和异常存档。
+核心房间回归位于 tests/life/：
+- test_room_blueprint.gd、test_room_partitions.gd、test_room_grid_outline.gd、test_room_finishes.gd：尺寸、墙体、自由轮廓和逐格装修。
+- test_room_zones.gd：**历史文件名**，现测试无功能分区的自由装修、旧区域地板色迁移、撤销/重做与 JSON 存档。
+- test_room_regions.gd：真实墙体/门洞的空间连通性及无区域设计存档槽位。
+- test_room_wall_mounts.gd、test_room_wall_sconce.gd：挂画、内外墙壁灯、独立开关、亮度和色温。
+- test_room_minimal_ui.gd、test_blueprint_ux.gd：自由装修入口与建造 UI。
+- test_furniture_showcase.gd、test_furniture_direct_interaction.gd、test_furniture_batch.gd：购物预览和家具操作。
 
-图形环境：
-- test_client_windows.gd：原生窗口、右键菜单和窗口交互，需要桌面显示环境；Linux CI 使用 Xvfb。
+常用命令（在仓库根目录）：
 
-fixtures/：固定测试样本，不加入正式商店。*.gd.uid 是 Godot 脚本稳定标识。
-
-运行 Python 测试：
     python -m unittest discover -s tests -p "test_catalog_importer.py" -v
     python -m unittest discover -s tests -p "test_showcase_models.py" -v
+    godot --headless --path . --editor --import
+    godot --headless --path . --script res://tests/life/test_room_zones.gd -- --fresh
 
-Godot 测试通常使用 --fresh，避免读取或写入正常玩家存档。完整命令见根目录 README.md；GitHub Actions 会运行 Headless 回归和 Xvfb 图形测试。
+完整自动化列表：.github/workflows/project-validation.yml；房间快速检查：.github/workflows/room-ui-smoke.yml。
+
+建议使用 --fresh 和测试自有的 user:// 临时存档，避免污染普通玩家数据。*.gd.uid 应与测试脚本一起保留。

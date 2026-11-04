@@ -7,3 +7,5 @@ dialogs/：设置、消息、重置、游玩弹窗和游戏库右键菜单。
 
 脚本：scripts/client.gd、scripts/client_pages.gd、scripts/client_ui.gd。
 游戏资料来自 data/games/_catalog.tres；补充展示信息来自 data/catalog.json。购物网页的库存组件属于 scenes/apps/browser/，不放在游戏平台目录。
+
+游戏封面规则及导入说明见 assets/art/README.txt、tools/catalog/README.md。房间自由装修与物品库存不属于游戏平台页面，详见 data/items/README.md。

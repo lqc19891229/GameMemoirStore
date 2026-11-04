@@ -5,3 +5,5 @@ components/inventory_row.tscn：购物与库存共用的商品行，显示名称
 脚本：scripts/life/browser.gd。
 
 通过电脑桌面进入时，购买、安装和钱包更新都写入共享玩家状态。单独预览场景时保留示例节点；没有共享会话时不执行交易。
+
+房间家具和壁灯通过统一商品库存体系购买，每件拥有独立 UID；购买后由自由装修编辑器摆放或挂墙。详见 data/items/README.md。
