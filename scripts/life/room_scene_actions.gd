@@ -873,8 +873,10 @@ func sync(active: bool) -> void:
 	action_buttons["mount"].visible = not multi
 	action_buttons["mount"].disabled = multi or layout._has_mounted_children(role)
 	action_buttons["mount"].tooltip_text = "取下并恢复上次地面位置" if layout.surface_mounts.has(role) else "陈列到附近的空闲桌面或书架（需要足够空间）"
-	action_buttons["move"].disabled = layout.surface_mounts.has(role)
-	action_buttons["rotate"].disabled = layout.surface_mounts.has(role)
+	action_buttons["move"].disabled = false
+	action_buttons["rotate"].disabled = false
+	action_buttons["move"].tooltip_text = "沿当前承载面拖动或用方向键微调 · Ctrl+Z 撤销" if layout.surface_mounts.has(role) else "拖拽移动家具"
+	action_buttons["rotate"].tooltip_text = "旋转陈列物 · Q/E 每次 15° · Shift 精细旋转" if layout.surface_mounts.has(role) else "旋转家具"
 	action_buttons["arrange"].disabled = layout.surface_mounts.has(role)
 	action_buttons["paint"].tooltip_text = "统一修改 %d 件家具的颜色" % group_size if multi else "选择单件家具颜色"
 	action_buttons["arrange"].tooltip_text = "当前多选对齐与等距排列" if multi else "附近家具对齐 · 同类家具等距排列"
