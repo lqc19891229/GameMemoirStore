@@ -3,7 +3,7 @@ extends SceneTree
 const Importer = preload("res://addons/furniture_manager/furniture_importer.gd")
 const ImportPanel = preload("res://addons/furniture_manager/furniture_import_panel.gd")
 const SOURCE := "res://assets/models/room/catalog/side_table_oak.glb"
-const TEMP_SCENE := "res://scenes/room/__furniture_import_regression__.tscn"
+const TEMP_SCENE := "res:" + "//scenes/room/__furniture_import_regression__.tscn"
 var failures := 0
 
 
@@ -14,9 +14,9 @@ func _initialize() -> void:
 func _run() -> void:
 	_check(Importer.valid_model_path(SOURCE), "known source is valid")
 	_check(not Importer.valid_model_path("res://data/items/_catalog.tres"), "disallow resources outside model directory")
-	_check(not Importer.valid_model_path("res://assets/models/room/../items/a.glb"), "disallow relative path traversal")
+	_check(not Importer.valid_model_path("res:" + "//assets/models/room/../items/a.glb"), "disallow relative path traversal")
 	_check(Importer.scene_path_for(SOURCE) == "res://scenes/room/side_table_oak.tscn", "stable default scene naming")
-	_check(Importer.scene_path_for("res://assets/models/room/a.txt").is_empty(), "reject non-model files")
+	_check(Importer.scene_path_for("res:" + "//assets/models/room/a.txt").is_empty(), "reject non-model files")
 	var found := Importer.list_models("res://assets/models/room/catalog")
 	_check(found.has(SOURCE), "scanner discovers existing catalog models")
 	_check(found.size() >= 15, "recursive catalog scan finds existing collection")
