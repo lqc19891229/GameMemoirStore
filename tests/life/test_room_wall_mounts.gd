@@ -79,6 +79,8 @@ func run() -> void:
 	var moved: bool = layout.move_wall_mount(Vector2(0.05,0.05))
 	check(moved,"wall mount supports horizontal and vertical adjustment")
 	check(layout.nudge_selected(Vector2.LEFT),"wall mount accepts keyboard adjustments")
+	var height_before: float = float(layout.wall_mounts[frame_role].height)
+	check(layout.nudge_selected(Vector2.UP) and float(layout.wall_mounts[frame_role].height)>height_before,"arrow up raises the wall decoration")
 	check(not layout.move_wall_mount(Vector2(10.0,0)),"wall edge prevents invalid translation")
 	layout.undo()
 	check(layout.wall_mounts.has(frame_role),"undo preserves wall attachment")
