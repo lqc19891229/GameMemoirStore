@@ -206,11 +206,47 @@ func _sync_wall_mount_poses() -> void:
 				yaw = -PI*.5
 		node.position = position
 		node.rotation.y = yaw
+	_sync_wall_sconce_lights()
+
+func _sync_wall_sconce_lights() -> void:
+	for role: String in nodes:
+		if Data.base_role(role) != WallMountData.LAMP_ROLE: continue
+		var light := nodes[role].get_node_or_null("LampGlow") as OmniLight3D
+		if light == null: continue
+		var entry: Dictionary = wall_mounts.get(role,{})
+		light.visible = placed_instances.has(role) and not entry.is_empty() and bool(entry.get("on",true))
+		light.light_energy = WallMountData.LAMP_ENERGY[clampi(int(entry.get("level",2)),1,3)-1]
+
+func set_wall_sconce_light(enabled: bool) -> bool:
+	if not active or not gesture.is_empty() or not wall_mounts.has(selected): return false
+	if Data.base_role(selected) != WallMountData.LAMP_ROLE: return false
+	var entry: Dictionary = wall_mounts[selected].duplicate(true)
+	if bool(entry.get("on",true)) == enabled: return false
+	var before: Dictionary = _draft()
+	entry["on"] = enabled
+	wall_mounts[selected] = entry
+	_sync_wall_sconce_lights()
+	_remember(before)
+	update()
+	return true
+
+func set_wall_sconce_brightness(level: int) -> bool:
+	if not active or not gesture.is_empty() or not wall_mounts.has(selected): return false
+	if Data.base_role(selected) != WallMountData.LAMP_ROLE or level < 1 or level > 3: return false
+	var entry: Dictionary = wall_mounts[selected].duplicate(true)
+	if int(entry.get("level",2)) == level: return false
+	var before: Dictionary = _draft()
+	entry["level"] = level
+	wall_mounts[selected] = entry
+	_sync_wall_sconce_lights()
+	_remember(before)
+	update()
+	return true
 
 func _wall_mount_blocker(role: String, entry: Dictionary) -> String:
 	var dimensions: Vector3 = bounds_for(role)
 	if not WallMountData.fits(entry,blueprint,dimensions.x,dimensions.y):
-		return "画框碰到墙边、门窗或天花板"
+		return "壁挂物碰到墙边、门窗或天花板"
 	for other: String in wall_mounts:
 		if other == role: continue
 		var mounted: Dictionary = wall_mounts[other]
@@ -229,12 +265,12 @@ func _wall_mount_blocker(role: String, entry: Dictionary) -> String:
 		var other_dimensions: Vector3 = bounds_for(other)
 		var x_hit: bool = absf(projected-other_projected) < (dimensions.x+other_dimensions.x)*.5+collision_margin
 		var y_hit: bool = float(entry.height)<float(mounted.height)+other_dimensions.y+collision_margin and float(mounted.height)<float(entry.height)+dimensions.y+collision_margin
-		if x_hit and y_hit: return "画框与另一件墙面装饰重叠"
+		if x_hit and y_hit: return "壁挂物与另一件墙面装饰重叠"
 	return ""
 
 func hang_selected_on_wall() -> bool:
 	if not active or not gesture.is_empty() or not placing_role.is_empty() or group_selection.size()>1: return false
-	if Data.base_role(selected) != WallMountData.MOUNT_ROLE or not placed_instances.has(selected): return false
+	if not WallMountData.is_mountable(Data.base_role(selected)) or not placed_instances.has(selected): return false
 	if wall_mounts.has(selected) or surface_mounts.has(selected): return false
 	var role: String = selected
 	var origin: Vector3 = nodes[role].position
@@ -261,18 +297,19 @@ func hang_selected_on_wall() -> bool:
 	for candidate: Dictionary in candidates:
 		var pose: Dictionary = {"x":origin.x,"z":origin.z,"yaw":nodes[role].rotation.y}
 		var entry: Dictionary = {"wall":candidate.wall,"along":snappedf(float(candidate.along),grid_step),
-			"height":1.20,"floor_pose":pose}
+			"height":1.40 if Data.base_role(role) == WallMountData.LAMP_ROLE else 1.20,"floor_pose":pose,
+			"on":true,"level":2}
 		if str(candidate.wall) == "partition":
 			entry["part"] = candidate.part.duplicate(true)
 			entry["side"] = candidate.side
 		if _attach_selected_wall_frame(entry): return true
-	message = "附近墙面没有足够的挂画空间"
+	message = "附近墙面没有足够的壁挂空间"
 	changed.emit()
 	return false
 
 func _attach_selected_wall_frame(entry: Dictionary) -> bool:
 	if not active or not gesture.is_empty() or not placing_role.is_empty() or group_selection.size() > 1: return false
-	if Data.base_role(selected) != WallMountData.MOUNT_ROLE or not placed_instances.has(selected): return false
+	if not WallMountData.is_mountable(Data.base_role(selected)) or not placed_instances.has(selected): return false
 	if wall_mounts.has(selected) or surface_mounts.has(selected): return false
 	if not _wall_mount_blocker(selected,entry).is_empty(): return false
 	var before := _draft()
@@ -295,9 +332,10 @@ func hang_selected_on_partition(at: Vector2, axis: String, side: int = 1) -> boo
 		var pose := {"x":origin.x,"z":origin.z,"yaw":nodes[selected].rotation.y}
 		var mount := {"wall":"partition","part":{"x":float(part.x),"z":float(part.z),"axis":axis},
 			"side":side,"along":clampf(snappedf(along,grid_step),-.09,.09),
-			"height":1.20,"floor_pose":pose}
+			"height":1.40 if Data.base_role(selected) == WallMountData.LAMP_ROLE else 1.20,
+			"floor_pose":pose,"on":true,"level":2}
 		if _attach_selected_wall_frame(mount): return true
-	message = "内墙画框与墙端或已有装饰发生冲突"
+	message = "内墙灯具或画框与墙端或已有装饰发生冲突"
 	changed.emit()
 	return false
 
@@ -307,6 +345,7 @@ func take_down_selected_wall_mount() -> bool:
 	var previous: Dictionary = wall_mounts[role]
 	var before := _draft()
 	wall_mounts.erase(role)
+	_sync_wall_sconce_lights()
 	nodes[role].position = Vector3(float(previous.floor_pose.x),0,float(previous.floor_pose.z))
 	nodes[role].rotation.y = float(previous.floor_pose.yaw)
 	clamp_pose(role)
@@ -1150,6 +1189,7 @@ func store_selected() -> void:
 	var before := _draft()
 	surface_mounts.erase(selected)
 	wall_mounts.erase(selected)
+	_sync_wall_sconce_lights()
 	placed_instances.erase(selected)
 	if Data.is_copy(selected):
 		nodes[selected].free()
@@ -1992,7 +2032,7 @@ func remove_partition(at: Vector2) -> bool:
 		if str(mount.get("wall","")) != "partition": continue
 		var mounted: Dictionary = mount.part
 		if str(mounted.axis) == str(target.axis) and is_equal_approx(float(mounted.x),float(target.x)) and is_equal_approx(float(mounted.z),float(target.z)):
-			message = "请先取下这段内墙上的画框，再拆除隔断"
+			message = "请先取下这段内墙上的灯具和画框，再拆除隔断"
 			changed.emit()
 			return false
 	var before := _draft()
