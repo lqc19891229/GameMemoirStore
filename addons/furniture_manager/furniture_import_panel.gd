@@ -21,7 +21,7 @@ func _ready() -> void:
 	var row := HBoxContainer.new()
 	add_child(row)
 	folder_input = LineEdit.new()
-	folder_input.text = "res://assets/models/room/catalog"
+	folder_input.text = "res://assets/models/room"
 	folder_input.placeholder_text = "res://assets/models/room/"
 	folder_input.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.add_child(folder_input)
@@ -56,7 +56,8 @@ func scan_models() -> void:
 		var target: String = Importer.scene_path_for(path)
 		if target.is_empty():
 			continue
-		var already_exists := FileAccess.file_exists(target) or ResourceLoader.exists(target)
+		var legacy := "res://scenes/room/" + path.get_file().get_basename() + ".tscn"
+		var already_exists := FileAccess.file_exists(target) or ResourceLoader.exists(target) or FileAccess.file_exists(legacy) or ResourceLoader.exists(legacy)
 		var duplicates := unique_targets.has(target)
 		unique_targets[target] = true
 		var index := model_list.item_count

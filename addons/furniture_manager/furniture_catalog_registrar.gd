@@ -14,20 +14,26 @@ static func list_unregistered_scenes() -> PackedStringArray:
 	for item in catalog.items:
 		if item != null and item.furniture_scene != null:
 			registered[item.furniture_scene.resource_path] = true
-	var dir := DirAccess.open(SCENE_ROOT)
+	_collect_scenes(SCENE_ROOT, registered, output)
+	output.sort()
+	return output
+
+
+static func _collect_scenes(folder_path: String, registered: Dictionary, output: PackedStringArray) -> void:
+	var dir := DirAccess.open(folder_path)
 	if dir == null:
-		return output
+		return
 	dir.list_dir_begin()
 	var entry := dir.get_next()
 	while not entry.is_empty():
-		if not dir.current_is_dir() and entry.ends_with(".tscn"):
-			var path := SCENE_ROOT + entry
-			if not registered.has(path):
+		if entry != "." and entry != "..":
+			var path := folder_path.path_join(entry)
+			if dir.current_is_dir():
+				_collect_scenes(path, registered, output)
+			elif entry.ends_with(".tscn") and not registered.has(path):
 				output.append(path)
 		entry = dir.get_next()
 	dir.list_dir_end()
-	output.sort()
-	return output
 
 
 static func validate_registration(scene_path: String, fields: Dictionary, catalog: MemoirItemCatalog = null) -> PackedStringArray:
