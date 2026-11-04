@@ -1,4 +1,5 @@
 extends SceneTree
+## Structural connectivity is independent from purpose-based area labels.
 const Blueprint = preload("res://scripts/room/room_blueprint_data.gd")
 const State = preload("res://scripts/store_state.gd")
 var checks := 0
@@ -11,17 +12,16 @@ func check(ok: bool, message: String) -> void:
 		push_error(message)
 
 func _initialize() -> void: run.call_deferred()
-
 func frames() -> void:
 	for i in range(5): await process_frame
 
 func run() -> void:
-	var legacy: Dictionary = Blueprint.clean({})
-	check(legacy.saved_schemes.is_empty(), "legacy room saves do not invent area snapshots")
 	var bare: Dictionary = Blueprint.clean({"shape":"custom"})
-	check(Blueprint.room_regions(bare).size() == 1, "unpartitioned rectangle is one connected room")
-	check(Blueprint.room_region_at(bare,Vector2.ZERO).size() == 192, "8x6 room has 192 half-metre floor cells")
-	check(Blueprint.room_region_at(bare,Vector2(99,99)).is_empty(), "out-of-bounds region clicks do not create areas")
+	check(Blueprint.room_regions(bare).size() == 1, "custom rectangle is one connected walkable room")
+	check(Blueprint.room_region_at(bare,Vector2.ZERO).size() == 192,
+		"8x6 floor still contains 192 half-metre cells")
+	check(Blueprint.room_region_at(bare,Vector2(99,99)).is_empty(),
+		"clicks outside geometry do not return floor cells")
 	var ring: Array = []
 	for x in [-.5,.5]:
 		for z in [-1.0,1.0]:
@@ -30,28 +30,31 @@ func run() -> void:
 		for x in [-1.0,1.0]:
 			ring.append({"x":x,"z":z,"axis":"z","kind":"wall"})
 	var isolated: Dictionary = Blueprint.clean({"shape":"custom","partitions":ring})
-	check(isolated.partitions.size() == 8, "all eight segments of enclosed room survive sanitation")
-	var inside: Array = Blueprint.room_region_at(isolated,Vector2.ZERO)
-	check(inside.size() == 16, "closed 2m x 2m space yields a 16-cell interior")
-	check(Blueprint.room_regions(isolated).size() == 2, "solid walls produce exactly two connected spaces")
+	check(isolated.partitions.size() == 8, "physical wall segments remain independent of room purposes")
+	check(Blueprint.room_region_at(isolated,Vector2.ZERO).size() == 16,
+		"walls enclose the expected four-square-meter space")
+	check(Blueprint.room_regions(isolated).size() == 2,
+		"two physical connected spaces remain detectable without labels")
 	var door: Dictionary = isolated.duplicate(true)
 	door.partitions[0].kind = "door"
-	check(Blueprint.room_region_at(door,Vector2.ZERO).size() == 192, "doorways connect separated rooms")
-	check(Blueprint.room_regions(door).size() == 1, "an open doorway collapses two rooms into one")
-	var removed: Dictionary = Blueprint.clean({"shape":"custom","removed_cells":[{"ix":15,"iz":11}]})
-	check(Blueprint.room_region_at(removed,Blueprint.cell_center(removed,{"ix":15,"iz":11})).is_empty(), "missing floor has no region")
-	check(Blueprint.room_region_at(removed,Vector2.ZERO).size() == 191, "one corner cutout leaves one connected region")
-	var poisoned: Dictionary = Blueprint.clean({"shape":"custom","saved_schemes":[
-		{"slot":0,"zone_cells":[{"ix":2,"iz":2,"zone":1},{"ix":2,"iz":2,"zone":2}],
-			"zone_styles":[{"floor":2,"wall":1,"light":0}],
-			"floor_finishes":[{"ix":2,"iz":2,"finish":1}]},
-		{"slot":0,"zone_cells":[{"ix":3,"iz":3,"zone":3}]},
-		{"slot":4,"zone_cells":[]},{"slot":INF,"zone_cells":[]}
-	]})
-	check(poisoned.saved_schemes.size() == 1 and poisoned.saved_schemes[0].slot == 0, "schemes sanitize invalid and duplicate slots")
-	check(poisoned.saved_schemes[0].zone_cells.size() == 1, "saved zone maps sanitize duplicate cells")
-	check(poisoned.saved_schemes[0].floor_finishes.size() == 1, "saved designs include manual flooring")
-	check(Blueprint.clean({"shape":"rectangle","saved_schemes":poisoned.saved_schemes}).saved_schemes.is_empty(), "preset snapshots are custom-room only")
+	check(Blueprint.room_region_at(door,Vector2.ZERO).size() == 192,
+		"doorways still connect physical spaces")
+	check(Blueprint.room_regions(door).size() == 1,
+		"room connectivity remains geometry-derived")
+	var cutout: Dictionary = Blueprint.clean({"shape":"custom","removed_cells":[{"ix":15,"iz":11}]})
+	check(Blueprint.room_region_at(cutout,Blueprint.cell_center(cutout,{"ix":15,"iz":11})).is_empty(),
+		"removed floor is absent from connected space")
+	check(Blueprint.room_region_at(cutout,Vector2.ZERO).size() == 191,
+		"remaining floor connectivity survives carving")
+	var obsolete: Dictionary = Blueprint.clean({"shape":"custom",
+		"saved_schemes":[{"slot":0,"zone_cells":[{"ix":2,"iz":2,"zone":1}],
+			"floor_finishes":[{"ix":2,"iz":2,"finish":1}]}],
+		"zone_cells":[{"ix":2,"iz":2,"zone":1}],
+		"zone_styles":[{"floor":3,"wall":1,"light":1}]})
+	check(not obsolete.has("saved_schemes") and not obsolete.has("zone_cells"),
+		"obsolete saved area presets and labels are stripped from new blueprint data")
+	check(Blueprint.floor_finish(obsolete,{"ix":2,"iz":2}) == 3,
+		"only active old zone floor color becomes a manual finish; snapshots are ignored")
 
 	var game = load("res://scenes/main/game_root.tscn").instantiate()
 	root.add_child(game)
@@ -60,72 +63,52 @@ func run() -> void:
 	var state = game.session.state
 	state.persistence_enabled = false
 	var desktop = game.desktop
-	var world = desktop.world
-	var layout = world.layout
-	var room = world.get_node("Room")
+	var layout = desktop.world.layout
 	desktop.begin_layout()
 	desktop.set_blueprint_mode(true)
-	check(desktop.get_node("%BlueprintRegionInfo") != null and desktop.get_node("%BlueprintSchemeSlot") != null, "region brush and design slots are authored")
-	check(layout.set_blueprint_shape("custom"), "custom floor can auto-select a connected space")
-	var chosen := {"ix":3,"iz":8}
-	var center: Vector2 = Blueprint.cell_center(layout.blueprint,chosen)
-	check(layout.paint_zone_cell(center,1), "paint an initial gaming zone cell")
-	check(layout.paint_floor_finish(center,3), "set an explicit tile finish for saved design")
-	check(layout.set_zone_style(1,"wall",2), "customize gaming zone wall finish")
-	check(layout.save_decor_scheme(0), "save area design to slot 1")
-	check(not Blueprint.scheme_for_slot(layout.blueprint,0).is_empty(), "saved snapshot is available from blueprints")
-	check(layout.fill_room_region(center,2) == 192, "single click replaces the full connected room assignment")
-	check(layout.blueprint.zone_cells.size() == 192 and Blueprint.zone_at(layout.blueprint,chosen) == 2, "fill replaces all zone assignments without gaps")
-	check(room.has_node("ZoneLights/Zone_2"), "filled region updates localized lighting")
-	check(layout.load_decor_scheme(0), "load previous area design from slot 1")
-	check(layout.blueprint.zone_cells.size() == 1 and Blueprint.zone_at(layout.blueprint,chosen) == 1, "loading restores the original zone map")
-	check(Blueprint.floor_finish(layout.blueprint,chosen) == 3, "loading also restores individually painted tiles")
-	check(int(Blueprint.zone_style(layout.blueprint,1).wall) == 2, "loading restores saved area wall palettes")
+	check(layout.set_blueprint_shape("custom"), "editable custom footprint remains supported")
+	check(desktop.get_node_or_null("%BlueprintQuickRegion") == null,
+		"automatic named-zone fill action is absent")
+	check(desktop.get_node_or_null("%BlueprintSchemeSlot") == null,
+		"functional-area snapshot slots are absent")
+	var cell := {"ix":3,"iz":8}
+	var center: Vector2 = Blueprint.cell_center(layout.blueprint,cell)
+	check(layout.paint_floor_finish(center,1), "editing an arbitrary connected cell works directly")
+	check(Blueprint.floor_finish(layout.blueprint,cell) == 1,
+		"direct decoration does not depend on connectivity labels")
 	layout.undo()
-	check(layout.blueprint.zone_cells.size() == 192, "loaded scheme can be undone")
+	check(Blueprint.floor_finish(layout.blueprint,cell) == 0,
+		"tile finish undo works without purpose zones")
 	layout.redo()
-	check(layout.blueprint.zone_cells.size() == 1, "loaded scheme can be redone")
-	check(layout.save_decor_scheme(1), "save a second scheme slot independently")
-	check(Blueprint.scheme_for_slot(layout.blueprint,1).size() > 0 and Blueprint.scheme_for_slot(layout.blueprint,2).is_empty(), "scheme slots are independent")
-	check(layout.paint_zone_cell(center,0), "existing zone can be cleared")
-	check(layout.floor_cell_blocker(chosen,true) != "", "a saved design prevents silently deleting its floor cells")
-	check(layout.clear_decor_scheme(1), "scheme deletion is supported")
-	check(Blueprint.scheme_for_slot(layout.blueprint,1).is_empty(), "deleted scheme slot is now empty")
-	layout.undo()
-	check(not Blueprint.scheme_for_slot(layout.blueprint,1).is_empty(), "scheme deletion can be undone")
-	check(layout.fill_room_region(Vector2(99,99),1) == 0, "outside clicks do not change layout")
-	check(layout.fill_room_region(center,0) == 0, "an all-unassigned open region needs no change")
-	desktop.finish_layout(false)
-	check(room.blueprint.shape == "rectangle" and room.blueprint.saved_schemes.is_empty(), "cancel restores room and clears uncommitted snapshots")
-
-	desktop.begin_layout()
-	desktop.set_blueprint_mode(true)
-	check(layout.set_blueprint_shape("custom"), "enter custom floor editing to commit a design")
-	check(layout.paint_zone_cell(center,3), "paint rest zone for persistent scheme")
-	check(layout.save_decor_scheme(2), "save the current scheme to third slot")
-	state.save_path = "user://memoir_room_regions_p7_test.json"
+	check(Blueprint.floor_finish(layout.blueprint,cell) == 1,
+		"tile finish redo works without purpose zones")
+	state.save_path = "user://memoir_connected_rooms_test.json"
 	state.persistence_enabled = true
 	desktop.finish_layout(true)
-	check(state.life.room_blueprint.saved_schemes.size() == 1, "committing stores named design slot data")
-	var stored = State.new()
-	stored.save_path = state.save_path
-	stored.load_state()
-	check(stored.life.room_blueprint.saved_schemes == state.life.room_blueprint.saved_schemes, "snapshot data survives JSON serialization")
-	var expected: Dictionary = stored.life.room_blueprint.duplicate(true)
+	check(not state.life.room_blueprint.has("saved_schemes"),
+		"committed room no longer persists functional-area snapshot data")
+	var loaded := State.new()
+	loaded.save_path = state.save_path
+	loaded.load_state()
+	check(loaded.life.room_blueprint == state.life.room_blueprint,
+		"physical room and direct tile colors survive JSON roundtrip")
 	state.persistence_enabled = false
 	game.queue_free()
 	await frames()
 	var resumed = load("res://scenes/main/game_root.tscn").instantiate()
-	resumed.get_node("GameSession").state = stored
+	resumed.get_node("GameSession").state = loaded
 	root.add_child(resumed)
 	resumed.session.timer.stop()
 	await frames()
-	check(resumed.desktop.world.get_node("Room").blueprint == expected, "new session restores saved region schemes")
-	check(resumed.desktop.world.layout.valid, "automatic regions preserve furniture validity")
+	check(resumed.desktop.world.layout.blueprint == loaded.life.room_blueprint,
+		"reloaded room uses the same free-decoration blueprint")
+	check(resumed.desktop.world.layout.valid,
+		"removing zone metadata does not invalidate furniture placement")
 	for role: String in resumed.desktop.world.devices:
-		check(resumed.desktop.world.layout.surface_for(role) == "desk", "computer hardware remains desk-only: " + role)
+		check(resumed.desktop.world.layout.surface_for(role) == "desk",
+			"existing computer devices remain on their authored desk: "+role)
 	resumed.queue_free()
 	await frames()
-	DirAccess.remove_absolute(ProjectSettings.globalize_path(stored.save_path))
-	print("ROOM_REGIONS_CHECKS: %d / %d passed" % [checks-failures,checks])
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(loaded.save_path))
+	print("ROOM_CONNECTED_SPACES_CHECKS: %d / %d passed" % [checks-failures,checks])
 	quit(1 if failures else 0)
