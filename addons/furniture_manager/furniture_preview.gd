@@ -146,6 +146,8 @@ func _rebuild_overlays() -> void:
 		overlay = null
 	if model == null or (not show_bounds and not show_surfaces):
 		return
+	if (not show_bounds or authored_bounds == Vector3.ZERO) and (not show_surfaces or support_anchors.is_empty()):
+		return
 	var mesh := ImmediateMesh.new()
 	var material := StandardMaterial3D.new()
 	material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
