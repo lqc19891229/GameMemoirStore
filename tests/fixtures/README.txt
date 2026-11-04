@@ -5,3 +5,5 @@ catalog/：对应的 Godot 游戏 Resource，供购买、筛选、存档和客�
 旧演示封面位于 assets/art/，仍被固定样本引用。
 
 这里的游戏不加入正式商店，也不由日常 Excel 导入更新。修改正式工作簿不会改变这些固定测试数据；如需更新测试样本，应同步检查相关测试断言。
+
+自由装修、旧功能区地板颜色迁移和实体房间连通性测试位于 tests/life/test_room_zones.gd 与 test_room_regions.gd，不修改本目录固定的游戏测试资料。
