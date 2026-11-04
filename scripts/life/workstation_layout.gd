@@ -2524,7 +2524,8 @@ func nudge_selected(direction: Vector2, fine: bool = false) -> bool:
 	if wall_mounts.has(selected):
 		var before_wall: bool = snapping
 		if fine: snapping = false
-		var changed_wall: bool = move_wall_mount(direction.normalized() * (0.01 if fine else grid_step))
+		# Screen Up should raise a wall frame; floor Z still follows the old keys.
+		var changed_wall: bool = move_wall_mount(Vector2(direction.x,-direction.y).normalized() * (0.01 if fine else grid_step))
 		snapping = before_wall
 		return changed_wall
 	var previous: Transform3D = nodes[selected].transform
