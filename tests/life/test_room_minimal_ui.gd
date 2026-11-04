@@ -64,7 +64,7 @@ func run() -> void:
 	check(layout.selected == "chair" and tools.action_strip.visible, "selecting placed 3D furniture replaces the right inspector with a nearby action ribbon")
 	check(tools.selection_chip.visible and tools.selection_chip.text.contains(layout.name_for("chair")), "selected furniture displays its real name near the action ribbon")
 	check(tools.selection_chip.mouse_filter == Control.MOUSE_FILTER_IGNORE, "selected-item label never intercepts direct 3D mouse picking")
-	check(not desktop.get_node("%LayoutPanel").visible and tools.action_buttons.size() == 9 and not tools.action_buttons["light"].visible and not tools.action_buttons["brightness"].visible, "normal editing keeps the seven existing actions and hides wall-light-only controls")
+	check(not desktop.get_node("%LayoutPanel").visible and tools.action_buttons.size() == 10 and not tools.action_buttons["light"].visible and not tools.action_buttons["brightness"].visible and not tools.action_buttons["temperature"].visible, "normal editing keeps the seven existing actions and hides wall-light-only controls")
 	check(tools.action_buttons["move"].toggle_mode and tools.action_buttons["rotate"].toggle_mode and tools.action_buttons["paint"].toggle_mode, "movement, rotation and paint controls expose persistent active states")
 	check(tools.action_buttons["move"].button_pressed and not tools.action_buttons["rotate"].button_pressed, "move button is highlighted when its gizmo is active")
 	check(tools.action_buttons["duplicate"].disabled and tools.action_buttons["duplicate"].tooltip_text.contains("没有可用库存"), "copy is disabled and explains missing same-item stock")
