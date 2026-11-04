@@ -110,6 +110,9 @@ static func create_scene(model_path: String, target_path: String = "") -> Dictio
 	var destination := expected if target_path.is_empty() else target_path
 	if not destination.begins_with(OUTPUT_ROOT) or destination.contains("..") or not destination.ends_with(".tscn"):
 		return {"ok": false, "error": "输出必须是 scenes/room/ 目录下的 .tscn"}
+	var legacy_path := OUTPUT_ROOT + model_path.get_file().get_basename() + ".tscn"
+	if legacy_path != destination and (FileAccess.file_exists(legacy_path) or ResourceLoader.exists(legacy_path)):
+		return {"ok": false, "error": "旧版同名家具场景仍存在，请先迁移：" + legacy_path}
 	if FileAccess.file_exists(destination) or ResourceLoader.exists(destination):
 		return {"ok": false, "error": "目标场景已存在，拒绝覆盖：" + destination}
 	if DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(destination.get_base_dir())) != OK:
