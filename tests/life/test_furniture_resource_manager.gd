@@ -30,6 +30,26 @@ func _run() -> void:
 	panel._populate_list()
 	_check(panel.item_tree.get_root().get_child_count() >= 4, "group filter selects existing lighting")
 	_check(panel.invalid_furniture == 0, "existing active furniture has no resource validation errors")
+	# The viewport must not create one renderer per catalog item.
+	_check(panel.preview != null and panel.preview.viewport != null, "single preview viewport available")
+	_check(panel.preview.model == null, "preview starts without an instantiated model")
+	panel.group_filter.select(0)
+	panel._populate_list()
+	var first := panel.item_tree.get_root().get_first_child()
+	_check(first != null, "furniture list has selectable row")
+	if first != null:
+		panel.item_tree.set_selected(first, 0)
+		panel._on_item_selected()
+		_check(panel.selected_item != null, "selection binds a catalog item")
+		_check(panel.preview.model != null, "preview instantiates selected furniture")
+		_check(panel.preview.measured_size.length() > 0.0, "preview calculates model dimensions")
+		var angle: float = panel.preview.orbit_degrees
+		panel.preview.rotate_preview(30.0)
+		_check(panel.preview.orbit_degrees != angle, "preview camera rotates")
+		_check(panel.source_paths is PackedStringArray, "model paths inspected safely")
+	# Legacy retired items have no scene; selecting one should clear the viewport.
+	panel.preview.show_furniture(null)
+	_check(panel.preview.model == null, "clearing preview removes instantiated furniture")
 	panel.queue_free()
 	await process_frame
 	print("FURNITURE_RESOURCE_MANAGER_CHECKS: %s" % ("PASS" if failures == 0 else "%d failed" % failures))
