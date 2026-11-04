@@ -1,16 +1,22 @@
-# 统一物品目录（第一阶段）
-商品、库存和物理摆放不再共用一个 role。 `item_id` 是商品类型，`uid` 是拥有的单件物品，`role` 是旧编辑器中的摆放节点名称。
+# 统一物品目录与房间库存
 
-- `_catalog.tres` 包含现有商品及首批现代家具、独立键鼠；新增物品时编辑资源目录。
-- `placement_surface = desk` 的主机、显示器、外设只能在电脑桌面上；桌面局部坐标与碰撞由 `workstation_layout.gd` 负责。
-- `placement_surface = floor` 的家具只能放在地面；`pc_case` 的内部组件预留给后续 DIY 装机。
-- 旧 `life.items` 与 `equipped.peripheral` 保留以兼容历史存档；新购买与重复家具用 `life.inventory` 的单件 UID 表示。
-- 旧 `data/hardware/_catalog.tres` 仍负责 3D 设备外观切换，`visual_id` 用于关联，避免重复复制 GLB 资源。
+`item_id` 表示商店商品种类；`uid` 标识玩家拥有的每一件实物；`role` 标识场景中对应的可交互实例。重复购买同款家具也拥有独立 UID，不能把商品类型当作摆放实例。
 
-## 家具商城展示（P15）
+## 商品与摆放
 
-- 商城商品卡新增真实家具 3D 缩略图、分类、二级类型与模型尺寸，通过单一 SubViewport 离屏渲染并缓存，避免 27 个常驻 3D 视口。
-- 商城可切换 9 种配色试色，试色仅影响商品预览；购买后在房间编辑器对单个家具进行改色。
-- 商店与房间编辑器共享 scripts/items/furniture_finishes.gd，保持原存档 0–5 色彩编号，增加深胡桃木、石墨黑和陶土橙色彩涂层。涂层不替换原有木材、金属或织物基底材质。
-- tests/life/test_furniture_showcase.gd 验证展示、试色和存档兼容；实际缩略图画质需要图形界面复核。
-- 电脑主机、显示器、键鼠仍必须放在专用电脑桌面上。
+- `_catalog.tres`：商品与家具定义、分类、价格、场景、表面类型。
+- `placement_surface = desk`：显示器、主机和键鼠等电脑设备只能摆放在对应桌面。
+- `placement_surface = floor`：可购买家具从地面放置流程进入房间；可陈列的家具随后可移动到桌面、书架或指定墙面（如画框和壁灯）。
+- 物体选择、碰撞、吸附、移动、旋转、复制、收纳、撤销和存档由 `scripts/life/workstation_layout.gd` 处理；承载表面由 `scripts/room/furniture_mount_data.gd` 及相应数据辅助脚本管理。
+- 内外墙挂画与 `room_wall_sconce` 壁灯受墙面尺寸、门窗和其他挂载物约束。壁灯独立保存开关、三级亮度和三档色温，不使用房间用途或场景灯光预设。
+- `life.inventory` 保存实物 UID；旧 `life.items` 和 `equipped.peripheral` 仍按兼容逻辑处理。旧硬件型号目录 `data/hardware/_catalog.tres` 继续管理设备 3D 外观。
+
+## 商城预览与外观
+
+家具卡片使用共享 3D 缩略图缓存，支持分类筛选和试色。购买前的预览配色不直接更改玩家房间内的家具。具体颜色处理见 `scripts/items/furniture_finishes.gd` 和 `tests/life/test_furniture_showcase.gd`。
+
+房间不设置“工作区／游戏区／休息区”；所有家具位置和颜色由玩家自由决定。
+
+## 开发检查
+
+增加商品需要确保：稳定的 `item_id`、合法的 `subcategory`/摆放角色、场景或模型、包围尺寸、价格和库存关联。核心回归见 `tests/life/test_item_system.gd`、`tests/life/test_furniture_catalog.gd`、`tests/life/test_room_wall_sconce.gd`。
