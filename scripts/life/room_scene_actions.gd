@@ -41,6 +41,7 @@ var group_copy_cancel: Button
 var category_buttons: Dictionary = {}
 var action_buttons: Dictionary = {}
 var color_buttons: Array[Button] = []
+var custom_color_picker: ColorPickerButton
 var _current_selection := ""
 var _current_group_size := 0
 
@@ -314,7 +315,11 @@ func _build_object_actions(canvas: Control) -> void:
 	grid.columns = 5
 	grid.add_theme_constant_override("h_separation",6)
 	grid.add_theme_constant_override("v_separation",6)
-	swatches.add_child(grid)
+	var palette_content := VBoxContainer.new()
+	palette_content.name = "PaletteContent"
+	palette_content.add_theme_constant_override("separation", 7)
+	swatches.add_child(palette_content)
+	palette_content.add_child(grid)
 	for i in range(Finishes.LABELS.size()):
 		var color_index := i
 		var button := Button.new()
@@ -333,6 +338,15 @@ func _build_object_actions(canvas: Control) -> void:
 		grid.add_child(button)
 		color_buttons.append(button)
 		button.pressed.connect(func() -> void: apply_color(color_index))
+	custom_color_picker = ColorPickerButton.new()
+	custom_color_picker.name = "CustomRGBPicker"
+	custom_color_picker.text = "自定义 RGB / HEX"
+	custom_color_picker.color = Color("9fbed3")
+	custom_color_picker.edit_alpha = false
+	custom_color_picker.custom_minimum_size = Vector2(180, 34)
+	custom_color_picker.tooltip_text = "选择自定义颜色，关闭选择器时提交一次，可撤销"
+	palette_content.add_child(custom_color_picker)
+	custom_color_picker.popup_closed.connect(func() -> void: apply_custom_color(custom_color_picker.color))
 	_build_arrangement(canvas)
 	_build_group_members(canvas)
 
@@ -740,6 +754,17 @@ func apply_color(index: int) -> void:
 	hide_colors()
 	room_ui.sync()
 
+func apply_custom_color(color: Color) -> void:
+	var layout = host.world.layout
+	var finish: int = Finishes.from_color(color)
+	if layout.group_selection.size() > 1:
+		if layout.set_group_furniture_color(finish):
+			room_ui.show_keyboard_feedback("已为 %d 件家具应用自定义 RGB · Ctrl+Z 撤销" % layout.group_selection.size())
+	else:
+		layout.set_furniture_color(finish)
+	hide_colors()
+	room_ui.sync()
+
 func hide_colors() -> void:
 	if is_instance_valid(swatches): swatches.hide()
 
@@ -848,6 +873,8 @@ func sync(active: bool) -> void:
 		for i in range(color_buttons.size()):
 			var style := color_buttons[i].get_theme_stylebox("normal") as StyleBoxFlat
 			var selected_color: int = layout.group_color_index() if multi else layout.color_for(role)
+			if Finishes.is_custom(selected_color):
+				custom_color_picker.color = Finishes.color_for(selected_color)
 			style.border_color = Color("317a56") if selected_color == i else Color("b9c9b9")
 			style.set_border_width_all(3 if selected_color == i else 2)
 
