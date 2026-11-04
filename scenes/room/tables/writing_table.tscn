@@ -12,6 +12,8 @@ script = ExtResource("1")
 role = "writing_table"
 bounds = Vector3(1.5, 0.82, 0.78)
 blocking = true
+use_custom_support_surfaces = true
+custom_support_surfaces = [{"id": "top", "center": Vector3(0, 0.82, 0), "size": Vector2(1.34, 0.62)}]
 
 [node name="Model" parent="." instance=ExtResource("2")]
 
