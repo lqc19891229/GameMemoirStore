@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="MemoirItemCatalog" load_steps=83 format=3]
+[gd_resource type="Resource" script_class="MemoirItemCatalog" load_steps=87 format=3]
 
 [ext_resource type="Script" path="res://scripts/items/item_catalog.gd" id="1"]
 [ext_resource type="Script" path="res://scripts/items/item_definition.gd" id="2"]
@@ -35,6 +35,8 @@
 [ext_resource type="PackedScene" path="res://scenes/room/poster_floor_frame.tscn" id="exp_poster_floor_frame"]
 [ext_resource type="PackedScene" path="res://scenes/room/game_display_shelf.tscn" id="exp_game_display_shelf"]
 [ext_resource type="PackedScene" path="res://scenes/room/lounge_cushion_pair.tscn" id="exp_lounge_cushion_pair"]
+[ext_resource type="PackedScene" path="res://scenes/room/desk_memento.tscn" id="exp_desk_memento"]
+[ext_resource type="PackedScene" path="res://scenes/room/mini_book_stack.tscn" id="exp_mini_book_stack"]
 [ext_resource type="PackedScene" path="res://scenes/room/retro_speaker_tower.tscn" id="exp_retro_speaker_tower"]
 
 [sub_resource type="Resource" id="item_0"]
@@ -888,6 +890,44 @@ capacity = 0
 retired = false
 furniture_scene = ExtResource("exp_retro_speaker_tower")
 
+[sub_resource type="Resource" id="item_47"]
+script = ExtResource("2")
+item_id = "room_desk_memento"
+catalog_group = "decor"
+catalog_type = "ornament"
+name = "游戏纪念陶瓷杯"
+category = "furniture"
+subcategory = "desk_memento"
+slot = ""
+price = 18
+description = "小尺寸纪念杯，可陈列于书桌、茶几和书架。先摆放，再选中点击陈列。"
+placement_surface = "floor"
+visual_id = ""
+speed = 1
+income = 0
+capacity = 0
+retired = false
+furniture_scene = ExtResource("exp_desk_memento")
+
+[sub_resource type="Resource" id="item_48"]
+script = ExtResource("2")
+item_id = "room_mini_book_stack"
+catalog_group = "decor"
+catalog_type = "ornament"
+name = "迷你游戏设定集"
+category = "furniture"
+subcategory = "mini_book_stack"
+slot = ""
+price = 24
+description = "三本游戏艺术集，可摆在书架、边桌或茶几上。"
+placement_surface = "floor"
+visual_id = ""
+speed = 1
+income = 0
+capacity = 0
+retired = false
+furniture_scene = ExtResource("exp_mini_book_stack")
+
 [resource]
 script = ExtResource("1")
-items = Array[ExtResource("2")]([SubResource("item_0"), SubResource("item_1"), SubResource("item_2"), SubResource("item_3"), SubResource("item_4"), SubResource("item_5"), SubResource("item_6"), SubResource("item_7"), SubResource("item_8"), SubResource("item_9"), SubResource("item_10"), SubResource("item_11"), SubResource("item_12"), SubResource("item_13"), SubResource("item_14"), SubResource("item_15"), SubResource("item_16"), SubResource("item_17"), SubResource("item_18"), SubResource("item_19"), SubResource("item_20"), SubResource("item_21"), SubResource("item_22"), SubResource("item_23"), SubResource("item_24"), SubResource("item_25"), SubResource("item_26"), SubResource("item_27"), SubResource("item_28"), SubResource("item_29"), SubResource("item_30"), SubResource("item_31"), SubResource("item_32"), SubResource("item_33"), SubResource("item_34"), SubResource("item_35"), SubResource("item_36"), SubResource("item_37"), SubResource("item_38"), SubResource("item_39"), SubResource("item_40"), SubResource("item_41"), SubResource("item_42"), SubResource("item_43"), SubResource("item_44"), SubResource("item_45"), SubResource("item_46")])
+items = Array[ExtResource("2")]([SubResource("item_0"), SubResource("item_1"), SubResource("item_2"), SubResource("item_3"), SubResource("item_4"), SubResource("item_5"), SubResource("item_6"), SubResource("item_7"), SubResource("item_8"), SubResource("item_9"), SubResource("item_10"), SubResource("item_11"), SubResource("item_12"), SubResource("item_13"), SubResource("item_14"), SubResource("item_15"), SubResource("item_16"), SubResource("item_17"), SubResource("item_18"), SubResource("item_19"), SubResource("item_20"), SubResource("item_21"), SubResource("item_22"), SubResource("item_23"), SubResource("item_24"), SubResource("item_25"), SubResource("item_26"), SubResource("item_27"), SubResource("item_28"), SubResource("item_29"), SubResource("item_30"), SubResource("item_31"), SubResource("item_32"), SubResource("item_33"), SubResource("item_34"), SubResource("item_35"), SubResource("item_36"), SubResource("item_37"), SubResource("item_38"), SubResource("item_39"), SubResource("item_40"), SubResource("item_41"), SubResource("item_42"), SubResource("item_43"), SubResource("item_44"), SubResource("item_45"), SubResource("item_46"), SubResource("item_47"), SubResource("item_48")])

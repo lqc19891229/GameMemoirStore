@@ -16,6 +16,12 @@ on:
       - "scripts/room/furniture_support_surfaces.gd"
       - "scripts/items/furniture_finishes.gd"
       - "tests/life/test_room_support_surfaces.gd"
+      - "tests/life/test_room_surface_mounts.gd"
+      - "scripts/room/furniture_mount_data.gd"
+      - "scenes/room/desk_memento.tscn"
+      - "scenes/room/mini_book_stack.tscn"
+      - "data/items/_catalog.tres"
+      - "scripts/life/life_data.gd"
       - "scripts/room/modern_room_shell.gd"
       - "scenes/computer/workstation_3d.tscn"
       - "tests/life/test_room_cinematic.gd"
@@ -52,6 +58,7 @@ jobs:
           set -euo pipefail
           for test in \
             tests/life/test_room_support_surfaces.gd \
+            tests/life/test_room_surface_mounts.gd \
             tests/life/test_room_minimal_ui.gd \
             tests/life/test_room_cinematic.gd \
             tests/life/test_room_art_direction.gd \

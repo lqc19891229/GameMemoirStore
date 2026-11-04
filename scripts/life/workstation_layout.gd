@@ -5,6 +5,8 @@ const InventoryData = preload("res://scripts/items/inventory_data.gd")
 const ItemCatalog: MemoirItemCatalog = preload("res://data/items/_catalog.tres")
 const BlueprintData = preload("res://scripts/room/room_blueprint_data.gd")
 const Finishes = preload("res://scripts/items/furniture_finishes.gd")
+const MountData = preload("res://scripts/room/furniture_mount_data.gd")
+const SupportSurfaces = preload("res://scripts/room/furniture_support_surfaces.gd")
 const FURNITURE_COLOR_LABELS = Finishes.LABELS
 const FURNITURE_COLOR_HEX = Finishes.HEX
 const NAMES := {"desk":"桌子（整套）", "monitor":"显示器", "computer":"机箱", "keyboard":"键盘", "mouse":"鼠标", "chair":"椅子", "bookcase":"书架", "lamp":"落地灯", "rug":"地毯", "plant":"盆栽", "sofa":"双人沙发", "stool":"软垫矮凳"}
@@ -71,6 +73,8 @@ var placed_instances: Dictionary = {}
 var committed_placements: Dictionary = {}
 var furniture_colors: Dictionary = {}
 var committed_colors: Dictionary = {}
+var surface_mounts: Dictionary = {}
+var committed_mounts: Dictionary = {}
 var placing_role := ""
 var placing_before: Dictionary = {}
 # P39 preview is transient visual state: never enters nodes, inventory or undo.
@@ -129,6 +133,8 @@ func name_for(role: String) -> String:
 func load_placements(raw: Dictionary, inventory: Array) -> void:
 	if active: return
 	available_inventory = inventory.duplicate(true)
+	surface_mounts.clear()
+	committed_mounts.clear()
 	placed_instances = raw.duplicate()
 	committed_placements = placed_instances.duplicate()
 	_apply_furniture_appearance()
@@ -139,17 +145,124 @@ func load_colors(raw: Dictionary) -> void:
 	for entry: Dictionary in available_inventory:
 		var uid := str(entry.uid)
 		var value: Variant = raw.get(uid, 0)
-		if value is int and int(value) > 0 and int(value) < FURNITURE_COLOR_LABELS.size():
+		if value is int and int(value) > 0 and Finishes.is_saved_finish(int(value)):
 			furniture_colors[uid] = int(value)
 	committed_colors = furniture_colors.duplicate()
 	_apply_furniture_appearance()
+
+func load_mounts(raw: Variant) -> void:
+	if active: return
+	surface_mounts = MountData.clean(raw,placed_instances)
+	# Validate scene-authored anchors as well as the saved role/UID references.
+	for role: String in surface_mounts.keys():
+		if not _mount_valid(role,surface_mounts[role]):
+			surface_mounts.erase(role)
+	committed_mounts = surface_mounts.duplicate(true)
+	_sync_mount_poses()
+	committed = snapshot()
+
+func export_mounts() -> Dictionary:
+	return committed_mounts.duplicate(true)
+
+func _mount_valid(role: String, mount: Dictionary) -> bool:
+	if not nodes.has(role) or not placed_instances.has(role): return false
+	var support: String = str(mount.get("support",""))
+	if not nodes.has(support) or not placed_instances.has(support) or support == role: return false
+	var point := Vector3(float(mount.get("x",0.0)),0.0,float(mount.get("z",0.0)))
+	var size: Vector3 = bounds_for(role)
+	for anchor: Dictionary in SupportSurfaces.anchors_for(nodes[support]):
+		if anchor.id != str(mount.get("anchor","")): continue
+		var origin: Vector3 = anchor.center
+		point.y = origin.y
+		return SupportSurfaces.fits(anchor,point,Vector2(size.x,size.z),collision_margin)
+	return false
+
+func _sync_mount_poses() -> void:
+	for role: String in surface_mounts:
+		if not _mount_valid(role,surface_mounts[role]): continue
+		var mount: Dictionary = surface_mounts[role]
+		var support: Node3D = nodes[mount.support]
+		var anchor: Dictionary = {}
+		for candidate: Dictionary in SupportSurfaces.anchors_for(support):
+			if candidate.id == mount.anchor:
+				anchor = candidate
+				break
+		if anchor.is_empty(): continue
+		var node: Node3D = nodes[role]
+		node.global_position = support.to_global(anchor.center + Vector3(float(mount.x),0,float(mount.z)))
+		node.global_rotation.y = support.global_rotation.y + float(mount.yaw)
+
+func _mount_collision(role: String, mount: Dictionary) -> String:
+	if not _mount_valid(role,mount): return "家具超出陈列表面或支撑物已收纳"
+	var point := Vector2(float(mount.x),float(mount.z))
+	var bounds: Vector3 = bounds_for(role)
+	var polygon := Rect2(point-Vector2(bounds.x,bounds.z)*.5,Vector2(bounds.x,bounds.z))
+	for other: String in surface_mounts:
+		if other == role: continue
+		var entry: Dictionary = surface_mounts[other]
+		if entry.support != mount.support or entry.anchor != mount.anchor: continue
+		var other_bounds: Vector3 = bounds_for(other)
+		var other_point := Vector2(float(entry.x),float(entry.z))
+		var occupied := Rect2(other_point-Vector2(other_bounds.x,other_bounds.z)*.5,Vector2(other_bounds.x,other_bounds.z))
+		if polygon.grow(collision_margin).intersects(occupied.grow(collision_margin)):
+			return "陈列物品与" + name_for(other) + "重叠"
+	return ""
+
+func mount_selected_on_nearest_surface() -> bool:
+	if not active or not placing_role.is_empty() or not gesture.is_empty() or group_selection.size() > 1: return false
+	if not placed_instances.has(selected) or surface_mounts.has(selected): return false
+	var role := selected
+	var original: Transform3D = nodes[role].transform
+	var original_pose := {"x":original.origin.x,"z":original.origin.z,"yaw":original.basis.get_euler().y}
+	var best := {}
+	var nearest := INF
+	for support: String in placed_instances:
+		if support == role or surface_mounts.has(support) or not nodes.has(support): continue
+		for anchor: Dictionary in SupportSurfaces.anchors_for(nodes[support]):
+			var location: Vector3 = nodes[support].to_global(anchor.center)
+			var distance := location.distance_to(nodes[role].global_position)
+			# Begin with a reliable centre placement; smaller offset adjustments can follow.
+			var entry := {"support":support,"anchor":anchor.id,"x":0.0,"z":0.0,"yaw":0.0,"floor_pose":original_pose}
+			if distance >= nearest or not _mount_valid(role,entry): continue
+			if not _mount_collision(role,entry).is_empty(): continue
+			best = entry
+			nearest = distance
+	if best.is_empty():
+		message = "找不到可容纳此家具的空闲桌面或搁板"
+		changed.emit()
+		return false
+	var before := _draft()
+	surface_mounts[role] = best
+	_sync_mount_poses()
+	_remember(before)
+	update()
+	return true
+
+func unmount_selected() -> bool:
+	if not active or not surface_mounts.has(selected) or not gesture.is_empty(): return false
+	var role: String = selected
+	var entry: Dictionary = surface_mounts[role]
+	var before := _draft()
+	surface_mounts.erase(role)
+	var floor_pose: Dictionary = entry.floor_pose
+	nodes[role].position = Vector3(float(floor_pose.x),0.0,float(floor_pose.z))
+	nodes[role].rotation.y = float(floor_pose.yaw)
+	clamp_pose(role)
+	if not _layout_blocker().is_empty():
+		_restore_draft(before)
+		message = "原来的地面位置已被占用，无法取下"
+		changed.emit()
+		return false
+	_remember(before)
+	update()
+	return true
 
 func color_for(role: String) -> int:
 	return int(furniture_colors.get(str(placed_instances.get(role, "")), 0))
 
 func set_furniture_color(index: int) -> void:
 	if not active or not InventoryData.is_room_furniture_role(Data.base_role(selected)): return
-	if not placed_instances.has(selected) or index < 0 or index >= FURNITURE_COLOR_LABELS.size(): return
+	if not placed_instances.has(selected) or not Finishes.is_saved_finish(index): return
 	var before := _draft()
 	var uid := str(placed_instances[selected])
 	if index == 0: furniture_colors.erase(uid)
@@ -171,7 +284,7 @@ func group_color_index() -> int:
 
 func set_group_furniture_color(index: int) -> bool:
 	if not active or not gesture.is_empty() or not placing_role.is_empty() or group_selection.size() < 2: return false
-	if index < 0 or index >= FURNITURE_COLOR_LABELS.size(): return false
+	if not Finishes.is_saved_finish(index): return false
 	for role: String in group_selection:
 		if not _group_eligible(role): return false
 	var before := _draft()
@@ -666,6 +779,11 @@ func cancel_group_copy_preview() -> void:
 	changed.emit()
 
 func store_group() -> bool:
+	for role: String in group_selection:
+		if _has_mounted_children(role): 
+			message = "请先取下陈列物品，再收纳支撑家具"
+			changed.emit()
+			return false
 	if not active or group_selection.size() < 2 or not gesture.is_empty() or not placing_role.is_empty(): return false
 	for role: String in group_selection:
 		if not _group_eligible(role): return false
@@ -689,11 +807,21 @@ func store_group() -> bool:
 func delete_selected() -> void:
 	store_selected()
 
+func _has_mounted_children(support: String) -> bool:
+	for mount: Dictionary in surface_mounts.values():
+		if str(mount.get("support","")) == support: return true
+	return false
+
 func store_selected() -> void:
+	if _has_mounted_children(selected):
+		message = "请先取下陈列物品，再收纳支撑家具"
+		changed.emit()
+		return
 	if not active or group_selection.size() > 1 or not InventoryData.is_room_furniture_role(Data.base_role(selected)): return
 	if not placing_role.is_empty() or not placed_instances.has(selected): return
 	end_drag()
 	var before := _draft()
+	surface_mounts.erase(selected)
 	placed_instances.erase(selected)
 	if Data.is_copy(selected):
 		nodes[selected].free()
@@ -706,10 +834,11 @@ func store_selected() -> void:
 	_remember(before)
 	update()
 
-func load_saved(raw: Variant) -> void:
+func load_saved(raw: Variant, raw_mounts: Variant = {}) -> void:
 	if active: return
 	var cleaned := Data.clean(raw)
-	if cleaned == saved and _layout_blocker().is_empty(): return
+	var sanitized_mounts: Dictionary = MountData.clean(raw_mounts,placed_instances)
+	if cleaned == saved and sanitized_mounts == surface_mounts and _layout_blocker().is_empty(): return
 	restore(authored)
 	for role: String in cleaned:
 		_create_copy(role)
@@ -717,14 +846,21 @@ func load_saved(raw: Variant) -> void:
 		nodes[role].position.z = cleaned[role].z
 		nodes[role].rotation.y = cleaned[role].yaw
 		clamp_pose(role)
+	surface_mounts = sanitized_mounts
+	for role: String in surface_mounts.keys():
+		if not _mount_valid(role,surface_mounts[role]): surface_mounts.erase(role)
+	_sync_mount_poses()
 	# Older layouts may touch or overlap after a model/bounds change. Keep the
 	# table pose, but recover a usable equipment arrangement rather than loading penetration.
 	if not _layout_blocker().is_empty():
 		for role: String in world.devices: nodes[role].transform = authored[role]
 	# Imported legacy table poses may intersect new room furniture or walls.
 	# Recover the complete authored room rather than keeping a partially invalid save.
-	if not _layout_blocker().is_empty(): restore(authored)
+	if not _layout_blocker().is_empty():
+		restore(authored)
+		surface_mounts.clear()
 	saved = cleaned
+	committed_mounts = surface_mounts.duplicate(true)
 	committed = snapshot()
 
 func export_layout() -> Dictionary:
@@ -1531,7 +1667,7 @@ func load_style(raw: Variant) -> void:
 	committed_style = world.get_node("Room").style.duplicate()
 
 func _draft() -> Dictionary:
-	return {"poses":snapshot(), "style":world.get_node("Room").style.duplicate(), "placements":placed_instances.duplicate(), "colors":furniture_colors.duplicate(), "blueprint":blueprint.duplicate(true)}
+	return {"poses":snapshot(), "style":world.get_node("Room").style.duplicate(), "placements":placed_instances.duplicate(), "colors":furniture_colors.duplicate(), "mounts":surface_mounts.duplicate(true), "blueprint":blueprint.duplicate(true)}
 
 func _restore_draft(draft: Dictionary) -> void:
 	blueprint = draft.blueprint.duplicate(true)
@@ -1539,6 +1675,8 @@ func _restore_draft(draft: Dictionary) -> void:
 	world.get_node("Room").apply_blueprint(blueprint)
 	restore(draft.poses)
 	placed_instances = draft.placements.duplicate()
+	surface_mounts = draft.get("mounts",{}).duplicate(true)
+	_sync_mount_poses()
 	furniture_colors = draft.colors.duplicate()
 	_apply_furniture_appearance()
 	world.get_node("Room").apply_style(draft.style)
@@ -1608,6 +1746,8 @@ func begin() -> void:
 	restore(committed)
 	placed_instances = committed_placements.duplicate()
 	furniture_colors = committed_colors.duplicate()
+	surface_mounts = committed_mounts.duplicate(true)
+	_sync_mount_poses()
 	_apply_furniture_appearance()
 	update()
 
@@ -1626,6 +1766,7 @@ func finish(apply: bool) -> bool:
 		committed = snapshot()
 		committed_placements = placed_instances.duplicate()
 		committed_colors = furniture_colors.duplicate()
+		committed_mounts = surface_mounts.duplicate(true)
 		committed_style = world.get_node("Room").style.duplicate()
 		committed_blueprint = blueprint.duplicate(true)
 		saved = export_layout()
@@ -1633,6 +1774,8 @@ func finish(apply: bool) -> bool:
 		restore(committed)
 		placed_instances = committed_placements.duplicate()
 		furniture_colors = committed_colors.duplicate()
+		surface_mounts = committed_mounts.duplicate(true)
+		_sync_mount_poses()
 		_apply_furniture_appearance()
 		world.get_node("Room").apply_style(committed_style)
 		blueprint = committed_blueprint.duplicate(true)
@@ -1913,6 +2056,7 @@ func reset_layout() -> void:
 	room_half_size = BlueprintData.half_size(blueprint)
 	world.get_node("Room").apply_blueprint(blueprint)
 	placed_instances = InventoryData.initial_placements()
+	surface_mounts.clear()
 	furniture_colors.clear()
 	_apply_furniture_appearance()
 	world.get_node("Room").apply_style({})
@@ -1931,6 +2075,7 @@ func _footprint_at(role: String, pose: Transform3D, padding: float) -> PackedVec
 	return result
 
 func surface_for(role: String) -> String:
+	if surface_mounts.has(role): return "mount"
 	return "desk" if world.devices.has(role) else "floor"
 
 func is_floor(role: String) -> bool:
@@ -1956,7 +2101,7 @@ func clamp_pose(role: String) -> void:
 	node.position.z = clampf(node.position.z, -allowance.y, allowance.y)
 
 func move_to(position_xz: Vector2) -> void:
-	if not active: return
+	if not active or surface_mounts.has(selected): return
 	if not placing_role.is_empty():
 		preview_placement(position_xz)
 		return
@@ -1982,7 +2127,7 @@ func move_to(position_xz: Vector2) -> void:
 	if gesture.is_empty(): _remember(undo_before)
 
 func rotate_to(yaw: float) -> void:
-	if not active: return
+	if not active or surface_mounts.has(selected): return
 	if not placing_role.is_empty():
 		nodes[placing_role].rotation.y = wrapf(snappedf(yaw, deg_to_rad(angle_step)) if snapping else yaw, -PI, PI)
 		update()
@@ -2002,6 +2147,7 @@ func rotate_to(yaw: float) -> void:
 	if gesture.is_empty(): _remember(undo_before)
 
 func _blocker(role: String, polygon: PackedVector2Array, ignored: Array[String] = []) -> String:
+	if surface_mounts.has(role): return _mount_collision(role,surface_mounts[role])
 	var floor_item := is_floor(role)
 	if floor_item:
 		if not BlueprintData.footprint_inside(blueprint, polygon, edge_margin):
@@ -2023,6 +2169,7 @@ func _blocker(role: String, polygon: PackedVector2Array, ignored: Array[String] 
 	return ""
 
 func _layout_blocker() -> String:
+	_sync_mount_poses()
 	# Desktop hardware must stay under the table's Equipment node. It is
 	# never a free floor item, even when a save or caller bypasses the UI.
 	for role: String in world.devices:
@@ -2211,7 +2358,7 @@ func _plane_point(pixel: Vector2) -> Variant:
 	return frame.to_local(hit) if hit != null else null
 
 func begin_drag(pixel: Vector2, operation: String = "move", direction: String = "plane", from_handle: bool = false) -> void:
-	if not active: return
+	if not active or surface_mounts.has(selected): return
 	var node: Node3D = nodes[selected]
 	drag_height = node.position.y + bounds_for(selected).y * .5
 	if from_handle:

@@ -33,7 +33,7 @@ static func defaults() -> Dictionary:
 		"equipped": {"computer": "starter_pc", "monitor": "starter_monitor", "peripheral": "starter_mouse", "keyboard": "starter_mouse", "mouse": "starter_mouse", "desk": "starter_desk", "cabinet": "starter_cabinet", "audio": "", "decor": ""},
 		"attributes": {"反应": 10.0, "操作": 10.0, "思考": 10.0, "探索": 10.0, "规划": 10.0, "协作": 10.0},
 		"progress": {}, "achievements": {}, "displayed": [], "guides": {}, "active": {},
-		"elapsed": 0, "stream_income": 0, "guide_income": 0, "followers": 0, "room_layout": 0, "workstation_layout": {}, "inventory": InventoryData.initial(), "placements": InventoryData.initial_placements(), "furniture_colors": {}, "room_blueprint": BlueprintData.DEFAULT.duplicate(), "room_style": {"wall":0,"floor":0,"light":0,"rgb":0,"brightness":70,"effect":0,"wall_pattern":0,"floor_pattern":0,"atmosphere":0,"ambience_volume":70}}
+		"elapsed": 0, "stream_income": 0, "guide_income": 0, "followers": 0, "room_layout": 0, "workstation_layout": {}, "inventory": InventoryData.initial(), "placements": InventoryData.initial_placements(), "furniture_colors": {}, "furniture_mounts": {}, "room_blueprint": BlueprintData.DEFAULT.duplicate(), "room_style": {"wall":0,"floor":0,"light":0,"rgb":0,"brightness":70,"effect":0,"wall_pattern":0,"floor_pattern":0,"atmosphere":0,"ambience_volume":70}}
 
 static func number(value: Variant, maximum: float = 9999999.0) -> float:
 	if not (value is float or value is int) or not is_finite(float(value)):
@@ -62,13 +62,14 @@ static func clean(raw: Variant, owned: Array[String], installed: Array[String]) 
 	result["room_style"] = preload("res://scripts/room/room_view.gd").clean_style(raw.get("room_style", {}))
 	result["inventory"] = InventoryData.clean(raw.get("inventory", null), result["items"], result["workstation_layout"], raw.get("placements", {}))
 	result["placements"] = InventoryData.clean_placements(raw.get("placements", null), result["inventory"], result["workstation_layout"])
+	result["furniture_mounts"] = preload("res://scripts/room/furniture_mount_data.gd").clean(raw.get("furniture_mounts", {}), result["placements"])
 	var known_uids: Dictionary = {}
 	for entry: Dictionary in result["inventory"]: known_uids[str(entry.uid)] = true
 	if raw.get("furniture_colors") is Dictionary:
 		for raw_uid: Variant in raw["furniture_colors"]:
 			var uid := str(raw_uid)
 			var value: Variant = raw["furniture_colors"][raw_uid]
-			if known_uids.has(uid) and (value is int or value is float) and is_finite(float(value)) and int(value) > 0 and int(value) < Finishes.LABELS.size():
+			if known_uids.has(uid) and (value is int or value is float) and is_finite(float(value)) and int(value) > 0 and Finishes.is_saved_finish(int(value)):
 				result["furniture_colors"][uid] = int(value)
 	# Older saves have a single bundled keyboard/mouse slot.
 	if raw.get("equipped") is Dictionary:

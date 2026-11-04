@@ -225,7 +225,10 @@ func animate_atmosphere_from(previous: Array) -> void:
 		var property_name: String = str(entry.get("property", ""))
 		var target: Variant = obj.get(property_name)
 		if target != entry["value"]:
-			fade.tween_property(obj, property_name, target, .55).from(entry["value"])
+			# Apply the old visual value immediately. Tween.from() alone is
+			# deferred until the next animation frame and flashes the new weather.
+			obj.set(property_name, entry["value"])
+			fade.tween_property(obj, property_name, target, .55)
 	_atmosphere_tween = fade
 
 func _apply_atmosphere() -> void:

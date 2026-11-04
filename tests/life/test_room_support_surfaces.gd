@@ -28,6 +28,17 @@ func _run() -> void:
 	for i in range(Finishes.LABELS.size()):
 		assert(Finishes.valid(i))
 		if i > 0: assert(Finishes.overlay(i) != null)
+	# Old indices must remain untouched; custom RGB encodes losslessly.
+	assert(Finishes.LABELS[8] == "陶土橙")
+	var rgb := Color8(18, 121, 224)
+	var packed: int = Finishes.from_color(rgb)
+	assert(Finishes.is_custom(packed))
+	assert(Finishes.is_saved_finish(packed))
+	assert(not Finishes.is_saved_finish(-1))
+	assert(not Finishes.is_saved_finish(0x2000000))
+	var unpacked: Color = Finishes.color_for(packed)
+	assert(unpacked.to_html(false) == "1279e0")
+	assert(is_equal_approx(Finishes.overlay(packed).albedo_color.a, 0.52))
 	assert(not Finishes.valid(16))
 	support.free()
 	print("PASS room support surfaces and expanded palette")

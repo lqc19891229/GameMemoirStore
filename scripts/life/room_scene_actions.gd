@@ -41,6 +41,8 @@ var group_copy_cancel: Button
 var category_buttons: Dictionary = {}
 var action_buttons: Dictionary = {}
 var color_buttons: Array[Button] = []
+var custom_color_picker: ColorPickerButton
+var _picker_opening_color := Color.WHITE
 var _current_selection := ""
 var _current_group_size := 0
 
@@ -52,6 +54,7 @@ const ACTIONS := [
 	{"id":"paint", "hint":"选择单件家具颜色"},
 	{"id":"arrange", "hint":"附近家具对齐 · 同类家具等距排列"},
 	{"id":"duplicate", "hint":"复制一件库存中的同款家具 · Ctrl+D"},
+	{"id":"mount", "hint":"把选中家具陈列到最近的空闲桌面或书架；再次点击取下"},
 	{"id":"store", "hint":"收纳这件家具 · Delete"}
 ]
 
@@ -314,7 +317,11 @@ func _build_object_actions(canvas: Control) -> void:
 	grid.columns = 5
 	grid.add_theme_constant_override("h_separation",6)
 	grid.add_theme_constant_override("v_separation",6)
-	swatches.add_child(grid)
+	var palette_content := VBoxContainer.new()
+	palette_content.name = "PaletteContent"
+	palette_content.add_theme_constant_override("separation", 7)
+	swatches.add_child(palette_content)
+	palette_content.add_child(grid)
 	for i in range(Finishes.LABELS.size()):
 		var color_index := i
 		var button := Button.new()
@@ -333,6 +340,18 @@ func _build_object_actions(canvas: Control) -> void:
 		grid.add_child(button)
 		color_buttons.append(button)
 		button.pressed.connect(func() -> void: apply_color(color_index))
+	custom_color_picker = ColorPickerButton.new()
+	custom_color_picker.name = "CustomRGBPicker"
+	custom_color_picker.text = "自定义 RGB / HEX"
+	custom_color_picker.color = Color("9fbed3")
+	custom_color_picker.edit_alpha = false
+	custom_color_picker.custom_minimum_size = Vector2(180, 34)
+	custom_color_picker.tooltip_text = "选择自定义颜色，关闭选择器时提交一次，可撤销"
+	palette_content.add_child(custom_color_picker)
+	custom_color_picker.popup_closed.connect(func() -> void:
+		if custom_color_picker.color.to_html(false) != _picker_opening_color.to_html(false):
+			apply_custom_color(custom_color_picker.color)
+	)
 	_build_arrangement(canvas)
 	_build_group_members(canvas)
 
@@ -686,6 +705,11 @@ func perform_action(id: String) -> void:
 			layout.set_tool("rotate")
 		"paint":
 			swatches.visible = not swatches.visible
+			if swatches.visible:
+				var current_finish: int = layout.group_color_index() if layout.group_selection.size() > 1 else layout.color_for(layout.selected)
+				if current_finish >= 0:
+					custom_color_picker.color = Finishes.color_for(current_finish)
+				_picker_opening_color = custom_color_picker.color
 		"arrange":
 			hide_colors()
 			arrange_panel.visible = not arrange_panel.visible
@@ -695,6 +719,10 @@ func perform_action(id: String) -> void:
 				if not started: room_ui.show_keyboard_feedback("无法预览 · " + str(layout.message))
 			else:
 				layout.duplicate_selected()
+		"mount":
+			var mounted: bool = layout.surface_mounts.has(layout.selected)
+			var succeeded: bool = layout.unmount_selected() if mounted else layout.mount_selected_on_nearest_surface()
+			room_ui.show_keyboard_feedback(("已取下陈列家具 · Ctrl+Z 撤销" if mounted else "已放上桌面/书架 · Ctrl+Z 撤销") if succeeded else str(layout.message))
 		"store":
 			if layout.group_selection.size() > 1:
 				var count: int = layout.group_selection.size()
@@ -737,6 +765,17 @@ func apply_color(index: int) -> void:
 		if changed: room_ui.show_keyboard_feedback("已统一改色 %d 件 · Ctrl+Z 撤销" % layout.group_selection.size())
 	else:
 		layout.set_furniture_color(index)
+	hide_colors()
+	room_ui.sync()
+
+func apply_custom_color(color: Color) -> void:
+	var layout = host.world.layout
+	var finish: int = Finishes.from_color(color)
+	if layout.group_selection.size() > 1:
+		if layout.set_group_furniture_color(finish):
+			room_ui.show_keyboard_feedback("已为 %d 件家具应用自定义 RGB · Ctrl+Z 撤销" % layout.group_selection.size())
+	else:
+		layout.set_furniture_color(finish)
 	hide_colors()
 	room_ui.sync()
 
@@ -831,6 +870,12 @@ func sync(active: bool) -> void:
 	action_buttons["paint"].disabled = false
 	action_buttons["arrange"].disabled = false
 	action_buttons["store"].disabled = false
+	action_buttons["mount"].visible = not multi
+	action_buttons["mount"].disabled = multi or layout._has_mounted_children(role)
+	action_buttons["mount"].tooltip_text = "取下并恢复上次地面位置" if layout.surface_mounts.has(role) else "陈列到附近的空闲桌面或书架（需要足够空间）"
+	action_buttons["move"].disabled = layout.surface_mounts.has(role)
+	action_buttons["rotate"].disabled = layout.surface_mounts.has(role)
+	action_buttons["arrange"].disabled = layout.surface_mounts.has(role)
 	action_buttons["paint"].tooltip_text = "统一修改 %d 件家具的颜色" % group_size if multi else "选择单件家具颜色"
 	action_buttons["arrange"].tooltip_text = "当前多选对齐与等距排列" if multi else "附近家具对齐 · 同类家具等距排列"
 	action_buttons["store"].tooltip_text = "收纳全部 %d 件家具 · Delete · 可撤销" % group_size if multi else "收纳这件家具 · Delete"
@@ -848,6 +893,8 @@ func sync(active: bool) -> void:
 		for i in range(color_buttons.size()):
 			var style := color_buttons[i].get_theme_stylebox("normal") as StyleBoxFlat
 			var selected_color: int = layout.group_color_index() if multi else layout.color_for(role)
+			if Finishes.is_custom(selected_color):
+				custom_color_picker.color = Finishes.color_for(selected_color)
 			style.border_color = Color("317a56") if selected_color == i else Color("b9c9b9")
 			style.set_border_width_all(3 if selected_color == i else 2)
 
