@@ -17,9 +17,9 @@ func _initialize() -> void:
 func run() -> void:
 	check(Finishes.LABELS.size() == 16 and Finishes.HEX.size() == 16, "sixteen shared finishes")
 	check(Finishes.LABELS[1] == "奶油白" and Finishes.LABELS[5] == "浅橡木", "old finish indices unchanged")
-	check(Finishes.LABELS[8] == "陶土橙" and not Finishes.valid(9), "new finish index validated")
+	check(Finishes.LABELS[8] == "陶土橙" and Finishes.valid(9) and not Finishes.valid(16), "new finish index validated")
 	var raw := LifeData.defaults()
-	raw["furniture_colors"] = {"starter_chair": 8, "starter_bookcase": 2, "starter_lamp": 9}
+	raw["furniture_colors"] = {"starter_chair": 8, "starter_bookcase": 2, "starter_lamp": 16}
 	var empty: Array[String] = []
 	var clean: Dictionary = LifeData.clean(raw, empty, empty)
 	check(clean.furniture_colors.get("starter_chair", 0) == 8, "new finish survives save sanitation")
