@@ -143,9 +143,9 @@ func validate_item(item: MemoirItemDefinition) -> PackedStringArray:
 		errors.append("分类无效")
 	if str(item.catalog_type) != "" and not Taxonomy.TYPES.has(item.catalog_type):
 		errors.append("二级分类无效")
-	if item.furniture_scene == null:
+	if item.furniture_scene == null and not item.retired:
 		errors.append("缺少家具场景")
-	elif str(item.furniture_scene.resource_path).is_empty():
+	elif item.furniture_scene != null and str(item.furniture_scene.resource_path).is_empty():
 		errors.append("家具场景缺少资源路径")
 	return errors
 
@@ -183,7 +183,7 @@ func _populate_list() -> void:
 		row.set_text(0, item.name)
 		row.set_text(1, Taxonomy.group_name(Taxonomy.group_for(item)))
 		row.set_text(2, item.item_id)
-		row.set_text(3, "正常" if issues.is_empty() else "问题 %d" % issues.size())
+		row.set_text(3, "问题 %d" % issues.size() if not issues.is_empty() else ("已停用" if item.retired else "正常"))
 		row.set_metadata(0, item)
 		row.set_tooltip_text(3, "\n".join(issues) if not issues.is_empty() else "资源检查通过")
 		if not issues.is_empty():
