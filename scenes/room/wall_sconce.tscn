@@ -32,7 +32,7 @@ roughness = 0.58
 [node name="wall_sconce" type="Node3D"]
 script = ExtResource("1")
 role = "wall_sconce"
-bounds = Vector3(0.40, 0.60, 0.30)
+bounds = Vector3(0.40, 0.60, 0.86)
 blocking = true
 
 [node name="Model" type="Node3D" parent="."]
@@ -46,6 +46,12 @@ material_override = SubResource("Brass")
 position = Vector3(0, 0.31, 0.055)
 rotation_degrees = Vector3(90, 0, 0)
 mesh = SubResource("Arm")
+material_override = SubResource("Brass")
+
+[node name="BrassShadeTrim" type="MeshInstance3D" parent="Model"]
+position = Vector3(0, 0.36, 0.20)
+scale = Vector3(0.98, 0.35, 0.98)
+mesh = SubResource("Shade")
 material_override = SubResource("Brass")
 
 [node name="Diffuser" type="MeshInstance3D" parent="Model"]
