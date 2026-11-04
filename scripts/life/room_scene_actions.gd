@@ -57,6 +57,7 @@ const ACTIONS := [
 	{"id":"mount", "hint":"把选中家具陈列到最近的空闲桌面或书架；再次点击取下"},
 	{"id":"light", "hint":"打开或关闭已悬挂壁灯的真实光源"},
 	{"id":"brightness", "hint":"壁灯亮度三级循环调节"},
+	{"id":"temperature", "hint":"壁灯色温：暖光、中性光、冷光"},
 	{"id":"store", "hint":"收纳这件家具 · Delete"}
 ]
 
@@ -732,6 +733,13 @@ func perform_action(id: String) -> void:
 				var next_level: int = level%3+1
 				if layout.set_wall_sconce_brightness(next_level):
 					room_ui.show_keyboard_feedback("壁灯亮度：%d / 3 · Ctrl+Z 撤销" % next_level)
+		"temperature":
+			if layout.wall_mounts.has(layout.selected):
+				var tone: int = int(layout.wall_mounts[layout.selected].get("tone",1))
+				var next_tone: int = tone%3+1
+				if layout.set_wall_sconce_temperature(next_tone):
+					var names := ["暖光 2700K","中性光 4000K","冷光 6500K"]
+					room_ui.show_keyboard_feedback("壁灯色温：" + names[next_tone-1] + " · Ctrl+Z 撤销")
 		"mount":
 			if layout.WallMountData.is_mountable(layout.Data.base_role(layout.selected)):
 				var wall_mounted: bool = layout.wall_mounts.has(layout.selected)
@@ -895,13 +903,17 @@ func sync(active: bool) -> void:
 	var mounted_wall: bool = layout.wall_mounts.has(role)
 	action_buttons["light"].visible = sconce and not multi
 	action_buttons["brightness"].visible = sconce and not multi
+	action_buttons["temperature"].visible = sconce and not multi
 	action_buttons["light"].disabled = not mounted_wall
 	action_buttons["brightness"].disabled = not mounted_wall
+	action_buttons["temperature"].disabled = not mounted_wall
 	if sconce and mounted_wall:
 		var light_on: bool = bool(layout.wall_mounts[role].get("on",true))
 		var level: int = int(layout.wall_mounts[role].get("level",2))
 		action_buttons["light"].tooltip_text = "关闭壁灯 · Ctrl+Z 撤销" if light_on else "打开壁灯 · Ctrl+Z 撤销"
 		action_buttons["brightness"].tooltip_text = "亮度 %d / 3 · 点击切换下一档" % level
+		var tone: int = clampi(int(layout.wall_mounts[role].get("tone",1)),1,3)
+		action_buttons["temperature"].tooltip_text = "色温 %s · 点击切换" % ["暖光 2700K","中性光 4000K","冷光 6500K"][tone-1]
 	if wall_role:
 		action_buttons["mount"].tooltip_text = "取下壁挂物并恢复原地面位置" if mounted_wall else "将壁灯或画框挂到最近的可用内外墙（避开门窗及已有装饰）"
 	else:
