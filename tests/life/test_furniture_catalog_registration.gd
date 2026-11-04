@@ -35,6 +35,14 @@ func _run() -> void:
 	_check(not Registrar.validate_registration("res://data/items/_catalog.tres", fields, empty_catalog).is_empty(), "reject catalog file as furniture scene")
 	_check(not Registrar.validate_registration("res://scenes/room/../room/side_table_oak.tscn", fields, empty_catalog).is_empty(), "reject path traversal")
 	_check(not Registrar.register(SCENE, fields, false).get("ok", false), "registration requires explicit confirmation")
+	var original_bytes := FileAccess.get_file_as_bytes(Registrar.CATALOG_PATH)
+	_check(not original_bytes.is_empty(), "existing authoritative catalog has bytes")
+	_check(Registrar.catalog_matches_snapshot(original_bytes), "current catalog matches captured snapshot")
+	var altered := original_bytes.duplicate()
+	if not altered.is_empty():
+		altered[0] = (int(altered[0]) + 1) % 256
+		_check(not Registrar.catalog_matches_snapshot(altered), "stale or corrupted snapshot is rejected")
+	_check(not Registrar.catalog_matches_snapshot(PackedByteArray()), "empty snapshot is rejected")
 	var listed := Registrar.list_unregistered_scenes()
 	_check(not listed.has(SCENE), "existing catalog scene never appears as unregistered")
 	var panel := RegistrationPanel.new()
