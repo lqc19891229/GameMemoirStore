@@ -12,6 +12,8 @@ var was_active := false
 var dock: PanelContainer
 var bar: HBoxContainer
 var catalog_toggle: Button
+var photo_button: Button
+var _capturing_photo := false
 var advanced_toggle: Button
 var mode_buttons: Dictionary = {}
 var inspector_content: VBoxContainer
@@ -127,6 +129,10 @@ func _build_bar(canvas: Control) -> void:
 		sync()
 	)
 	bar.add_child(advanced_toggle)
+	photo_button = _button("拍照", "隐藏装修界面并保存当前房间截图到用户数据目录")
+	photo_button.name = "RoomPhotoButton"
+	photo_button.pressed.connect(capture_room_photo)
+	bar.add_child(photo_button)
 	# The original undo/redo controls remain wired to the existing transaction
 	# stack; only their physical location changes to the top bar.
 	var history: HBoxContainer = inspector_content.get_node("History")
@@ -135,6 +141,31 @@ func _build_bar(canvas: Control) -> void:
 		child.custom_minimum_size.x = 44
 		if child is Button:
 			child.icon = Icons.texture("undo" if child.name == "UndoLayout" else "redo")
+
+func capture_room_photo() -> void:
+	if _capturing_photo or not host.world.layout.active:
+		return
+	_capturing_photo = true
+	var canvas: Control = host.get_node("HUD/Interface")
+	canvas.hide()
+	# Wait until the hidden controls are absent from the presented frame.
+	await RenderingServer.frame_post_draw
+	var shot: Image = host.get_viewport().get_texture().get_image()
+	canvas.show()
+	_capturing_photo = false
+	if shot == null or shot.is_empty():
+		show_keyboard_feedback("截图失败：未获取到房间画面")
+		return
+	var folder := "user://room_photos"
+	var directory_error := DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(folder))
+	if directory_error != OK:
+		show_keyboard_feedback("截图失败：无法创建图片目录")
+		return
+	var stamp := Time.get_datetime_string_from_system().replace(":", "-")
+	var filename := "%s/room_%s.png" % [folder, stamp]
+	var saved := shot.save_png(filename)
+	show_keyboard_feedback("截图已保存：" + ProjectSettings.globalize_path(filename) if saved == OK else "截图保存失败")
+
 
 func _build_dock(canvas: Control) -> void:
 	dock = PanelContainer.new()
