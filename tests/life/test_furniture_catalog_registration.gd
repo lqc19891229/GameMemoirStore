@@ -18,6 +18,11 @@ func _run() -> void:
 	}
 	var empty_catalog := MemoirItemCatalog.new()
 	_check(Registrar.validate_registration(SCENE, fields, empty_catalog).is_empty(), "complete reviewed furniture metadata passes")
+	var mountable := fields.duplicate()
+	mountable["allow_surface_mount"] = true
+	_check(Registrar.validate_registration(SCENE, mountable, empty_catalog).is_empty(), "explicit mountable SKU metadata is valid")
+	mountable["allow_surface_mount"] = "yes"
+	_check(not Registrar.validate_registration(SCENE, mountable, empty_catalog).is_empty(), "reject non-boolean mountable SKU metadata")
 	var missing_id := fields.duplicate()
 	missing_id.item_id = ""
 	_check(not Registrar.validate_registration(SCENE, missing_id, empty_catalog).is_empty(), "reject missing item ID")
@@ -50,6 +55,7 @@ func _run() -> void:
 	await process_frame
 	_check(panel.register_button.disabled, "registration UI defaults to disabled")
 	_check(not panel.confirmation.button_pressed, "confirmation defaults off")
+	_check(not panel.surface_mount_choice.button_pressed, "surface mounting defaults off for newly registered furniture")
 	panel.queue_free()
 	await process_frame
 	print("FURNITURE_CATALOG_REGISTRATION_CHECKS: %s" % ("PASS" if failures == 0 else "%d failed" % failures))
