@@ -81,8 +81,8 @@ func run() -> void:
 		"redo restores manual tile material")
 	check(layout.paint_floor_finish(center,0),
 		"player can clear individual flooring independently")
-	check(layout.floor_cell_blocker(cell,true).is_empty(),
-		"no deprecated zone membership prevents removing an otherwise empty floor tile")
+	check(not layout.floor_cell_blocker(cell,true).contains("功能分区"),
+		"floor carving never requires clearing a deprecated functional-area label")
 	desktop.finish_layout(false)
 	check(room.blueprint == Blueprint.DEFAULT,
 		"cancel restores original room without functional-area data")
