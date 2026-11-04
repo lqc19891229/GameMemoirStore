@@ -265,14 +265,39 @@ func hang_selected_on_wall() -> bool:
 		if str(candidate.wall) == "partition":
 			entry["part"] = candidate.part.duplicate(true)
 			entry["side"] = candidate.side
-		if not _wall_mount_blocker(role,entry).is_empty(): continue
-		var before := _draft()
-		wall_mounts[role] = entry
-		_sync_wall_mount_poses()
-		_remember(before)
-		update()
-		return true
-	message = "附近外墙没有足够的挂画空间"
+		if _attach_selected_wall_frame(entry): return true
+	message = "附近墙面没有足够的挂画空间"
+	changed.emit()
+	return false
+
+func _attach_selected_wall_frame(entry: Dictionary) -> bool:
+	if not active or not gesture.is_empty() or not placing_role.is_empty() or group_selection.size() > 1: return false
+	if Data.base_role(selected) != WallMountData.MOUNT_ROLE or not placed_instances.has(selected): return false
+	if wall_mounts.has(selected) or surface_mounts.has(selected): return false
+	if not _wall_mount_blocker(selected,entry).is_empty(): return false
+	var before := _draft()
+	wall_mounts[selected] = entry
+	_sync_wall_mount_poses()
+	_remember(before)
+	update()
+	return true
+
+func hang_selected_on_partition(at: Vector2, axis: String, side: int = 1) -> bool:
+	# An explicit geometry-based target is stable even when the partition list
+	# is edited or reordered. The existing quick mount action selects the nearest.
+	if not active or axis not in ["x","z"] or side not in [-1,1]: return false
+	for part: Dictionary in blueprint.partitions:
+		if str(part.kind) != "wall" or str(part.axis) != axis: continue
+		if not is_equal_approx(float(part.x),at.x) or not is_equal_approx(float(part.z),at.y): continue
+		if not nodes.has(selected): return false
+		var origin: Vector3 = nodes[selected].position
+		var along: float = origin.x-float(part.x) if axis == "x" else origin.z-float(part.z)
+		var pose := {"x":origin.x,"z":origin.z,"yaw":nodes[selected].rotation.y}
+		var mount := {"wall":"partition","part":{"x":float(part.x),"z":float(part.z),"axis":axis},
+			"side":side,"along":clampf(snappedf(along,grid_step),-.09,.09),
+			"height":1.20,"floor_pose":pose}
+		if _attach_selected_wall_frame(mount): return true
+	message = "内墙画框与墙端或已有装饰发生冲突"
 	changed.emit()
 	return false
 
