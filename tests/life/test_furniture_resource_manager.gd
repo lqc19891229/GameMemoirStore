@@ -47,6 +47,26 @@ func _run() -> void:
 		panel.preview.rotate_preview(30.0)
 		_check(panel.preview.orbit_degrees != angle, "preview camera rotates")
 		_check(panel.source_paths is PackedStringArray, "model paths inspected safely")
+		_check(panel.preview.authored_bounds.length() > 0.0, "read authored furniture bounds")
+		_check(panel.bounds_toggle.button_pressed and panel.surfaces_toggle.button_pressed, "guides start enabled")
+		_check(panel.preview.overlay != null, "bounds guide is visible")
+		panel.bounds_toggle.button_pressed = false
+		panel.surfaces_toggle.button_pressed = false
+		panel._on_overlay_toggled(false)
+		_check(panel.preview.overlay == null, "both overlays can be hidden")
+		panel.bounds_toggle.button_pressed = true
+		panel._on_overlay_toggled(false)
+		_check(panel.preview.overlay != null, "bounds overlay can be shown independently")
+		var shelf := panel.catalog.lookup("room_bookcase")
+		_check(shelf != null and shelf.furniture_scene != null, "bookcase preview resource exists")
+		if shelf != null and shelf.furniture_scene != null:
+			panel.preview.show_furniture(shelf.furniture_scene)
+			_check(panel.preview.support_anchors.size() >= 1, "support shelves are read from furniture metadata")
+			panel.bounds_toggle.button_pressed = false
+			panel.surfaces_toggle.button_pressed = true
+			panel._on_overlay_toggled(false)
+			_check(panel.preview.overlay != null, "support surfaces can be shown separately")
+
 	# Legacy retired items have no scene; selecting one should clear the viewport.
 	panel.preview.show_furniture(null)
 	_check(panel.preview.model == null, "clearing preview removes instantiated furniture")

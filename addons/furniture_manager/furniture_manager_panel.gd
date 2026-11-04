@@ -17,6 +17,8 @@ var inspector_button: Button
 var scene_button: Button
 var locate_button: Button
 var preview: SubViewportContainer
+var bounds_toggle: CheckBox
+var surfaces_toggle: CheckBox
 var source_paths: PackedStringArray = []
 var catalog: MemoirItemCatalog
 var selected_item: MemoirItemDefinition
@@ -110,6 +112,19 @@ func _build_ui() -> void:
 	orbit_right.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	orbit_right.pressed.connect(func() -> void: preview.rotate_preview(30.0))
 	orbit_buttons.add_child(orbit_right)
+
+	var overlays := HBoxContainer.new()
+	detail.add_child(overlays)
+	bounds_toggle = CheckBox.new()
+	bounds_toggle.text = "橙色：摆放边界"
+	bounds_toggle.button_pressed = true
+	overlays.add_child(bounds_toggle)
+	surfaces_toggle = CheckBox.new()
+	surfaces_toggle.text = "绿色：承载面"
+	surfaces_toggle.button_pressed = true
+	overlays.add_child(surfaces_toggle)
+	bounds_toggle.toggled.connect(_on_overlay_toggled)
+	surfaces_toggle.toggled.connect(_on_overlay_toggled)
 
 	info_label = RichTextLabel.new()
 	info_label.bbcode_enabled = false
@@ -237,6 +252,7 @@ func _update_details() -> void:
 		source_paths = get_model_paths(selected_item.furniture_scene)
 	locate_button.disabled = source_paths.is_empty()
 	preview.show_furniture(selected_item.furniture_scene if selected_item != null else null)
+	_on_overlay_toggled(false)
 	if selected_item == null:
 		info_label.text = "从列表选择一件家具。\n\n此管理器直接读取现有商品目录，不会改变玩家存档。"
 		return
@@ -245,12 +261,14 @@ func _update_details() -> void:
 	var scene_path := "（未关联）"
 	if item.furniture_scene != null:
 		scene_path = item.furniture_scene.resource_path
-	info_label.text = "名称：%s\n物品 ID：%s\n一级分类：%s\n二级类型：%s\n摆放角色：%s\n价格：%d\n是否停用：%s\n场景：%s\n模型来源：%s\n几何尺寸（米）：%s\n\n资源检查：%s" % [
+	info_label.text = "名称：%s\n物品 ID：%s\n一级分类：%s\n二级类型：%s\n摆放角色：%s\n价格：%d\n是否停用：%s\n场景：%s\n模型来源：%s\n几何尺寸（米）：%s\n摆放边界（米）：%s\n承载面：%s\n\n资源检查：%s" % [
 		item.name, item.item_id, Taxonomy.group_name(Taxonomy.group_for(item)),
 		Taxonomy.type_name(Taxonomy.type_for(item)), item.subcategory,
 		item.price, "是" if item.retired else "否",
 		scene_path, "\n".join(source_paths) if not source_paths.is_empty() else "原生场景/未找到独立模型",
 		str(preview.measured_size.snapped(Vector3(0.01, 0.01, 0.01))),
+		str(preview.authored_bounds.snapped(Vector3(0.01, 0.01, 0.01))) if preview.authored_bounds != Vector3.ZERO else "未定义",
+		_anchor_summary(preview.support_anchors),
 		"通过" if issues.is_empty() else "\n".join(issues)
 	]
 
@@ -302,3 +320,18 @@ func _locate_model() -> void:
 	if source_paths.is_empty():
 		return
 	EditorInterface.get_file_system_dock().navigate_to_path(source_paths[0])
+
+func _on_overlay_toggled(_value: bool) -> void:
+	if preview != null:
+		preview.set_overlay_visibility(bounds_toggle.button_pressed, surfaces_toggle.button_pressed)
+
+
+func _anchor_summary(anchors: Array[Dictionary]) -> String:
+	if anchors.is_empty():
+		return "无（不可承载其他物品）"
+	var lines := PackedStringArray()
+	for anchor in anchors:
+		var center: Vector3 = anchor.center
+		var size: Vector2 = anchor.size
+		lines.append("%s · %.2f×%.2f m · 高 %.2f m" % [anchor.id, size.x, size.y, center.y])
+	return "\n".join(lines)
