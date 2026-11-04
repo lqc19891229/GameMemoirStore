@@ -49,6 +49,8 @@ func run() -> void:
 	var item_id := "room_desk_memento"
 	var bought: String = str(game.session.buy_item(item_id))
 	check(bought.begins_with("已购买"),"small decor is bought through existing inventory economy")
+	check(str(game.session.buy_item("room_mini_book_stack")).begins_with("已购买"),
+		"second compact collectible can be bought independently")
 	desktop.begin_layout()
 	var uid: String = Inventory.unused_uid(state.life.inventory,layout.placed_instances,item_id)
 	check(not uid.is_empty(),"purchase creates one unused UID")
@@ -63,6 +65,39 @@ func run() -> void:
 	if layout.surface_mounts.has(role):
 		check(str(layout.surface_mounts[role].support) == "bookcase", "starter bookshelf is chosen as support")
 	check(layout.nodes[role].global_position.y > 0.2,"mounted item appears above the floor")
+	# Direct placement from the inventory should not require a temporary floor
+	# confirmation followed by a separate mount action.
+	var book_id := "room_mini_book_stack"
+	var book_uid: String = Inventory.unused_uid(state.life.inventory,layout.placed_instances,book_id)
+	check(layout.start_place(book_id,book_uid),"begin direct placement for purchased mini art books")
+	var book_role: String = Data.instance_role("mini_book_stack",book_uid)
+	var shelf: Node3D = layout.nodes["bookcase"]
+	var anchors: Array[Dictionary] = layout.SupportSurfaces.anchors_for(shelf)
+	var target_point: Vector3 = shelf.to_global(anchors[3].center)
+	var target_pixel: Vector2 = layout.world.camera.unproject_position(target_point)
+	layout.preview_at(target_pixel)
+	check(layout.surface_mounts.has(book_role),"hovering over upper shelf generates a direct surface preview")
+	check(layout.valid,"direct surface preview passes collision checks")
+	layout.cancel_placement()
+	check(not layout.nodes.has(book_role) and not layout.surface_mounts.has(book_role),
+		"cancelling a direct preview returns the UID to inventory without leaked scene nodes")
+	check(layout.start_place(book_id,book_uid),"cancelled purchased UID can be placed again")
+	layout.preview_at(target_pixel)
+	if layout.surface_mounts.has(book_role) and layout.valid:
+		check(layout.confirm_placement(),"direct shelf placement confirms without floor staging")
+	else:
+		check(false,"direct shelf placement must be ready for confirmation")
+	check(layout.placed_instances.get(book_role,"") == book_uid and layout.surface_mounts.has(book_role),
+		"confirmed shelf attachment preserves the purchased inventory UID")
+	if layout.surface_mounts.has(book_role):
+		var floor_pose: Dictionary = layout.surface_mounts[book_role].floor_pose
+		check(is_finite(float(floor_pose.x)) and is_finite(float(floor_pose.z)),
+			"direct shelf placement reserves a removable floor fallback")
+		layout.select(book_role)
+		check(layout.unmount_selected(),"direct shelf item can return to its reserved floor spot")
+		layout.undo()
+		check(layout.surface_mounts.has(book_role),"undo restores the direct shelf mount after take-down")
+	layout.select(role)
 	check(layout.nudge_selected(Vector2.RIGHT),"mounted item supports surface-local keyboard nudge")
 	check(is_equal_approx(float(layout.surface_mounts[role].x),0.05),"mounted nudge changes local X without changing floor pose")
 	var drag_point: Vector2 = layout.world.camera.unproject_position(layout.nodes[role].global_position + Vector3.UP * 0.10)
@@ -105,6 +140,7 @@ func run() -> void:
 	loaded.save_path = state.save_path
 	loaded.load_state()
 	check(loaded.life.get("furniture_mounts",{}).has(role),"JSON reload keeps UID surface attachment")
+	check(loaded.life.get("furniture_mounts",{}).has(book_role),"directly placed UID survives JSON reload")
 	state.persistence_enabled = false
 	game.queue_free()
 	await frames()
@@ -115,6 +151,7 @@ func run() -> void:
 	await frames()
 	var restored = resumed.desktop.world.layout
 	check(restored.surface_mounts.has(role),"room rebuild restores mounted furniture")
+	check(restored.surface_mounts.has(book_role),"room rebuild restores directly placed miniature books")
 	check(restored._layout_blocker().is_empty(),"restored scene has no collision or loss of support")
 	check(restored.nodes.has(role) and restored.nodes[role].global_position.y > 0.2,"mounted model is physically elevated after reload")
 	resumed.queue_free()
