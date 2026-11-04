@@ -14,18 +14,20 @@ func _run() -> void:
 	var bookcase := scene.instantiate() as Node3D
 	root.add_child(bookcase)
 	await process_frame
-	_check(SurfaceHelper.anchors_for(bookcase).size() == 4, "existing bookcase legacy shelves remain intact")
+	_check(SurfaceHelper.anchors_for(bookcase).size() == 4, "bookcase loads four authored shelves from its scene")
 	var custom: Array[Dictionary] = [
 		{"id": "top_custom", "center": Vector3(0, 2.35, 0), "size": Vector2(1.0, 0.38)}
 	]
 	bookcase.call("apply_custom_support_surfaces", true, custom)
-	_check(SurfaceHelper.anchors_for(bookcase).size() == 1, "edited anchors replace legacy shelves")
+	_check(SurfaceHelper.anchors_for(bookcase).size() == 1, "edited anchors replace authored shelves")
 	_check(SurfaceHelper.anchors_for(bookcase)[0].id == "top_custom", "authored ID is preserved")
 	_check(bookcase.get("custom_support_surfaces").size() == 1, "edit stored as exported scene property")
 	bookcase.call("apply_custom_support_surfaces", true, [])
 	_check(SurfaceHelper.anchors_for(bookcase).is_empty(), "explicit empty surfaces disable stacking")
 	bookcase.call("apply_custom_support_surfaces", false, [])
-	_check(SurfaceHelper.anchors_for(bookcase).size() == 4, "undo-style fallback restores legacy shelves")
+	_check(SurfaceHelper.anchors_for(bookcase).is_empty(), "disabled surfaces have no role-generated fallback")
+	bookcase.call("apply_custom_support_surfaces", true, custom)
+	_check(SurfaceHelper.anchors_for(bookcase).size() == 1, "re-enabling saved anchors restores editable surfaces")
 	bookcase.queue_free()
 
 	var panel := Manager.new()
