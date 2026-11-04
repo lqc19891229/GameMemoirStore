@@ -47,7 +47,7 @@ func run() -> void:
 	var desktop = game.desktop
 	var layout = desktop.world.layout
 	var item_id := "room_desk_memento"
-	var bought := game.session.buy_item(item_id)
+	var bought: String = str(game.session.buy_item(item_id))
 	check(bought.begins_with("已购买"),"small decor is bought through existing inventory economy")
 	desktop.begin_layout()
 	var uid: String = Inventory.unused_uid(state.life.inventory,layout.placed_instances,item_id)
