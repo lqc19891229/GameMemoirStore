@@ -12,6 +12,7 @@ const STROKES := {
 	"arrange": '<path d="M3 3v18M3 7h18M3 17h18M8 4v6m8-6v6M8 14v6m8-6v6"/>',
 	"duplicate": '<rect x="8" y="8" width="13" height="13" rx="2"/><path d="M5 16H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v1"/>',
 	"store": '<path d="M3 8h18v13H3zM2 4h20v4H2zM9 13h6"/>',
+	"mount": '<path d="M3 19h18M5 12h14M7 12V4h10v8M9 16v3m6-3v3"/>',
 	"furniture": '<path d="M4 12V7a3 3 0 0 1 3-3h10a3 3 0 0 1 3 3v5M4 13h16M4 13v6m16-6v6M7 9v4m10-4v4M4 18h16"/>',
 	"decor": '<path d="M4 19h16M7 17l10-10 3 3-10 10H7zM14 10l3 3M5 6h4M7 4v4"/>',
 	"lighting": '<circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M4.9 4.9l1.4 1.4m11.4 11.4 1.4 1.4M19.1 4.9l-1.4 1.4M6.3 17.7l-1.4 1.4"/>',
