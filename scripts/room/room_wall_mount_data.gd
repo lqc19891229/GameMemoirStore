@@ -44,7 +44,6 @@ static func clean_entry(raw: Variant) -> Dictionary:
 		if not is_finite(float(raw_side)) or float(raw_side) not in [-1.0,1.0]: return {}
 		entry["part"] = {"x":float(part.x),"z":float(part.z),"axis":str(part.axis)}
 		entry["side"] = int(raw_side)
-	if wall == "partition": pass
 	var raw_on: Variant = raw.get("on",true)
 	if not raw_on is bool: return {}
 	var raw_level: Variant = raw.get("level",2)
