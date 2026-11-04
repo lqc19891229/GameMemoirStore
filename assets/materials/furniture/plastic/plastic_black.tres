@@ -1,0 +1,7 @@
+[gd_resource type="StandardMaterial3D" format=3]
+
+[resource]
+resource_name = "plastic_black"
+albedo_color = Color(0.13333, 0.14902, 0.16863, 1)
+metallic = 0
+roughness = 0.62

@@ -1,0 +1,7 @@
+[gd_resource type="StandardMaterial3D" format=3]
+
+[resource]
+resource_name = "fabric_gray"
+albedo_color = Color(0.45098, 0.46667, 0.49412, 1)
+metallic = 0
+roughness = 0.96
