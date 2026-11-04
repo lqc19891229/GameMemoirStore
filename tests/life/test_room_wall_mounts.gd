@@ -57,7 +57,7 @@ func run() -> void:
 	check(layout.hang_selected_on_wall(),"frame moves from floor to a valid exterior wall")
 	check(layout.wall_mounts.has(frame_role),"wall attachment is tracked independently of surface mounts")
 	check(layout.nodes[frame_role].position.y > 0.8,"frame is elevated on the wall")
-	var moved := layout.move_wall_mount(Vector2(0.05,0.05))
+	var moved: bool = layout.move_wall_mount(Vector2(0.05,0.05))
 	check(moved,"wall mount supports horizontal and vertical adjustment")
 	check(layout.nudge_selected(Vector2.LEFT),"wall mount accepts keyboard adjustments")
 	check(not layout.move_wall_mount(Vector2(10.0,0)),"wall edge prevents invalid translation")
