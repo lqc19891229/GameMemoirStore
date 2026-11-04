@@ -20,18 +20,21 @@ func _run() -> void:
 	var uid := "item_999"
 	var copy_role := LayoutData.instance_role("chair", uid)
 	_check(not copy_role.is_empty(), "test purchased instance role exists")
-	layout.available_inventory.append({"uid": uid, "item_id": "room_chair"})
-	layout.placed_instances[copy_role] = uid
+	game.session.state.life["inventory"].append({"uid": uid, "item_id": "room_chair"})
 	var incoming: Dictionary = layout.export_layout()
 	# A duplicate chair occupying exactly the starter chair's position
 	# must cause the invalid-layout rollback.
 	incoming[copy_role] = incoming["chair"].duplicate(true)
-	layout.load_saved(incoming)
+	game.session.state.life["placements"][copy_role] = uid
+	game.session.state.life["workstation_layout"] = incoming.duplicate(true)
+	game.desktop._update_equipment()
 	_check(not layout.nodes.has(copy_role), "invalid purchased copy removed from scene")
 	_check(not layout.placed_instances.has(copy_role), "orphan placement record removed")
 	_check(not layout.committed_placements.has(copy_role), "committed placement map agrees with scene")
+	_check(not game.session.state.life["placements"].has(copy_role), "session placement map repaired for shop inventory")
+	_check(not game.session.state.life["workstation_layout"].has(copy_role), "session saved poses match recovered room")
 	_check(not layout.export_layout().has(copy_role), "recovered save excludes deleted copy pose")
-	_check(Inventory.unused_uid(layout.available_inventory, layout.placed_instances, "room_chair") == uid, "owned chair returned to free inventory")
+	_check(Inventory.unused_uid(game.session.state.life["inventory"], game.session.state.life["placements"], "room_chair") == uid, "owned chair returned to free inventory")
 	_check(layout.surface_mounts.is_empty() and layout.wall_mounts.is_empty(), "invalid attachments removed")
 	_check(layout.saved == layout.export_layout(), "recovery does not cache invalid incoming poses")
 	game.queue_free()
