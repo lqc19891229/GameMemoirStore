@@ -181,6 +181,17 @@ func _sync_wall_mount_poses() -> void:
 		var position := Vector3.ZERO
 		var yaw := 0.0
 		match str(data.wall):
+			"partition":
+				var part: Dictionary = data.part
+				var side: float = float(data.side)
+				if str(part.axis) == "x":
+					position = Vector3(float(part.x)+float(data.along),float(data.height),
+						float(part.z)+side*(BlueprintData.WALL_THICKNESS*.5+.012))
+					yaw = 0.0 if side > 0 else PI
+				else:
+					position = Vector3(float(part.x)+side*(BlueprintData.WALL_THICKNESS*.5+.012),
+						float(data.height),float(part.z)+float(data.along))
+					yaw = PI*.5 if side > 0 else -PI*.5
 			"north":
 				position = Vector3(float(data.along),float(data.height),-half.y+.075)
 				yaw = 0.0
@@ -204,8 +215,19 @@ func _wall_mount_blocker(role: String, entry: Dictionary) -> String:
 		if other == role: continue
 		var mounted: Dictionary = wall_mounts[other]
 		if entry.wall != mounted.wall: continue
+		var projected: float = float(entry.along)
+		var other_projected: float = float(mounted.along)
+		if entry.wall == "partition":
+			var part: Dictionary = entry.part
+			var other_part: Dictionary = mounted.get("part",{})
+			if str(part.axis) != str(other_part.get("axis","")) or int(entry.side) != int(mounted.get("side",0)): continue
+			var plane_axis: String = "z" if str(part.axis) == "x" else "x"
+			if not is_equal_approx(float(part[plane_axis]),float(other_part.get(plane_axis,INF))): continue
+			var horizontal_axis: String = "x" if str(part.axis) == "x" else "z"
+			projected += float(part[horizontal_axis])
+			other_projected += float(other_part.get(horizontal_axis,0))
 		var other_dimensions: Vector3 = bounds_for(other)
-		var x_hit: bool = absf(float(entry.along)-float(mounted.along)) < (dimensions.x+other_dimensions.x)*.5+collision_margin
+		var x_hit: bool = absf(projected-other_projected) < (dimensions.x+other_dimensions.x)*.5+collision_margin
 		var y_hit: bool = float(entry.height)<float(mounted.height)+other_dimensions.y+collision_margin and float(mounted.height)<float(entry.height)+dimensions.y+collision_margin
 		if x_hit and y_hit: return "画框与另一件墙面装饰重叠"
 	return ""
@@ -223,11 +245,26 @@ func hang_selected_on_wall() -> bool:
 		{"wall":"west","along":origin.z,"distance":absf(origin.x+half.x)},
 		{"wall":"east","along":origin.z,"distance":absf(origin.x-half.x)}
 	]
+	for part: Dictionary in blueprint.partitions:
+		if str(part.kind) != "wall": continue
+		var is_horizontal: bool = str(part.axis) == "x"
+		var along: float = origin.x-float(part.x) if is_horizontal else origin.z-float(part.z)
+		if absf(along) > .65: continue
+		var perpendicular: float = origin.z-float(part.z) if is_horizontal else origin.x-float(part.x)
+		var safe_along: float = clampf(snappedf(along,grid_step),-.09,.09)
+		var part_ref: Dictionary = {"axis":str(part.axis),"x":float(part.x),"z":float(part.z)}
+		for side: int in [-1,1]:
+			candidates.append({"wall":"partition","part":part_ref,"side":side,
+				"along":safe_along,
+				"distance":absf(perpendicular-side*BlueprintData.WALL_THICKNESS*.5)+maxf(0,absf(along)-.09)})
 	candidates.sort_custom(func(a: Dictionary,b: Dictionary) -> bool: return float(a.distance)<float(b.distance))
 	for candidate: Dictionary in candidates:
 		var pose: Dictionary = {"x":origin.x,"z":origin.z,"yaw":nodes[role].rotation.y}
 		var entry: Dictionary = {"wall":candidate.wall,"along":snappedf(float(candidate.along),grid_step),
 			"height":1.20,"floor_pose":pose}
+		if str(candidate.wall) == "partition":
+			entry["part"] = candidate.part.duplicate(true)
+			entry["side"] = candidate.side
 		if not _wall_mount_blocker(role,entry).is_empty(): continue
 		var before := _draft()
 		wall_mounts[role] = entry
@@ -289,7 +326,8 @@ func move_wall_mount(direction: Vector2) -> bool:
 func _wall_pointer_position(pixel: Vector2) -> Variant:
 	if not wall_mounts.has(selected) or not nodes.has(selected): return null
 	var data: Dictionary = wall_mounts[selected]
-	var normal: Vector3 = world.global_basis.x if str(data.wall) in ["west","east"] else world.global_basis.z
+	var vertical_axis: bool = str(data.wall) in ["west","east"] or (str(data.wall) == "partition" and str(data.part.axis) == "z")
+	var normal: Vector3 = world.global_basis.x if vertical_axis else world.global_basis.z
 	var plane := Plane(normal.normalized(),nodes[selected].global_position)
 	var ray_start: Vector3 = world.camera.project_ray_origin(pixel)
 	var ray_direction: Vector3 = world.camera.project_ray_normal(pixel)
@@ -297,7 +335,10 @@ func _wall_pointer_position(pixel: Vector2) -> Variant:
 	if contact == null: return null
 	# On either side of a room, use the same floor-plan axes as saved wall mounts.
 	var local: Vector3 = nodes[selected].get_parent().to_local(contact)
-	return Vector2(local.x if str(data.wall) in ["north","south"] else local.z,local.y)
+	var along: float = local.z if vertical_axis else local.x
+	if str(data.wall) == "partition":
+		along -= float(data.part.z) if vertical_axis else float(data.part.x)
+	return Vector2(along,local.y)
 
 
 func _mount_footprint(role: String, mount: Dictionary) -> PackedVector2Array:
@@ -1921,6 +1962,14 @@ func remove_partition(at: Vector2) -> bool:
 			nearest = index
 			distance = metric
 	if nearest == -1: return false
+	var target: Dictionary = blueprint.partitions[nearest]
+	for mount: Dictionary in wall_mounts.values():
+		if str(mount.get("wall","")) != "partition": continue
+		var mounted: Dictionary = mount.part
+		if str(mounted.axis) == str(target.axis) and is_equal_approx(float(mounted.x),float(target.x)) and is_equal_approx(float(mounted.z),float(target.z)):
+			message = "请先取下这段内墙上的画框，再拆除隔断"
+			changed.emit()
+			return false
 	var before := _draft()
 	blueprint.partitions.remove_at(nearest)
 	world.get_node("Room").apply_blueprint(blueprint)
