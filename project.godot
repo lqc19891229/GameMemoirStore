@@ -31,3 +31,7 @@ window/size/min_height=600
 renderer/rendering_method="gl_compatibility"
 renderer/rendering_method.mobile="gl_compatibility"
 environment/defaults/default_clear_color=Color(0.055, 0.09, 0.12, 1)
+
+[editor_plugins]
+
+enabled=PackedStringArray("res://addons/furniture_manager/plugin.cfg")
