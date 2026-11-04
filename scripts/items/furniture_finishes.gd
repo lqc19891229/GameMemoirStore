@@ -39,8 +39,9 @@ static func overlay(index: int) -> StandardMaterial3D:
 	color.a = 0.52 if is_custom(index) else ALPHA[index]
 	material.albedo_color = color
 	material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	material.roughness = ROUGHNESS[index]
-	material.metallic = METALLIC[index]
+	# Packed RGB values are not palette indices; they use neutral material defaults.
+	material.roughness = 0.83 if is_custom(index) else ROUGHNESS[index]
+	material.metallic = 0.0 if is_custom(index) else METALLIC[index]
 	return material
 
 static func apply_preview(furniture: Node3D, index: int) -> void:
