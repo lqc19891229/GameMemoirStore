@@ -2,6 +2,7 @@
 extends VBoxContainer
 ## A small staged editor. Only the Apply signal can mutate the opened furniture scene.
 signal apply_requested(anchors: Array[Dictionary])
+signal preview_changed(anchors: Array[Dictionary])
 
 const Surfaces = preload("res://scripts/room/furniture_support_surfaces.gd")
 var anchors: Array[Dictionary] = []
@@ -127,6 +128,7 @@ func _add_anchor() -> void:
 		return
 	anchors.append(a)
 	_refresh_list()
+	preview_changed.emit(anchors.duplicate(true))
 	list.select(anchors.size() - 1)
 	_select_anchor(anchors.size() - 1)
 
@@ -141,6 +143,7 @@ func _update_anchor() -> void:
 		return
 	anchors[index] = a
 	_refresh_list()
+	preview_changed.emit(anchors.duplicate(true))
 	list.select(index)
 	_select_anchor(index)
 
@@ -151,6 +154,7 @@ func _remove_anchor() -> void:
 		return
 	anchors.remove_at(indices[0])
 	_refresh_list()
+	preview_changed.emit(anchors.duplicate(true))
 
 
 func _id_in_use(id: String, except_index: int = -1) -> bool:
