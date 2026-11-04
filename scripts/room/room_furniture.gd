@@ -39,7 +39,8 @@ func _register_support_surfaces() -> void:
 		set_meta("support_surfaces", cleaned)
 		return
 	# When switching back to legacy defaults, stale custom anchors must disappear.
-	remove_meta("support_surfaces")
+	if has_meta("support_surfaces"):
+		remove_meta("support_surfaces")
 	# Authored safe contact areas; no automatic stacking on chairs/lamps.
 	var anchors: Array = []
 	var base_role := role.get_slice("__instance__", 0)
