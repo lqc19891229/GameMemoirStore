@@ -473,16 +473,38 @@ func preview_at(pixel: Vector2) -> void:
 
 func confirm_placement() -> bool:
 	if placing_role.is_empty() or not valid: return false
-	# Store an actual safe floor fallback if the initial preview was on a shelf.
-	# Mounted transforms are world-space, while floor_pose must remain floor-local.
+	# A new surface item has no prior safe floor position. Find a removable
+	# staging point now, so taking it off a shelf later remains possible.
 	if surface_mounts.has(placing_role):
-		var mounted: Dictionary = surface_mounts[placing_role]
-		var original: Dictionary = mounted.floor_pose
-		var floor_position := Vector2(float(original.x),float(original.z))
-		var half: Vector2 = room_half_size
-		mounted["floor_pose"] = {"x":clampf(floor_position.x,-half.x,half.x),
-			"z":clampf(floor_position.y,-half.y,half.y),"yaw":float(original.yaw)}
-		surface_mounts[placing_role] = mounted
+		var attached_role: String = placing_role
+		var attached: Dictionary = surface_mounts[attached_role].duplicate(true)
+		var raised_pose: Transform3D = nodes[attached_role].transform
+		var support_position: Vector3 = nodes[attached.support].position
+		surface_mounts.erase(attached_role)
+		var found_floor := false
+		for ring in range(24):
+			if found_floor: break
+			for sector in range(16):
+				var angle := TAU * float(sector) / 16.0
+				var radius := float(ring) * .3
+				var target := Vector2(support_position.x+cos(angle)*radius,
+					support_position.z+sin(angle)*radius)
+				nodes[attached_role].position = Vector3(target.x,0.0,target.y)
+				nodes[attached_role].rotation.y = float(attached.floor_pose.yaw)
+				clamp_pose(attached_role)
+				if _blocker(attached_role,footprint(attached_role,collision_margin)).is_empty():
+					var local: Vector3 = nodes[attached_role].position
+					attached["floor_pose"] = {"x":local.x,"z":local.z,
+						"yaw":nodes[attached_role].rotation.y}
+					found_floor = true
+					break
+		surface_mounts[attached_role] = attached
+		nodes[attached_role].transform = raised_pose
+		_sync_mount_poses()
+		if not found_floor:
+			message = "附近没有可供取下时使用的安全地面位置"
+			changed.emit()
+			return false
 	var before := placing_before
 	wall_magnet_active = false
 	snap_bypass = false
