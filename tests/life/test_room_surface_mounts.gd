@@ -46,6 +46,16 @@ func run() -> void:
 	state.wallet = 15000
 	var desktop = game.desktop
 	var layout = desktop.world.layout
+	# SKU metadata, not hard-coded role names, controls mounting permission.
+	check(layout._can_surface_mount("desk_memento"), "existing ceramic cup opted in")
+	check(layout._can_surface_mount("mini_book_stack"), "existing miniature books opted in")
+	check(not layout._can_surface_mount("chair"), "large furniture is not surface mountable by default")
+	var chair_definition: MemoirItemDefinition = layout.ItemCatalog.lookup("room_chair")
+	var saved_permission: bool = chair_definition.allow_surface_mount
+	chair_definition.allow_surface_mount = true
+	check(layout._can_surface_mount("chair"), "surface permission can be enabled by SKU metadata without changing room code")
+	chair_definition.allow_surface_mount = saved_permission
+	check(not layout._can_surface_mount("chair"), "restoring default metadata disables mounting")
 	var item_id := "room_desk_memento"
 	var bought: String = str(game.session.buy_item(item_id))
 	check(bought.begins_with("已购买"),"small decor is bought through existing inventory economy")
