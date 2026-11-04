@@ -1,7 +1,7 @@
 class_name MemoirRoomBlueprintData
 extends RefCounted
 ## Rectangular, L and grid-painted orthogonal footprints with validated interior walls.
-const DEFAULT := {"width": 8.0, "depth": 6.0, "door_x": -2.75, "window_z": -0.8, "partitions": [], "shape":"rectangle", "notch_width":1.5, "notch_depth":1.5, "removed_cells":[], "floor_finishes":[], "edge_finishes":[], "zone_cells":[], "zone_styles":[{"floor":2,"wall":3,"light":1},{"floor":1,"wall":1,"light":0},{"floor":3,"wall":2,"light":2}], "saved_schemes":[]}
+const DEFAULT := {"width": 8.0, "depth": 6.0, "door_x": -2.75, "window_z": -0.8, "partitions": [], "shape":"rectangle", "notch_width":1.5, "notch_depth":1.5, "removed_cells":[], "floor_finishes":[], "edge_finishes":[]}
 const MIN_WIDTH := 6.0
 const MAX_WIDTH := 12.0
 const MIN_DEPTH := 5.0
@@ -14,10 +14,6 @@ const FLOOR_GRID := 0.5
 const MAX_REMOVED := 128
 const FINISH_COUNT := 4
 const MAX_EDGE_EDITS := 256
-const ZONE_NAMES := ["游戏区","工作区","休息区"]
-const ZONE_PRESETS := [{"floor":2,"wall":3,"light":1},{"floor":1,"wall":1,"light":0},{"floor":3,"wall":2,"light":2}]
-const MAX_ZONE_CELLS := 480
-const MAX_SCHEMES := 3
 
 static func clean(raw: Variant) -> Dictionary:
 	var result: Dictionary = DEFAULT.duplicate(true)
@@ -79,38 +75,31 @@ static func clean(raw: Variant) -> Dictionary:
 						break
 				if not present: result.edge_finishes.append(edge)
 
-	var raw_styles: Variant = raw.get("zone_styles", [])
-	if raw_styles is Array:
-		for i in range(mini(raw_styles.size(), ZONE_PRESETS.size())):
-			if raw_styles[i] is Dictionary:
-				var config: Dictionary = raw_styles[i]
-				result.zone_styles[i] = {
-					"floor": finish_id(config.get("floor", ZONE_PRESETS[i].floor)),
-					"wall": finish_id(config.get("wall", ZONE_PRESETS[i].wall)),
-					"light": zone_light_id(config.get("light", ZONE_PRESETS[i].light))
-				}
+	# Backward-compatible one-time migration: preserve legacy zone floor colors
+	# as ordinary tile finishes. No functional labels, preset slots or zone
+	# lights survive into the new free-decoration blueprint schema.
 	if result.shape == "custom":
-		var zone_entries: Variant = raw.get("zone_cells", [])
-		if zone_entries is Array:
-			for raw_zone: Variant in zone_entries:
-				if result.zone_cells.size() >= MAX_ZONE_CELLS: break
-				var entry: Dictionary = clean_zone_cell(raw_zone)
-				if entry.is_empty() or not valid_cell(result, entry) or has_cell(result, entry): continue
-				if zone_at(result, entry) != 0: continue
-				result.zone_cells.append(entry)
-	if result.shape == "custom":
-		var schemes: Variant = raw.get("saved_schemes", [])
-		if schemes is Array:
-			for raw_scheme: Variant in schemes:
-				if result.saved_schemes.size() >= MAX_SCHEMES: break
-				var scheme: Dictionary = clean_scheme(result, raw_scheme)
-				if scheme.is_empty(): continue
-				var duplicate := false
-				for entry: Dictionary in result.saved_schemes:
-					if entry.slot == scheme.slot:
-						duplicate = true
-						break
-				if not duplicate: result.saved_schemes.append(scheme)
+		var legacy_zones: Variant = raw.get("zone_cells",[])
+		var legacy_styles: Variant = raw.get("zone_styles",[])
+		if legacy_zones is Array:
+			var seen: Dictionary = {}
+			for old: Variant in legacy_zones:
+				if not old is Dictionary: continue
+				var cell: Dictionary = clean_cell(old)
+				if cell.is_empty() or not valid_cell(result,cell) or has_cell(result,cell): continue
+				var key := Vector2i(int(cell.ix),int(cell.iz))
+				if seen.has(key): continue
+				seen[key] = true
+				var raw_zone: Variant = old.get("zone",0)
+				if not (raw_zone is int or raw_zone is float) or not is_finite(float(raw_zone)): continue
+				if float(raw_zone) != floorf(float(raw_zone)) or int(raw_zone) < 1 or int(raw_zone) > 3: continue
+				if floor_finish(result,cell) != 0: continue
+				var defaults := [2,1,3]
+				var color_id: int = defaults[int(raw_zone)-1]
+				if legacy_styles is Array and legacy_styles.size() >= int(raw_zone) and legacy_styles[int(raw_zone)-1] is Dictionary:
+					color_id = finish_id(legacy_styles[int(raw_zone)-1].get("floor",color_id))
+				if color_id > 0:
+					result.floor_finishes.append({"ix":cell.ix,"iz":cell.iz,"finish":color_id})
 	return result
 
 static func clean_partition(raw: Variant) -> Dictionary:
@@ -360,66 +349,12 @@ static func edge_edit(value: Dictionary, edge: Dictionary) -> Dictionary:
 	return {"ix":edge.ix, "iz":edge.iz, "dx":edge.dx, "dz":edge.dz, "kind":"wall", "finish":0}
 
 ## Painted room areas use the same grid coordinates as the floor brush.
-## Zone 0 is neutral; zones 1-3 have independent decoration and accent lights.
-static func zone_light_id(value: Variant) -> int:
-	if not (value is int or value is float): return 0
-	if not is_finite(float(value)) or float(value) != floorf(float(value)): return 0
-	return int(value) if int(value) >= 0 and int(value) <= 2 else 0
-
-static func clean_zone_cell(raw: Variant) -> Dictionary:
-	var cell: Dictionary = clean_cell(raw)
-	if cell.is_empty(): return {}
-	var zone: Variant = raw.get("zone", null)
-	if not (zone is int or zone is float) or not is_finite(float(zone)): return {}
-	if float(zone) != floorf(float(zone)) or int(zone) < 1 or int(zone) > ZONE_PRESETS.size(): return {}
-	cell["zone"] = int(zone)
-	return cell
-
-static func zone_at(value: Dictionary, cell: Dictionary) -> int:
-	for entry: Dictionary in value.get("zone_cells", []):
-		if entry.ix == cell.ix and entry.iz == cell.iz:
-			return int(entry.zone)
-	return 0
-
-static func zone_at_point(value: Dictionary, at: Vector2) -> int:
-	var cell: Dictionary = cell_at(value, at)
-	if not valid_cell(value, cell) or has_cell(value, cell): return 0
-	return zone_at(value, cell)
-
-static func zone_style(value: Dictionary, zone: int) -> Dictionary:
-	if zone < 1 or zone > ZONE_PRESETS.size(): return {"floor":0,"wall":0,"light":0}
-	var configs: Array = value.get("zone_styles", [])
-	if configs.size() != ZONE_PRESETS.size(): return ZONE_PRESETS[zone-1].duplicate()
-	return configs[zone-1]
-
+## Finishes are direct user edits; no room-purpose designation influences them.
 static func effective_floor_finish(value: Dictionary, cell: Dictionary) -> int:
-	# Explicit per-tile overrides always win over a room-area preset.
-	var finish: int = floor_finish(value, cell)
-	if finish != 0: return finish
-	var zone: int = zone_at(value, cell)
-	if zone == 0: return 0
-	return int(zone_style(value, zone).floor)
+	return floor_finish(value,cell)
 
-static func effective_wall_finish(value: Dictionary, at: Vector2, manual: int) -> int:
-	if manual != 0: return manual
-	var zone: int = zone_at_point(value, at)
-	if zone == 0: return 0
-	return int(zone_style(value, zone).wall)
-
-static func zone_centroids(value: Dictionary) -> Dictionary:
-	var sums := {}
-	for entry: Dictionary in value.get("zone_cells", []):
-		var zone: int = int(entry.zone)
-		var center: Vector2 = cell_center(value, entry)
-		if not sums.has(zone):
-			sums[zone] = {"sum":Vector2.ZERO, "count":0}
-		var record: Dictionary = sums[zone]
-		record.sum += center
-		record.count += 1
-	var result := {}
-	for zone: int in sums:
-		result[zone] = sums[zone].sum / float(sums[zone].count)
-	return result
+static func effective_wall_finish(_value: Dictionary, _at: Vector2, manual: int) -> int:
+	return manual
 
 ## Connected space detection: a solid 1m partition blocks crossings between
 ## 0.5m floor cells. Door segments keep the path open, so adjoining spaces
@@ -489,24 +424,3 @@ static func room_regions(value: Dictionary) -> Array:
 			found.append(region)
 	return found
 
-## Saved designs capture zone maps and area palettes, not room geometry.
-## They cannot move furniture, erase walls or change an existing door.
-static func clean_scheme(room: Dictionary, raw: Variant) -> Dictionary:
-	if not raw is Dictionary: return {}
-	var slot: Variant = raw.get("slot",null)
-	if not (slot is int or slot is float) or not is_finite(float(slot)): return {}
-	if float(slot) != floorf(float(slot)) or int(slot) < 0 or int(slot) >= MAX_SCHEMES: return {}
-	var valid: Dictionary = room.duplicate(true)
-	valid.erase("saved_schemes")
-	valid["zone_cells"] = raw.get("zone_cells",[])
-	valid["zone_styles"] = raw.get("zone_styles",[])
-	valid["floor_finishes"] = raw.get("floor_finishes",[])
-	var checked: Dictionary = clean(valid)
-	return {"slot":int(slot),"zone_cells":checked.zone_cells.duplicate(true),
-		"zone_styles":checked.zone_styles.duplicate(true),
-		"floor_finishes":checked.floor_finishes.duplicate(true)}
-
-static func scheme_for_slot(value: Dictionary, slot: int) -> Dictionary:
-	for scheme: Dictionary in value.get("saved_schemes",[]):
-		if int(scheme.slot) == slot: return scheme
-	return {}
