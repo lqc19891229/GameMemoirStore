@@ -1,12 +1,12 @@
 @tool
 extends EditorPlugin
 
-const Panel = preload("res://addons/furniture_manager/furniture_manager_panel.gd")
+const FurnitureManagerPanel = preload("res://addons/furniture_manager/furniture_manager_panel.gd")
 var panel: Control
 
 
 func _enter_tree() -> void:
-	panel = Panel.new()
+	panel = FurnitureManagerPanel.new()
 	panel.name = "家具资源"
 	add_control_to_bottom_panel(panel, "家具资源")
 
