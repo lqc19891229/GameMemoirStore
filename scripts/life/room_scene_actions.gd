@@ -54,6 +54,7 @@ const ACTIONS := [
 	{"id":"paint", "hint":"选择单件家具颜色"},
 	{"id":"arrange", "hint":"附近家具对齐 · 同类家具等距排列"},
 	{"id":"duplicate", "hint":"复制一件库存中的同款家具 · Ctrl+D"},
+	{"id":"mount", "hint":"把选中家具陈列到最近的空闲桌面或书架；再次点击取下"},
 	{"id":"store", "hint":"收纳这件家具 · Delete"}
 ]
 
@@ -718,6 +719,10 @@ func perform_action(id: String) -> void:
 				if not started: room_ui.show_keyboard_feedback("无法预览 · " + str(layout.message))
 			else:
 				layout.duplicate_selected()
+		"mount":
+			var mounted: bool = layout.surface_mounts.has(layout.selected)
+			var succeeded: bool = layout.unmount_selected() if mounted else layout.mount_selected_on_nearest_surface()
+			room_ui.show_keyboard_feedback(("已取下陈列家具 · Ctrl+Z 撤销" if mounted else "已放上桌面/书架 · Ctrl+Z 撤销") if succeeded else str(layout.message))
 		"store":
 			if layout.group_selection.size() > 1:
 				var count: int = layout.group_selection.size()
@@ -865,6 +870,12 @@ func sync(active: bool) -> void:
 	action_buttons["paint"].disabled = false
 	action_buttons["arrange"].disabled = false
 	action_buttons["store"].disabled = false
+	action_buttons["mount"].visible = not multi
+	action_buttons["mount"].disabled = multi or layout._has_mounted_children(role)
+	action_buttons["mount"].tooltip_text = "取下并恢复上次地面位置" if layout.surface_mounts.has(role) else "陈列到附近的空闲桌面或书架（需要足够空间）"
+	action_buttons["move"].disabled = layout.surface_mounts.has(role)
+	action_buttons["rotate"].disabled = layout.surface_mounts.has(role)
+	action_buttons["arrange"].disabled = layout.surface_mounts.has(role)
 	action_buttons["paint"].tooltip_text = "统一修改 %d 件家具的颜色" % group_size if multi else "选择单件家具颜色"
 	action_buttons["arrange"].tooltip_text = "当前多选对齐与等距排列" if multi else "附近家具对齐 · 同类家具等距排列"
 	action_buttons["store"].tooltip_text = "收纳全部 %d 件家具 · Delete · 可撤销" % group_size if multi else "收纳这件家具 · Delete"
