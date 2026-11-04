@@ -15,7 +15,10 @@ func _ready() -> void:
 func _register_support_surfaces() -> void:
 	# Authored safe contact areas; no automatic stacking on chairs/lamps.
 	var anchors: Array = []
-	match role:
+	var base_role := role.get_slice("__instance__", 0)
+	if base_role.ends_with("_1") or base_role.ends_with("_2") or base_role.ends_with("_3") or base_role.ends_with("_4") or base_role.ends_with("_5") or base_role.ends_with("_6") or base_role.ends_with("_7") or base_role.ends_with("_8"):
+		base_role = base_role.substr(0, base_role.rfind("_"))
+	match base_role:
 		"bookcase":
 			for level in range(4):
 				anchors.append({"id": "shelf_%d" % level, "center": Vector3(0, [0.2575, 0.8375, 1.4175, 1.9975][level], 0), "size": Vector2(1.16, 0.42)})
