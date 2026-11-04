@@ -1,0 +1,22 @@
+[gd_scene format=3 uid="uid://bt4gyph7dc273"]
+
+[ext_resource type="Script" uid="uid://bjouphuphmd3a" path="res://scripts/room/room_furniture.gd" id="1_ret6d"]
+[ext_resource type="PackedScene" uid="uid://cft7xvsecpjt1" path="res://assets/models/room/seating/chair_gaming.glb" id="2_ngxcr"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_u76ak"]
+size = Vector3(0.81, 1.25, 0.71)
+
+[node name="chair_gaming" type="Node3D" unique_id=542207737]
+script = ExtResource("1_ret6d")
+bounds = Vector3(0.81, 1.25, 0.71)
+role = "chair_gaming"
+
+[node name="Model" type="Node3D" parent="." unique_id=2108839260 instance=ExtResource("2_ngxcr")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.0057140356, -0.026882201)
+
+[node name="PickArea" type="Area3D" parent="." unique_id=781312179]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.625, 0)
+collision_mask = 0
+
+[node name="Hit" type="CollisionShape3D" parent="PickArea" unique_id=1797814324]
+shape = SubResource("BoxShape3D_u76ak")
