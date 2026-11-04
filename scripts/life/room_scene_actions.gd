@@ -42,6 +42,7 @@ var category_buttons: Dictionary = {}
 var action_buttons: Dictionary = {}
 var color_buttons: Array[Button] = []
 var custom_color_picker: ColorPickerButton
+var _picker_opening_color := Color.WHITE
 var _current_selection := ""
 var _current_group_size := 0
 
@@ -346,7 +347,10 @@ func _build_object_actions(canvas: Control) -> void:
 	custom_color_picker.custom_minimum_size = Vector2(180, 34)
 	custom_color_picker.tooltip_text = "选择自定义颜色，关闭选择器时提交一次，可撤销"
 	palette_content.add_child(custom_color_picker)
-	custom_color_picker.popup_closed.connect(func() -> void: apply_custom_color(custom_color_picker.color))
+	custom_color_picker.popup_closed.connect(func() -> void:
+		if custom_color_picker.color.to_html(false) != _picker_opening_color.to_html(false):
+			apply_custom_color(custom_color_picker.color)
+	)
 	_build_arrangement(canvas)
 	_build_group_members(canvas)
 
@@ -700,6 +704,11 @@ func perform_action(id: String) -> void:
 			layout.set_tool("rotate")
 		"paint":
 			swatches.visible = not swatches.visible
+			if swatches.visible:
+				var current_finish: int = layout.group_color_index() if layout.group_selection.size() > 1 else layout.color_for(layout.selected)
+				if current_finish >= 0:
+					custom_color_picker.color = Finishes.color_for(current_finish)
+				_picker_opening_color = custom_color_picker.color
 		"arrange":
 			hide_colors()
 			arrange_panel.visible = not arrange_panel.visible
