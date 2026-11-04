@@ -14,8 +14,8 @@ var info_label: RichTextLabel
 var status_label: Label
 var inspector_button: Button
 var scene_button: Button
-var catalog: Resource
-var selected_item: Resource
+var catalog: MemoirItemCatalog
+var selected_item: MemoirItemDefinition
 var total_furniture := 0
 var invalid_furniture := 0
 
@@ -116,22 +116,22 @@ func _build_ui() -> void:
 
 
 func refresh_catalog() -> void:
-	catalog = ResourceLoader.load(CATALOG_PATH, "", ResourceLoader.CACHE_MODE_REPLACE)
+	catalog = ResourceLoader.load(CATALOG_PATH, "", ResourceLoader.CACHE_MODE_REPLACE) as MemoirItemCatalog
 	selected_item = null
 	_populate_list()
 
 
-func get_furniture_items() -> Array:
-	var result: Array = []
+func get_furniture_items() -> Array[MemoirItemDefinition]:
+	var result: Array[MemoirItemDefinition] = []
 	if catalog == null:
 		return result
-	for item in catalog.get("items"):
+	for item: MemoirItemDefinition in catalog.items:
 		if item != null and item.category == "furniture":
 			result.append(item)
 	return result
 
 
-func validate_item(item: Resource) -> PackedStringArray:
+func validate_item(item: MemoirItemDefinition) -> PackedStringArray:
 	var errors := PackedStringArray()
 	if str(item.item_id).strip_edges().is_empty():
 		errors.append("缺少 item_id")
@@ -199,7 +199,7 @@ func _populate_list() -> void:
 
 func _on_item_selected() -> void:
 	var row := item_tree.get_selected()
-	selected_item = row.get_metadata(0) if row != null else null
+	selected_item = row.get_metadata(0) as MemoirItemDefinition if row != null else null
 	_update_details()
 
 
