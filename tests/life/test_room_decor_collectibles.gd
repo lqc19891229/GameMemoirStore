@@ -27,7 +27,8 @@ func run() -> void:
 		var item: MemoirItemDefinition = Catalog.lookup(id)
 		check(item != null and item.furniture_scene != null and item.placement_surface == "floor" and item.price > 0,"all P43 props have real purchasable floor scene: "+id)
 		check(Data.valid_role(base) and Inventory.furniture_item_id(base) == id,"new decor role resolves to a stable inventory item: "+base)
-		check(ResourceLoader.exists("res://assets/models/room/catalog/"+base+".glb"),"authored 3D glTF model is imported: "+base)
+		var model_path: String = "res://assets/models/room/%s/%s.glb" % [MemoirItemTaxonomy.group_for(item), base]
+		check(ResourceLoader.exists(model_path),"authored 3D glTF model is imported: "+base)
 		var scene: Node3D = item.furniture_scene.instantiate()
 		root.add_child(scene)
 		await process_frame
