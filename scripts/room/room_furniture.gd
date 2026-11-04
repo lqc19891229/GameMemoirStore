@@ -4,6 +4,11 @@ extends Node3D
 @export var bounds := Vector3.ONE
 @export var blocking := true
 @export var role := "chair"
+## Explicit placement surfaces override the legacy role-generated anchors.
+## Empty enabled overrides intentionally mean this furniture supports no items.
+@export var use_custom_support_surfaces := false
+@export var custom_support_surfaces: Array[Dictionary] = []
+
 
 const SupportSurfaces = preload("res://scripts/room/furniture_support_surfaces.gd")
 
@@ -12,7 +17,34 @@ func _ready() -> void:
 	if not has_node("Model"):
 		_build_visual()
 
+func apply_custom_support_surfaces(enabled: bool, anchors: Array) -> void:
+	# Accept both typed and ordinary arrays, including empty arrays used by Undo.
+	var copied: Array[Dictionary] = []
+	for raw in anchors:
+		if raw is Dictionary:
+			copied.append(raw.duplicate(true))
+	use_custom_support_surfaces = enabled
+	custom_support_surfaces = copied
+	_register_support_surfaces()
+
+
 func _register_support_surfaces() -> void:
+	if use_custom_support_surfaces:
+		var cleaned: Array[Dictionary] = []
+		var seen := {}
+		for raw: Dictionary in custom_support_surfaces:
+			if cleaned.size() >= SupportSurfaces.MAX_ANCHORS:
+				break
+			var anchor := SupportSurfaces.clean_anchor(raw)
+			if anchor.is_empty() or seen.has(anchor.id):
+				continue
+			seen[anchor.id] = true
+			cleaned.append(anchor)
+		set_meta("support_surfaces", cleaned)
+		return
+	# When switching back to legacy defaults, stale custom anchors must disappear.
+	if has_meta("support_surfaces"):
+		remove_meta("support_surfaces")
 	# Authored safe contact areas; no automatic stacking on chairs/lamps.
 	var anchors: Array = []
 	var base_role := role.get_slice("__instance__", 0)

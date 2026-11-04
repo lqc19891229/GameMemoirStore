@@ -6,6 +6,7 @@ extends VBoxContainer
 const CATALOG_PATH := "res://data/items/_catalog.tres"
 const Taxonomy = preload("res://scripts/items/item_taxonomy.gd")
 const FurniturePreview = preload("res://addons/furniture_manager/furniture_preview.gd")
+const SupportSurfaceEditor = preload("res://addons/furniture_manager/support_surface_editor.gd")
 
 var search_field: LineEdit
 var group_filter: OptionButton
@@ -17,6 +18,7 @@ var inspector_button: Button
 var scene_button: Button
 var locate_button: Button
 var preview: SubViewportContainer
+var surface_editor: VBoxContainer
 var bounds_toggle: CheckBox
 var surfaces_toggle: CheckBox
 var source_paths: PackedStringArray = []
@@ -152,6 +154,12 @@ func _build_ui() -> void:
 	locate_button.pressed.connect(_locate_model)
 	detail.add_child(locate_button)
 
+	surface_editor = SupportSurfaceEditor.new()
+	surface_editor.visible = false
+	surface_editor.apply_requested.connect(_apply_surface_changes)
+	surface_editor.preview_changed.connect(_preview_surface_changes)
+	detail.add_child(surface_editor)
+
 	status_label = Label.new()
 	add_child(status_label)
 
@@ -253,6 +261,12 @@ func _update_details() -> void:
 	locate_button.disabled = source_paths.is_empty()
 	preview.show_furniture(selected_item.furniture_scene if selected_item != null else null)
 	_on_overlay_toggled(false)
+	if selected_item != null and selected_item.furniture_scene != null and preview.model != null and preview.model.has_method("apply_custom_support_surfaces"):
+		surface_editor.visible = true
+		surface_editor.set_anchors(preview.support_anchors, true)
+	else:
+		surface_editor.visible = false
+		surface_editor.set_anchors([], false)
 	if selected_item == null:
 		info_label.text = "从列表选择一件家具。\n\n此管理器直接读取现有商品目录，不会改变玩家存档。"
 		return
@@ -335,3 +349,39 @@ func _anchor_summary(anchors: Array[Dictionary]) -> String:
 		var size: Vector2 = anchor.size
 		lines.append("%s · %.2f×%.2f m · 高 %.2f m" % [anchor.id, size.x, size.y, center.y])
 	return "\n".join(lines)
+
+
+
+func _preview_surface_changes(anchors: Array[Dictionary]) -> void:
+	preview.preview_staged_surfaces(anchors)
+
+
+func _apply_surface_changes(anchors: Array[Dictionary]) -> void:
+	# Explicitly open the selected furniture scene first. Never overwrite a
+	# PackedScene from an instance: that can flatten imported/instanced models.
+	if not Engine.is_editor_hint() or selected_item == null or selected_item.furniture_scene == null:
+		return
+	var scene_path := selected_item.furniture_scene.resource_path
+	var scene_root := EditorInterface.get_edited_scene_root()
+	if scene_root == null or scene_root.scene_file_path != scene_path:
+		status_label.text = "请先点击「打开家具场景」，确认该场景处于当前编辑标签，再应用承载面"
+		return
+	if not scene_root.has_method("apply_custom_support_surfaces"):
+		status_label.text = "当前家具场景没有可编辑的承载面组件"
+		return
+	if anchors.size() > 32:
+		status_label.text = "承载面数量超过上限"
+		return
+	var old_enabled: bool = scene_root.get("use_custom_support_surfaces")
+	var old_data: Array[Dictionary] = scene_root.get("custom_support_surfaces").duplicate(true)
+	var new_data := anchors.duplicate(true)
+	var undo := EditorInterface.get_editor_undo_redo()
+	undo.create_action("更新家具承载面", UndoRedo.MERGE_DISABLE, scene_root)
+	undo.add_do_method(scene_root, "apply_custom_support_surfaces", true, new_data)
+	undo.add_undo_method(scene_root, "apply_custom_support_surfaces", old_enabled, old_data)
+	undo.commit_action()
+	var result := EditorInterface.save_scene()
+	if result == OK:
+		status_label.text = "承载面已保存到 %s（可使用编辑器撤销）" % scene_path
+	else:
+		status_label.text = "修改已应用到当前场景，但场景保存失败；请在编辑器中手动保存"

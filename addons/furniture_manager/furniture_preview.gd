@@ -134,6 +134,12 @@ func _read_authored_bounds(node: Node3D) -> Vector3:
 	return Vector3.ZERO
 
 
+func preview_staged_surfaces(anchors: Array[Dictionary]) -> void:
+	# Temporary visual only; does not mutate the furniture scene or runtime metadata.
+	support_anchors = anchors.duplicate(true)
+	_rebuild_overlays()
+
+
 func set_overlay_visibility(bounds_visible: bool, surfaces_visible: bool) -> void:
 	show_bounds = bounds_visible
 	show_surfaces = surfaces_visible
