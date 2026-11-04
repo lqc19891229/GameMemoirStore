@@ -28,7 +28,7 @@ func _run() -> void:
 	var minimum: Dictionary = Drag.changed_anchor(original, "right", Vector2(-10, 0))
 	_check(minimum.size.x >= Drag.MIN_SIZE - 0.0001, "drag cannot invert rectangle or shrink below 2cm")
 	_check(Surfaces.clean_anchor(minimum) != {}, "resized surface remains valid")
-	_check(original.center == Vector3.ZERO or original.center.y == 0.8, "source anchor remains unchanged")
+	_check(original.center == Vector3(0, 0.8, 0), "source anchor remains unchanged")
 
 	var panel := Manager.new()
 	root.add_child(panel)
