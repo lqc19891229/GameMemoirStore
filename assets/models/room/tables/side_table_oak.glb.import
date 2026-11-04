@@ -8,7 +8,7 @@ path="res://.godot/imported/side_table_oak.glb-43d508a107f74585cae6cbecc83bace7.
 
 [deps]
 
-source_file="res://assets/models/room/catalog/side_table_oak.glb"
+source_file="res://assets/models/room/tables/side_table_oak.glb"
 dest_files=["res://.godot/imported/side_table_oak.glb-43d508a107f74585cae6cbecc83bace7.scn"]
 
 [params]

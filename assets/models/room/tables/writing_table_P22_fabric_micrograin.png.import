@@ -13,7 +13,7 @@ generator_parameters={
 
 [deps]
 
-source_file="res://assets/models/room/catalog/writing_table_P22_fabric_micrograin.png"
+source_file="res://assets/models/room/tables/writing_table_P22_fabric_micrograin.png"
 dest_files=["res://.godot/imported/writing_table_P22_fabric_micrograin.png-f4ae43d108a5003e439acd311f65e342.ctex"]
 
 [params]

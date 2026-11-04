@@ -14,7 +14,7 @@ generator_parameters={
 
 [deps]
 
-source_file="res://assets/models/room/catalog/media_console_P22_wood_micrograin.png"
+source_file="res://assets/models/room/storage/media_console_P22_wood_micrograin.png"
 dest_files=["res://.godot/imported/media_console_P22_wood_micrograin.png-e7201ee04d1dc4e9f52c59e9e4f2b14f.s3tc.ctex"]
 
 [params]

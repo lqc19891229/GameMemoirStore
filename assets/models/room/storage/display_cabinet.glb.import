@@ -8,7 +8,7 @@ path="res://.godot/imported/display_cabinet.glb-0a82f7ae96858b976793468e1eec54a7
 
 [deps]
 
-source_file="res://assets/models/room/catalog/display_cabinet.glb"
+source_file="res://assets/models/room/storage/display_cabinet.glb"
 dest_files=["res://.godot/imported/display_cabinet.glb-0a82f7ae96858b976793468e1eec54a7.scn"]
 
 [params]

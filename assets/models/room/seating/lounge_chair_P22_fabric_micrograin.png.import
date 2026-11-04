@@ -14,7 +14,7 @@ generator_parameters={
 
 [deps]
 
-source_file="res://assets/models/room/catalog/lounge_chair_P22_fabric_micrograin.png"
+source_file="res://assets/models/room/seating/lounge_chair_P22_fabric_micrograin.png"
 dest_files=["res://.godot/imported/lounge_chair_P22_fabric_micrograin.png-cec6a3c19dafd13972435a6986eaba6f.s3tc.ctex"]
 
 [params]

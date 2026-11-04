@@ -8,7 +8,7 @@ path="res://.godot/imported/chair.glb-5ae61dda482d823855d42bf29d429b43.scn"
 
 [deps]
 
-source_file="res://assets/models/room/chair.glb"
+source_file="res://assets/models/room/seating/chair.glb"
 dest_files=["res://.godot/imported/chair.glb-5ae61dda482d823855d42bf29d429b43.scn"]
 
 [params]

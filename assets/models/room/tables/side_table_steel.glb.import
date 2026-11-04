@@ -8,7 +8,7 @@ path="res://.godot/imported/side_table_steel.glb-7ea60fe2e49902011bea675db2bfa24
 
 [deps]
 
-source_file="res://assets/models/room/catalog/side_table_steel.glb"
+source_file="res://assets/models/room/tables/side_table_steel.glb"
 dest_files=["res://.godot/imported/side_table_steel.glb-7ea60fe2e49902011bea675db2bfa248.scn"]
 
 [params]

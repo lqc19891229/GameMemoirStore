@@ -8,7 +8,7 @@ path="res://.godot/imported/vinyl_crate.glb-87b4fd465b43f3564b4e35284fd343a7.scn
 
 [deps]
 
-source_file="res://assets/models/room/catalog/vinyl_crate.glb"
+source_file="res://assets/models/room/decor/vinyl_crate.glb"
 dest_files=["res://.godot/imported/vinyl_crate.glb-87b4fd465b43f3564b4e35284fd343a7.scn"]
 
 [params]

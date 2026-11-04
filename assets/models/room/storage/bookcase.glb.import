@@ -8,7 +8,7 @@ path="res://.godot/imported/bookcase.glb-a0a4b667229604589750b0154f3ec557.scn"
 
 [deps]
 
-source_file="res://assets/models/room/bookcase.glb"
+source_file="res://assets/models/room/storage/bookcase.glb"
 dest_files=["res://.godot/imported/bookcase.glb-a0a4b667229604589750b0154f3ec557.scn"]
 
 [params]

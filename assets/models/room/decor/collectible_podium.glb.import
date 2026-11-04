@@ -8,7 +8,7 @@ path="res://.godot/imported/collectible_podium.glb-2d964987e48e236a72c8bb9194292
 
 [deps]
 
-source_file="res://assets/models/room/catalog/collectible_podium.glb"
+source_file="res://assets/models/room/decor/collectible_podium.glb"
 dest_files=["res://.godot/imported/collectible_podium.glb-2d964987e48e236a72c8bb9194292646.scn"]
 
 [params]

@@ -8,7 +8,7 @@ path="res://.godot/imported/lamp_arc.glb-eb40eab1ecfb2980772894a13dc32604.scn"
 
 [deps]
 
-source_file="res://assets/models/room/catalog/lamp_arc.glb"
+source_file="res://assets/models/room/lighting/lamp_arc.glb"
 dest_files=["res://.godot/imported/lamp_arc.glb-eb40eab1ecfb2980772894a13dc32604.scn"]
 
 [params]

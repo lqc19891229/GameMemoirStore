@@ -2,7 +2,7 @@ extends SceneTree
 ## Non-destructive catalog registration checks (never writes the real catalog).
 const Registrar = preload("res://addons/furniture_manager/furniture_catalog_registrar.gd")
 const RegistrationPanel = preload("res://addons/furniture_manager/furniture_registration_panel.gd")
-const SCENE := "res://scenes/room/side_table_oak.tscn"
+const SCENE := "res://scenes/room/tables/side_table_oak.tscn"
 var failures := 0
 
 

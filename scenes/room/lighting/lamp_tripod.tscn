@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" path="res://scripts/room/room_furniture.gd" id="1"]
 
-[ext_resource type="PackedScene" path="res://assets/models/room/catalog/lamp_tripod.glb" id="2"]
+[ext_resource type="PackedScene" path="res://assets/models/room/lighting/lamp_tripod.glb" id="2"]
 
 [sub_resource type="BoxShape3D" id="Pick"]
 size = Vector3(0.76, 1.78, 0.76)

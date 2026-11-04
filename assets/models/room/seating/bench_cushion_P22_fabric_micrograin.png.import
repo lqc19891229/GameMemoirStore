@@ -14,7 +14,7 @@ generator_parameters={
 
 [deps]
 
-source_file="res://assets/models/room/catalog/bench_cushion_P22_fabric_micrograin.png"
+source_file="res://assets/models/room/seating/bench_cushion_P22_fabric_micrograin.png"
 dest_files=["res://.godot/imported/bench_cushion_P22_fabric_micrograin.png-4cb81ad3dab4350716bbd0566e89859e.s3tc.ctex"]
 
 [params]

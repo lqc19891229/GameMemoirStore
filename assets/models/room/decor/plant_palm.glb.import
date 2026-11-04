@@ -8,7 +8,7 @@ path="res://.godot/imported/plant_palm.glb-97160a32419259c2674008a902488180.scn"
 
 [deps]
 
-source_file="res://assets/models/room/catalog/plant_palm.glb"
+source_file="res://assets/models/room/decor/plant_palm.glb"
 dest_files=["res://.godot/imported/plant_palm.glb-97160a32419259c2674008a902488180.scn"]
 
 [params]

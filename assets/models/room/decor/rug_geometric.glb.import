@@ -8,7 +8,7 @@ path="res://.godot/imported/rug_geometric.glb-1026203fecbe70018d74af37250b4f9d.s
 
 [deps]
 
-source_file="res://assets/models/room/catalog/rug_geometric.glb"
+source_file="res://assets/models/room/decor/rug_geometric.glb"
 dest_files=["res://.godot/imported/rug_geometric.glb-1026203fecbe70018d74af37250b4f9d.scn"]
 
 [params]

@@ -8,7 +8,7 @@ path="res://.godot/imported/shelf_low.glb-d4f29c421ce7fd6d5b83da6a0a88ef4f.scn"
 
 [deps]
 
-source_file="res://assets/models/room/catalog/shelf_low.glb"
+source_file="res://assets/models/room/storage/shelf_low.glb"
 dest_files=["res://.godot/imported/shelf_low.glb-d4f29c421ce7fd6d5b83da6a0a88ef4f.scn"]
 
 [params]

@@ -14,7 +14,7 @@ generator_parameters={
 
 [deps]
 
-source_file="res://assets/models/room/catalog/side_table_oak_P22_wood_micrograin.png"
+source_file="res://assets/models/room/tables/side_table_oak_P22_wood_micrograin.png"
 dest_files=["res://.godot/imported/side_table_oak_P22_wood_micrograin.png-9e31316daab9a343a849f8baf1e0f5b7.s3tc.ctex"]
 
 [params]

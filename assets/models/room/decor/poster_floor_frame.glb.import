@@ -8,7 +8,7 @@ path="res://.godot/imported/poster_floor_frame.glb-3c5409daf37574b3f0c44bab816f2
 
 [deps]
 
-source_file="res://assets/models/room/catalog/poster_floor_frame.glb"
+source_file="res://assets/models/room/decor/poster_floor_frame.glb"
 dest_files=["res://.godot/imported/poster_floor_frame.glb-3c5409daf37574b3f0c44bab816f2a15.scn"]
 
 [params]

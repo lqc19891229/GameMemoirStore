@@ -8,7 +8,7 @@ path="res://.godot/imported/plant_cactus.glb-dfd58780c92d80fd7f2df96ecc78cabb.sc
 
 [deps]
 
-source_file="res://assets/models/room/catalog/plant_cactus.glb"
+source_file="res://assets/models/room/decor/plant_cactus.glb"
 dest_files=["res://.godot/imported/plant_cactus.glb-dfd58780c92d80fd7f2df96ecc78cabb.scn"]
 
 [params]

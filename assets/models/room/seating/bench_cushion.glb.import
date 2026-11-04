@@ -8,7 +8,7 @@ path="res://.godot/imported/bench_cushion.glb-fc7299da8082d4f646627a62e6f78132.s
 
 [deps]
 
-source_file="res://assets/models/room/catalog/bench_cushion.glb"
+source_file="res://assets/models/room/seating/bench_cushion.glb"
 dest_files=["res://.godot/imported/bench_cushion.glb-fc7299da8082d4f646627a62e6f78132.scn"]
 
 [params]

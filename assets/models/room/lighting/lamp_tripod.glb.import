@@ -8,7 +8,7 @@ path="res://.godot/imported/lamp_tripod.glb-9e168a258be9f72569d101b19409d553.scn
 
 [deps]
 
-source_file="res://assets/models/room/catalog/lamp_tripod.glb"
+source_file="res://assets/models/room/lighting/lamp_tripod.glb"
 dest_files=["res://.godot/imported/lamp_tripod.glb-9e168a258be9f72569d101b19409d553.scn"]
 
 [params]

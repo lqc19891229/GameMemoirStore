@@ -8,7 +8,7 @@ path="res://.godot/imported/coffee_table_round.glb-bd4f832b1b7f8eb6bda3483c785a0
 
 [deps]
 
-source_file="res://assets/models/room/catalog/coffee_table_round.glb"
+source_file="res://assets/models/room/tables/coffee_table_round.glb"
 dest_files=["res://.godot/imported/coffee_table_round.glb-bd4f832b1b7f8eb6bda3483c785a009a.scn"]
 
 [params]

@@ -8,7 +8,7 @@ path="res://.godot/imported/writing_table.glb-1dd3e22762c9bd6696253a1a2d58884a.s
 
 [deps]
 
-source_file="res://assets/models/room/catalog/writing_table.glb"
+source_file="res://assets/models/room/tables/writing_table.glb"
 dest_files=["res://.godot/imported/writing_table.glb-1dd3e22762c9bd6696253a1a2d58884a.scn"]
 
 [params]

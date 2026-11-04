@@ -8,7 +8,7 @@ path="res://.godot/imported/lamp_cylinder.glb-0ae085f5d67c0ab90e62d1e045f29ded.s
 
 [deps]
 
-source_file="res://assets/models/room/catalog/lamp_cylinder.glb"
+source_file="res://assets/models/room/lighting/lamp_cylinder.glb"
 dest_files=["res://.godot/imported/lamp_cylinder.glb-0ae085f5d67c0ab90e62d1e045f29ded.scn"]
 
 [params]

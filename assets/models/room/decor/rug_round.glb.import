@@ -8,7 +8,7 @@ path="res://.godot/imported/rug_round.glb-ad8e33559c77f8786a9833b7c206cd94.scn"
 
 [deps]
 
-source_file="res://assets/models/room/catalog/rug_round.glb"
+source_file="res://assets/models/room/decor/rug_round.glb"
 dest_files=["res://.godot/imported/rug_round.glb-ad8e33559c77f8786a9833b7c206cd94.scn"]
 
 [params]

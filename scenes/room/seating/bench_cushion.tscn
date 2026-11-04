@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" path="res://scripts/room/room_furniture.gd" id="1"]
 
-[ext_resource type="PackedScene" path="res://assets/models/room/catalog/bench_cushion.glb" id="2"]
+[ext_resource type="PackedScene" path="res://assets/models/room/seating/bench_cushion.glb" id="2"]
 
 [sub_resource type="BoxShape3D" id="Pick"]
 size = Vector3(1.36, 0.66, 0.63)

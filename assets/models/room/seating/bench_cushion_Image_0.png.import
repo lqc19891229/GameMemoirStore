@@ -14,7 +14,7 @@ generator_parameters={
 
 [deps]
 
-source_file="res://assets/models/room/catalog/bench_cushion_Image_0.png"
+source_file="res://assets/models/room/seating/bench_cushion_Image_0.png"
 dest_files=["res://.godot/imported/bench_cushion_Image_0.png-34d6eda535b1adc28b841b8377bf0e39.s3tc.ctex"]
 
 [params]

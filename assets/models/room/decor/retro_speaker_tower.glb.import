@@ -8,7 +8,7 @@ path="res://.godot/imported/retro_speaker_tower.glb-9f0969fddc30841ac6e77580e745
 
 [deps]
 
-source_file="res://assets/models/room/catalog/retro_speaker_tower.glb"
+source_file="res://assets/models/room/decor/retro_speaker_tower.glb"
 dest_files=["res://.godot/imported/retro_speaker_tower.glb-9f0969fddc30841ac6e77580e745d069.scn"]
 
 [params]
