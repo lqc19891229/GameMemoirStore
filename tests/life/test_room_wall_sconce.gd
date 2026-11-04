@@ -113,6 +113,10 @@ func run() -> void:
 	var recovered = restored.desktop.world.layout
 	var restored_glow := recovered.nodes[item_role].get_node_or_null("LampGlow") as OmniLight3D
 	check(recovered.wall_mounts.has(item_role),"reloaded layout restores the sconce mount")
+	if restored_glow != null:
+		print("SCONCE_DIAGNOSTIC visible=",restored_glow.visible," energy=",restored_glow.light_energy,
+			" mount=",recovered.wall_mounts.get(item_role,{})," placed=",recovered.placed_instances.has(item_role),
+			" effective_visible=",restored_glow.is_visible_in_tree())
 	check(restored_glow != null and restored_glow.visible and is_equal_approx(restored_glow.light_energy,float(Wall.LAMP_ENERGY[2])),
 		"reloaded room actually emits the saved brightness")
 	restored.desktop.begin_layout()
