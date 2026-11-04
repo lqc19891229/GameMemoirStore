@@ -78,3 +78,7 @@ Windows 可双击项目根目录的 import_games.bat。脚本自动寻找 py -3�
     godot --headless --path . --script res://tests/test_catalog_integration.gd -- --fresh
 
 购买、存档、筛选和旧路径回归使用 tests/fixtures/ 中的固定目录，不会加入正式商店。
+
+## 与房间物品目录的区别
+
+本导入器只负责**游戏商品资料**（`data/games/`）；可购买家具、壁挂装饰和灯具属于 `data/items/_catalog.tres`，不通过游戏 Excel 工作簿生成。房间自由装修的存档和商品 UID 说明见 [data/items/README.md](../../data/items/README.md)。
