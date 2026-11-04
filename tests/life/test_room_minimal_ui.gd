@@ -64,7 +64,7 @@ func run() -> void:
 	check(layout.selected == "chair" and tools.action_strip.visible, "selecting placed 3D furniture replaces the right inspector with a nearby action ribbon")
 	check(tools.selection_chip.visible and tools.selection_chip.text.contains(layout.name_for("chair")), "selected furniture displays its real name near the action ribbon")
 	check(tools.selection_chip.mouse_filter == Control.MOUSE_FILTER_IGNORE, "selected-item label never intercepts direct 3D mouse picking")
-	check(not desktop.get_node("%LayoutPanel").visible and tools.action_buttons.size() == 7, "normal editing includes alignment, arrangement and the shelf-display action")
+	check(not desktop.get_node("%LayoutPanel").visible and tools.action_buttons.size() == 9 and not tools.action_buttons["light"].visible and not tools.action_buttons["brightness"].visible, "normal editing keeps the seven existing actions and hides wall-light-only controls")
 	check(tools.action_buttons["move"].toggle_mode and tools.action_buttons["rotate"].toggle_mode and tools.action_buttons["paint"].toggle_mode, "movement, rotation and paint controls expose persistent active states")
 	check(tools.action_buttons["move"].button_pressed and not tools.action_buttons["rotate"].button_pressed, "move button is highlighted when its gizmo is active")
 	check(tools.action_buttons["duplicate"].disabled and tools.action_buttons["duplicate"].tooltip_text.contains("没有可用库存"), "copy is disabled and explains missing same-item stock")
@@ -213,7 +213,7 @@ func run() -> void:
 	ui._apply_layout_size(Vector2(1280,800))
 	check(desktop.get_node("%FurnitureCatalogItems").columns == 2 and ui.dock.offset_left == 73.0, "desktop layout uses a two-column left drawer and large unobstructed 3D canvas")
 	check(desktop.get_node("%FurnitureCatalogItems").get_parent() is ScrollContainer, "catalog remains scrollable inside left drawer")
-	check(desktop.furniture_cards.cards.size() == 35, "all 35 purchasable furniture SKUs remain available including P43 decor")
+	check(desktop.furniture_cards.cards.size() == 36 and desktop.furniture_cards.cards.has("room_wall_sconce"), "all 36 purchasable furniture SKUs include the new wall-light product")
 	check(desktop.furniture_cards.renderer.get_child_count() == 1, "all catalog cards continue using the same 3D thumbnail cache")
 	var sample_card: Dictionary = desktop.furniture_cards.cards["room_sofa"]
 	check(sample_card.button.get_node("VisualCard/FurniturePreview") == sample_card.image, "item card still shows its true GLB model")

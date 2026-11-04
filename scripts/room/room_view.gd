@@ -294,6 +294,9 @@ func _apply_atmosphere() -> void:
 		ceiling.light_color = LIGHTS[style.light]
 		ceiling.light_energy = [0.12,.08,.32][style.light] * [1.0,1.5,2.5,1.8][index]
 	for item: Node3D in $Furniture.get_children():
+		# A mounted wall sconce owns an independent power/brightness preset.
+		# Ambient room styles may retune floor lamps but must not override it.
+		if item.role.get_slice("__instance__",0) == "wall_sconce": continue
 		if item.has_node("LampGlow"):
 			item.get_node("LampGlow").light_energy = [0.36,.18,.85][style.light] * [1.0,1.25,2.1,1.55][index]
 

@@ -5,6 +5,14 @@ const LayoutData = preload("res://scripts/life/workstation_layout_data.gd")
 const BlueprintData = preload("res://scripts/room/room_blueprint_data.gd")
 const MAX_ENTRIES := 96
 const MOUNT_ROLE := "poster_floor_frame"
+const LAMP_ROLE := "wall_sconce"
+const LAMP_ENERGY := [0.24,0.50,0.84]
+
+static func is_mountable(role: String) -> bool:
+	return role in [MOUNT_ROLE,LAMP_ROLE]
+
+static func dimensions(role: String) -> Vector2:
+	return Vector2(.40,.60) if role == LAMP_ROLE else Vector2(.77,1.20)
 const MIN_HEIGHT := 0.4
 const MAX_HEIGHT := 2.8
 const EDGE_GAP := 0.12
@@ -36,6 +44,13 @@ static func clean_entry(raw: Variant) -> Dictionary:
 		if not is_finite(float(raw_side)) or float(raw_side) not in [-1.0,1.0]: return {}
 		entry["part"] = {"x":float(part.x),"z":float(part.z),"axis":str(part.axis)}
 		entry["side"] = int(raw_side)
+	var raw_on: Variant = raw.get("on",true)
+	if not raw_on is bool: return {}
+	var raw_level: Variant = raw.get("level",2)
+	if not (raw_level is int or raw_level is float) or not is_finite(float(raw_level)): return {}
+	if int(raw_level) < 1 or int(raw_level) > 3 or float(raw_level) != float(int(raw_level)): return {}
+	entry["on"] = raw_on
+	entry["level"] = int(raw_level)
 	return entry
 
 static func fits(mount: Dictionary, blueprint: Dictionary, frame_width: float, frame_height: float) -> bool:
@@ -77,9 +92,10 @@ static func clean(raw: Variant, placements: Dictionary, blueprint: Dictionary) -
 		if result.size() >= MAX_ENTRIES: break
 		if not key is String: continue
 		var role: String = key
-		if not LayoutData.valid_role(role) or LayoutData.base_role(role) != MOUNT_ROLE: continue
+		if not LayoutData.valid_role(role) or not is_mountable(LayoutData.base_role(role)): continue
 		if not placements.has(role): continue
 		var mount: Dictionary = clean_entry(raw[role])
-		if not mount.is_empty() and fits(mount,blueprint,.77,1.2):
+		var size: Vector2 = dimensions(LayoutData.base_role(role))
+		if not mount.is_empty() and fits(mount,blueprint,size.x,size.y):
 			result[role] = mount
 	return result

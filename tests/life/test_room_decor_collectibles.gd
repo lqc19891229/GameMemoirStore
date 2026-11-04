@@ -21,7 +21,7 @@ func frames() -> void:
 
 func run() -> void:
 	var all_roles := ["vinyl_crate","collectible_podium","poster_floor_frame","game_display_shelf","lounge_cushion_pair","retro_speaker_tower"]
-	check(Catalog.room_furniture().size() == 35,"six P43 decor SKUs plus two small collectibles extend furniture to 35")
+	check(Catalog.room_furniture().size() == 36 and Catalog.lookup("room_wall_sconce") != null,"P43 decor and new wall sconce remain in 36-item furniture catalog")
 	for base: String in all_roles:
 		var id: String = "room_"+base
 		var item: MemoirItemDefinition = Catalog.lookup(id)
