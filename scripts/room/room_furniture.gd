@@ -17,10 +17,14 @@ func _ready() -> void:
 	if not has_node("Model"):
 		_build_visual()
 
-func apply_custom_support_surfaces(enabled: bool, anchors: Array[Dictionary]) -> void:
-	# Used by the editor manager's undo/redo action. Runtime reads the same metadata.
+func apply_custom_support_surfaces(enabled: bool, anchors: Array) -> void:
+	# Accept both typed and ordinary arrays, including empty arrays used by Undo.
+	var copied: Array[Dictionary] = []
+	for raw in anchors:
+		if raw is Dictionary:
+			copied.append(raw.duplicate(true))
 	use_custom_support_surfaces = enabled
-	custom_support_surfaces = anchors.duplicate(true)
+	custom_support_surfaces = copied
 	_register_support_surfaces()
 
 
