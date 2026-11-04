@@ -52,8 +52,17 @@ func run() -> void:
 	var uid: String = Inventory.unused_uid(state.life.inventory,layout.placed_instances,sku)
 	check(not uid.is_empty() and layout.start_place(sku,uid),"purchased frame starts the standard placement workflow")
 	var frame_role: String = Roles.instance_role("poster_floor_frame",uid)
-	layout.preview_placement(Vector2(0.0,-1.5))
-	check(layout.valid and layout.confirm_placement(),"floor staging position confirms")
+	var floor_found := false
+	for z_step in range(-5,6):
+		if floor_found: break
+		for x_step in range(-7,8):
+			var candidate := Vector2(float(x_step)*.5,float(z_step)*.5)
+			layout.preview_placement(candidate)
+			if layout.valid:
+				floor_found = true
+				break
+	check(floor_found,"room has a safe original floor spot for the framed poster")
+	if floor_found: check(layout.confirm_placement(),"floor staging position confirms")
 	check(layout.hang_selected_on_wall(),"frame moves from floor to a valid exterior wall")
 	check(layout.wall_mounts.has(frame_role),"wall attachment is tracked independently of surface mounts")
 	check(layout.nodes[frame_role].position.y > 0.8,"frame is elevated on the wall")
