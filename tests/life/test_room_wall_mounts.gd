@@ -36,6 +36,21 @@ func run() -> void:
 	check(not Wall.fits({"wall":"south","along":float(Blueprint.DEFAULT.door_x),"height":1.2},Blueprint.DEFAULT,.77,1.2),"door opening cannot host frame")
 	check(not Wall.fits({"wall":"west","along":float(Blueprint.DEFAULT.window_z),"height":1.2},Blueprint.DEFAULT,.77,1.2),"window opening cannot host frame")
 	check(not Wall.fits({"wall":"north","along":3.95,"height":1.2},Blueprint.DEFAULT,.77,1.2),"corner clearance enforced")
+	var inner_blueprint: Dictionary = Blueprint.DEFAULT.duplicate(true)
+	inner_blueprint.partitions = [{"x":1.0,"z":1.0,"axis":"x","kind":"wall"}]
+	var inside: Dictionary = {"wall":"partition","part":{"x":1.0,"z":1.0,"axis":"x"},
+		"side":1,"along":0.0,"height":1.20,"floor_pose":pose}
+	check(Wall.clean({role:inside},placed,inner_blueprint).has(role),
+		"interior wall poster retains a stable geometry-based anchor")
+	check(not Wall.fits({"wall":"partition","part":inside.part,"side":1,"along":.3,"height":1.2},inner_blueprint,.77,1.2),
+		"interior artwork cannot extend beyond one-metre wall ends")
+	inner_blueprint.partitions.clear()
+	check(Wall.clean({role:inside},placed,inner_blueprint).is_empty(),
+		"save sanitizer discards dangling frames when supporting partition no longer exists")
+	var spoofed_inner: Dictionary = inside.duplicate(true)
+	spoofed_inner.side = 0
+	check(Wall.clean({role:spoofed_inner},placed,Blueprint.DEFAULT).is_empty(),
+		"invalid interior wall face is rejected")
 
 	var game = load("res://scenes/main/game_root.tscn").instantiate()
 	root.add_child(game)
@@ -138,6 +153,53 @@ func run() -> void:
 	check(recovered.wall_mounts.has(frame_role),"wall mount restored into active layout")
 	check(recovered._layout_blocker().is_empty(),"restored wall frame passes layout validation")
 	check(recovered.nodes.has(frame_role) and recovered.nodes[frame_role].position.y > .8,"wall frame remains elevated after reload")
+	# A second edit mounts the same purchased UID on a player-built partition,
+	# ensures the partition cannot be removed and persists its exact geometry.
+	loaded.persistence_enabled = false
+	resumed.desktop.begin_layout()
+	recovered.select(frame_role)
+	check(recovered.take_down_selected_wall_mount(),"reloaded exterior picture can be taken down")
+	var partition_found := false
+	var installed_part: Dictionary = {}
+	for z_step in range(-4,5):
+		if partition_found: break
+		for x_step in range(-6,7):
+			if partition_found: break
+			for part_axis: String in ["x","z"]:
+				var part: Dictionary = {"x":float(x_step)*.5,"z":float(z_step)*.5,
+					"axis":part_axis,"kind":"wall"}
+				if recovered.partition_blocker(part).is_empty():
+					installed_part = part
+					partition_found = recovered.add_partition(Vector2(float(part.x),float(part.z)),part_axis)
+					if partition_found: break
+	check(partition_found,"a valid player-created interior wall segment can be built")
+	if partition_found:
+		check(recovered.hang_selected_on_partition(Vector2(float(installed_part.x),float(installed_part.z)),
+			str(installed_part.axis),1),"frame can be attached directly to a specified inner-wall face")
+		check(str(recovered.wall_mounts.get(frame_role,{}).get("wall","")) == "partition",
+			"interior placement records its own wall kind")
+		check(not recovered.remove_partition(Vector2(float(installed_part.x),float(installed_part.z))),
+			"occupied interior wall cannot be demolished before taking its decoration down")
+		check(recovered.blueprint.partitions.has(installed_part),
+			"blocked wall demolition leaves structural geometry intact")
+		check(not recovered.set_wall_mount_position(Vector2(3.0,1.2)),
+			"interior wall clamps wall-relative drag to its actual segment length")
+		check(recovered._layout_blocker().is_empty(),"interior picture passes runtime layout collision validation")
+		recovered.undo()
+		check(not recovered.wall_mounts.has(frame_role),
+			"undoing inner-wall mount returns the frame to its original floor position")
+		recovered.redo()
+		check(recovered.wall_mounts.has(frame_role),"redo restores interior wall attachment")
+		loaded.persistence_enabled = true
+		resumed.desktop.finish_layout(true)
+		var persisted: Dictionary = loaded.life.get("wall_mounts",{})
+		check(persisted.has(frame_role) and str(persisted[frame_role].wall) == "partition",
+			"committed JSON saves the exact interior partition binding")
+		var persisted_state := State.new()
+		persisted_state.save_path = loaded.save_path
+		persisted_state.load_state()
+		check(persisted_state.life.get("wall_mounts",{}).has(frame_role),
+			"interior wall mount survives save sanitization and reload")
 	resumed.queue_free()
 	await frames()
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(loaded.save_path))
