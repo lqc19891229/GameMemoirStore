@@ -5,3 +5,5 @@ OFL.txt：Ark Pixel 字体的 SIL Open Font License 1.1 授权文本。
 ArkPixel12.ttf.import：Godot 字体导入配置。
 
 发布或重新分发字体时，应同时保留授权文本，并遵循 OFL 条款。
+
+房间编辑界面使用独立的 assets/room_minimal_theme.tres；字体与主题配置见 assets/README.txt。
