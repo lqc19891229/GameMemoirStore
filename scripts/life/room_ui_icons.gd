@@ -15,6 +15,7 @@ const STROKES := {
 	"mount": '<path d="M3 19h18M5 12h14M7 12V4h10v8M9 16v3m6-3v3"/>',
 	"light": '<path d="M12 2v9M7 5a9 9 0 1 0 10 0"/>',
 	"brightness": '<circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M4.9 4.9l1.4 1.4m11.4 11.4 1.4 1.4M19.1 4.9l-1.4 1.4M6.3 17.7l-1.4 1.4"/>',
+	"temperature": '<path d="M12 3v9a4 4 0 1 1-4 0V3a2 2 0 0 1 4 0z"/><path d="M9 8h3M17 5h4M17 10h4M17 15h4"/>',
 	"furniture": '<path d="M4 12V7a3 3 0 0 1 3-3h10a3 3 0 0 1 3 3v5M4 13h16M4 13v6m16-6v6M7 9v4m10-4v4M4 18h16"/>',
 	"decor": '<path d="M4 19h16M7 17l10-10 3 3-10 10H7zM14 10l3 3M5 6h4M7 4v4"/>',
 	"lighting": '<circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M4.9 4.9l1.4 1.4m11.4 11.4 1.4 1.4M19.1 4.9l-1.4 1.4M6.3 17.7l-1.4 1.4"/>',

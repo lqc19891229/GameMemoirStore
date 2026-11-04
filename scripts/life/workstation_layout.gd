@@ -216,6 +216,7 @@ func _sync_wall_sconce_lights() -> void:
 		var entry: Dictionary = wall_mounts.get(role,{})
 		light.visible = placed_instances.has(role) and not entry.is_empty() and bool(entry.get("on",true))
 		light.light_energy = WallMountData.LAMP_ENERGY[clampi(int(entry.get("level",2)),1,3)-1]
+		light.light_color = WallMountData.LAMP_COLORS[clampi(int(entry.get("tone",1)),1,3)-1]
 
 func set_wall_sconce_light(enabled: bool) -> bool:
 	if not active or not gesture.is_empty() or not wall_mounts.has(selected): return false
@@ -237,6 +238,19 @@ func set_wall_sconce_brightness(level: int) -> bool:
 	if int(entry.get("level",2)) == level: return false
 	var before: Dictionary = _draft()
 	entry["level"] = level
+	wall_mounts[selected] = entry
+	_sync_wall_sconce_lights()
+	_remember(before)
+	update()
+	return true
+
+func set_wall_sconce_temperature(tone: int) -> bool:
+	if not active or not gesture.is_empty() or not wall_mounts.has(selected): return false
+	if Data.base_role(selected) != WallMountData.LAMP_ROLE or tone < 1 or tone > 3: return false
+	var entry: Dictionary = wall_mounts[selected].duplicate(true)
+	if int(entry.get("tone",1)) == tone: return false
+	var before: Dictionary = _draft()
+	entry["tone"] = tone
 	wall_mounts[selected] = entry
 	_sync_wall_sconce_lights()
 	_remember(before)
@@ -298,7 +312,7 @@ func hang_selected_on_wall() -> bool:
 		var pose: Dictionary = {"x":origin.x,"z":origin.z,"yaw":nodes[role].rotation.y}
 		var entry: Dictionary = {"wall":candidate.wall,"along":snappedf(float(candidate.along),grid_step),
 			"height":1.40 if Data.base_role(role) == WallMountData.LAMP_ROLE else 1.20,"floor_pose":pose,
-			"on":true,"level":2}
+			"on":true,"level":2,"tone":1}
 		if str(candidate.wall) == "partition":
 			entry["part"] = candidate.part.duplicate(true)
 			entry["side"] = candidate.side
@@ -333,7 +347,7 @@ func hang_selected_on_partition(at: Vector2, axis: String, side: int = 1) -> boo
 		var mount := {"wall":"partition","part":{"x":float(part.x),"z":float(part.z),"axis":axis},
 			"side":side,"along":clampf(snappedf(along,grid_step),-.09,.09),
 			"height":1.40 if Data.base_role(selected) == WallMountData.LAMP_ROLE else 1.20,
-			"floor_pose":pose,"on":true,"level":2}
+			"floor_pose":pose,"on":true,"level":2,"tone":1}
 		if _attach_selected_wall_frame(mount): return true
 	message = "内墙灯具或画框与墙端或已有装饰发生冲突"
 	changed.emit()
