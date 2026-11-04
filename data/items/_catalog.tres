@@ -1,114 +1,90 @@
-[gd_resource type="Resource" script_class="MemoirItemCatalog" load_steps=89 format=3]
+[gd_resource type="Resource" script_class="MemoirItemCatalog" format=3 uid="uid://d3pdjkyimqqj3"]
 
-[ext_resource type="Script" path="res://scripts/items/item_catalog.gd" id="1"]
-[ext_resource type="Script" path="res://scripts/items/item_definition.gd" id="2"]
-[ext_resource type="PackedScene" path="res://scenes/room/seating/chair.tscn" id="s_chair"]
-[ext_resource type="PackedScene" path="res://scenes/room/storage/bookcase.tscn" id="s_bookcase"]
-[ext_resource type="PackedScene" path="res://scenes/room/lighting/lamp.tscn" id="s_lamp"]
-[ext_resource type="PackedScene" path="res://scenes/room/decor/rug.tscn" id="s_rug"]
-[ext_resource type="PackedScene" path="res://scenes/room/decor/plant.tscn" id="s_plant"]
-[ext_resource type="PackedScene" path="res://scenes/room/seating/sofa.tscn" id="s_sofa"]
-[ext_resource type="PackedScene" path="res://scenes/room/seating/stool.tscn" id="s_stool"]
-[ext_resource type="PackedScene" path="res://scenes/room/tables/side_table_oak.tscn" id="exp_side_table_oak"]
-[ext_resource type="PackedScene" path="res://scenes/room/tables/side_table_steel.tscn" id="exp_side_table_steel"]
-[ext_resource type="PackedScene" path="res://scenes/room/tables/coffee_table_round.tscn" id="exp_coffee_table_round"]
-[ext_resource type="PackedScene" path="res://scenes/room/tables/coffee_table_glass.tscn" id="exp_coffee_table_glass"]
-[ext_resource type="PackedScene" path="res://scenes/room/tables/writing_table.tscn" id="exp_writing_table"]
-[ext_resource type="PackedScene" path="res://scenes/room/seating/lounge_chair.tscn" id="exp_lounge_chair"]
-[ext_resource type="PackedScene" path="res://scenes/room/seating/chair_mesh.tscn" id="exp_chair_mesh"]
-[ext_resource type="PackedScene" path="res://scenes/room/seating/sofa_modular.tscn" id="exp_sofa_modular"]
-[ext_resource type="PackedScene" path="res://scenes/room/seating/bench_cushion.tscn" id="exp_bench_cushion"]
-[ext_resource type="PackedScene" path="res://scenes/room/storage/shelf_low.tscn" id="exp_shelf_low"]
-[ext_resource type="PackedScene" path="res://scenes/room/storage/shelf_ladder.tscn" id="exp_shelf_ladder"]
-[ext_resource type="PackedScene" path="res://scenes/room/storage/media_console.tscn" id="exp_media_console"]
-[ext_resource type="PackedScene" path="res://scenes/room/storage/display_cabinet.tscn" id="exp_display_cabinet"]
-[ext_resource type="PackedScene" path="res://scenes/room/lighting/lamp_tripod.tscn" id="exp_lamp_tripod"]
-[ext_resource type="PackedScene" path="res://scenes/room/lighting/lamp_arc.tscn" id="exp_lamp_arc"]
-[ext_resource type="PackedScene" path="res://scenes/room/lighting/lamp_cylinder.tscn" id="exp_lamp_cylinder"]
-[ext_resource type="PackedScene" path="res://scenes/room/decor/plant_cactus.tscn" id="exp_plant_cactus"]
-[ext_resource type="PackedScene" path="res://scenes/room/decor/plant_palm.tscn" id="exp_plant_palm"]
-[ext_resource type="PackedScene" path="res://scenes/room/decor/rug_geometric.tscn" id="exp_rug_geometric"]
-[ext_resource type="PackedScene" path="res://scenes/room/decor/rug_round.tscn" id="exp_rug_round"]
-
-[ext_resource type="PackedScene" path="res://scenes/room/decor/vinyl_crate.tscn" id="exp_vinyl_crate"]
-[ext_resource type="PackedScene" path="res://scenes/room/decor/collectible_podium.tscn" id="exp_collectible_podium"]
-[ext_resource type="PackedScene" path="res://scenes/room/decor/poster_floor_frame.tscn" id="exp_poster_floor_frame"]
-[ext_resource type="PackedScene" path="res://scenes/room/lighting/wall_sconce.tscn" id="exp_wall_sconce"]
-[ext_resource type="PackedScene" path="res://scenes/room/storage/game_display_shelf.tscn" id="exp_game_display_shelf"]
-[ext_resource type="PackedScene" path="res://scenes/room/seating/lounge_cushion_pair.tscn" id="exp_lounge_cushion_pair"]
-[ext_resource type="PackedScene" path="res://scenes/room/decor/desk_memento.tscn" id="exp_desk_memento"]
-[ext_resource type="PackedScene" path="res://scenes/room/decor/mini_book_stack.tscn" id="exp_mini_book_stack"]
-[ext_resource type="PackedScene" path="res://scenes/room/decor/retro_speaker_tower.tscn" id="exp_retro_speaker_tower"]
+[ext_resource type="Script" uid="uid://b3ilypcb0cnql" path="res://scripts/items/item_definition.gd" id="1_71y6h"]
+[ext_resource type="PackedScene" path="res://scenes/room/seating/chair.tscn" id="2_mxjg5"]
+[ext_resource type="PackedScene" path="res://scenes/room/storage/bookcase.tscn" id="3_l4bff"]
+[ext_resource type="PackedScene" path="res://scenes/room/lighting/lamp.tscn" id="4_w8kot"]
+[ext_resource type="PackedScene" path="res://scenes/room/decor/rug.tscn" id="5_sb30q"]
+[ext_resource type="PackedScene" path="res://scenes/room/decor/plant.tscn" id="6_fdgs2"]
+[ext_resource type="PackedScene" path="res://scenes/room/seating/sofa.tscn" id="7_5lub2"]
+[ext_resource type="PackedScene" path="res://scenes/room/seating/stool.tscn" id="8_taaqq"]
+[ext_resource type="PackedScene" path="res://scenes/room/tables/side_table_oak.tscn" id="9_2chn0"]
+[ext_resource type="PackedScene" path="res://scenes/room/tables/side_table_steel.tscn" id="10_ewdux"]
+[ext_resource type="PackedScene" path="res://scenes/room/tables/coffee_table_round.tscn" id="11_xxnm2"]
+[ext_resource type="PackedScene" path="res://scenes/room/tables/coffee_table_glass.tscn" id="12_kko3y"]
+[ext_resource type="PackedScene" path="res://scenes/room/tables/writing_table.tscn" id="13_42whu"]
+[ext_resource type="PackedScene" path="res://scenes/room/seating/lounge_chair.tscn" id="14_2luyj"]
+[ext_resource type="PackedScene" path="res://scenes/room/seating/chair_mesh.tscn" id="15_hvxpr"]
+[ext_resource type="PackedScene" path="res://scenes/room/seating/sofa_modular.tscn" id="16_3elym"]
+[ext_resource type="PackedScene" path="res://scenes/room/seating/bench_cushion.tscn" id="17_ggb3w"]
+[ext_resource type="PackedScene" path="res://scenes/room/storage/shelf_low.tscn" id="18_r50g2"]
+[ext_resource type="PackedScene" path="res://scenes/room/storage/shelf_ladder.tscn" id="19_a2w1d"]
+[ext_resource type="PackedScene" path="res://scenes/room/storage/media_console.tscn" id="20_qpm1b"]
+[ext_resource type="PackedScene" path="res://scenes/room/storage/display_cabinet.tscn" id="21_2n32r"]
+[ext_resource type="PackedScene" path="res://scenes/room/lighting/lamp_tripod.tscn" id="22_gg7c1"]
+[ext_resource type="PackedScene" path="res://scenes/room/lighting/lamp_arc.tscn" id="23_ixolv"]
+[ext_resource type="PackedScene" path="res://scenes/room/lighting/lamp_cylinder.tscn" id="24_w1j77"]
+[ext_resource type="PackedScene" path="res://scenes/room/decor/plant_cactus.tscn" id="25_juifr"]
+[ext_resource type="PackedScene" path="res://scenes/room/decor/plant_palm.tscn" id="26_nn01i"]
+[ext_resource type="PackedScene" path="res://scenes/room/decor/rug_geometric.tscn" id="27_mvdwb"]
+[ext_resource type="PackedScene" path="res://scenes/room/decor/rug_round.tscn" id="28_d2n8c"]
+[ext_resource type="PackedScene" path="res://scenes/room/decor/vinyl_crate.tscn" id="29_mu4rq"]
+[ext_resource type="PackedScene" path="res://scenes/room/decor/collectible_podium.tscn" id="30_iopho"]
+[ext_resource type="PackedScene" path="res://scenes/room/decor/poster_floor_frame.tscn" id="31_xnrpn"]
+[ext_resource type="PackedScene" path="res://scenes/room/storage/game_display_shelf.tscn" id="32_5ytbw"]
+[ext_resource type="PackedScene" path="res://scenes/room/seating/lounge_cushion_pair.tscn" id="33_hkut8"]
+[ext_resource type="PackedScene" path="res://scenes/room/decor/retro_speaker_tower.tscn" id="34_sori5"]
+[ext_resource type="PackedScene" path="res://scenes/room/decor/desk_memento.tscn" id="35_blfbu"]
+[ext_resource type="PackedScene" path="res://scenes/room/decor/mini_book_stack.tscn" id="36_curca"]
+[ext_resource type="PackedScene" path="res://scenes/room/lighting/wall_sconce.tscn" id="37_7rgta"]
+[ext_resource type="PackedScene" uid="uid://bt4gyph7dc273" path="res://scenes/room/seating/chair_gaming.tscn" id="38_kowlq"]
+[ext_resource type="Script" uid="uid://uvb78r526nb1" path="res://scripts/items/item_catalog.gd" id="39_ac6gt"]
 
 [sub_resource type="Resource" id="item_0"]
-script = ExtResource("2")
+script = ExtResource("1_71y6h")
 item_id = "starter_monitor"
 name = "旧日 CRT 显示器"
-category = "device"
 subcategory = "monitor"
 slot = "monitor"
-price = 0
 description = "厚实的米色边框，熟悉的游戏时光。"
 placement_surface = "desk"
 visual_id = "starter_monitor"
-speed = 1
-income = 0
-capacity = 0
-retired = false
 
 [sub_resource type="Resource" id="item_1"]
-script = ExtResource("2")
+script = ExtResource("1_71y6h")
 item_id = "lcd_monitor"
 name = "轻薄液晶显示器"
-category = "device"
 subcategory = "monitor"
 slot = "monitor"
 price = 75
 description = "更轻薄的银灰色显示器。"
 placement_surface = "desk"
 visual_id = "lcd_monitor"
-speed = 1
-income = 0
-capacity = 0
-retired = false
 
 [sub_resource type="Resource" id="item_2"]
-script = ExtResource("2")
+script = ExtResource("1_71y6h")
 item_id = "starter_pc"
 name = "旧日主机"
-category = "device"
 subcategory = "computer"
 slot = "computer"
-price = 0
 description = "陪你开始收藏的第一台电脑。"
 placement_surface = "desk"
 visual_id = "starter_pc"
-speed = 1
-income = 0
-capacity = 0
-retired = false
 
 [sub_resource type="Resource" id="item_3"]
-script = ExtResource("2")
+script = ExtResource("1_71y6h")
 item_id = "starter_mouse"
 name = "有线键鼠"
-category = "device"
 subcategory = "input"
 slot = "peripheral"
-price = 0
 description = "可靠的入门外设。"
 placement_surface = "desk"
 visual_id = "starter_mouse"
-speed = 1
-income = 0
-capacity = 0
-retired = false
 
 [sub_resource type="Resource" id="item_4"]
-script = ExtResource("2")
+script = ExtResource("1_71y6h")
 item_id = "precise_mouse"
 name = "精准键鼠套装"
-category = "device"
 subcategory = "input"
 slot = "peripheral"
 price = 28
@@ -116,31 +92,22 @@ description = "成就挑战进度增加 15%。"
 placement_surface = "desk"
 visual_id = "precise_mouse"
 speed = 1.15
-income = 0
-capacity = 0
-retired = false
 
 [sub_resource type="Resource" id="item_5"]
-script = ExtResource("2")
+script = ExtResource("1_71y6h")
 item_id = "stream_mic"
 name = "桌面麦克风"
-category = "device"
 subcategory = "microphone"
 slot = "audio"
 price = 45
 description = "直播每次结算额外获得 1 点。"
 placement_surface = "desk"
-visual_id = ""
-speed = 1
 income = 1
-capacity = 0
-retired = false
 
 [sub_resource type="Resource" id="item_6"]
-script = ExtResource("2")
+script = ExtResource("1_71y6h")
 item_id = "workstation"
 name = "进阶游戏主机"
-category = "device"
 subcategory = "computer"
 slot = "computer"
 price = 120
@@ -149,43 +116,32 @@ placement_surface = "desk"
 visual_id = "workstation"
 speed = 1.2
 income = 1
-capacity = 0
-retired = false
 
 [sub_resource type="Resource" id="item_7"]
-script = ExtResource("2")
+script = ExtResource("1_71y6h")
 item_id = "starter_desk"
 name = "旧木书桌"
 category = "furniture"
 subcategory = "desk"
 slot = "desk"
-price = 0
 description = "历史收藏记录。"
 placement_surface = "floor"
-visual_id = ""
-speed = 1
-income = 0
-capacity = 0
 retired = true
 
 [sub_resource type="Resource" id="item_8"]
-script = ExtResource("2")
+script = ExtResource("1_71y6h")
 item_id = "starter_cabinet"
 name = "纪念小架"
 category = "furniture"
 subcategory = "cabinet"
 slot = "cabinet"
-price = 0
 description = "历史收藏记录。"
 placement_surface = "floor"
-visual_id = ""
-speed = 1
-income = 0
 capacity = 1
 retired = true
 
 [sub_resource type="Resource" id="item_9"]
-script = ExtResource("2")
+script = ExtResource("1_71y6h")
 item_id = "oak_desk"
 name = "橡木工作台"
 category = "furniture"
@@ -194,14 +150,10 @@ slot = "desk"
 price = 60
 description = "历史收藏记录。"
 placement_surface = "floor"
-visual_id = ""
-speed = 1
-income = 0
-capacity = 0
 retired = true
 
 [sub_resource type="Resource" id="item_10"]
-script = ExtResource("2")
+script = ExtResource("1_71y6h")
 item_id = "reading_lamp"
 name = "暖光台灯"
 category = "furniture"
@@ -210,14 +162,10 @@ slot = "decor"
 price = 24
 description = "历史收藏记录。"
 placement_surface = "floor"
-visual_id = ""
-speed = 1
-income = 0
-capacity = 0
 retired = true
 
 [sub_resource type="Resource" id="item_11"]
-script = ExtResource("2")
+script = ExtResource("1_71y6h")
 item_id = "display_cabinet"
 name = "玻璃成就柜"
 category = "furniture"
@@ -226,112 +174,78 @@ slot = "cabinet"
 price = 80
 description = "历史收藏记录。"
 placement_surface = "floor"
-visual_id = ""
-speed = 1
-income = 0
 capacity = 3
 retired = true
 
 [sub_resource type="Resource" id="item_12"]
-script = ExtResource("2")
+script = ExtResource("1_71y6h")
 item_id = "room_chair"
-catalog_group = "seating"
-catalog_type = "office_chair"
 name = "现代办公椅"
 category = "furniture"
 subcategory = "chair"
-slot = ""
+catalog_group = "seating"
+catalog_type = "office_chair"
 price = 90
 description = "可以放置在房间地面。"
 placement_surface = "floor"
-visual_id = ""
-speed = 1
-income = 0
-capacity = 0
-retired = false
-furniture_scene = ExtResource("s_chair")
+furniture_scene = ExtResource("2_mxjg5")
 
 [sub_resource type="Resource" id="item_13"]
-script = ExtResource("2")
+script = ExtResource("1_71y6h")
 item_id = "room_bookcase"
-catalog_group = "storage"
-catalog_type = "bookcase"
 name = "现代书架"
 category = "furniture"
 subcategory = "bookcase"
-slot = ""
+catalog_group = "storage"
+catalog_type = "bookcase"
 price = 85
 description = "可以放置在房间地面。"
 placement_surface = "floor"
-visual_id = ""
-speed = 1
-income = 0
-capacity = 0
-retired = false
-furniture_scene = ExtResource("s_bookcase")
+furniture_scene = ExtResource("3_l4bff")
 
 [sub_resource type="Resource" id="item_14"]
-script = ExtResource("2")
+script = ExtResource("1_71y6h")
 item_id = "room_lamp"
-catalog_group = "lighting"
-catalog_type = "floor_lamp"
 name = "现代落地灯"
 category = "furniture"
 subcategory = "lamp"
-slot = ""
+catalog_group = "lighting"
+catalog_type = "floor_lamp"
 price = 40
 description = "可以放置在房间地面。"
 placement_surface = "floor"
-visual_id = ""
-speed = 1
-income = 0
-capacity = 0
-retired = false
-furniture_scene = ExtResource("s_lamp")
+furniture_scene = ExtResource("4_w8kot")
 
 [sub_resource type="Resource" id="item_15"]
-script = ExtResource("2")
+script = ExtResource("1_71y6h")
 item_id = "room_rug"
-catalog_group = "decor"
-catalog_type = "rug"
 name = "现代地毯"
 category = "furniture"
 subcategory = "rug"
-slot = ""
+catalog_group = "decor"
+catalog_type = "rug"
 price = 35
 description = "可以放置在房间地面。"
 placement_surface = "floor"
-visual_id = ""
-speed = 1
-income = 0
-capacity = 0
-retired = false
-furniture_scene = ExtResource("s_rug")
+furniture_scene = ExtResource("5_sb30q")
 
 [sub_resource type="Resource" id="item_16"]
-script = ExtResource("2")
+script = ExtResource("1_71y6h")
 item_id = "room_plant"
-catalog_group = "decor"
-catalog_type = "plant"
 name = "室内绿植"
 category = "furniture"
 subcategory = "plant"
-slot = ""
+catalog_group = "decor"
+catalog_type = "plant"
 price = 25
 description = "可以放置在房间地面。"
 placement_surface = "floor"
-visual_id = ""
-speed = 1
-income = 0
-capacity = 0
-retired = false
-furniture_scene = ExtResource("s_plant")
+furniture_scene = ExtResource("6_fdgs2")
 
 [sub_resource type="Resource" id="item_17"]
-script = ExtResource("2")
+script = ExtResource("1_71y6h")
 item_id = "mechanical_keyboard"
 name = "机械键盘"
-category = "device"
 subcategory = "keyboard"
 slot = "keyboard"
 price = 35
@@ -339,15 +253,11 @@ description = "独立升级键盘。"
 placement_surface = "desk"
 visual_id = "precise_mouse"
 speed = 1.03
-income = 0
-capacity = 0
-retired = false
 
 [sub_resource type="Resource" id="item_18"]
-script = ExtResource("2")
+script = ExtResource("1_71y6h")
 item_id = "optical_mouse"
 name = "光学游戏鼠标"
-category = "device"
 subcategory = "mouse"
 slot = "mouse"
 price = 25
@@ -355,601 +265,424 @@ description = "独立升级鼠标。"
 placement_surface = "desk"
 visual_id = "precise_mouse"
 speed = 1.1
-income = 0
-capacity = 0
-retired = false
 
 [sub_resource type="Resource" id="item_19"]
-script = ExtResource("2")
+script = ExtResource("1_71y6h")
 item_id = "room_sofa"
-catalog_group = "seating"
-catalog_type = "sofa"
 name = "奶油双人沙发"
 category = "furniture"
 subcategory = "sofa"
-slot = ""
+catalog_group = "seating"
+catalog_type = "sofa"
 price = 110
 description = "柔软坐垫和双层靠背，为游戏房间增添休息区。"
 placement_surface = "floor"
-visual_id = ""
-speed = 1
-income = 0
-capacity = 0
-retired = false
-furniture_scene = ExtResource("s_sofa")
+furniture_scene = ExtResource("7_5lub2")
 
 [sub_resource type="Resource" id="item_20"]
-script = ExtResource("2")
+script = ExtResource("1_71y6h")
 item_id = "room_stool"
-catalog_group = "seating"
-catalog_type = "stool"
 name = "胡桃木软垫矮凳"
 category = "furniture"
 subcategory = "stool"
-slot = ""
+catalog_group = "seating"
+catalog_type = "stool"
 price = 42
 description = "小巧的软垫边凳与托盘，适合书架或休息角。"
 placement_surface = "floor"
-visual_id = ""
-speed = 1
-income = 0
-capacity = 0
-retired = false
-furniture_scene = ExtResource("s_stool")
+furniture_scene = ExtResource("8_taaqq")
 
 [sub_resource type="Resource" id="item_21"]
-script = ExtResource("2")
+script = ExtResource("1_71y6h")
 item_id = "room_side_table_oak"
-catalog_group = "tables"
-catalog_type = "side_table"
 name = "橡木床边桌"
 category = "furniture"
 subcategory = "side_table_oak"
-slot = ""
+catalog_group = "tables"
+catalog_type = "side_table"
 price = 62
 description = "小型橡木边桌，带开放下层搁板。"
 placement_surface = "floor"
-visual_id = ""
-speed = 1
-income = 0
-capacity = 0
-retired = false
-furniture_scene = ExtResource("exp_side_table_oak")
+furniture_scene = ExtResource("9_2chn0")
 
 [sub_resource type="Resource" id="item_22"]
-script = ExtResource("2")
+script = ExtResource("1_71y6h")
 item_id = "room_side_table_steel"
-catalog_group = "tables"
-catalog_type = "side_table"
 name = "工业金属边桌"
 category = "furniture"
 subcategory = "side_table_steel"
-slot = ""
+catalog_group = "tables"
+catalog_type = "side_table"
 price = 68
 description = "金属框架与原木拼接的轻巧边桌。"
 placement_surface = "floor"
-visual_id = ""
-speed = 1
-income = 0
-capacity = 0
-retired = false
-furniture_scene = ExtResource("exp_side_table_steel")
+furniture_scene = ExtResource("10_ewdux")
 
 [sub_resource type="Resource" id="item_23"]
-script = ExtResource("2")
+script = ExtResource("1_71y6h")
 item_id = "room_coffee_table_round"
-catalog_group = "tables"
-catalog_type = "coffee_table"
 name = "圆形木茶几"
 category = "furniture"
 subcategory = "coffee_table_round"
-slot = ""
+catalog_group = "tables"
+catalog_type = "coffee_table"
 price = 87
 description = "温润圆角台面搭配中央木质支柱。"
 placement_surface = "floor"
-visual_id = ""
-speed = 1
-income = 0
-capacity = 0
-retired = false
-furniture_scene = ExtResource("exp_coffee_table_round")
+furniture_scene = ExtResource("11_xxnm2")
 
 [sub_resource type="Resource" id="item_24"]
-script = ExtResource("2")
+script = ExtResource("1_71y6h")
 item_id = "room_coffee_table_glass"
-catalog_group = "tables"
-catalog_type = "coffee_table"
 name = "玻璃方茶几"
 category = "furniture"
 subcategory = "coffee_table_glass"
-slot = ""
+catalog_group = "tables"
+catalog_type = "coffee_table"
 price = 105
 description = "透明玻璃面与古铜金属边框。"
 placement_surface = "floor"
-visual_id = ""
-speed = 1
-income = 0
-capacity = 0
-retired = false
-furniture_scene = ExtResource("exp_coffee_table_glass")
+furniture_scene = ExtResource("12_kko3y")
 
 [sub_resource type="Resource" id="item_25"]
-script = ExtResource("2")
+script = ExtResource("1_71y6h")
 item_id = "room_writing_table"
-catalog_group = "tables"
-catalog_type = "writing_desk"
 name = "胡桃木写字桌"
 category = "furniture"
 subcategory = "writing_table"
-slot = ""
+catalog_group = "tables"
+catalog_type = "writing_desk"
 price = 135
 description = "独立摆放的装饰写字桌；电脑设备仍须安装于主电脑桌。"
 placement_surface = "floor"
-visual_id = ""
-speed = 1
-income = 0
-capacity = 0
-retired = false
-furniture_scene = ExtResource("exp_writing_table")
+furniture_scene = ExtResource("13_42whu")
 
 [sub_resource type="Resource" id="item_26"]
-script = ExtResource("2")
+script = ExtResource("1_71y6h")
 item_id = "room_lounge_chair"
-catalog_group = "seating"
-catalog_type = "lounge_chair"
 name = "苔绿休闲单椅"
 category = "furniture"
 subcategory = "lounge_chair"
-slot = ""
+catalog_group = "seating"
+catalog_type = "lounge_chair"
 price = 88
 description = "带宽扶手和软垫靠背的舒适单椅。"
 placement_surface = "floor"
-visual_id = ""
-speed = 1
-income = 0
-capacity = 0
-retired = false
-furniture_scene = ExtResource("exp_lounge_chair")
+furniture_scene = ExtResource("14_2luyj")
 
 [sub_resource type="Resource" id="item_27"]
-script = ExtResource("2")
+script = ExtResource("1_71y6h")
 item_id = "room_chair_mesh"
-catalog_group = "seating"
-catalog_type = "office_chair"
 name = "透气网布办公椅"
 category = "furniture"
 subcategory = "chair_mesh"
-slot = ""
+catalog_group = "seating"
+catalog_type = "office_chair"
 price = 95
 description = "轻质网布靠背、旋转支柱与五爪底座。"
 placement_surface = "floor"
-visual_id = ""
-speed = 1
-income = 0
-capacity = 0
-retired = false
-furniture_scene = ExtResource("exp_chair_mesh")
+furniture_scene = ExtResource("15_hvxpr")
 
 [sub_resource type="Resource" id="item_28"]
-script = ExtResource("2")
+script = ExtResource("1_71y6h")
 item_id = "room_sofa_modular"
-catalog_group = "seating"
-catalog_type = "sofa"
 name = "拼接三人沙发"
 category = "furniture"
 subcategory = "sofa_modular"
-slot = ""
+catalog_group = "seating"
+catalog_type = "sofa"
 price = 158
 description = "三块独立坐垫与低靠背的宽体沙发。"
 placement_surface = "floor"
-visual_id = ""
-speed = 1
-income = 0
-capacity = 0
-retired = false
-furniture_scene = ExtResource("exp_sofa_modular")
+furniture_scene = ExtResource("16_3elym")
 
 [sub_resource type="Resource" id="item_29"]
-script = ExtResource("2")
+script = ExtResource("1_71y6h")
 item_id = "room_bench_cushion"
-catalog_group = "seating"
-catalog_type = "bench"
 name = "原木长软凳"
 category = "furniture"
 subcategory = "bench_cushion"
-slot = ""
+catalog_group = "seating"
+catalog_type = "bench"
 price = 75
 description = "适合休息角或陈列区的软垫长凳。"
 placement_surface = "floor"
-visual_id = ""
-speed = 1
-income = 0
-capacity = 0
-retired = false
-furniture_scene = ExtResource("exp_bench_cushion")
+furniture_scene = ExtResource("17_ggb3w")
 
 [sub_resource type="Resource" id="item_30"]
-script = ExtResource("2")
+script = ExtResource("1_71y6h")
 item_id = "room_shelf_low"
-catalog_group = "storage"
-catalog_type = "shelf"
 name = "矮开放书架"
 category = "furniture"
 subcategory = "shelf_low"
-slot = ""
+catalog_group = "storage"
+catalog_type = "shelf"
 price = 89
 description = "三层低矮书架，内置陈列书籍。"
 placement_surface = "floor"
-visual_id = ""
-speed = 1
-income = 0
-capacity = 0
-retired = false
-furniture_scene = ExtResource("exp_shelf_low")
+furniture_scene = ExtResource("18_r50g2")
 
 [sub_resource type="Resource" id="item_31"]
-script = ExtResource("2")
+script = ExtResource("1_71y6h")
 item_id = "room_shelf_ladder"
-catalog_group = "storage"
-catalog_type = "shelf"
 name = "金属梯形展示架"
 category = "furniture"
 subcategory = "shelf_ladder"
-slot = ""
+catalog_group = "storage"
+catalog_type = "shelf"
 price = 112
 description = "细金属框与阶梯式橡木层板。"
 placement_surface = "floor"
-visual_id = ""
-speed = 1
-income = 0
-capacity = 0
-retired = false
-furniture_scene = ExtResource("exp_shelf_ladder")
+furniture_scene = ExtResource("19_a2w1d")
 
 [sub_resource type="Resource" id="item_32"]
-script = ExtResource("2")
+script = ExtResource("1_71y6h")
 item_id = "room_media_console"
-catalog_group = "storage"
-catalog_type = "cabinet"
 name = "奶油木电视柜"
 category = "furniture"
 subcategory = "media_console"
-slot = ""
+catalog_group = "storage"
+catalog_type = "cabinet"
 price = 145
 description = "多扇储物柜门与低矮金属支脚。"
 placement_surface = "floor"
-visual_id = ""
-speed = 1
-income = 0
-capacity = 0
-retired = false
-furniture_scene = ExtResource("exp_media_console")
+furniture_scene = ExtResource("20_qpm1b")
 
 [sub_resource type="Resource" id="item_33"]
-script = ExtResource("2")
+script = ExtResource("1_71y6h")
 item_id = "room_display_cabinet"
-catalog_group = "storage"
-catalog_type = "cabinet"
 name = "玻璃奖杯展示柜"
 category = "furniture"
 subcategory = "display_cabinet"
-slot = ""
+catalog_group = "storage"
+catalog_type = "cabinet"
 price = 165
 description = "透明柜门与多层可视展示空间。"
 placement_surface = "floor"
-visual_id = ""
-speed = 1
-income = 0
-capacity = 0
-retired = false
-furniture_scene = ExtResource("exp_display_cabinet")
+furniture_scene = ExtResource("21_2n32r")
 
 [sub_resource type="Resource" id="item_34"]
-script = ExtResource("2")
+script = ExtResource("1_71y6h")
 item_id = "room_lamp_tripod"
-catalog_group = "lighting"
-catalog_type = "floor_lamp"
 name = "三脚暖光落地灯"
 category = "furniture"
 subcategory = "lamp_tripod"
-slot = ""
+catalog_group = "lighting"
+catalog_type = "floor_lamp"
 price = 66
 description = "三脚支架与亚麻灯罩，带真实局部光源。"
 placement_surface = "floor"
-visual_id = ""
-speed = 1
-income = 0
-capacity = 0
-retired = false
-furniture_scene = ExtResource("exp_lamp_tripod")
+furniture_scene = ExtResource("22_gg7c1")
 
 [sub_resource type="Resource" id="item_35"]
-script = ExtResource("2")
+script = ExtResource("1_71y6h")
 item_id = "room_lamp_arc"
-catalog_group = "lighting"
-catalog_type = "floor_lamp"
 name = "现代弧形落地灯"
 category = "furniture"
 subcategory = "lamp_arc"
-slot = ""
+catalog_group = "lighting"
+catalog_type = "floor_lamp"
 price = 92
 description = "悬臂灯头适合沙发和阅读角。"
 placement_surface = "floor"
-visual_id = ""
-speed = 1
-income = 0
-capacity = 0
-retired = false
-furniture_scene = ExtResource("exp_lamp_arc")
+furniture_scene = ExtResource("23_ixolv")
 
 [sub_resource type="Resource" id="item_36"]
-script = ExtResource("2")
+script = ExtResource("1_71y6h")
 item_id = "room_lamp_cylinder"
-catalog_group = "lighting"
-catalog_type = "ambient_light"
 name = "柱形氛围灯"
 category = "furniture"
 subcategory = "lamp_cylinder"
-slot = ""
+catalog_group = "lighting"
+catalog_type = "ambient_light"
 price = 78
 description = "现代磨砂灯罩与柔和的独立发光层。"
 placement_surface = "floor"
-visual_id = ""
-speed = 1
-income = 0
-capacity = 0
-retired = false
-furniture_scene = ExtResource("exp_lamp_cylinder")
+furniture_scene = ExtResource("24_w1j77")
 
 [sub_resource type="Resource" id="item_37"]
-script = ExtResource("2")
+script = ExtResource("1_71y6h")
 item_id = "room_plant_cactus"
-catalog_group = "decor"
-catalog_type = "plant"
 name = "沙漠仙人掌盆栽"
 category = "furniture"
 subcategory = "plant_cactus"
-slot = ""
+catalog_group = "decor"
+catalog_type = "plant"
 price = 32
 description = "陶盆内的仙人掌与两根侧枝。"
 placement_surface = "floor"
-visual_id = ""
-speed = 1
-income = 0
-capacity = 0
-retired = false
-furniture_scene = ExtResource("exp_plant_cactus")
+furniture_scene = ExtResource("25_juifr")
 
 [sub_resource type="Resource" id="item_38"]
-script = ExtResource("2")
+script = ExtResource("1_71y6h")
 item_id = "room_plant_palm"
-catalog_group = "decor"
-catalog_type = "plant"
 name = "室内高株棕榈"
 category = "furniture"
 subcategory = "plant_palm"
-slot = ""
+catalog_group = "decor"
+catalog_type = "plant"
 price = 54
 description = "高株盆栽与七组舒展的棕榈叶。"
 placement_surface = "floor"
-visual_id = ""
-speed = 1
-income = 0
-capacity = 0
-retired = false
-furniture_scene = ExtResource("exp_plant_palm")
+furniture_scene = ExtResource("26_nn01i")
 
 [sub_resource type="Resource" id="item_39"]
-script = ExtResource("2")
+script = ExtResource("1_71y6h")
 item_id = "room_rug_geometric"
-catalog_group = "decor"
-catalog_type = "rug"
 name = "织纹几何地毯"
 category = "furniture"
 subcategory = "rug_geometric"
-slot = ""
+catalog_group = "decor"
+catalog_type = "rug"
 price = 56
 description = "低绒羊毛织纹和多道条纹装饰。"
 placement_surface = "floor"
-visual_id = ""
-speed = 1
-income = 0
-capacity = 0
-retired = false
-furniture_scene = ExtResource("exp_rug_geometric")
+furniture_scene = ExtResource("27_mvdwb")
 
 [sub_resource type="Resource" id="item_40"]
-script = ExtResource("2")
+script = ExtResource("1_71y6h")
 item_id = "room_rug_round"
-catalog_group = "decor"
-catalog_type = "rug"
 name = "鼠尾草圆地毯"
 category = "furniture"
 subcategory = "rug_round"
-slot = ""
+catalog_group = "decor"
+catalog_type = "rug"
 price = 52
 description = "圆形薄绒地毯配同心花纹。"
 placement_surface = "floor"
-visual_id = ""
-speed = 1
-income = 0
-capacity = 0
-retired = false
-furniture_scene = ExtResource("exp_rug_round")
+furniture_scene = ExtResource("28_d2n8c")
 
 [sub_resource type="Resource" id="item_41"]
-script = ExtResource("2")
+script = ExtResource("1_71y6h")
 item_id = "room_vinyl_crate"
-catalog_group = "decor"
-catalog_type = "ornament"
 name = "黑胶唱片收纳箱"
 category = "furniture"
 subcategory = "vinyl_crate"
-slot = ""
+catalog_group = "decor"
+catalog_type = "ornament"
 price = 48
 description = "带实木箱体、独立封套和金属提手的黑胶唱片收藏。"
 placement_surface = "floor"
-visual_id = ""
-speed = 1
-income = 0
-capacity = 0
-retired = false
-furniture_scene = ExtResource("exp_vinyl_crate")
+furniture_scene = ExtResource("29_mu4rq")
 
 [sub_resource type="Resource" id="item_42"]
-script = ExtResource("2")
+script = ExtResource("1_71y6h")
 item_id = "room_collectible_podium"
-catalog_group = "decor"
-catalog_type = "ornament"
 name = "游戏收藏品展示座"
 category = "furniture"
 subcategory = "collectible_podium"
-slot = ""
+catalog_group = "decor"
+catalog_type = "ornament"
 price = 72
 description = "带铭牌的手办展台；可摆在游戏房间的空余地面。"
 placement_surface = "floor"
-visual_id = ""
-speed = 1
-income = 0
-capacity = 0
-retired = false
-furniture_scene = ExtResource("exp_collectible_podium")
+furniture_scene = ExtResource("30_iopho")
 
 [sub_resource type="Resource" id="item_43"]
-script = ExtResource("2")
+script = ExtResource("1_71y6h")
 item_id = "room_poster_floor_frame"
-catalog_group = "decor"
-catalog_type = "poster"
 name = "落地游戏主题画框"
 category = "furniture"
 subcategory = "poster_floor_frame"
-slot = ""
+catalog_group = "decor"
+catalog_type = "poster"
 price = 58
 description = "胡桃木画框与抽象游戏风景插画，靠墙落地摆放。"
 placement_surface = "floor"
-visual_id = ""
-speed = 1
-income = 0
-capacity = 0
-retired = false
-furniture_scene = ExtResource("exp_poster_floor_frame")
+furniture_scene = ExtResource("31_xnrpn")
 
 [sub_resource type="Resource" id="item_44"]
-script = ExtResource("2")
+script = ExtResource("1_71y6h")
 item_id = "room_game_display_shelf"
-catalog_group = "storage"
-catalog_type = "shelf"
 name = "游戏收藏展示架"
 category = "furniture"
 subcategory = "game_display_shelf"
-slot = ""
+catalog_group = "storage"
+catalog_type = "shelf"
 price = 118
 description = "内置游戏盒、艺术设定集与装饰小主机的收藏展示架。"
 placement_surface = "floor"
-visual_id = ""
-speed = 1
-income = 0
-capacity = 0
-retired = false
-furniture_scene = ExtResource("exp_game_display_shelf")
+furniture_scene = ExtResource("32_5ytbw")
 
 [sub_resource type="Resource" id="item_45"]
-script = ExtResource("2")
+script = ExtResource("1_71y6h")
 item_id = "room_lounge_cushion_pair"
-catalog_group = "seating"
-catalog_type = "cushion"
 name = "双拼休闲坐垫"
 category = "furniture"
 subcategory = "lounge_cushion_pair"
-slot = ""
+catalog_group = "seating"
+catalog_type = "cushion"
 price = 38
 description = "鼠尾草绿与米白色厚织坐垫，适合低矮休息角落。"
 placement_surface = "floor"
-visual_id = ""
-speed = 1
-income = 0
-capacity = 0
-retired = false
-furniture_scene = ExtResource("exp_lounge_cushion_pair")
+furniture_scene = ExtResource("33_hkut8")
 
 [sub_resource type="Resource" id="item_46"]
-script = ExtResource("2")
+script = ExtResource("1_71y6h")
 item_id = "room_retro_speaker_tower"
-catalog_group = "decor"
-catalog_type = "audio"
 name = "复古落地游戏音箱"
 category = "furniture"
 subcategory = "retro_speaker_tower"
-slot = ""
+catalog_group = "decor"
+catalog_type = "audio"
 price = 94
 description = "木质机身、金属扬声器环和复古音响面板。"
 placement_surface = "floor"
-visual_id = ""
-speed = 1
-income = 0
-capacity = 0
-retired = false
-furniture_scene = ExtResource("exp_retro_speaker_tower")
+furniture_scene = ExtResource("34_sori5")
 
 [sub_resource type="Resource" id="item_47"]
-script = ExtResource("2")
+script = ExtResource("1_71y6h")
 item_id = "room_desk_memento"
-catalog_group = "decor"
-catalog_type = "ornament"
 name = "游戏纪念陶瓷杯"
 category = "furniture"
 subcategory = "desk_memento"
-slot = ""
+catalog_group = "decor"
+catalog_type = "ornament"
 price = 18
 description = "小尺寸纪念杯，可陈列于书桌、茶几和书架。先摆放，再选中点击陈列。"
 placement_surface = "floor"
-visual_id = ""
-speed = 1
-income = 0
-capacity = 0
-retired = false
 allow_surface_mount = true
-furniture_scene = ExtResource("exp_desk_memento")
+furniture_scene = ExtResource("35_blfbu")
 
 [sub_resource type="Resource" id="item_48"]
-script = ExtResource("2")
+script = ExtResource("1_71y6h")
 item_id = "room_mini_book_stack"
-catalog_group = "decor"
-catalog_type = "ornament"
 name = "迷你游戏设定集"
 category = "furniture"
 subcategory = "mini_book_stack"
-slot = ""
+catalog_group = "decor"
+catalog_type = "ornament"
 price = 24
 description = "三本游戏艺术集，可摆在书架、边桌或茶几上。"
 placement_surface = "floor"
-visual_id = ""
-speed = 1
-income = 0
-capacity = 0
-retired = false
 allow_surface_mount = true
-furniture_scene = ExtResource("exp_mini_book_stack")
+furniture_scene = ExtResource("36_curca")
 
 [sub_resource type="Resource" id="item_49"]
-script = ExtResource("2")
+script = ExtResource("1_71y6h")
 item_id = "room_wall_sconce"
-catalog_group = "lighting"
-catalog_type = "ambient_light"
 name = "暖黄铜壁灯"
 category = "furniture"
 subcategory = "wall_sconce"
-slot = ""
+catalog_group = "lighting"
+catalog_type = "ambient_light"
 price = 66
 description = "柔和暖光壁灯，可在房间地面暂放后挂到内外墙；选中可开关灯光并调节亮度。"
 placement_surface = "floor"
-visual_id = ""
-speed = 1
-income = 0
-capacity = 0
-retired = false
-furniture_scene = ExtResource("exp_wall_sconce")
+furniture_scene = ExtResource("37_7rgta")
+
+[sub_resource type="Resource" id="Resource_w6tj7"]
+script = ExtResource("1_71y6h")
+item_id = "chair_gaming"
+name = "电竞椅"
+category = "furniture"
+subcategory = "chair_gaming"
+catalog_group = "seating"
+catalog_type = "office_chair"
+price = 1500
+placement_surface = "floor"
+furniture_scene = ExtResource("38_kowlq")
 
 [resource]
-script = ExtResource("1")
-items = Array[ExtResource("2")]([SubResource("item_0"), SubResource("item_1"), SubResource("item_2"), SubResource("item_3"), SubResource("item_4"), SubResource("item_5"), SubResource("item_6"), SubResource("item_7"), SubResource("item_8"), SubResource("item_9"), SubResource("item_10"), SubResource("item_11"), SubResource("item_12"), SubResource("item_13"), SubResource("item_14"), SubResource("item_15"), SubResource("item_16"), SubResource("item_17"), SubResource("item_18"), SubResource("item_19"), SubResource("item_20"), SubResource("item_21"), SubResource("item_22"), SubResource("item_23"), SubResource("item_24"), SubResource("item_25"), SubResource("item_26"), SubResource("item_27"), SubResource("item_28"), SubResource("item_29"), SubResource("item_30"), SubResource("item_31"), SubResource("item_32"), SubResource("item_33"), SubResource("item_34"), SubResource("item_35"), SubResource("item_36"), SubResource("item_37"), SubResource("item_38"), SubResource("item_39"), SubResource("item_40"), SubResource("item_41"), SubResource("item_42"), SubResource("item_43"), SubResource("item_44"), SubResource("item_45"), SubResource("item_46"), SubResource("item_47"), SubResource("item_48"), SubResource("item_49")])
+script = ExtResource("39_ac6gt")
+items = Array[ExtResource("1_71y6h")]([SubResource("item_0"), SubResource("item_1"), SubResource("item_2"), SubResource("item_3"), SubResource("item_4"), SubResource("item_5"), SubResource("item_6"), SubResource("item_7"), SubResource("item_8"), SubResource("item_9"), SubResource("item_10"), SubResource("item_11"), SubResource("item_12"), SubResource("item_13"), SubResource("item_14"), SubResource("item_15"), SubResource("item_16"), SubResource("item_17"), SubResource("item_18"), SubResource("item_19"), SubResource("item_20"), SubResource("item_21"), SubResource("item_22"), SubResource("item_23"), SubResource("item_24"), SubResource("item_25"), SubResource("item_26"), SubResource("item_27"), SubResource("item_28"), SubResource("item_29"), SubResource("item_30"), SubResource("item_31"), SubResource("item_32"), SubResource("item_33"), SubResource("item_34"), SubResource("item_35"), SubResource("item_36"), SubResource("item_37"), SubResource("item_38"), SubResource("item_39"), SubResource("item_40"), SubResource("item_41"), SubResource("item_42"), SubResource("item_43"), SubResource("item_44"), SubResource("item_45"), SubResource("item_46"), SubResource("item_47"), SubResource("item_48"), SubResource("item_49"), SubResource("Resource_w6tj7")])
