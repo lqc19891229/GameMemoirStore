@@ -13,6 +13,7 @@ var group_choice: OptionButton
 var type_choice: OptionButton
 var price_input: SpinBox
 var description_input: LineEdit
+var surface_mount_choice: CheckBox
 var confirmation: CheckBox
 var status: Label
 var register_button: Button
@@ -56,6 +57,9 @@ func _ready() -> void:
 	price_input.prefix = "价格 "
 	add_child(price_input)
 	description_input = _field("商品说明（可选）", "")
+	surface_mount_choice = CheckBox.new()
+	surface_mount_choice.text = "允许放置在其他家具的承载面（适用于小型摆件）"
+	add_child(surface_mount_choice)
 	confirmation = CheckBox.new()
 	confirmation.text = "我已检查场景、摆放尺寸、角色和商品 ID，确认新增商品"
 	add_child(confirmation)
@@ -95,6 +99,7 @@ func _scene_changed() -> void:
 		id_input.text = filename
 		name_input.text = filename.replace("_", " ")
 		role_input.text = ""
+	surface_mount_choice.button_pressed = false
 	status.text = "可选 %d 个未注册场景。注册前请在编辑器中打开并审核场景。" % scenes.size()
 	_update_button()
 
@@ -109,7 +114,8 @@ func _fields() -> Dictionary:
 		"role": role_input.text,
 		"group": group_choice.get_item_metadata(group_choice.selected),
 		"type": type_choice.get_item_metadata(type_choice.selected),
-		"price": int(price_input.value), "description": description_input.text
+		"price": int(price_input.value), "description": description_input.text,
+		"allow_surface_mount": surface_mount_choice.button_pressed
 	}
 
 
