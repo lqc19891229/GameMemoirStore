@@ -15,7 +15,7 @@ func _initialize() -> void:
 	run.call_deferred()
 
 func run() -> void:
-	check(Finishes.LABELS.size() == 9 and Finishes.HEX.size() == 9, "nine shared finishes")
+	check(Finishes.LABELS.size() == 16 and Finishes.HEX.size() == 16, "sixteen shared finishes")
 	check(Finishes.LABELS[1] == "奶油白" and Finishes.LABELS[5] == "浅橡木", "old finish indices unchanged")
 	check(Finishes.LABELS[8] == "陶土橙" and not Finishes.valid(9), "new finish index validated")
 	var raw := LifeData.defaults()
@@ -33,7 +33,7 @@ func run() -> void:
 	game.session.state.persistence_enabled = false
 	var desktop = game.desktop
 	var layout = desktop.world.layout
-	check(layout.FURNITURE_COLOR_LABELS.size() == 9, "editor reads shared finish list")
+	check(layout.FURNITURE_COLOR_LABELS.size() == 16, "editor reads shared finish list")
 	desktop.begin_layout()
 	layout.select("chair")
 	layout.set_furniture_color(8)
@@ -44,7 +44,7 @@ func run() -> void:
 	check(browser != null, "browser opens")
 	if browser != null:
 		var picker: OptionButton = browser.get_node("%ShopPreviewFinish")
-		check(picker.item_count == 9, "nine preview choices in shop")
+		check(picker.item_count == 16, "sixteen preview choices in shop")
 		var thumbs := 0
 		var sample: TextureRect
 		for row: Node in browser.get_node("%Rows").get_children():
