@@ -20,6 +20,37 @@ func _run() -> void:
 	assert(Surfaces.find_fit(support, Vector3(0, 0.82, 0), Vector2(0.3, 0.3)).id == "top")
 	assert(Surfaces.find_fit(support, Vector3(2, 0.82, 0), Vector2(0.3, 0.3)).is_empty())
 	assert(Surfaces.from_bounds(Vector3(-1, 1, 1)).is_empty())
+	# Every legacy support has the same authored contact geometry after the
+	# role-driven fallback is removed. Other furniture never auto-generates it.
+	var expected := [
+		{"scene": "res://scenes/room/storage/bookcase.tscn", "count": 4,
+			"heights": [0.2575, 0.8375, 1.4175, 1.9975]},
+		{"scene": "res://scenes/room/tables/writing_table.tscn", "count": 1, "height": 0.82, "size": Vector2(1.34, 0.62)},
+		{"scene": "res://scenes/room/tables/side_table_oak.tscn", "count": 1, "height": 0.69, "size": Vector2(0.62, 0.56)},
+		{"scene": "res://scenes/room/tables/coffee_table_round.tscn", "count": 1, "height": 0.56, "size": Vector2(1.08, 1.08)},
+		{"scene": "res://scenes/room/tables/coffee_table_glass.tscn", "count": 1, "height": 0.54, "size": Vector2(1.26, 0.63)},
+		{"scene": "res://scenes/room/storage/shelf_low.tscn", "count": 1, "height": 0.99, "size": Vector2(1.30, 0.32)}
+	]
+	for spec: Dictionary in expected:
+		var instance: Node3D = (load(str(spec.scene)) as PackedScene).instantiate()
+		root.add_child(instance)
+		var surfaces := Surfaces.anchors_for(instance)
+		assert(surfaces.size() == int(spec.count))
+		assert(bool(instance.get("use_custom_support_surfaces")))
+		if spec.has("heights"):
+			for i in range(surfaces.size()):
+				assert(str(surfaces[i].id) == "shelf_%d" % i)
+				assert(is_equal_approx(float(surfaces[i].center.y), float(spec.heights[i])))
+				assert(surfaces[i].size.is_equal_approx(Vector2(1.16, 0.42)))
+		else:
+			assert(str(surfaces[0].id) == "top")
+			assert(is_equal_approx(float(surfaces[0].center.y), float(spec.height)))
+			assert(surfaces[0].size.is_equal_approx(spec.size))
+		instance.free()
+	var non_support: Node3D = (load("res://scenes/room/seating/chair.tscn") as PackedScene).instantiate()
+	root.add_child(non_support)
+	assert(Surfaces.anchors_for(non_support).is_empty())
+	non_support.free()
 	assert(Finishes.LABELS.size() == 16)
 	assert(Finishes.LABELS.size() == Finishes.HEX.size())
 	assert(Finishes.LABELS.size() == Finishes.ALPHA.size())
