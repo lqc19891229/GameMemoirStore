@@ -164,17 +164,28 @@ func load_mounts(raw: Variant) -> void:
 func export_mounts() -> Dictionary:
 	return committed_mounts.duplicate(true)
 
+func _mount_footprint(role: String, mount: Dictionary) -> PackedVector2Array:
+	var width: Vector3 = bounds_for(role)
+	var position := Vector2(float(mount.get("x",0.0)),float(mount.get("z",0.0)))
+	var yaw := float(mount.get("yaw",0.0))
+	var footprint := PackedVector2Array()
+	for corner in [Vector2(-1,-1), Vector2(1,-1), Vector2(1,1), Vector2(-1,1)]:
+		var offset := Vector2(corner.x * width.x * .5,corner.y * width.z * .5)
+		footprint.append(position + offset.rotated(-yaw))
+	return footprint
+
 func _mount_valid(role: String, mount: Dictionary) -> bool:
 	if not nodes.has(role) or not placed_instances.has(role): return false
 	var support: String = str(mount.get("support",""))
 	if not nodes.has(support) or not placed_instances.has(support) or support == role: return false
-	var point := Vector3(float(mount.get("x",0.0)),0.0,float(mount.get("z",0.0)))
-	var size: Vector3 = bounds_for(role)
 	for anchor: Dictionary in SupportSurfaces.anchors_for(nodes[support]):
 		if anchor.id != str(mount.get("anchor","")): continue
-		var origin: Vector3 = anchor.center
-		point.y = origin.y
-		return SupportSurfaces.fits(anchor,point,Vector2(size.x,size.z),collision_margin)
+		var center: Vector3 = anchor.center
+		var surface_size: Vector2 = anchor.size
+		for corner: Vector2 in _mount_footprint(role,mount):
+			if absf(corner.x-center.x) + collision_margin > surface_size.x * .5: return false
+			if absf(corner.y-center.z) + collision_margin > surface_size.y * .5: return false
+		return true
 	return false
 
 func _sync_mount_poses() -> void:
@@ -194,19 +205,50 @@ func _sync_mount_poses() -> void:
 
 func _mount_collision(role: String, mount: Dictionary) -> String:
 	if not _mount_valid(role,mount): return "家具超出陈列表面或支撑物已收纳"
-	var point := Vector2(float(mount.x),float(mount.z))
-	var bounds: Vector3 = bounds_for(role)
-	var polygon := Rect2(point-Vector2(bounds.x,bounds.z)*.5,Vector2(bounds.x,bounds.z))
+	var polygon := _mount_footprint(role,mount)
 	for other: String in surface_mounts:
 		if other == role: continue
 		var entry: Dictionary = surface_mounts[other]
 		if entry.support != mount.support or entry.anchor != mount.anchor: continue
-		var other_bounds: Vector3 = bounds_for(other)
-		var other_point := Vector2(float(entry.x),float(entry.z))
-		var occupied := Rect2(other_point-Vector2(other_bounds.x,other_bounds.z)*.5,Vector2(other_bounds.x,other_bounds.z))
-		if polygon.grow(collision_margin).intersects(occupied.grow(collision_margin)):
+		if Data.overlap(polygon,_mount_footprint(other,entry)):
 			return "陈列物品与" + name_for(other) + "重叠"
 	return ""
+
+func edit_selected_mount(offset: Vector2, yaw: float) -> bool:
+	if not active or not surface_mounts.has(selected) or group_selection.size() > 1 or not gesture.is_empty() and gesture not in ["move","rotate"]:
+		return false
+	if not is_finite(offset.x) or not is_finite(offset.y) or not is_finite(yaw): return false
+	var before := _draft()
+	var entry: Dictionary = surface_mounts[selected].duplicate(true)
+	entry["x"] = offset.x
+	entry["z"] = offset.y
+	entry["yaw"] = wrapf(snappedf(yaw,deg_to_rad(angle_step)) if snapping else yaw,-PI,PI)
+	var blocker := _mount_collision(selected,entry)
+	if not blocker.is_empty():
+		message = "已阻挡：" + blocker
+		changed.emit()
+		return false
+	surface_mounts[selected] = entry
+	_sync_mount_poses()
+	if gesture.is_empty(): _remember(before)
+	update()
+	return true
+
+func _mounted_hit(pixel: Vector2) -> Variant:
+	if not surface_mounts.has(selected): return null
+	var entry: Dictionary = surface_mounts[selected]
+	var support: Node3D = nodes.get(str(entry.support)) as Node3D
+	if support == null: return null
+	var anchor: Dictionary = {}
+	for candidate: Dictionary in SupportSurfaces.anchors_for(support):
+		if candidate.id == entry.anchor:
+			anchor = candidate
+			break
+	if anchor.is_empty(): return null
+	var plane := Plane(support.global_basis.y.normalized(),support.to_global(anchor.center))
+	var hit: Variant = plane.intersects_ray(world.camera.project_ray_origin(pixel),world.camera.project_ray_normal(pixel))
+	if hit == null: return null
+	return support.to_local(hit)
 
 func mount_selected_on_nearest_surface() -> bool:
 	if not active or not placing_role.is_empty() or not gesture.is_empty() or group_selection.size() > 1: return false
@@ -2101,7 +2143,11 @@ func clamp_pose(role: String) -> void:
 	node.position.z = clampf(node.position.z, -allowance.y, allowance.y)
 
 func move_to(position_xz: Vector2) -> void:
-	if not active or surface_mounts.has(selected): return
+	if not active: return
+	if surface_mounts.has(selected):
+		var mounted: Dictionary = surface_mounts[selected]
+		edit_selected_mount(position_xz,float(mounted.yaw))
+		return
 	if not placing_role.is_empty():
 		preview_placement(position_xz)
 		return
@@ -2127,7 +2173,11 @@ func move_to(position_xz: Vector2) -> void:
 	if gesture.is_empty(): _remember(undo_before)
 
 func rotate_to(yaw: float) -> void:
-	if not active or surface_mounts.has(selected): return
+	if not active: return
+	if surface_mounts.has(selected):
+		var mounted: Dictionary = surface_mounts[selected]
+		edit_selected_mount(Vector2(float(mounted.x),float(mounted.z)),yaw)
+		return
 	if not placing_role.is_empty():
 		nodes[placing_role].rotation.y = wrapf(snappedf(yaw, deg_to_rad(angle_step)) if snapping else yaw, -PI, PI)
 		update()
@@ -2333,20 +2383,23 @@ func nudge_selected(direction: Vector2, fine: bool = false) -> bool:
 	if not active or not gesture.is_empty() or not nodes.has(selected): return false
 	if direction.is_zero_approx(): return false
 	var previous: Transform3D = nodes[selected].transform
+	var mount_before: Dictionary = surface_mounts.get(selected,{}).duplicate(true)
 	var step: float = 0.01 if fine else grid_step
 	var previous_snap: bool = snapping
 	if fine: snapping = false
-	move_to(Vector2(previous.origin.x,previous.origin.z) + direction.normalized() * step)
+	var origin := Vector2(float(mount_before.x),float(mount_before.z)) if not mount_before.is_empty() else Vector2(previous.origin.x,previous.origin.z)
+	move_to(origin + direction.normalized() * step)
 	snapping = previous_snap
 	if fine: update()
-	return not previous.is_equal_approx(nodes[selected].transform)
+	return mount_before != surface_mounts.get(selected,{}) if not mount_before.is_empty() else not previous.is_equal_approx(nodes[selected].transform)
 
 func rotate_step(direction: float, fine: bool = false) -> void:
 	if not active or not nodes.has(selected): return
 	# 1-degree rotation must not be rounded back to the normal 15-degree grid.
 	var previous_snap: bool = snapping
 	if fine: snapping = false
-	rotate_to(nodes[selected].rotation.y + deg_to_rad(1.0 if fine else angle_step) * direction)
+	var yaw: float = float(surface_mounts[selected].yaw) if surface_mounts.has(selected) else nodes[selected].rotation.y
+	rotate_to(yaw + deg_to_rad(1.0 if fine else angle_step) * direction)
 	snapping = previous_snap
 	if fine: update()
 
@@ -2358,7 +2411,22 @@ func _plane_point(pixel: Vector2) -> Variant:
 	return frame.to_local(hit) if hit != null else null
 
 func begin_drag(pixel: Vector2, operation: String = "move", direction: String = "plane", from_handle: bool = false) -> void:
-	if not active or surface_mounts.has(selected): return
+	if not active: return
+	if surface_mounts.has(selected):
+		var mounted_hit: Variant = _mounted_hit(pixel)
+		if mounted_hit == null: return
+		var entry: Dictionary = surface_mounts[selected]
+		drag_before = _draft()
+		gesture = operation
+		axis = direction
+		start_hit = mounted_hit
+		start_position = Vector3(float(entry.x),0.0,float(entry.z))
+		start_yaw = float(entry.yaw)
+		start_group_pivot = Vector2(start_position.x,start_position.z)
+		start_axis = (Vector3.RIGHT if axis == "x" else Vector3.BACK)
+		start_angle = atan2(mounted_hit.z-start_position.z,mounted_hit.x-start_position.x)
+		update()
+		return
 	var node: Node3D = nodes[selected]
 	drag_height = node.position.y + bounds_for(selected).y * .5
 	if from_handle:
@@ -2383,6 +2451,18 @@ func begin_drag(pixel: Vector2, operation: String = "move", direction: String = 
 
 func drag_to(pixel: Vector2) -> void:
 	if gesture.is_empty(): return
+	if surface_mounts.has(selected):
+		var mounted_hit: Variant = _mounted_hit(pixel)
+		if mounted_hit == null: return
+		if gesture == "move":
+			var delta: Vector3 = mounted_hit-start_hit
+			if axis in ["x","z"]: delta = start_axis * delta.dot(start_axis)
+			var offset := Vector2(start_position.x+delta.x,start_position.z+delta.z)
+			move_to(offset.snapped(Vector2.ONE*grid_step) if snapping else offset)
+		else:
+			var current := atan2(mounted_hit.z-start_group_pivot.y,mounted_hit.x-start_group_pivot.x)
+			rotate_to(start_yaw - angle_difference(start_angle,current))
+		return
 	var hit: Variant = _plane_point(pixel)
 	if hit == null: return
 	if gesture == "move":
