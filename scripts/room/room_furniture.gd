@@ -81,7 +81,7 @@ func _build_visual() -> void:
 	var model := Node3D.new()
 	model.name = "Model"
 	add_child(model)
-	match role.get_slice("_", 0):
+	match "desk_memento" if role.begins_with("desk_memento") else "mini_book_stack" if role.begins_with("mini_book_stack") else role.get_slice("_", 0):
 		"chair":
 			_build_chair(model)
 		"bookcase":
