@@ -24,7 +24,7 @@ def references() -> dict[str, str]:
     mapping = {}
     for new in sorted(current - baseline):
         parts = new.split("/")
-        if len(parts) < 4 or parts[2] not in GROUPS:
+        if len(parts) < 4 or not (\n            (parts[:2] == ["scenes", "room"] and parts[2] in GROUPS)\n            or (parts[:3] == ["assets", "models", "room"] and len(parts) >= 5 and parts[3] in GROUPS)\n        ):
             continue
         old = ""
         if parts[:2] == ["scenes", "room"]:
