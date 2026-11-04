@@ -416,14 +416,55 @@ func start_place(item_id: String, uid: String) -> bool:
 
 func preview_placement(position_xz: Vector2) -> void:
 	if not active or placing_role.is_empty(): return
+	# Floor remains a valid fallback when no usable display surface is under the cursor.
+	# Never keep an earlier surface attachment while switching back to floor preview.
+	if surface_mounts.has(placing_role):
+		surface_mounts.erase(placing_role)
+		nodes[placing_role].position.y = 0.0
 	var position := position_xz.snapped(Vector2.ONE * grid_step) if snapping else position_xz
 	position = _wall_snap_point(placing_role,position)
 	nodes[placing_role].position.x = position.x
 	nodes[placing_role].position.z = position.y
 	update()
 
+func _surface_preview_at(pixel: Vector2) -> bool:
+	if placing_role.is_empty(): return false
+	# Only compact collectibles use automatic contact placement; ordinary sofas,
+	# cabinets and floor furniture must never jump onto shelf surfaces.
+	if Data.base_role(placing_role) not in ["desk_memento","mini_book_stack"]: return false
+	var origin: Vector3 = world.camera.project_ray_origin(pixel)
+	var direction: Vector3 = world.camera.project_ray_normal(pixel)
+	var nearest: float = INF
+	var best: Dictionary = {}
+	for support: String in placed_instances:
+		if support == placing_role or surface_mounts.has(support) or not nodes.has(support): continue
+		var furniture: Node3D = nodes[support]
+		for anchor: Dictionary in SupportSurfaces.anchors_for(furniture):
+			var plane := Plane(furniture.global_basis.y.normalized(),furniture.to_global(anchor.center))
+			var hit: Variant = plane.intersects_ray(origin,direction)
+			if hit == null: continue
+			var distance: float = origin.distance_to(hit)
+			if distance >= nearest or direction.dot(hit-origin) <= 0.0: continue
+			var local: Vector3 = furniture.to_local(hit)
+			var offset := Vector2(local.x-anchor.center.x,local.z-anchor.center.z)
+			if snapping: offset = offset.snapped(Vector2.ONE * grid_step)
+			var placement := {"support":support,"anchor":anchor.id,"x":offset.x,"z":offset.y,
+				"yaw":nodes[placing_role].rotation.y-furniture.global_rotation.y,
+				"floor_pose":{"x":nodes[placing_role].position.x,"z":nodes[placing_role].position.z,"yaw":nodes[placing_role].rotation.y}}
+			# A cursor outside the usable surface should continue to floor preview.
+			# An occupied point within the surface stays red and cannot be confirmed.
+			if not _mount_valid(placing_role,placement): continue
+			best = placement
+			nearest = distance
+	if best.is_empty(): return false
+	surface_mounts[placing_role] = best
+	_sync_mount_poses()
+	update()
+	return true
+
 func preview_at(pixel: Vector2) -> void:
 	if placing_role.is_empty(): return
+	if _surface_preview_at(pixel): return
 	var plane := Plane(world.global_basis.y.normalized(), world.to_global(Vector3.ZERO))
 	var hit: Variant = plane.intersects_ray(world.camera.project_ray_origin(pixel), world.camera.project_ray_normal(pixel))
 	if hit != null:
@@ -432,6 +473,16 @@ func preview_at(pixel: Vector2) -> void:
 
 func confirm_placement() -> bool:
 	if placing_role.is_empty() or not valid: return false
+	# Store an actual safe floor fallback if the initial preview was on a shelf.
+	# Mounted transforms are world-space, while floor_pose must remain floor-local.
+	if surface_mounts.has(placing_role):
+		var mounted: Dictionary = surface_mounts[placing_role]
+		var original: Dictionary = mounted.floor_pose
+		var floor_position := Vector2(float(original.x),float(original.z))
+		var half: Vector2 = room_half_size
+		mounted["floor_pose"] = {"x":clampf(floor_position.x,-half.x,half.x),
+			"z":clampf(floor_position.y,-half.y,half.y),"yaw":float(original.yaw)}
+		surface_mounts[placing_role] = mounted
 	var before := placing_before
 	wall_magnet_active = false
 	snap_bypass = false
@@ -2505,7 +2556,7 @@ func update(contact: String = "") -> void:
 	if not placing_role.is_empty(): _apply_furniture_appearance()
 	message = "右键环绕 · 滚轮缩放 · 拖动物品布置房间"
 	if not placing_role.is_empty():
-		message = "鼠标移动预览 · 左键放置 · Q/E 旋转 · 右键取消"
+		message = "贴面预览 · 左键放置 · Q/E 旋转 · 右键取消" if surface_mounts.has(placing_role) else "地面预览 · 移到桌面或书架可自动贴面 · 左键放置 · 右键取消"
 	if not valid: message = blocker + "，请选择其他位置" if not placing_role.is_empty() else blocker + "，请调整位置或恢复默认布置"
 	elif not contact.is_empty(): message = "已阻挡：" + contact
 	elif wall_magnet_active: message = "已贴墙吸附 · 按住 Alt 暂时关闭吸附"
