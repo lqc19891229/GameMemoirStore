@@ -48,8 +48,8 @@ static func validate_registration(scene_path: String, fields: Dictionary, catalo
 		errors.append("商品 ID 只能使用非空的字母、数字和下划线，且不能以数字开头")
 	if display_name.is_empty():
 		errors.append("需要商品名称")
-	if role.is_empty():
-		errors.append("需要摆放角色")
+	if role.is_empty() or not role.is_valid_identifier() or role.contains("__instance__"):
+		errors.append("摆放角色必须为有效标识符，不能包含保留的 __instance__ 标记")
 	if group.is_empty() or group == "hardware" or not Taxonomy.valid_group(group):
 		errors.append("需要有效的家具一级分类")
 	if kind.is_empty() or not Taxonomy.TYPES.has(kind):
@@ -72,6 +72,9 @@ static func validate_registration(scene_path: String, fields: Dictionary, catalo
 				var bounds: Variant = instance.get("bounds")
 				if not bounds is Vector3 or bounds.x <= 0 or bounds.y <= 0 or bounds.z <= 0:
 					errors.append("家具摆放边界无效")
+				var scene_role := str(instance.get("role")).strip_edges()
+				if not role.is_empty() and scene_role != role:
+					errors.append("商品摆放角色必须与家具场景根节点的 role 一致")
 			instance.free()
 	if catalog == null:
 		catalog = ResourceLoader.load(CATALOG_PATH, "", ResourceLoader.CACHE_MODE_REPLACE) as MemoirItemCatalog
@@ -83,6 +86,8 @@ static func validate_registration(scene_path: String, fields: Dictionary, catalo
 				continue
 			if item.item_id == id:
 				errors.append("商品 ID 已存在，禁止覆盖")
+			if item.category == "furniture" and item.subcategory == role and not role.is_empty():
+				errors.append("摆放角色已被其他家具商品占用")
 			if item.furniture_scene != null and item.furniture_scene.resource_path == scene_path:
 				errors.append("场景已被商品引用，禁止重复注册")
 	return errors
