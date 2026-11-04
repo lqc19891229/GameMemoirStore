@@ -390,7 +390,7 @@ func _transform_readout(layout) -> String:
 	# rather than the ordinary floor X/Z/yaw readout.
 	if layout.wall_mounts.has(layout.selected):
 		var mount: Dictionary = layout.wall_mounts[layout.selected]
-		var wall_name: String = {"north":"北","south":"南","west":"西","east":"东"}.get(str(mount.wall),"")
+		var wall_name: String = {"north":"北","south":"南","west":"西","east":"东","partition":"内隔断"}.get(str(mount.wall),"")
 		return "%s墙  ·  横向 %.2f m  ·  高度 %.2f m\n沿墙拖动物件 · %s" % [
 			wall_name,float(mount.along),float(mount.height),
 			"网格 %.2f m" % layout.grid_step if layout.snapping else "自由定位"

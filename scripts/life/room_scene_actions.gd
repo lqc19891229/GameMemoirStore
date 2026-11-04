@@ -878,7 +878,7 @@ func sync(active: bool) -> void:
 	action_buttons["mount"].visible = not multi
 	action_buttons["mount"].disabled = multi or layout._has_mounted_children(role)
 	if layout.Data.base_role(role) == "poster_floor_frame":
-		action_buttons["mount"].tooltip_text = "取下墙面画框并恢复原地面位置" if layout.wall_mounts.has(role) else "将画框挂到最近的可用外墙（避开门窗）"
+		action_buttons["mount"].tooltip_text = "取下墙面画框并恢复原地面位置" if layout.wall_mounts.has(role) else "将画框挂到最近的可用内墙或外墙（避开门窗与已有装饰）"
 	else:
 		action_buttons["mount"].tooltip_text = "取下并恢复上次地面位置" if layout.surface_mounts.has(role) else "陈列到附近的空闲桌面或书架（需要足够空间）"
 	action_buttons["move"].disabled = false

@@ -12,7 +12,7 @@ const EDGE_GAP := 0.12
 static func clean_entry(raw: Variant) -> Dictionary:
 	if not raw is Dictionary: return {}
 	var wall: String = str(raw.get("wall",""))
-	if wall not in ["north","south","west","east"]: return {}
+	if wall not in ["north","south","west","east","partition"]: return {}
 	for key in ["along","height"]:
 		var value: Variant = raw.get(key)
 		if not (value is int or value is float) or not is_finite(float(value)): return {}
@@ -24,10 +24,19 @@ static func clean_entry(raw: Variant) -> Dictionary:
 	for key in ["x","z","yaw"]:
 		var value: Variant = original.get(key)
 		if not (value is int or value is float) or not is_finite(float(value)): return {}
-	return {"wall":wall,"along":along,"height":height,
+	var entry := {"wall":wall,"along":along,"height":height,
 		"floor_pose":{"x":clampf(float(original.x),-12,12),
 			"z":clampf(float(original.z),-12,12),
 			"yaw":wrapf(float(original.yaw),-PI,PI)}}
+	if wall == "partition":
+		var part: Dictionary = BlueprintData.clean_partition(raw.get("part",{}))
+		if part.is_empty() or str(part.kind) != "wall": return {}
+		var raw_side: Variant = raw.get("side")
+		if not (raw_side is int or raw_side is float): return {}
+		if not is_finite(float(raw_side)) or float(raw_side) not in [-1.0,1.0]: return {}
+		entry["part"] = {"x":float(part.x),"z":float(part.z),"axis":str(part.axis)}
+		entry["side"] = int(raw_side)
+	return entry
 
 static func fits(mount: Dictionary, blueprint: Dictionary, frame_width: float, frame_height: float) -> bool:
 	if mount.is_empty() or not is_finite(frame_width) or not is_finite(frame_height): return false
@@ -37,8 +46,21 @@ static func fits(mount: Dictionary, blueprint: Dictionary, frame_width: float, f
 	var room_height := 3.0
 	var along: float = float(mount.along)
 	var height: float = float(mount.height)
-	var limit: float = half.x if wall in ["north","south"] else half.y
-	if absf(along)+frame_width*.5+EDGE_GAP >= limit: return false
+	if wall == "partition":
+		if not mount.has("part") or not mount.has("side"): return false
+		var part: Dictionary = mount.part
+		if int(mount.side) not in [-1,1]: return false
+		var supported := false
+		for candidate: Dictionary in blueprint.partitions:
+			if str(candidate.kind) == "wall" and str(candidate.axis) == str(part.get("axis","")) and is_equal_approx(float(candidate.x),float(part.get("x",INF))) and is_equal_approx(float(candidate.z),float(part.get("z",INF))):
+				supported = true
+				break
+		if not supported: return false
+		# One partition spans one metre; a frame may not overhang its ends.
+		if absf(along)+frame_width*.5+.025 > BlueprintData.WALL_LENGTH*.5: return false
+	else:
+		var limit: float = half.x if wall in ["north","south"] else half.y
+		if absf(along)+frame_width*.5+EDGE_GAP >= limit: return false
 	if height < 0.4 or height+frame_height > room_height-.15: return false
 	# Existing external openings: a door on the south wall, a window on the west.
 	# Keep clearance around the entire visible decoration, not just its centre.
