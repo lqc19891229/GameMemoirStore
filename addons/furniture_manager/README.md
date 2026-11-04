@@ -84,3 +84,25 @@ Godot 编辑器底部新增 **「家具导入」** 标签，用于将已放入�
 4. 成功后刷新「家具资源」面板；新商品以 `category=furniture`、`placement_surface=floor` 注册在唯一的 `data/items/_catalog.tres` 内。价格为 0 的商品不会显示在普通销售列表中。
 
 写入前会先序列化并重新加载候选目录，通过校验后将原目录保存为带时间戳的独立备份 `user://furniture_catalog_backup_<timestamp>_<ticks>.tres`，不会覆盖之前的备份。随后再次检查原目录字节是否发生变化，最后通过同目录文件重命名尝试替换正式目录；若操作系统拒绝替换，工具报告失败，**不会退回到直接截断写入**。建议通过 Git 审核 `_catalog.tres` 的差异，特别是 Godot 资源序列化的格式变化。不要在同一时间手工编辑目录并执行注册。工具不会批量自动上架、不修改历史商品 ID、库存 UID 或玩家存档。
+
+## 按类型整理家具目录
+
+现有商品分类保持五组：`tables`（桌类）、`seating`（座椅）、`storage`（储物）、`lighting`（照明）、`decor`（装饰）。模型和独立家具场景使用**同名分类目录**：
+
+```text
+assets/models/room/
+  tables/  seating/  storage/  lighting/  decor/
+scenes/room/
+  tables/  seating/  storage/  lighting/  decor/
+```
+
+`scenes/room/` 根目录中属于房间本体、布局或系统逻辑的非家具场景保持不动。
+
+### 迁移已有资源
+
+1. 先确保 Git 工作区没有未提交改动，然后从项目根目录执行 `python tools/migrate_furniture_folders.py`，预览要移动的场景、模型和受影响引用。
+2. 确认分类正确，再运行 `python tools/migrate_furniture_folders.py --apply`。脚本读取现有商品目录的家具 `catalog_group`，未注册资产则根据文件名判定；保留 UID/导入设置侧车文件，并修改项目中的文本资源路径引用。若名称分类不合适，**先调整脚本分类规则，重新预览**。
+3. 用 Godot 4.6 重新导入并运行自动化测试，审核 Git diff，尤其核对 `data/items/_catalog.tres`、GDScript、场景中的引用。完成后提交文件移动和路径更新。
+4. 模型导入面板默认从 `res://assets/models/room/` 递归扫描，自动为新场景生成对应 `scenes/room/<type>/` 路径；商品注册面板递归查找所有分类目录。
+
+**不要直接在操作系统文件管理器里批量拖动模型或场景**，否则项目中的 `res://` 引用可能失效。此迁移工具默认仅预览；必须明确使用 `--apply` 才会更改项目文件。若资源依赖二进制或自定义动态路径，应先额外检查；脚本不会尝试修改存档或不可解析的二进制文件。
