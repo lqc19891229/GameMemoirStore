@@ -76,6 +76,34 @@ func run() -> void:
 	check(hung,"frame moves from floor to a valid exterior wall")
 	check(layout.wall_mounts.has(frame_role),"wall attachment is tracked independently of surface mounts")
 	check(layout.nodes[frame_role].position.y > 0.8,"frame is elevated on the wall")
+	var original_mount: Dictionary = layout.wall_mounts[frame_role].duplicate(true)
+	var position_3d: Vector3 = layout.nodes[frame_role].global_position
+	var wall_axis: Vector3 = Vector3.RIGHT if str(original_mount.wall) in ["north","south"] else Vector3.BACK
+	var camera: Camera3D = layout.world.camera
+	var pointer_start: Vector2 = camera.unproject_position(position_3d + Vector3.UP * .2)
+	var pointer_next: Vector2 = camera.unproject_position(position_3d + wall_axis * .10 + Vector3.UP * .30)
+	var undo_count: int = layout.undo_stack.size()
+	layout.begin_drag(pointer_start,"move")
+	check(layout.gesture == "move","wall hanging begins mouse drag on its vertical plane")
+	layout.drag_to(pointer_next)
+	check(float(layout.wall_mounts[frame_role].height) > float(original_mount.height),
+		"mouse drag moves a wall frame vertically")
+	check(not is_equal_approx(float(layout.wall_mounts[frame_role].along),float(original_mount.along)),
+		"mouse drag changes the frame's horizontal wall position")
+	layout.end_drag()
+	check(layout.undo_stack.size() == undo_count+1,"entire wall drag is one undo operation")
+	layout.undo()
+	check(is_equal_approx(float(layout.wall_mounts[frame_role].along),float(original_mount.along)) and
+		is_equal_approx(float(layout.wall_mounts[frame_role].height),float(original_mount.height)),
+		"undo restores precise wall attachment before mouse drag")
+	layout.redo()
+	check(float(layout.wall_mounts[frame_role].height) > float(original_mount.height),
+		"redo restores position after wall drag")
+	var before_blocked: Dictionary = layout.wall_mounts[frame_role].duplicate(true)
+	check(not layout.set_wall_mount_position(Vector2(20.0,1.5)),
+		"invalid wall drag targets cannot cross the wall boundaries")
+	check(layout.wall_mounts[frame_role] == before_blocked,
+		"rejected wall drag keeps the last safe wall position")
 	var moved: bool = layout.move_wall_mount(Vector2(0.05,0.05))
 	check(moved,"wall mount supports horizontal and vertical adjustment")
 	check(layout.nudge_selected(Vector2.LEFT),"wall mount accepts keyboard adjustments")
