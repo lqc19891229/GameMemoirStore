@@ -257,23 +257,48 @@ func take_down_selected_wall_mount() -> bool:
 	update()
 	return true
 
-func move_wall_mount(direction: Vector2) -> bool:
-	if not active or not wall_mounts.has(selected) or not gesture.is_empty() or group_selection.size()>1: return false
-	if not is_finite(direction.x) or not is_finite(direction.y): return false
-	var before := _draft()
+func set_wall_mount_position(position: Vector2) -> bool:
+	# A wall mount's local editing axes are (distance along the wall, height).
+	# During a pointer gesture, end_drag() records the whole motion as one undo.
+	if not active or not wall_mounts.has(selected) or group_selection.size() > 1: return false
+	if not gesture.is_empty() and gesture != "move": return false
+	if not is_finite(position.x) or not is_finite(position.y): return false
+	var before: Dictionary = _draft()
 	var entry: Dictionary = wall_mounts[selected].duplicate(true)
-	entry["along"] = snappedf(float(entry.along)+direction.x,grid_step) if snapping else float(entry.along)+direction.x
-	entry["height"] = snappedf(float(entry.height)+direction.y,grid_step) if snapping else float(entry.height)+direction.y
+	entry["along"] = snappedf(position.x,grid_step) if snapping else position.x
+	entry["height"] = snappedf(position.y,grid_step) if snapping else position.y
 	var blocker: String = _wall_mount_blocker(selected,entry)
 	if not blocker.is_empty():
 		message = "已阻挡：" + blocker
 		changed.emit()
 		return false
+	if is_equal_approx(float(entry.along),float(wall_mounts[selected].along)) and is_equal_approx(float(entry.height),float(wall_mounts[selected].height)):
+		return false
 	wall_mounts[selected] = entry
 	_sync_wall_mount_poses()
-	_remember(before)
+	if gesture.is_empty(): _remember(before)
 	update()
 	return true
+
+func move_wall_mount(direction: Vector2) -> bool:
+	if not active or not wall_mounts.has(selected) or not gesture.is_empty(): return false
+	if not is_finite(direction.x) or not is_finite(direction.y): return false
+	var entry: Dictionary = wall_mounts[selected]
+	return set_wall_mount_position(Vector2(float(entry.along),float(entry.height))+direction)
+
+func _wall_pointer_position(pixel: Vector2) -> Variant:
+	if not wall_mounts.has(selected) or not nodes.has(selected): return null
+	var data: Dictionary = wall_mounts[selected]
+	var normal: Vector3 = world.global_basis.x if str(data.wall) in ["west","east"] else world.global_basis.z
+	var plane := Plane(normal.normalized(),nodes[selected].global_position)
+	var ray_start: Vector3 = world.camera.project_ray_origin(pixel)
+	var ray_direction: Vector3 = world.camera.project_ray_normal(pixel)
+	var contact: Variant = plane.intersects_ray(ray_start,ray_direction)
+	if contact == null: return null
+	# On either side of a room, use the same floor-plan axes as saved wall mounts.
+	var local: Vector3 = nodes[selected].get_parent().to_local(contact)
+	return Vector2(local.x if str(data.wall) in ["north","south"] else local.z,local.y)
+
 
 func _mount_footprint(role: String, mount: Dictionary) -> PackedVector2Array:
 	var width: Vector3 = bounds_for(role)
@@ -2642,7 +2667,19 @@ func _plane_point(pixel: Vector2) -> Variant:
 	return frame.to_local(hit) if hit != null else null
 
 func begin_drag(pixel: Vector2, operation: String = "move", direction: String = "plane", from_handle: bool = false) -> void:
-	if not active or wall_mounts.has(selected): return
+	if not active: return
+	if wall_mounts.has(selected):
+		if operation != "move" or group_selection.size() > 1: return
+		var wall_hit: Variant = _wall_pointer_position(pixel)
+		if wall_hit == null: return
+		var mounted: Dictionary = wall_mounts[selected]
+		drag_before = _draft()
+		gesture = "move"
+		axis = "plane"
+		start_hit = Vector3(wall_hit.x,wall_hit.y,0.0)
+		start_position = Vector3(float(mounted.along),float(mounted.height),0.0)
+		update()
+		return
 	if surface_mounts.has(selected):
 		var mounted_hit: Variant = _mounted_hit(pixel)
 		if mounted_hit == null: return
@@ -2682,6 +2719,12 @@ func begin_drag(pixel: Vector2, operation: String = "move", direction: String = 
 
 func drag_to(pixel: Vector2) -> void:
 	if gesture.is_empty(): return
+	if wall_mounts.has(selected):
+		var wall_hit: Variant = _wall_pointer_position(pixel)
+		if wall_hit == null: return
+		var target := Vector2(start_position.x+wall_hit.x-start_hit.x,start_position.y+wall_hit.y-start_hit.y)
+		set_wall_mount_position(target)
+		return
 	if surface_mounts.has(selected):
 		var mounted_hit: Variant = _mounted_hit(pixel)
 		if mounted_hit == null: return
@@ -2749,6 +2792,13 @@ func _update_gizmo(contact: bool = false) -> void:
 	if not active or not gizmo.is_inside_tree(): return
 	gizmo.show()
 	var node: Node3D = nodes[selected]
+	if wall_mounts.has(selected):
+		# The normal horizontal X/Z gizmo is misleading on a vertical surface.
+		# Drag the frame directly instead; prevent hidden handles intercepting hits.
+		gizmo.hide()
+		for handle: CollisionShape3D in gizmo.find_children("*","CollisionShape3D",true,false):
+			handle.disabled = true
+		return
 	var multi: bool = group_selection.size() > 1
 	var size := bounds_for(selected) * node.scale.abs()
 	# Solo mode retains the familiar local gizmo. In group mode both tools
