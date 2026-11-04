@@ -7,6 +7,9 @@ const MAX_ENTRIES := 96
 const MOUNT_ROLE := "poster_floor_frame"
 const LAMP_ROLE := "wall_sconce"
 const LAMP_ENERGY := [0.24,0.50,0.84]
+# Approximate correlated color temperatures: warm / neutral / cool.
+const LAMP_TEMPERATURES := [2700,4000,6500]
+const LAMP_COLORS := [Color(1.0,0.69,0.42),Color(1.0,0.87,0.73),Color(0.80,0.88,1.0)]
 
 static func is_mountable(role: String) -> bool:
 	return role in [MOUNT_ROLE,LAMP_ROLE]
@@ -49,8 +52,12 @@ static func clean_entry(raw: Variant) -> Dictionary:
 	var raw_level: Variant = raw.get("level",2)
 	if not (raw_level is int or raw_level is float) or not is_finite(float(raw_level)): return {}
 	if int(raw_level) < 1 or int(raw_level) > 3 or float(raw_level) != float(int(raw_level)): return {}
+	var raw_tone: Variant = raw.get("tone",1)
+	if not (raw_tone is int or raw_tone is float) or not is_finite(float(raw_tone)): return {}
+	if int(raw_tone) < 1 or int(raw_tone) > 3 or float(raw_tone) != float(int(raw_tone)): return {}
 	entry["on"] = raw_on
 	entry["level"] = int(raw_level)
+	entry["tone"] = int(raw_tone)
 	return entry
 
 static func fits(mount: Dictionary, blueprint: Dictionary, frame_width: float, frame_height: float) -> bool:
