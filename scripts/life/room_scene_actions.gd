@@ -55,6 +55,8 @@ const ACTIONS := [
 	{"id":"arrange", "hint":"附近家具对齐 · 同类家具等距排列"},
 	{"id":"duplicate", "hint":"复制一件库存中的同款家具 · Ctrl+D"},
 	{"id":"mount", "hint":"把选中家具陈列到最近的空闲桌面或书架；再次点击取下"},
+	{"id":"light", "hint":"打开或关闭已悬挂壁灯的真实光源"},
+	{"id":"brightness", "hint":"壁灯亮度三级循环调节"},
 	{"id":"store", "hint":"收纳这件家具 · Delete"}
 ]
 
@@ -719,11 +721,22 @@ func perform_action(id: String) -> void:
 				if not started: room_ui.show_keyboard_feedback("无法预览 · " + str(layout.message))
 			else:
 				layout.duplicate_selected()
+		"light":
+			if layout.wall_mounts.has(layout.selected):
+				var powered: bool = bool(layout.wall_mounts[layout.selected].get("on",true))
+				if layout.set_wall_sconce_light(not powered):
+					room_ui.show_keyboard_feedback("壁灯已打开 · Ctrl+Z 撤销" if not powered else "壁灯已关闭 · Ctrl+Z 撤销")
+		"brightness":
+			if layout.wall_mounts.has(layout.selected):
+				var level: int = int(layout.wall_mounts[layout.selected].get("level",2))
+				var next_level: int = level%3+1
+				if layout.set_wall_sconce_brightness(next_level):
+					room_ui.show_keyboard_feedback("壁灯亮度：%d / 3 · Ctrl+Z 撤销" % next_level)
 		"mount":
-			if layout.Data.base_role(layout.selected) == "poster_floor_frame":
+			if layout.WallMountData.is_mountable(layout.Data.base_role(layout.selected)):
 				var wall_mounted: bool = layout.wall_mounts.has(layout.selected)
 				var wall_success: bool = layout.take_down_selected_wall_mount() if wall_mounted else layout.hang_selected_on_wall()
-				room_ui.show_keyboard_feedback(("已从墙上取下画框 · Ctrl+Z 撤销" if wall_mounted else "已挂到外墙 · Ctrl+Z 撤销") if wall_success else str(layout.message))
+				room_ui.show_keyboard_feedback(("已从墙上取下装饰 · Ctrl+Z 撤销" if wall_mounted else "已挂到墙面 · Ctrl+Z 撤销") if wall_success else str(layout.message))
 			else:
 				var mounted: bool = layout.surface_mounts.has(layout.selected)
 				var succeeded: bool = layout.unmount_selected() if mounted else layout.mount_selected_on_nearest_surface()
@@ -877,15 +890,27 @@ func sync(active: bool) -> void:
 	action_buttons["store"].disabled = false
 	action_buttons["mount"].visible = not multi
 	action_buttons["mount"].disabled = multi or layout._has_mounted_children(role)
-	if layout.Data.base_role(role) == "poster_floor_frame":
-		action_buttons["mount"].tooltip_text = "取下墙面画框并恢复原地面位置" if layout.wall_mounts.has(role) else "将画框挂到最近的可用内墙或外墙（避开门窗与已有装饰）"
+	var wall_role: bool = layout.WallMountData.is_mountable(layout.Data.base_role(role))
+	var sconce: bool = layout.Data.base_role(role) == layout.WallMountData.LAMP_ROLE
+	var mounted_wall: bool = layout.wall_mounts.has(role)
+	action_buttons["light"].visible = sconce and not multi
+	action_buttons["brightness"].visible = sconce and not multi
+	action_buttons["light"].disabled = not mounted_wall
+	action_buttons["brightness"].disabled = not mounted_wall
+	if sconce and mounted_wall:
+		var light_on: bool = bool(layout.wall_mounts[role].get("on",true))
+		var level: int = int(layout.wall_mounts[role].get("level",2))
+		action_buttons["light"].tooltip_text = "关闭壁灯 · Ctrl+Z 撤销" if light_on else "打开壁灯 · Ctrl+Z 撤销"
+		action_buttons["brightness"].tooltip_text = "亮度 %d / 3 · 点击切换下一档" % level
+	if wall_role:
+		action_buttons["mount"].tooltip_text = "取下壁挂物并恢复原地面位置" if mounted_wall else "将壁灯或画框挂到最近的可用内外墙（避开门窗及已有装饰）"
 	else:
 		action_buttons["mount"].tooltip_text = "取下并恢复上次地面位置" if layout.surface_mounts.has(role) else "陈列到附近的空闲桌面或书架（需要足够空间）"
 	action_buttons["move"].disabled = false
 	action_buttons["rotate"].disabled = layout.wall_mounts.has(role)
-	action_buttons["move"].tooltip_text = "拖动画框沿墙移动 · ←/→ 横移、↑/↓ 调高度 · Shift 精细调整 · Ctrl+Z 撤销" if layout.wall_mounts.has(role) else "沿当前承载面拖动或用方向键微调 · Ctrl+Z 撤销" if layout.surface_mounts.has(role) else "拖拽移动家具"
+	action_buttons["move"].tooltip_text = "拖动壁挂物沿墙移动 · ←/→ 横移、↑/↓ 调高度 · Shift 精细调整 · Ctrl+Z 撤销" if layout.wall_mounts.has(role) else "沿当前承载面拖动或用方向键微调 · Ctrl+Z 撤销" if layout.surface_mounts.has(role) else "拖拽移动家具"
 	action_buttons["rotate"].tooltip_text = "旋转陈列物 · Q/E 每次 15° · Shift 精细旋转" if layout.surface_mounts.has(role) else "旋转家具"
-	action_buttons["arrange"].disabled = layout.surface_mounts.has(role)
+	action_buttons["arrange"].disabled = layout.surface_mounts.has(role) or mounted_wall
 	action_buttons["paint"].tooltip_text = "统一修改 %d 件家具的颜色" % group_size if multi else "选择单件家具颜色"
 	action_buttons["arrange"].tooltip_text = "当前多选对齐与等距排列" if multi else "附近家具对齐 · 同类家具等距排列"
 	action_buttons["store"].tooltip_text = "收纳全部 %d 件家具 · Delete · 可撤销" % group_size if multi else "收纳这件家具 · Delete"
