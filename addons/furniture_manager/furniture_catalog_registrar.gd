@@ -101,35 +101,67 @@ static func register(scene_path: String, fields: Dictionary, confirmed: bool = f
 	item.description = str(fields.get("description", "")).strip_edges()
 	item.placement_surface = "floor"
 	item.furniture_scene = scene
-	# Save a candidate first; do not touch the live catalog until serialization
-	# succeeds. Preserve a byte-for-byte user:// backup for recovery.
+	# Serialize a candidate on the same filesystem. Never truncate the live
+	# catalog: a failed rename must leave its original bytes intact.
 	var pending := "res://data/items/__furniture_catalog_pending__.tres"
 	if FileAccess.file_exists(pending):
 		return {"ok": false, "error": "发现未清理的候选目录文件，请人工检查"}
+	var original := FileAccess.get_file_as_bytes(CATALOG_PATH)
+	if original.is_empty():
+		return {"ok": false, "error": "读取原商品目录失败"}
 	catalog.items.append(item)
 	var save_err := ResourceSaver.save(catalog, pending)
 	if save_err != OK:
+		_cleanup_pending(pending)
 		return {"ok": false, "error": "候选商品目录保存失败 (%d)" % save_err}
-	var original := FileAccess.get_file_as_bytes(CATALOG_PATH)
-	if original.is_empty():
-		DirAccess.remove_absolute(ProjectSettings.globalize_path(pending))
-		return {"ok": false, "error": "读取原商品目录失败"}
-	var backup := FileAccess.open("user://furniture_catalog_before_registration.tres", FileAccess.WRITE)
-	if backup == null:
-		DirAccess.remove_absolute(ProjectSettings.globalize_path(pending))
-		return {"ok": false, "error": "无法创建备份，未修改商品目录"}
-	backup.store_buffer(original)
-	backup.close()
+	# Ensure the serialized candidate can actually be loaded before replacing
+	# the authoritative resource.
+	var candidate := ResourceLoader.load(pending, "", ResourceLoader.CACHE_MODE_IGNORE) as MemoirItemCatalog
+	if candidate == null or candidate.lookup(item.item_id) == null or candidate.items.size() != catalog.items.size():
+		_cleanup_pending(pending)
+		return {"ok": false, "error": "候选目录校验失败，原目录未修改"}
 	var replacement := FileAccess.get_file_as_bytes(pending)
 	if replacement.is_empty():
-		DirAccess.remove_absolute(ProjectSettings.globalize_path(pending))
-		return {"ok": false, "error": "候选文件无内容，未修改商品目录"}
-	var writer := FileAccess.open(CATALOG_PATH, FileAccess.WRITE)
-	if writer == null:
-		DirAccess.remove_absolute(ProjectSettings.globalize_path(pending))
-		return {"ok": false, "error": "无法写入商品目录"}
-	writer.store_buffer(replacement)
-	writer.close()
-	DirAccess.remove_absolute(ProjectSettings.globalize_path(pending))
+		_cleanup_pending(pending)
+		return {"ok": false, "error": "候选文件无内容，原目录未修改"}
+	# A concurrent editor/user edit must not be lost between read and commit.
+	if not catalog_matches_snapshot(original):
+		_cleanup_pending(pending)
+		return {"ok": false, "error": "商品目录已被其他操作修改，请刷新后重试"}
+	# Use an individually named immutable snapshot, rather than overwriting
+	# the previous registration backup.
+	var backup_path := "user://furniture_catalog_backup_%d_%d.tres" % [
+		int(Time.get_unix_time_from_system()), Time.get_ticks_usec()
+	]
+	var backup := FileAccess.open(backup_path, FileAccess.WRITE)
+	if backup == null:
+		_cleanup_pending(pending)
+		return {"ok": false, "error": "无法创建备份，原目录未修改"}
+	backup.store_buffer(original)
+	backup.flush()
+	var backup_error := backup.get_error()
+	backup.close()
+	if backup_error != OK or FileAccess.get_file_as_bytes(backup_path) != original:
+		_cleanup_pending(pending)
+		return {"ok": false, "error": "备份校验失败，原目录未修改"}
+	if not catalog_matches_snapshot(original):
+		_cleanup_pending(pending)
+		return {"ok": false, "error": "备份期间商品目录发生变化，原目录未修改"}
+	var rename_error := DirAccess.rename_absolute(
+		ProjectSettings.globalize_path(pending),
+		ProjectSettings.globalize_path(CATALOG_PATH)
+	)
+	if rename_error != OK:
+		_cleanup_pending(pending)
+		return {"ok": false, "error": "安全替换目录失败 (%d)；原目录未主动截断。备份：%s" % [rename_error, backup_path]}
 	ResourceLoader.load(CATALOG_PATH, "", ResourceLoader.CACHE_MODE_REPLACE)
-	return {"ok": true, "item_id": item.item_id, "backup": "user://furniture_catalog_before_registration.tres"}
+	return {"ok": true, "item_id": item.item_id, "backup": backup_path}
+
+
+static func catalog_matches_snapshot(expected: PackedByteArray) -> bool:
+	return not expected.is_empty() and FileAccess.get_file_as_bytes(CATALOG_PATH) == expected
+
+
+static func _cleanup_pending(path: String) -> void:
+	if FileAccess.file_exists(path):
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
