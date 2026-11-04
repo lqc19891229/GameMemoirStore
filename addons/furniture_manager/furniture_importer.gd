@@ -72,7 +72,8 @@ static func _collect_geometry(node: Node, parent_transform: Transform3D, state: 
 						state.box = AABB(point, Vector3.ZERO)
 						state.found = true
 					else:
-						state.box = (state.box as AABB).expand(point)
+						var current_box: AABB = state.box
+						state.box = current_box.expand(point)
 	for child in node.get_children():
 		_collect_geometry(child, transform, state)
 
