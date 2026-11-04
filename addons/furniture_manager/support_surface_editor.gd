@@ -77,8 +77,11 @@ func _add_number(parent: Control, title: String, target: Array[SpinBox], low: fl
 	target.append(spinner)
 
 
-func set_anchors(values: Array[Dictionary], can_apply: bool) -> void:
-	anchors = values.duplicate(true)
+func set_anchors(values: Array, can_apply: bool) -> void:
+	anchors.clear()
+	for raw in values:
+		if raw is Dictionary:
+			anchors.append(raw.duplicate(true))
 	enabled_for_scene = can_apply
 	_refresh_list()
 
