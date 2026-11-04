@@ -1225,10 +1225,17 @@ func load_saved(raw: Variant, raw_mounts: Variant = {}, raw_walls: Variant = {})
 	restore(authored)
 	for role: String in cleaned:
 		_create_copy(role)
+		# Unknown or no-longer-registered roles can appear in older saves.
+		# Never dereference them or leave their inventory UID marked as placed.
+		if not nodes.has(role):
+			continue
 		nodes[role].position.x = cleaned[role].x
 		nodes[role].position.z = cleaned[role].z
 		nodes[role].rotation.y = cleaned[role].yaw
 		clamp_pose(role)
+	# A placement must always resolve to an actual scene node. Keeping a
+	# dangling UID here makes purchased furniture unavailable in the room.
+	_prune_orphan_placements()
 	surface_mounts = sanitized_mounts
 	for role: String in surface_mounts.keys():
 		if not _mount_valid(role,surface_mounts[role]): surface_mounts.erase(role)
@@ -1241,14 +1248,31 @@ func load_saved(raw: Variant, raw_mounts: Variant = {}, raw_walls: Variant = {})
 		for role: String in world.devices: nodes[role].transform = authored[role]
 	# Imported legacy table poses may intersect new room furniture or walls.
 	# Recover the complete authored room rather than keeping a partially invalid save.
+	var recovered := false
 	if not _layout_blocker().is_empty():
 		restore(authored)
+		# Restoring the authored scene removes purchased copy nodes. Free all
+		# orphaned inventory UIDs so those items can be placed again.
+		_prune_orphan_placements()
 		surface_mounts.clear()
 		wall_mounts.clear()
-	saved = cleaned
+		recovered = true
+	_sync_mount_poses()
+	_sync_wall_mount_poses()
+	_apply_furniture_appearance()
 	committed_mounts = surface_mounts.duplicate(true)
 	committed_wall_mounts = wall_mounts.duplicate(true)
+	committed_placements = placed_instances.duplicate()
 	committed = snapshot()
+	# Do not cache the invalid incoming poses as if they were loaded.
+	# Future saves must use the recovered, actually instantiated layout.
+	saved = export_layout() if recovered else cleaned
+
+
+func _prune_orphan_placements() -> void:
+	for role: String in placed_instances.keys():
+		if not nodes.has(role):
+			placed_instances.erase(role)
 
 func export_layout() -> Dictionary:
 	var result: Dictionary = {}
