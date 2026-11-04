@@ -139,7 +139,7 @@ func load_colors(raw: Dictionary) -> void:
 	for entry: Dictionary in available_inventory:
 		var uid := str(entry.uid)
 		var value: Variant = raw.get(uid, 0)
-		if value is int and int(value) > 0 and int(value) < FURNITURE_COLOR_LABELS.size():
+		if value is int and int(value) > 0 and Finishes.is_saved_finish(int(value)):
 			furniture_colors[uid] = int(value)
 	committed_colors = furniture_colors.duplicate()
 	_apply_furniture_appearance()
@@ -149,7 +149,7 @@ func color_for(role: String) -> int:
 
 func set_furniture_color(index: int) -> void:
 	if not active or not InventoryData.is_room_furniture_role(Data.base_role(selected)): return
-	if not placed_instances.has(selected) or index < 0 or index >= FURNITURE_COLOR_LABELS.size(): return
+	if not placed_instances.has(selected) or not Finishes.is_saved_finish(index): return
 	var before := _draft()
 	var uid := str(placed_instances[selected])
 	if index == 0: furniture_colors.erase(uid)
@@ -171,7 +171,7 @@ func group_color_index() -> int:
 
 func set_group_furniture_color(index: int) -> bool:
 	if not active or not gesture.is_empty() or not placing_role.is_empty() or group_selection.size() < 2: return false
-	if index < 0 or index >= FURNITURE_COLOR_LABELS.size(): return false
+	if not Finishes.is_saved_finish(index): return false
 	for role: String in group_selection:
 		if not _group_eligible(role): return false
 	var before := _draft()
