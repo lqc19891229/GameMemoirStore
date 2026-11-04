@@ -4,12 +4,12 @@ importer="scene"
 importer_version=1
 type="PackedScene"
 uid="uid://cnks05ygkbvhm"
-path="res://.godot/imported/poster_floor_frame.glb-3c5409daf37574b3f0c44bab816f2a15.scn"
+path="res://.godot/imported/poster_floor_frame.glb-15833b59287ee5368d0ca21bf7b9b3cd.scn"
 
 [deps]
 
 source_file="res://assets/models/room/decor/poster_floor_frame.glb"
-dest_files=["res://.godot/imported/poster_floor_frame.glb-3c5409daf37574b3f0c44bab816f2a15.scn"]
+dest_files=["res://.godot/imported/poster_floor_frame.glb-15833b59287ee5368d0ca21bf7b9b3cd.scn"]
 
 [params]
 

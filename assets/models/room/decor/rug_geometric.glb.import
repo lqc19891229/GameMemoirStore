@@ -4,12 +4,12 @@ importer="scene"
 importer_version=1
 type="PackedScene"
 uid="uid://b4uiva5kgclc1"
-path="res://.godot/imported/rug_geometric.glb-1026203fecbe70018d74af37250b4f9d.scn"
+path="res://.godot/imported/rug_geometric.glb-a43994a3b7df8096c8a84e823618e8e6.scn"
 
 [deps]
 
 source_file="res://assets/models/room/decor/rug_geometric.glb"
-dest_files=["res://.godot/imported/rug_geometric.glb-1026203fecbe70018d74af37250b4f9d.scn"]
+dest_files=["res://.godot/imported/rug_geometric.glb-a43994a3b7df8096c8a84e823618e8e6.scn"]
 
 [params]
 

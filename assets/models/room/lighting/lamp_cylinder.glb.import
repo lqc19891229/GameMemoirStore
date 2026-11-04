@@ -4,12 +4,12 @@ importer="scene"
 importer_version=1
 type="PackedScene"
 uid="uid://0huyb7mf43jw"
-path="res://.godot/imported/lamp_cylinder.glb-0ae085f5d67c0ab90e62d1e045f29ded.scn"
+path="res://.godot/imported/lamp_cylinder.glb-0b8d6507397ed26e70568ad3e246d560.scn"
 
 [deps]
 
 source_file="res://assets/models/room/lighting/lamp_cylinder.glb"
-dest_files=["res://.godot/imported/lamp_cylinder.glb-0ae085f5d67c0ab90e62d1e045f29ded.scn"]
+dest_files=["res://.godot/imported/lamp_cylinder.glb-0b8d6507397ed26e70568ad3e246d560.scn"]
 
 [params]
 

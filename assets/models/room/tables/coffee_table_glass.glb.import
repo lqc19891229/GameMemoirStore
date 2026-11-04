@@ -4,12 +4,12 @@ importer="scene"
 importer_version=1
 type="PackedScene"
 uid="uid://bu8xxwefeai2i"
-path="res://.godot/imported/coffee_table_glass.glb-447b9c387842994817327de6b16e8ed3.scn"
+path="res://.godot/imported/coffee_table_glass.glb-74b9d109847cc436ee0511dc48467194.scn"
 
 [deps]
 
 source_file="res://assets/models/room/tables/coffee_table_glass.glb"
-dest_files=["res://.godot/imported/coffee_table_glass.glb-447b9c387842994817327de6b16e8ed3.scn"]
+dest_files=["res://.godot/imported/coffee_table_glass.glb-74b9d109847cc436ee0511dc48467194.scn"]
 
 [params]
 

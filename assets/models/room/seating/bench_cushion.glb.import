@@ -4,12 +4,12 @@ importer="scene"
 importer_version=1
 type="PackedScene"
 uid="uid://ds62rafkedjsv"
-path="res://.godot/imported/bench_cushion.glb-fc7299da8082d4f646627a62e6f78132.scn"
+path="res://.godot/imported/bench_cushion.glb-25bfa3344f4e8c04bf4a634b6a1f5f02.scn"
 
 [deps]
 
 source_file="res://assets/models/room/seating/bench_cushion.glb"
-dest_files=["res://.godot/imported/bench_cushion.glb-fc7299da8082d4f646627a62e6f78132.scn"]
+dest_files=["res://.godot/imported/bench_cushion.glb-25bfa3344f4e8c04bf4a634b6a1f5f02.scn"]
 
 [params]
 

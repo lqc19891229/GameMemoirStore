@@ -4,12 +4,12 @@ importer="scene"
 importer_version=1
 type="PackedScene"
 uid="uid://cm8lsb4w11bqi"
-path="res://.godot/imported/lamp_tripod.glb-9e168a258be9f72569d101b19409d553.scn"
+path="res://.godot/imported/lamp_tripod.glb-56d6cb40e7555d7ec568ba43e85e9f57.scn"
 
 [deps]
 
 source_file="res://assets/models/room/lighting/lamp_tripod.glb"
-dest_files=["res://.godot/imported/lamp_tripod.glb-9e168a258be9f72569d101b19409d553.scn"]
+dest_files=["res://.godot/imported/lamp_tripod.glb-56d6cb40e7555d7ec568ba43e85e9f57.scn"]
 
 [params]
 

@@ -3,7 +3,7 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://ckufber0cu0nm"
-path="res://.godot/imported/writing_table_P22_fabric_micrograin.png-f4ae43d108a5003e439acd311f65e342.ctex"
+path="res://.godot/imported/writing_table_P22_fabric_micrograin.png-e938e5ca701952a4f4791b833ccc5d3b.ctex"
 metadata={
 "vram_texture": false
 }
@@ -14,7 +14,7 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/models/room/tables/writing_table_P22_fabric_micrograin.png"
-dest_files=["res://.godot/imported/writing_table_P22_fabric_micrograin.png-f4ae43d108a5003e439acd311f65e342.ctex"]
+dest_files=["res://.godot/imported/writing_table_P22_fabric_micrograin.png-e938e5ca701952a4f4791b833ccc5d3b.ctex"]
 
 [params]
 

@@ -4,12 +4,12 @@ importer="scene"
 importer_version=1
 type="PackedScene"
 uid="uid://dbyt0s45vhij0"
-path="res://.godot/imported/writing_table.glb-1dd3e22762c9bd6696253a1a2d58884a.scn"
+path="res://.godot/imported/writing_table.glb-e2b6baaa75e2017fdd2993534ae5063a.scn"
 
 [deps]
 
 source_file="res://assets/models/room/tables/writing_table.glb"
-dest_files=["res://.godot/imported/writing_table.glb-1dd3e22762c9bd6696253a1a2d58884a.scn"]
+dest_files=["res://.godot/imported/writing_table.glb-e2b6baaa75e2017fdd2993534ae5063a.scn"]
 
 [params]
 

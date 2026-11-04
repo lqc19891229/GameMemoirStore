@@ -4,12 +4,12 @@ importer="scene"
 importer_version=1
 type="PackedScene"
 uid="uid://basceuu72fctr"
-path="res://.godot/imported/sofa_modular.glb-fb868c6aa89dcf3c8feb69fe49e71602.scn"
+path="res://.godot/imported/sofa_modular.glb-d4f77770b0bbcf23199e96c160a04925.scn"
 
 [deps]
 
 source_file="res://assets/models/room/seating/sofa_modular.glb"
-dest_files=["res://.godot/imported/sofa_modular.glb-fb868c6aa89dcf3c8feb69fe49e71602.scn"]
+dest_files=["res://.godot/imported/sofa_modular.glb-d4f77770b0bbcf23199e96c160a04925.scn"]
 
 [params]
 

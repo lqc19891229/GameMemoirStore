@@ -4,12 +4,12 @@ importer="scene"
 importer_version=1
 type="PackedScene"
 uid="uid://cginn1hn3jgbe"
-path="res://.godot/imported/plant_palm.glb-97160a32419259c2674008a902488180.scn"
+path="res://.godot/imported/plant_palm.glb-a5b27b0f11806da8bd8372442d3d58be.scn"
 
 [deps]
 
 source_file="res://assets/models/room/decor/plant_palm.glb"
-dest_files=["res://.godot/imported/plant_palm.glb-97160a32419259c2674008a902488180.scn"]
+dest_files=["res://.godot/imported/plant_palm.glb-a5b27b0f11806da8bd8372442d3d58be.scn"]
 
 [params]
 

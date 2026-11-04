@@ -3,7 +3,7 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bk11qweekgm64"
-path.s3tc="res://.godot/imported/bench_cushion_P22_wood_micrograin.png-d58a9b5b8ca90c0046a7c1e1a5975c4d.s3tc.ctex"
+path.s3tc="res://.godot/imported/bench_cushion_P22_wood_micrograin.png-d545558e7679b426587233947ebda0d0.s3tc.ctex"
 metadata={
 "imported_formats": ["s3tc_bptc"],
 "vram_texture": true
@@ -15,7 +15,7 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/models/room/seating/bench_cushion_P22_wood_micrograin.png"
-dest_files=["res://.godot/imported/bench_cushion_P22_wood_micrograin.png-d58a9b5b8ca90c0046a7c1e1a5975c4d.s3tc.ctex"]
+dest_files=["res://.godot/imported/bench_cushion_P22_wood_micrograin.png-d545558e7679b426587233947ebda0d0.s3tc.ctex"]
 
 [params]
 

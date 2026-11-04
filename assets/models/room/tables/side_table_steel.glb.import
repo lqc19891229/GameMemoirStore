@@ -4,12 +4,12 @@ importer="scene"
 importer_version=1
 type="PackedScene"
 uid="uid://ch4cqevtwcju8"
-path="res://.godot/imported/side_table_steel.glb-7ea60fe2e49902011bea675db2bfa248.scn"
+path="res://.godot/imported/side_table_steel.glb-b162404ca5fe7422a026f493a76ee797.scn"
 
 [deps]
 
 source_file="res://assets/models/room/tables/side_table_steel.glb"
-dest_files=["res://.godot/imported/side_table_steel.glb-7ea60fe2e49902011bea675db2bfa248.scn"]
+dest_files=["res://.godot/imported/side_table_steel.glb-b162404ca5fe7422a026f493a76ee797.scn"]
 
 [params]
 

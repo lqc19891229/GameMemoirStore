@@ -3,7 +3,7 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://cid5mww0y2pvd"
-path.s3tc="res://.godot/imported/bench_cushion_Image_0.png-34d6eda535b1adc28b841b8377bf0e39.s3tc.ctex"
+path.s3tc="res://.godot/imported/bench_cushion_Image_0.png-73991bc2ae2b068aff4a4cbb65a9bdc2.s3tc.ctex"
 metadata={
 "imported_formats": ["s3tc_bptc"],
 "vram_texture": true
@@ -15,7 +15,7 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/models/room/seating/bench_cushion_Image_0.png"
-dest_files=["res://.godot/imported/bench_cushion_Image_0.png-34d6eda535b1adc28b841b8377bf0e39.s3tc.ctex"]
+dest_files=["res://.godot/imported/bench_cushion_Image_0.png-73991bc2ae2b068aff4a4cbb65a9bdc2.s3tc.ctex"]
 
 [params]
 

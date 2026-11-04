@@ -4,12 +4,12 @@ importer="scene"
 importer_version=1
 type="PackedScene"
 uid="uid://b8chx4dneery"
-path="res://.godot/imported/lamp_arc.glb-eb40eab1ecfb2980772894a13dc32604.scn"
+path="res://.godot/imported/lamp_arc.glb-3db1b90071c8350c8029b72d82e5c127.scn"
 
 [deps]
 
 source_file="res://assets/models/room/lighting/lamp_arc.glb"
-dest_files=["res://.godot/imported/lamp_arc.glb-eb40eab1ecfb2980772894a13dc32604.scn"]
+dest_files=["res://.godot/imported/lamp_arc.glb-3db1b90071c8350c8029b72d82e5c127.scn"]
 
 [params]
 

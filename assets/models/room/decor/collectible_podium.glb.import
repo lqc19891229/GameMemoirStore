@@ -4,12 +4,12 @@ importer="scene"
 importer_version=1
 type="PackedScene"
 uid="uid://j0ke3hwjy1os"
-path="res://.godot/imported/collectible_podium.glb-2d964987e48e236a72c8bb9194292646.scn"
+path="res://.godot/imported/collectible_podium.glb-a2edaa28d50ce4b67986a207c1b2001f.scn"
 
 [deps]
 
 source_file="res://assets/models/room/decor/collectible_podium.glb"
-dest_files=["res://.godot/imported/collectible_podium.glb-2d964987e48e236a72c8bb9194292646.scn"]
+dest_files=["res://.godot/imported/collectible_podium.glb-a2edaa28d50ce4b67986a207c1b2001f.scn"]
 
 [params]
 

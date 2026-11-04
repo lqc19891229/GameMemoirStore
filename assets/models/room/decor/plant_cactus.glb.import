@@ -4,12 +4,12 @@ importer="scene"
 importer_version=1
 type="PackedScene"
 uid="uid://5fo15oc7okt2"
-path="res://.godot/imported/plant_cactus.glb-dfd58780c92d80fd7f2df96ecc78cabb.scn"
+path="res://.godot/imported/plant_cactus.glb-aa7658dd5b2d798cde428acc7e7f0461.scn"
 
 [deps]
 
 source_file="res://assets/models/room/decor/plant_cactus.glb"
-dest_files=["res://.godot/imported/plant_cactus.glb-dfd58780c92d80fd7f2df96ecc78cabb.scn"]
+dest_files=["res://.godot/imported/plant_cactus.glb-aa7658dd5b2d798cde428acc7e7f0461.scn"]
 
 [params]
 

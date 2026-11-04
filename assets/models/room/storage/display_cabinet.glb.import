@@ -4,12 +4,12 @@ importer="scene"
 importer_version=1
 type="PackedScene"
 uid="uid://dnukmgd8ngsxl"
-path="res://.godot/imported/display_cabinet.glb-0a82f7ae96858b976793468e1eec54a7.scn"
+path="res://.godot/imported/display_cabinet.glb-5e9a5a45a488c974ae906e1d6237d1d4.scn"
 
 [deps]
 
 source_file="res://assets/models/room/storage/display_cabinet.glb"
-dest_files=["res://.godot/imported/display_cabinet.glb-0a82f7ae96858b976793468e1eec54a7.scn"]
+dest_files=["res://.godot/imported/display_cabinet.glb-5e9a5a45a488c974ae906e1d6237d1d4.scn"]
 
 [params]
 

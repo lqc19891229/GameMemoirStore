@@ -4,12 +4,12 @@ importer="scene"
 importer_version=1
 type="PackedScene"
 uid="uid://c68hsady4lmra"
-path="res://.godot/imported/vinyl_crate.glb-87b4fd465b43f3564b4e35284fd343a7.scn"
+path="res://.godot/imported/vinyl_crate.glb-c47fa6deacdae978bef5b9698314e186.scn"
 
 [deps]
 
 source_file="res://assets/models/room/decor/vinyl_crate.glb"
-dest_files=["res://.godot/imported/vinyl_crate.glb-87b4fd465b43f3564b4e35284fd343a7.scn"]
+dest_files=["res://.godot/imported/vinyl_crate.glb-c47fa6deacdae978bef5b9698314e186.scn"]
 
 [params]
 

@@ -3,7 +3,7 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://cemi1k52xchs8"
-path.s3tc="res://.godot/imported/sofa_modular_P22_wood_micrograin.png-46130af0bade013b04d7563556208cd1.s3tc.ctex"
+path.s3tc="res://.godot/imported/sofa_modular_P22_wood_micrograin.png-4d70237efdc0732e399a1732ddd104bc.s3tc.ctex"
 metadata={
 "imported_formats": ["s3tc_bptc"],
 "vram_texture": true
@@ -15,7 +15,7 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/models/room/seating/sofa_modular_P22_wood_micrograin.png"
-dest_files=["res://.godot/imported/sofa_modular_P22_wood_micrograin.png-46130af0bade013b04d7563556208cd1.s3tc.ctex"]
+dest_files=["res://.godot/imported/sofa_modular_P22_wood_micrograin.png-4d70237efdc0732e399a1732ddd104bc.s3tc.ctex"]
 
 [params]
 

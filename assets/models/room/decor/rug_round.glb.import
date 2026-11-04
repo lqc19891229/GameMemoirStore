@@ -4,12 +4,12 @@ importer="scene"
 importer_version=1
 type="PackedScene"
 uid="uid://b5c2y5bbma80g"
-path="res://.godot/imported/rug_round.glb-ad8e33559c77f8786a9833b7c206cd94.scn"
+path="res://.godot/imported/rug_round.glb-6af161e97e7a37e0474fe61d2227c3f2.scn"
 
 [deps]
 
 source_file="res://assets/models/room/decor/rug_round.glb"
-dest_files=["res://.godot/imported/rug_round.glb-ad8e33559c77f8786a9833b7c206cd94.scn"]
+dest_files=["res://.godot/imported/rug_round.glb-6af161e97e7a37e0474fe61d2227c3f2.scn"]
 
 [params]
 

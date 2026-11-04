@@ -3,7 +3,7 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://48xqiiilsxbi"
-path.s3tc="res://.godot/imported/writing_table_P22_wood_micrograin.png-106639ec2f556420c9f76c6e3c980b3b.s3tc.ctex"
+path.s3tc="res://.godot/imported/writing_table_P22_wood_micrograin.png-f84cefd1acd58a4e157a9c60fe8f2549.s3tc.ctex"
 metadata={
 "imported_formats": ["s3tc_bptc"],
 "vram_texture": true
@@ -15,7 +15,7 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/models/room/tables/writing_table_P22_wood_micrograin.png"
-dest_files=["res://.godot/imported/writing_table_P22_wood_micrograin.png-106639ec2f556420c9f76c6e3c980b3b.s3tc.ctex"]
+dest_files=["res://.godot/imported/writing_table_P22_wood_micrograin.png-f84cefd1acd58a4e157a9c60fe8f2549.s3tc.ctex"]
 
 [params]
 

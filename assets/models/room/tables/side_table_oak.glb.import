@@ -4,12 +4,12 @@ importer="scene"
 importer_version=1
 type="PackedScene"
 uid="uid://cpgwo26df5vwl"
-path="res://.godot/imported/side_table_oak.glb-43d508a107f74585cae6cbecc83bace7.scn"
+path="res://.godot/imported/side_table_oak.glb-8c687c4431d681cf0e2495ecd80d345f.scn"
 
 [deps]
 
 source_file="res://assets/models/room/tables/side_table_oak.glb"
-dest_files=["res://.godot/imported/side_table_oak.glb-43d508a107f74585cae6cbecc83bace7.scn"]
+dest_files=["res://.godot/imported/side_table_oak.glb-8c687c4431d681cf0e2495ecd80d345f.scn"]
 
 [params]
 
