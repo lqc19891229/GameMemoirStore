@@ -158,6 +158,9 @@ func _build_ui() -> void:
 	surface_editor.visible = false
 	surface_editor.apply_requested.connect(_apply_surface_changes)
 	surface_editor.preview_changed.connect(_preview_surface_changes)
+	surface_editor.selection_changed.connect(_select_preview_anchor)
+	preview.anchor_selected.connect(_select_edit_anchor)
+	preview.anchor_changed.connect(_change_edit_anchor)
 	detail.add_child(surface_editor)
 
 	status_label = Label.new()
@@ -264,9 +267,13 @@ func _update_details() -> void:
 	if selected_item != null and selected_item.furniture_scene != null and preview.model != null and preview.model.has_method("apply_custom_support_surfaces"):
 		surface_editor.visible = true
 		surface_editor.set_anchors(preview.support_anchors, true)
+		preview.set_edit_surfaces(true)
+		preview.set_selected_anchor(0 if not preview.support_anchors.is_empty() else -1)
 	else:
 		surface_editor.visible = false
 		surface_editor.set_anchors([], false)
+		preview.set_edit_surfaces(false)
+		preview.set_selected_anchor(-1)
 	if selected_item == null:
 		info_label.text = "从列表选择一件家具。\n\n此管理器直接读取现有商品目录，不会改变玩家存档。"
 		return
@@ -354,6 +361,21 @@ func _anchor_summary(anchors: Array[Dictionary]) -> String:
 
 func _preview_surface_changes(anchors: Array[Dictionary]) -> void:
 	preview.preview_staged_surfaces(anchors)
+	preview.set_selected_anchor(surface_editor.list.get_selected_items()[0] if not surface_editor.list.get_selected_items().is_empty() else -1)
+
+
+func _select_preview_anchor(index: int) -> void:
+	preview.set_selected_anchor(index)
+
+
+func _select_edit_anchor(index: int) -> void:
+	surface_editor.select_anchor_index(index)
+
+
+func _change_edit_anchor(index: int, anchor: Dictionary) -> void:
+	surface_editor.update_from_preview(index, anchor)
+	status_label.text = "承载面草稿已调整 · 点击「应用并保存当前家具场景」才会保存"
+
 
 
 func _apply_surface_changes(anchors: Array[Dictionary]) -> void:
