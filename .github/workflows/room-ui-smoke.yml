@@ -4,6 +4,7 @@ on:
     paths:
       - "addons/furniture_manager/**"
       - "tests/life/test_furniture_support_authoring.gd"
+      - "tests/life/test_furniture_drag_handles.gd"
       - "tests/life/test_furniture_resource_manager.gd"
       - "project.godot"
       - "scripts/life/room_*"
@@ -78,6 +79,7 @@ jobs:
             tests/life/test_furniture_catalog.gd \
             tests/life/test_furniture_resource_manager.gd \
             tests/life/test_furniture_support_authoring.gd \
+            tests/life/test_furniture_drag_handles.gd \
             tests/life/test_room_decor_collectibles.gd \
             tests/life/test_shop_room_flow.gd \
             tests/life/test_furniture_pbr.gd \
