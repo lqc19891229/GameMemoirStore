@@ -720,9 +720,14 @@ func perform_action(id: String) -> void:
 			else:
 				layout.duplicate_selected()
 		"mount":
-			var mounted: bool = layout.surface_mounts.has(layout.selected)
-			var succeeded: bool = layout.unmount_selected() if mounted else layout.mount_selected_on_nearest_surface()
-			room_ui.show_keyboard_feedback(("已取下陈列家具 · Ctrl+Z 撤销" if mounted else "已放上桌面/书架 · Ctrl+Z 撤销") if succeeded else str(layout.message))
+			if layout.Data.base_role(layout.selected) == "poster_floor_frame":
+				var wall_mounted: bool = layout.wall_mounts.has(layout.selected)
+				var wall_success: bool = layout.take_down_selected_wall_mount() if wall_mounted else layout.hang_selected_on_wall()
+				room_ui.show_keyboard_feedback(("已从墙上取下画框 · Ctrl+Z 撤销" if wall_mounted else "已挂到外墙 · Ctrl+Z 撤销") if wall_success else str(layout.message))
+			else:
+				var mounted: bool = layout.surface_mounts.has(layout.selected)
+				var succeeded: bool = layout.unmount_selected() if mounted else layout.mount_selected_on_nearest_surface()
+				room_ui.show_keyboard_feedback(("已取下陈列家具 · Ctrl+Z 撤销" if mounted else "已放上桌面/书架 · Ctrl+Z 撤销") if succeeded else str(layout.message))
 		"store":
 			if layout.group_selection.size() > 1:
 				var count: int = layout.group_selection.size()
@@ -872,9 +877,12 @@ func sync(active: bool) -> void:
 	action_buttons["store"].disabled = false
 	action_buttons["mount"].visible = not multi
 	action_buttons["mount"].disabled = multi or layout._has_mounted_children(role)
-	action_buttons["mount"].tooltip_text = "取下并恢复上次地面位置" if layout.surface_mounts.has(role) else "陈列到附近的空闲桌面或书架（需要足够空间）"
+	if layout.Data.base_role(role) == "poster_floor_frame":
+		action_buttons["mount"].tooltip_text = "取下墙面画框并恢复原地面位置" if layout.wall_mounts.has(role) else "将画框挂到最近的可用外墙（避开门窗）"
+	else:
+		action_buttons["mount"].tooltip_text = "取下并恢复上次地面位置" if layout.surface_mounts.has(role) else "陈列到附近的空闲桌面或书架（需要足够空间）"
 	action_buttons["move"].disabled = false
-	action_buttons["rotate"].disabled = false
+	action_buttons["rotate"].disabled = layout.wall_mounts.has(role)
 	action_buttons["move"].tooltip_text = "沿当前承载面拖动或用方向键微调 · Ctrl+Z 撤销" if layout.surface_mounts.has(role) else "拖拽移动家具"
 	action_buttons["rotate"].tooltip_text = "旋转陈列物 · Q/E 每次 15° · Shift 精细旋转" if layout.surface_mounts.has(role) else "旋转家具"
 	action_buttons["arrange"].disabled = layout.surface_mounts.has(role)
