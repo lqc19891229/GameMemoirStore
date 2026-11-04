@@ -133,6 +133,8 @@ func name_for(role: String) -> String:
 func load_placements(raw: Dictionary, inventory: Array) -> void:
 	if active: return
 	available_inventory = inventory.duplicate(true)
+	surface_mounts.clear()
+	committed_mounts.clear()
 	placed_instances = raw.duplicate()
 	committed_placements = placed_instances.duplicate()
 	_apply_furniture_appearance()
@@ -816,12 +818,11 @@ func store_selected() -> void:
 		message = "请先取下陈列物品，再收纳支撑家具"
 		changed.emit()
 		return
-	if surface_mounts.has(selected):
-		surface_mounts.erase(selected)
 	if not active or group_selection.size() > 1 or not InventoryData.is_room_furniture_role(Data.base_role(selected)): return
 	if not placing_role.is_empty() or not placed_instances.has(selected): return
 	end_drag()
 	var before := _draft()
+	surface_mounts.erase(selected)
 	placed_instances.erase(selected)
 	if Data.is_copy(selected):
 		nodes[selected].free()
@@ -834,10 +835,11 @@ func store_selected() -> void:
 	_remember(before)
 	update()
 
-func load_saved(raw: Variant) -> void:
+func load_saved(raw: Variant, raw_mounts: Variant = {}) -> void:
 	if active: return
 	var cleaned := Data.clean(raw)
-	if cleaned == saved and _layout_blocker().is_empty(): return
+	var sanitized_mounts: Dictionary = MountData.clean(raw_mounts,placed_instances)
+	if cleaned == saved and sanitized_mounts == surface_mounts and _layout_blocker().is_empty(): return
 	restore(authored)
 	for role: String in cleaned:
 		_create_copy(role)
@@ -845,6 +847,10 @@ func load_saved(raw: Variant) -> void:
 		nodes[role].position.z = cleaned[role].z
 		nodes[role].rotation.y = cleaned[role].yaw
 		clamp_pose(role)
+	surface_mounts = sanitized_mounts
+	for role: String in surface_mounts.keys():
+		if not _mount_valid(role,surface_mounts[role]): surface_mounts.erase(role)
+	_sync_mount_poses()
 	# Older layouts may touch or overlap after a model/bounds change. Keep the
 	# table pose, but recover a usable equipment arrangement rather than loading penetration.
 	if not _layout_blocker().is_empty():
@@ -853,6 +859,7 @@ func load_saved(raw: Variant) -> void:
 	# Recover the complete authored room rather than keeping a partially invalid save.
 	if not _layout_blocker().is_empty(): restore(authored)
 	saved = cleaned
+	committed_mounts = surface_mounts.duplicate(true)
 	committed = snapshot()
 
 func export_layout() -> Dictionary:
