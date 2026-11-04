@@ -113,3 +113,11 @@ scenes/room/
 历史家具模型、配套贴图与 `.import` 配置已实际移动到 `assets/models/room/{tables,seating,storage,lighting,decor}/`；对应独立家具场景已移动到 `scenes/room/` 的同名分类目录。商品目录、场景、脚本及测试中的 `res://` 引用已同步更新。房间主体 `room.tscn`、`modern_room_shell.tscn` 与 `room_shell.glb` 不参与家具迁移。
 
 对于已经包含此次实际迁移提交的分支，**不需要再运行** `tools/migrate_furniture_folders.py --apply`。检出分支后请让 Godot 完成资源重新导入，再执行项目回归测试。
+
+## 家具承载面摆放许可
+
+家具商品新增可选的 `allow_surface_mount` 布尔属性（默认关闭）。在「家具注册」中勾选「允许放置在其他家具的承载面」后，新商品才能通过鼠标将物品直接摆到桌面、茶几或书架，以及使用手动陈列操作。启用许可仍需通过家具实际尺寸、承载面边界和相邻物品碰撞校验；仅勾选不会绕过这些规则，也不会使支撑家具本身自动生成承载面。
+
+已存在的游戏纪念陶瓷杯 (`room_desk_memento`) 与迷你游戏设定集 (`room_mini_book_stack`) 已显式开启这一许可，保持旧版交互。普通椅子、沙发、灯具等默认禁用。需要为旧商品补充许可时，在 `data/items/_catalog.tres` 中编辑对应 `MemoirItemDefinition.allow_surface_mount`；商品 ID、库存 UID 及存档格式无变化。
+
+支撑面仍通过家具场景的 `use_custom_support_surfaces` 与 `custom_support_surfaces` 配置；少量历史场景继续兼容原本按角色生成的默认承载面。

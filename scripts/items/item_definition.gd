@@ -18,4 +18,7 @@ extends Resource
 @export var income := 0
 @export var capacity := 0
 @export var retired := false
+## Opt-in for placing this floor-stocked item on authored furniture support surfaces.
+## Defaults false so sofas, lamps and large furniture never auto-mount.
+@export var allow_surface_mount := false
 @export var furniture_scene: PackedScene
