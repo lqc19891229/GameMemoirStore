@@ -1,7 +1,7 @@
 extends SceneTree
 ## Lightweight headless regression for the development-only editor browser.
 const Catalog = preload("res://scripts/items/item_catalog.gd")
-const Panel = preload("res://addons/furniture_manager/furniture_manager_panel.gd")
+const FurnitureManagerPanel = preload("res://addons/furniture_manager/furniture_manager_panel.gd")
 var failures := 0
 
 
@@ -10,7 +10,7 @@ func _initialize() -> void:
 
 
 func _run() -> void:
-	var panel := Panel.new()
+	var panel := FurnitureManagerPanel.new()
 	root.add_child(panel)
 	await process_frame
 	_check(panel.catalog is MemoirItemCatalog, "catalog loads")
