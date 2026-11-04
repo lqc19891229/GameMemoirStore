@@ -6,6 +6,7 @@ const INPUT_ROOT := "res://assets/models/room/"
 const OUTPUT_ROOT := "res://scenes/room/"
 const MODEL_EXTENSIONS := [".glb", ".gltf"]
 const MIN_DIMENSION := 0.02
+const FOLDERS := ["tables", "seating", "storage", "lighting", "decor"]
 
 
 static func valid_model_path(path: String) -> bool:
@@ -21,7 +22,27 @@ static func scene_path_for(model_path: String) -> String:
 	var basename := model_path.get_file().get_basename()
 	if not basename.is_valid_filename() or basename.is_empty():
 		return ""
-	return OUTPUT_ROOT + basename + ".tscn"
+	var relative := model_path.trim_prefix(INPUT_ROOT)
+	var parts := relative.split("/")
+	var group := ""
+	if parts.size() > 1 and FOLDERS.has(parts[0]):
+		group = parts[0]
+	else:
+		group = group_for_filename(basename)
+	return OUTPUT_ROOT + group + "/" + basename + ".tscn"
+
+
+static func group_for_filename(basename: String) -> String:
+	var name_lower := basename.to_lower()
+	if name_lower.contains("desk") or name_lower.contains("table"):
+		return "tables"
+	if name_lower.contains("chair") or name_lower.contains("sofa") or name_lower.contains("stool") or name_lower.contains("bench") or name_lower.contains("cushion"):
+		return "seating"
+	if name_lower.contains("shelf") or name_lower.contains("bookcase") or name_lower.contains("cabinet") or name_lower.contains("console") or name_lower.contains("crate"):
+		return "storage"
+	if name_lower.contains("lamp") or name_lower.contains("light") or name_lower.contains("sconce"):
+		return "lighting"
+	return "decor"
 
 
 static func list_models(directory_path: String) -> PackedStringArray:
@@ -91,6 +112,8 @@ static func create_scene(model_path: String, target_path: String = "") -> Dictio
 		return {"ok": false, "error": "输出必须是 scenes/room/ 目录下的 .tscn"}
 	if FileAccess.file_exists(destination) or ResourceLoader.exists(destination):
 		return {"ok": false, "error": "目标场景已存在，拒绝覆盖：" + destination}
+	if DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(destination.get_base_dir())) != OK:
+		return {"ok": false, "error": "创建分类场景目录失败"}
 	var model_resource := ResourceLoader.load(model_path) as PackedScene
 	if model_resource == null:
 		return {"ok": false, "error": "GLB/GLTF 没有导入为 PackedScene"}
