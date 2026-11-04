@@ -121,3 +121,11 @@ scenes/room/
 已存在的游戏纪念陶瓷杯 (`room_desk_memento`) 与迷你游戏设定集 (`room_mini_book_stack`) 已显式开启这一许可，保持旧版交互。普通椅子、沙发、灯具等默认禁用。需要为旧商品补充许可时，在 `data/items/_catalog.tres` 中编辑对应 `MemoirItemDefinition.allow_surface_mount`；商品 ID、库存 UID 及存档格式无变化。
 
 支撑面仍通过家具场景的 `use_custom_support_surfaces` 与 `custom_support_surfaces` 配置；少量历史场景继续兼容原本按角色生成的默认承载面。
+
+## 统一的家具场景承载面（分类资源配置）
+
+所有可承载物品的家具，直接在对应 `.tscn` 根节点定义 `use_custom_support_surfaces = true` 和 `custom_support_surfaces`（含 `id`、`center: Vector3`、`size: Vector2`）。可以通过「家具资源库 → 承载面编辑」创建、查看、移动并保存这些锚点，无需修改房间控制代码。
+
+已有书架的四层搁板、书桌、木质边桌、圆茶几、玻璃茶几和矮架的顶部承载面均已迁移到各自场景资源。**不再根据角色名自动生成承载面**；未启用或空列表意味着不支持陈列。新家具不会因为名称中包含 table/shelf 就自动成为承载家具，必须明确编辑承载区域。
+
+一个物品要能被放到家具上，需要同时满足：商品定义启用 `allow_surface_mount`、目标家具场景存在有效的承载锚点、大小/位置/碰撞检测通过。不要只开启商品开关而忘记为目标家具定义承载面。

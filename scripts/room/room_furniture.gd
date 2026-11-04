@@ -4,8 +4,8 @@ extends Node3D
 @export var bounds := Vector3.ONE
 @export var blocking := true
 @export var role := "chair"
-## Explicit placement surfaces override the legacy role-generated anchors.
-## Empty enabled overrides intentionally mean this furniture supports no items.
+## Scene-authored support surfaces. Disabled or an empty list means no stacking.
+## The editor exposes the same fields; no role-name special cases are needed.
 @export var use_custom_support_surfaces := false
 @export var custom_support_surfaces: Array[Dictionary] = []
 
@@ -42,24 +42,12 @@ func _register_support_surfaces() -> void:
 			cleaned.append(anchor)
 		set_meta("support_surfaces", cleaned)
 		return
-	# When switching back to legacy defaults, stale custom anchors must disappear.
+	# All surfaces are authored in the furniture scene, not generated from
+	# SKU roles. Disabled/empty means this scene provides no support surface.
+	# Remove previously cached anchors when Undo switches off the override.
 	if has_meta("support_surfaces"):
 		remove_meta("support_surfaces")
-	# Authored safe contact areas; no automatic stacking on chairs/lamps.
-	var anchors: Array = []
-	var base_role := role.get_slice("__instance__", 0)
-	if base_role.ends_with("_1") or base_role.ends_with("_2") or base_role.ends_with("_3") or base_role.ends_with("_4") or base_role.ends_with("_5") or base_role.ends_with("_6") or base_role.ends_with("_7") or base_role.ends_with("_8"):
-		base_role = base_role.substr(0, base_role.rfind("_"))
-	match base_role:
-		"bookcase":
-			for level in range(4):
-				anchors.append({"id": "shelf_%d" % level, "center": Vector3(0, [0.2575, 0.8375, 1.4175, 1.9975][level], 0), "size": Vector2(1.16, 0.42)})
-		"writing_table", "side_table_oak", "coffee_table_round", "coffee_table_glass", "shelf_low":
-			var top := SupportSurfaces.from_bounds(bounds, 0.08)
-			if not top.is_empty():
-				anchors.append(top)
-	if not anchors.is_empty():
-		set_meta("support_surfaces", anchors)
+
 
 func _material(color: Color, roughness: float = 0.78, metallic: float = 0.0) -> StandardMaterial3D:
 	var material := StandardMaterial3D.new()

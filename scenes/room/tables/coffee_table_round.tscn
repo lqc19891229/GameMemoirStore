@@ -12,6 +12,8 @@ script = ExtResource("1")
 role = "coffee_table_round"
 bounds = Vector3(1.24, 0.56, 1.24)
 blocking = true
+use_custom_support_surfaces = true
+custom_support_surfaces = [{"id": "top", "center": Vector3(0, 0.56, 0), "size": Vector2(1.08, 1.08)}]
 
 [node name="Model" parent="." instance=ExtResource("2")]
 
