@@ -422,7 +422,6 @@ func _build_grid_floor() -> void:
 				Vector3(length, .014, Blueprint.FLOOR_GRID - .014),
 				Vector3(center_x, .006, center_z), plank, finish, "floor")
 			board.set_meta("tone", tone)
-			if zone > 0: board.set_meta("zone_id", zone)
 			index += 1
 
 func _build_custom_exterior(wall: Material, trim: Material) -> void:
