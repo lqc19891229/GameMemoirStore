@@ -26,7 +26,7 @@ func run() -> void:
 	var overlay = world.get_node("BlueprintOverlay")
 	check(not overlay.visible, "construction grid does not show during normal gameplay")
 	check(world.get_node("WallPreview") != null and overlay.has_node("GridLines") and overlay.has_node("RegionFill"), "overlay nodes are authored into workstation scene")
-	check(desktop.get_node("%BlueprintQuickWall") != null and desktop.get_node("%BlueprintQuickRegion") != null and desktop.get_node("%BlueprintQuickOpening") != null, "quick build tools are scene-authored")
+	check(desktop.get_node("%BlueprintQuickWall") != null and desktop.get_node("%BlueprintQuickFloor") != null and desktop.get_node("%BlueprintQuickOpening") != null and desktop.get_node_or_null("%BlueprintQuickRegion") == null, "quick build tools are scene-authored")
 	check(desktop.get_node("%BlueprintGridToggle") != null and desktop.get_node("%BlueprintApertureTarget") != null, "grid toggle and opening selector are authored")
 	desktop.begin_layout()
 	desktop.set_blueprint_mode(true)
