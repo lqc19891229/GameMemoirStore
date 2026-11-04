@@ -429,7 +429,15 @@ func _mount_footprint(role: String, mount: Dictionary) -> PackedVector2Array:
 		footprint.append(position + offset.rotated(-yaw))
 	return footprint
 
+func _can_surface_mount(role: String) -> bool:
+	# The SKU is authoritative: never infer placement permission from
+	# an ornament name, taxonomy group or geometry alone.
+	var item: MemoirItemDefinition = ItemCatalog.item_for_placement_role(Data.base_role(role))
+	return item != null and item.allow_surface_mount and item.placement_surface == "floor"
+
+
 func _mount_valid(role: String, mount: Dictionary) -> bool:
+	if not _can_surface_mount(role): return false
 	if not nodes.has(role) or not placed_instances.has(role): return false
 	var support: String = str(mount.get("support",""))
 	if not nodes.has(support) or not placed_instances.has(support) or support == role: return false
@@ -507,7 +515,7 @@ func _mounted_hit(pixel: Vector2) -> Variant:
 
 func mount_selected_on_nearest_surface() -> bool:
 	if not active or not placing_role.is_empty() or not gesture.is_empty() or group_selection.size() > 1: return false
-	if not placed_instances.has(selected) or surface_mounts.has(selected): return false
+	if not placed_instances.has(selected) or surface_mounts.has(selected) or not _can_surface_mount(selected): return false
 	var role := selected
 	var original: Transform3D = nodes[role].transform
 	var original_pose := {"x":original.origin.x,"z":original.origin.z,"yaw":original.basis.get_euler().y}
@@ -694,9 +702,9 @@ func preview_placement(position_xz: Vector2) -> void:
 
 func _surface_preview_at(pixel: Vector2) -> bool:
 	if placing_role.is_empty(): return false
-	# Only compact collectibles use automatic contact placement; ordinary sofas,
-	# cabinets and floor furniture must never jump onto shelf surfaces.
-	if Data.base_role(placing_role) not in ["desk_memento","mini_book_stack"]: return false
+	# Only explicitly opted-in SKUs can hover onto authored surfaces.
+	# Bounds, rotation and overlap are still checked by _mount_valid().
+	if not _can_surface_mount(placing_role): return false
 	var origin: Vector3 = world.camera.project_ray_origin(pixel)
 	var direction: Vector3 = world.camera.project_ray_normal(pixel)
 	var nearest: float = INF
