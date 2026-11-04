@@ -63,7 +63,17 @@ func run() -> void:
 				break
 	check(floor_found,"room has a safe original floor spot for the framed poster")
 	if floor_found: check(layout.confirm_placement(),"floor staging position confirms")
-	check(layout.hang_selected_on_wall(),"frame moves from floor to a valid exterior wall")
+	var hung: bool = layout.hang_selected_on_wall()
+	if not hung:
+		print("WALL_DIAGNOSTIC selected=",layout.selected,
+			" role=",frame_role," pose=",layout.nodes[frame_role].position,
+			" stage=",layout.placing_role," group=",layout.group_selection,
+			" error=",layout.message," dims=",layout.bounds_for(frame_role))
+		for wall: String in ["north","south","west","east"]:
+			var check_mount := {"wall":wall,"along":layout.nodes[frame_role].position.x if wall in ["north","south"] else layout.nodes[frame_role].position.z,
+				"height":1.2}
+			print("WALL_DIAGNOSTIC ",wall,": ",Wall.fits(check_mount,layout.blueprint,.77,1.2))
+	check(hung,"frame moves from floor to a valid exterior wall")
 	check(layout.wall_mounts.has(frame_role),"wall attachment is tracked independently of surface mounts")
 	check(layout.nodes[frame_role].position.y > 0.8,"frame is elevated on the wall")
 	var moved: bool = layout.move_wall_mount(Vector2(0.05,0.05))
