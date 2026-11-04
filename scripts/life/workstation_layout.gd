@@ -6,6 +6,7 @@ const ItemCatalog: MemoirItemCatalog = preload("res://data/items/_catalog.tres")
 const BlueprintData = preload("res://scripts/room/room_blueprint_data.gd")
 const Finishes = preload("res://scripts/items/furniture_finishes.gd")
 const MountData = preload("res://scripts/room/furniture_mount_data.gd")
+const WallMountData = preload("res://scripts/room/room_wall_mount_data.gd")
 const SupportSurfaces = preload("res://scripts/room/furniture_support_surfaces.gd")
 const FURNITURE_COLOR_LABELS = Finishes.LABELS
 const FURNITURE_COLOR_HEX = Finishes.HEX
@@ -75,6 +76,8 @@ var furniture_colors: Dictionary = {}
 var committed_colors: Dictionary = {}
 var surface_mounts: Dictionary = {}
 var committed_mounts: Dictionary = {}
+var wall_mounts: Dictionary = {}
+var committed_wall_mounts: Dictionary = {}
 var placing_role := ""
 var placing_before: Dictionary = {}
 # P39 preview is transient visual state: never enters nodes, inventory or undo.
@@ -135,6 +138,8 @@ func load_placements(raw: Dictionary, inventory: Array) -> void:
 	available_inventory = inventory.duplicate(true)
 	surface_mounts.clear()
 	committed_mounts.clear()
+	wall_mounts.clear()
+	committed_wall_mounts.clear()
 	placed_instances = raw.duplicate()
 	committed_placements = placed_instances.duplicate()
 	_apply_furniture_appearance()
@@ -163,6 +168,112 @@ func load_mounts(raw: Variant) -> void:
 
 func export_mounts() -> Dictionary:
 	return committed_mounts.duplicate(true)
+
+func export_wall_mounts() -> Dictionary:
+	return committed_wall_mounts.duplicate(true)
+
+func _sync_wall_mount_poses() -> void:
+	for role: String in wall_mounts:
+		if not nodes.has(role) or not placed_instances.has(role): continue
+		var data: Dictionary = wall_mounts[role]
+		var half: Vector2 = BlueprintData.half_size(blueprint)
+		var node: Node3D = nodes[role]
+		var position := Vector3.ZERO
+		var yaw := 0.0
+		match str(data.wall):
+			"north":
+				position = Vector3(float(data.along),float(data.height),-half.y+.075)
+				yaw = 0.0
+			"south":
+				position = Vector3(float(data.along),float(data.height),half.y-.075)
+				yaw = PI
+			"west":
+				position = Vector3(-half.x+.075,float(data.height),float(data.along))
+				yaw = PI*.5
+			"east":
+				position = Vector3(half.x-.075,float(data.height),float(data.along))
+				yaw = -PI*.5
+		node.position = position
+		node.rotation.y = yaw
+
+func _wall_mount_blocker(role: String, entry: Dictionary) -> String:
+	var dimensions: Vector3 = bounds_for(role)
+	if not WallMountData.fits(entry,blueprint,dimensions.x,dimensions.y):
+		return "画框碰到墙边、门窗或天花板"
+	for other: String in wall_mounts:
+		if other == role: continue
+		var mounted: Dictionary = wall_mounts[other]
+		if entry.wall != mounted.wall: continue
+		var other_dimensions: Vector3 = bounds_for(other)
+		var x_hit: bool = absf(float(entry.along)-float(mounted.along)) < (dimensions.x+other_dimensions.x)*.5+collision_margin
+		var y_hit: bool = float(entry.height)<float(mounted.height)+other_dimensions.y+collision_margin and float(mounted.height)<float(entry.height)+dimensions.y+collision_margin
+		if x_hit and y_hit: return "画框与另一件墙面装饰重叠"
+	return ""
+
+func hang_selected_on_wall() -> bool:
+	if not active or not gesture.is_empty() or not placing_role.is_empty() or group_selection.size()>1: return false
+	if Data.base_role(selected) != WallMountData.MOUNT_ROLE or not placed_instances.has(selected): return false
+	if wall_mounts.has(selected) or surface_mounts.has(selected): return false
+	var role: String = selected
+	var origin: Vector3 = nodes[role].position
+	var half: Vector2 = BlueprintData.half_size(blueprint)
+	var candidates: Array[Dictionary] = [
+		{"wall":"north","along":origin.x,"distance":absf(origin.z+half.y)},
+		{"wall":"south","along":origin.x,"distance":absf(origin.z-half.y)},
+		{"wall":"west","along":origin.z,"distance":absf(origin.x+half.x)},
+		{"wall":"east","along":origin.z,"distance":absf(origin.x-half.x)}
+	]
+	candidates.sort_custom(func(a: Dictionary,b: Dictionary) -> bool: return float(a.distance)<float(b.distance))
+	for candidate: Dictionary in candidates:
+		var pose: Dictionary = {"x":origin.x,"z":origin.z,"yaw":nodes[role].rotation.y}
+		var entry: Dictionary = {"wall":candidate.wall,"along":snappedf(float(candidate.along),grid_step),
+			"height":1.20,"floor_pose":pose}
+		if not _wall_mount_blocker(role,entry).is_empty(): continue
+		var before := _draft()
+		wall_mounts[role] = entry
+		_sync_wall_mount_poses()
+		_remember(before)
+		update()
+		return true
+	message = "附近外墙没有足够的挂画空间"
+	changed.emit()
+	return false
+
+func take_down_selected_wall_mount() -> bool:
+	if not active or not wall_mounts.has(selected) or not gesture.is_empty(): return false
+	var role: String = selected
+	var previous: Dictionary = wall_mounts[role]
+	var before := _draft()
+	wall_mounts.erase(role)
+	nodes[role].position = Vector3(float(previous.floor_pose.x),0,float(previous.floor_pose.z))
+	nodes[role].rotation.y = float(previous.floor_pose.yaw)
+	clamp_pose(role)
+	if not _layout_blocker().is_empty():
+		_restore_draft(before)
+		message = "原来的地面位置已被占用，请调整家具后再取下"
+		changed.emit()
+		return false
+	_remember(before)
+	update()
+	return true
+
+func move_wall_mount(direction: Vector2) -> bool:
+	if not active or not wall_mounts.has(selected) or not gesture.is_empty() or group_selection.size()>1: return false
+	if not is_finite(direction.x) or not is_finite(direction.y): return false
+	var before := _draft()
+	var entry: Dictionary = wall_mounts[selected].duplicate(true)
+	entry["along"] = snappedf(float(entry.along)+direction.x,grid_step) if snapping else float(entry.along)+direction.x
+	entry["height"] = snappedf(float(entry.height)+direction.y,grid_step) if snapping else float(entry.height)+direction.y
+	var blocker: String = _wall_mount_blocker(selected,entry)
+	if not blocker.is_empty():
+		message = "已阻挡：" + blocker
+		changed.emit()
+		return false
+	wall_mounts[selected] = entry
+	_sync_wall_mount_poses()
+	_remember(before)
+	update()
+	return true
 
 func _mount_footprint(role: String, mount: Dictionary) -> PackedVector2Array:
 	var width: Vector3 = bounds_for(role)
@@ -298,6 +409,16 @@ func unmount_selected() -> bool:
 	_remember(before)
 	update()
 	return true
+
+func load_wall_mounts(raw: Variant) -> void:
+	if active: return
+	wall_mounts = WallMountData.clean(raw,placed_instances,blueprint)
+	for role: String in wall_mounts.keys():
+		if not nodes.has(role) or not _wall_mount_blocker(role,wall_mounts[role]).is_empty():
+			wall_mounts.erase(role)
+	committed_wall_mounts = wall_mounts.duplicate(true)
+	_sync_wall_mount_poses()
+	committed = snapshot()
 
 func color_for(role: String) -> int:
 	return int(furniture_colors.get(str(placed_instances.get(role, "")), 0))
@@ -864,6 +985,7 @@ func store_selected() -> void:
 	end_drag()
 	var before := _draft()
 	surface_mounts.erase(selected)
+	wall_mounts.erase(selected)
 	placed_instances.erase(selected)
 	if Data.is_copy(selected):
 		nodes[selected].free()
@@ -876,11 +998,12 @@ func store_selected() -> void:
 	_remember(before)
 	update()
 
-func load_saved(raw: Variant, raw_mounts: Variant = {}) -> void:
+func load_saved(raw: Variant, raw_mounts: Variant = {}, raw_walls: Variant = {}) -> void:
 	if active: return
 	var cleaned := Data.clean(raw)
 	var sanitized_mounts: Dictionary = MountData.clean(raw_mounts,placed_instances)
-	if cleaned == saved and sanitized_mounts == surface_mounts and _layout_blocker().is_empty(): return
+	var sanitized_walls: Dictionary = WallMountData.clean(raw_walls,placed_instances,blueprint)
+	if cleaned == saved and sanitized_mounts == surface_mounts and sanitized_walls == wall_mounts and _layout_blocker().is_empty(): return
 	restore(authored)
 	for role: String in cleaned:
 		_create_copy(role)
@@ -892,6 +1015,8 @@ func load_saved(raw: Variant, raw_mounts: Variant = {}) -> void:
 	for role: String in surface_mounts.keys():
 		if not _mount_valid(role,surface_mounts[role]): surface_mounts.erase(role)
 	_sync_mount_poses()
+	wall_mounts = sanitized_walls
+	_sync_wall_mount_poses()
 	# Older layouts may touch or overlap after a model/bounds change. Keep the
 	# table pose, but recover a usable equipment arrangement rather than loading penetration.
 	if not _layout_blocker().is_empty():
@@ -901,8 +1026,10 @@ func load_saved(raw: Variant, raw_mounts: Variant = {}) -> void:
 	if not _layout_blocker().is_empty():
 		restore(authored)
 		surface_mounts.clear()
+		wall_mounts.clear()
 	saved = cleaned
 	committed_mounts = surface_mounts.duplicate(true)
+	committed_wall_mounts = wall_mounts.duplicate(true)
 	committed = snapshot()
 
 func export_layout() -> Dictionary:
@@ -1709,7 +1836,7 @@ func load_style(raw: Variant) -> void:
 	committed_style = world.get_node("Room").style.duplicate()
 
 func _draft() -> Dictionary:
-	return {"poses":snapshot(), "style":world.get_node("Room").style.duplicate(), "placements":placed_instances.duplicate(), "colors":furniture_colors.duplicate(), "mounts":surface_mounts.duplicate(true), "blueprint":blueprint.duplicate(true)}
+	return {"poses":snapshot(), "style":world.get_node("Room").style.duplicate(), "placements":placed_instances.duplicate(), "colors":furniture_colors.duplicate(), "mounts":surface_mounts.duplicate(true), "wall_mounts":wall_mounts.duplicate(true), "blueprint":blueprint.duplicate(true)}
 
 func _restore_draft(draft: Dictionary) -> void:
 	blueprint = draft.blueprint.duplicate(true)
@@ -1718,7 +1845,9 @@ func _restore_draft(draft: Dictionary) -> void:
 	restore(draft.poses)
 	placed_instances = draft.placements.duplicate()
 	surface_mounts = draft.get("mounts",{}).duplicate(true)
+	wall_mounts = draft.get("wall_mounts",{}).duplicate(true)
 	_sync_mount_poses()
+	_sync_wall_mount_poses()
 	furniture_colors = draft.colors.duplicate()
 	_apply_furniture_appearance()
 	world.get_node("Room").apply_style(draft.style)
@@ -1789,7 +1918,9 @@ func begin() -> void:
 	placed_instances = committed_placements.duplicate()
 	furniture_colors = committed_colors.duplicate()
 	surface_mounts = committed_mounts.duplicate(true)
+	wall_mounts = committed_wall_mounts.duplicate(true)
 	_sync_mount_poses()
+	_sync_wall_mount_poses()
 	_apply_furniture_appearance()
 	update()
 
@@ -1809,6 +1940,7 @@ func finish(apply: bool) -> bool:
 		committed_placements = placed_instances.duplicate()
 		committed_colors = furniture_colors.duplicate()
 		committed_mounts = surface_mounts.duplicate(true)
+		committed_wall_mounts = wall_mounts.duplicate(true)
 		committed_style = world.get_node("Room").style.duplicate()
 		committed_blueprint = blueprint.duplicate(true)
 		saved = export_layout()
@@ -1817,7 +1949,9 @@ func finish(apply: bool) -> bool:
 		placed_instances = committed_placements.duplicate()
 		furniture_colors = committed_colors.duplicate()
 		surface_mounts = committed_mounts.duplicate(true)
+		wall_mounts = committed_wall_mounts.duplicate(true)
 		_sync_mount_poses()
+		_sync_wall_mount_poses()
 		_apply_furniture_appearance()
 		world.get_node("Room").apply_style(committed_style)
 		blueprint = committed_blueprint.duplicate(true)
@@ -2099,6 +2233,7 @@ func reset_layout() -> void:
 	world.get_node("Room").apply_blueprint(blueprint)
 	placed_instances = InventoryData.initial_placements()
 	surface_mounts.clear()
+	wall_mounts.clear()
 	furniture_colors.clear()
 	_apply_furniture_appearance()
 	world.get_node("Room").apply_style({})
@@ -2117,6 +2252,7 @@ func _footprint_at(role: String, pose: Transform3D, padding: float) -> PackedVec
 	return result
 
 func surface_for(role: String) -> String:
+	if wall_mounts.has(role): return "wall"
 	if surface_mounts.has(role): return "mount"
 	return "desk" if world.devices.has(role) else "floor"
 
@@ -2144,6 +2280,7 @@ func clamp_pose(role: String) -> void:
 
 func move_to(position_xz: Vector2) -> void:
 	if not active: return
+	if wall_mounts.has(selected): return
 	if surface_mounts.has(selected):
 		var mounted: Dictionary = surface_mounts[selected]
 		edit_selected_mount(position_xz,float(mounted.yaw))
@@ -2173,7 +2310,7 @@ func move_to(position_xz: Vector2) -> void:
 	if gesture.is_empty(): _remember(undo_before)
 
 func rotate_to(yaw: float) -> void:
-	if not active: return
+	if not active or wall_mounts.has(selected): return
 	if surface_mounts.has(selected):
 		var mounted: Dictionary = surface_mounts[selected]
 		edit_selected_mount(Vector2(float(mounted.x),float(mounted.z)),yaw)
@@ -2197,6 +2334,7 @@ func rotate_to(yaw: float) -> void:
 	if gesture.is_empty(): _remember(undo_before)
 
 func _blocker(role: String, polygon: PackedVector2Array, ignored: Array[String] = []) -> String:
+	if wall_mounts.has(role): return _wall_mount_blocker(role,wall_mounts[role])
 	if surface_mounts.has(role): return _mount_collision(role,surface_mounts[role])
 	var floor_item := is_floor(role)
 	if floor_item:
@@ -2220,6 +2358,7 @@ func _blocker(role: String, polygon: PackedVector2Array, ignored: Array[String] 
 
 func _layout_blocker() -> String:
 	_sync_mount_poses()
+	_sync_wall_mount_poses()
 	# Desktop hardware must stay under the table's Equipment node. It is
 	# never a free floor item, even when a save or caller bypasses the UI.
 	for role: String in world.devices:
@@ -2382,6 +2521,12 @@ func nudge_selected(direction: Vector2, fine: bool = false) -> bool:
 	# Fine adjustment temporarily skips grid rounding for a genuine 1 cm step.
 	if not active or not gesture.is_empty() or not nodes.has(selected): return false
 	if direction.is_zero_approx(): return false
+	if wall_mounts.has(selected):
+		var before_wall: bool = snapping
+		if fine: snapping = false
+		var changed_wall: bool = move_wall_mount(direction.normalized() * (0.01 if fine else grid_step))
+		snapping = before_wall
+		return changed_wall
 	var previous: Transform3D = nodes[selected].transform
 	var mount_before: Dictionary = surface_mounts.get(selected,{}).duplicate(true)
 	var step: float = 0.01 if fine else grid_step
@@ -2411,7 +2556,7 @@ func _plane_point(pixel: Vector2) -> Variant:
 	return frame.to_local(hit) if hit != null else null
 
 func begin_drag(pixel: Vector2, operation: String = "move", direction: String = "plane", from_handle: bool = false) -> void:
-	if not active: return
+	if not active or wall_mounts.has(selected): return
 	if surface_mounts.has(selected):
 		var mounted_hit: Variant = _mounted_hit(pixel)
 		if mounted_hit == null: return
