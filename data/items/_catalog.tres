@@ -908,6 +908,7 @@ speed = 1
 income = 0
 capacity = 0
 retired = false
+allow_surface_mount = true
 furniture_scene = ExtResource("exp_desk_memento")
 
 [sub_resource type="Resource" id="item_48"]
@@ -927,6 +928,7 @@ speed = 1
 income = 0
 capacity = 0
 retired = false
+allow_surface_mount = true
 furniture_scene = ExtResource("exp_mini_book_stack")
 
 [sub_resource type="Resource" id="item_49"]
