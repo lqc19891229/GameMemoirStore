@@ -60,7 +60,7 @@ static func validate_registration(scene_path: String, fields: Dictionary, catalo
 			errors.append("家具场景不是 PackedScene")
 		else:
 			var instance := scene.instantiate()
-			if not instance is Node3D or not ("bounds" in instance) or not ("role" in instance):
+			if not instance is Node3D or not instance.get("bounds") is Vector3 or not instance.get("role") is String:
 				errors.append("场景必须是包含 bounds 和 role 的家具根节点")
 			else:
 				var bounds: Variant = instance.get("bounds")
