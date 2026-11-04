@@ -96,6 +96,29 @@ func _build_visual() -> void:
 			_build_sofa(model)
 		"stool":
 			_build_stool(model)
+		"desk_memento":
+			_build_desk_memento(model)
+		"mini_book_stack":
+			_build_mini_book_stack(model)
+
+func _build_desk_memento(model: Node3D) -> void:
+	var ceramic := _material(Color("e2d8c3"),0.45)
+	var rim := _material(Color("bf946c"),0.34)
+	var dark := _material(Color("4e635b"),0.78)
+	_cylinder(model,"CupBody",0.096,0.072,0.205,Vector3(0,0.118,0),ceramic,24)
+	_cylinder(model,"CupRim",0.102,0.102,0.018,Vector3(0,0.225,0),rim,24)
+	_cylinder(model,"CupInside",0.080,0.080,0.004,Vector3(0,0.235,0),dark,24)
+	_box(model,"GameBadge",Vector3(0.10,0.065,0.012),Vector3(0,0.132,0.089),dark)
+
+func _build_mini_book_stack(model: Node3D) -> void:
+	var covers := [_material(Color("667b84"),0.85),_material(Color("b98a76"),0.86),_material(Color("a5b19b"),0.87)]
+	var pages := _material(Color("f0e5cf"),0.95)
+	for i in range(3):
+		var height := 0.052
+		var level := 0.028 + float(i)*0.057
+		_box(model,"BookCover_%d" % i,Vector3(0.30,height,0.21),Vector3(0,level,0),covers[i])
+		_box(model,"Pages_%d" % i,Vector3(0.268,height*0.70,0.184),Vector3(0,level,0),pages)
+		_box(model,"Spine_%d" % i,Vector3(0.013,height*0.9,0.195),Vector3(-0.144,level,0),covers[i])
 
 func _build_chair(model: Node3D) -> void:
 	var fabric := _material(Color("666f73"), 0.94)
