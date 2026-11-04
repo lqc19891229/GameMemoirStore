@@ -44,6 +44,9 @@ static func validate_registration(scene_path: String, fields: Dictionary, catalo
 	var group := str(fields.get("group", "")).strip_edges()
 	var kind := str(fields.get("type", "")).strip_edges()
 	var price: Variant = fields.get("price", -1)
+	var allow_mount: Variant = fields.get("allow_surface_mount", false)
+	if not allow_mount is bool:
+		errors.append("承载面摆放开关必须为布尔值")
 	if id.is_empty() or not id.is_valid_identifier():
 		errors.append("商品 ID 只能使用非空的字母、数字和下划线，且不能以数字开头")
 	if display_name.is_empty():
@@ -106,6 +109,7 @@ static func register(scene_path: String, fields: Dictionary, confirmed: bool = f
 	item.price = int(fields.price)
 	item.description = str(fields.get("description", "")).strip_edges()
 	item.placement_surface = "floor"
+	item.allow_surface_mount = bool(fields.get("allow_surface_mount", false))
 	item.furniture_scene = scene
 	# Serialize a candidate on the same filesystem. Never truncate the live
 	# catalog: a failed rename must leave its original bytes intact.
