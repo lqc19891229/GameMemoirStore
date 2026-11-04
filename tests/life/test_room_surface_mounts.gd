@@ -93,6 +93,10 @@ func run() -> void:
 		var floor_pose: Dictionary = layout.surface_mounts[book_role].floor_pose
 		check(is_finite(float(floor_pose.x)) and is_finite(float(floor_pose.z)),
 			"direct shelf placement reserves a removable floor fallback")
+		layout.select(book_role)
+		check(layout.unmount_selected(),"direct shelf item can return to its reserved floor spot")
+		layout.undo()
+		check(layout.surface_mounts.has(book_role),"undo restores the direct shelf mount after take-down")
 	layout.select(role)
 	check(layout.nudge_selected(Vector2.RIGHT),"mounted item supports surface-local keyboard nudge")
 	check(is_equal_approx(float(layout.surface_mounts[role].x),0.05),"mounted nudge changes local X without changing floor pose")
