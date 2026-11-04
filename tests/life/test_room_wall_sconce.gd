@@ -37,6 +37,18 @@ func run() -> void:
 	invalid["on"] = 1
 	check(Wall.clean({role:invalid},placements,Blueprint.DEFAULT).is_empty(),
 		"non-boolean lamp power is rejected")
+	invalid = entry.duplicate(true)
+	invalid["tone"] = 4
+	check(Wall.clean({role:invalid},placements,Blueprint.DEFAULT).is_empty(),
+		"invalid fourth temperature preset is rejected")
+	invalid = entry.duplicate(true)
+	invalid["tone"] = NAN
+	check(Wall.clean({role:invalid},placements,Blueprint.DEFAULT).is_empty(),
+		"nonfinite temperature index is rejected")
+	var legacy := entry.duplicate(true)
+	legacy.erase("tone")
+	check(Wall.clean({role:legacy},placements,Blueprint.DEFAULT)[role].tone == 1,
+		"existing sconce saves without tone default to warm light")
 	var mini_blueprint := Blueprint.DEFAULT.duplicate(true)
 	mini_blueprint.partitions = [{"x":1.0,"z":1.0,"axis":"x","kind":"wall"}]
 	var inner := {"wall":"partition","part":{"x":1.0,"z":1.0,"axis":"x"},
@@ -87,6 +99,22 @@ func run() -> void:
 		"brightness setting changes OmniLight energy")
 	check(layout.set_wall_sconce_light(true),"lamp can be switched on again")
 	check(glow.visible,"power on restores the visible light")
+	check(glow.light_color.is_equal_approx(Wall.LAMP_COLORS[0]),
+		"initial sconce light has the backwards-compatible warm tone")
+	check(layout.set_wall_sconce_temperature(2),"wall lamp accepts neutral color temperature")
+	check(glow.light_color.is_equal_approx(Wall.LAMP_COLORS[1]),
+		"neutral preset changes the real OmniLight color")
+	layout.undo()
+	check(glow.light_color.is_equal_approx(Wall.LAMP_COLORS[0]),
+		"temperature undo restores previous lamp color")
+	layout.redo()
+	check(glow.light_color.is_equal_approx(Wall.LAMP_COLORS[1]),
+		"temperature redo restores adjusted lamp color")
+	check(layout.set_wall_sconce_temperature(3),"wall lamp accepts cool color temperature")
+	check(glow.light_color.is_equal_approx(Wall.LAMP_COLORS[2]),
+		"cool preset changes emitted real light color")
+	check(not layout.set_wall_sconce_temperature(0) and not layout.set_wall_sconce_temperature(4),
+		"temperature cannot exceed three safe presets")
 	check(not layout.set_wall_sconce_brightness(5),"out of range brightness is refused")
 	var lamp_before: Dictionary = layout.wall_mounts[item_role].duplicate(true)
 	check(not layout.set_wall_mount_position(Vector2(20.0,1.4)),
@@ -102,6 +130,8 @@ func run() -> void:
 	check(saved.life.get("wall_mounts",{}).has(item_role),"lamp wall mount exists in actual JSON save")
 	check(int(saved.life.wall_mounts[item_role].level) == 3 and bool(saved.life.wall_mounts[item_role].on),
 		"power and brightness survive JSON serialization")
+	check(int(saved.life.wall_mounts[item_role].tone) == 3,
+		"cool lamp color temperature survives actual JSON serialization")
 	state.persistence_enabled = false
 	game.queue_free()
 	await frames()
@@ -119,6 +149,8 @@ func run() -> void:
 			" effective_visible=",restored_glow.is_visible_in_tree())
 	check(restored_glow != null and restored_glow.visible and is_equal_approx(restored_glow.light_energy,float(Wall.LAMP_ENERGY[2])),
 		"reloaded room actually emits the saved brightness")
+	check(restored_glow != null and restored_glow.light_color.is_equal_approx(Wall.LAMP_COLORS[2]),
+		"reloaded room restores the saved cool light color without ambience override")
 	restored.desktop.begin_layout()
 	recovered.select(item_role)
 	check(recovered.take_down_selected_wall_mount(),"lamp can return to its floor position")
