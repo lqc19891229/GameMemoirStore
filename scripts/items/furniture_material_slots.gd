@@ -25,6 +25,17 @@ const PRESET_NAMES := {
 }
 const MAX_SLOTS := 96
 const MAX_UIDS := 512
+const TILE_MIN := 0.25
+const TILE_MAX := 8.0
+
+static func valid_tile(value: Variant) -> bool:
+	return (value is float or value is int) and is_finite(float(value)) and float(value) >= TILE_MIN and float(value) <= TILE_MAX
+
+
+static func tile_for(settings: Dictionary, key: String) -> float:
+	var value: Variant = settings.get(key, 1.0)
+	return float(value) if valid_tile(value) else 1.0
+
 
 static func preset_label(preset: String) -> String:
 	return str(PRESET_NAMES.get(preset, preset))
@@ -89,7 +100,14 @@ static func clean(raw: Variant, known_uids: Dictionary) -> Dictionary:
 			var hex := str(entry.get("color", "")).to_lower()
 			if not valid_preset(preset) or hex.length() != 6 or not hex.is_valid_hex_number():
 				continue
-			entries[key] = {"preset": preset, "color": hex}
+			var cleaned := {"preset": preset, "color": hex}
+			for tile_key: String in ["tile_u", "tile_v"]:
+				if valid_tile(entry.get(tile_key, 1.0)):
+					cleaned[tile_key] = float(entry.get(tile_key, 1.0))
+			for flip_key: String in ["flip_u", "flip_v"]:
+				if entry.get(flip_key, false) is bool:
+					cleaned[flip_key] = entry.get(flip_key, false)
+			entries[key] = cleaned
 		if not entries.is_empty():
 			result[uid] = entries
 	return result
@@ -102,10 +120,14 @@ static func list_slots(furniture: Node3D) -> Array[Dictionary]:
 			continue
 		for surface in range(mesh.mesh.get_surface_count()):
 			var key := "%s:%d" % [str(furniture.get_path_to(mesh)), surface]
-			result.append({"key": key, "mesh": mesh, "surface": surface})
+			# Read the surface format flag instead of pulling all vertex arrays
+			# on every furniture appearance refresh.
+			var has_uv := (mesh.mesh.surface_get_format(surface) & Mesh.ARRAY_FORMAT_TEX_UV) != 0
+			result.append({"key": key, "mesh": mesh, "surface": surface,
+				"has_uv": has_uv})
 	return result
 
-static func build_material(preset: String, color_hex: String) -> StandardMaterial3D:
+static func build_material(preset: String, color_hex: String, settings: Dictionary = {}) -> StandardMaterial3D:
 	if not valid_preset(preset):
 		return null
 	var resource := load(ROOT + preset + ".tres") as StandardMaterial3D
@@ -121,6 +143,14 @@ static func build_material(preset: String, color_hex: String) -> StandardMateria
 	var chosen := Color("#" + color_hex)
 	chosen.a = resource.albedo_color.a
 	material.albedo_color = chosen
+	var tile_u := tile_for(settings, "tile_u")
+	var tile_v := tile_for(settings, "tile_v")
+	var flip_u: bool = settings.get("flip_u", false) == true
+	var flip_v: bool = settings.get("flip_v", false) == true
+	material.uv1_scale = Vector3(
+		resource.uv1_scale.x * tile_u * (-1.0 if flip_u else 1.0),
+		resource.uv1_scale.y * tile_v * (-1.0 if flip_v else 1.0),
+		resource.uv1_scale.z)
 	material.resource_local_to_scene = true
 	return material
 
@@ -134,7 +164,7 @@ static func apply(furniture: Node3D, entries: Dictionary, originals: Dictionary)
 			if not originals.has(identity):
 				originals[identity] = {"mesh": weakref(mesh), "surface": surface, "material": mesh.get_surface_override_material(surface)}
 			var setting: Dictionary = entries[key]
-			var material := build_material(str(setting["preset"]), str(setting["color"]))
+			var material := build_material(str(setting["preset"]), str(setting["color"]), setting)
 			if material != null:
 				mesh.set_surface_override_material(surface, material)
 		elif originals.has(identity):

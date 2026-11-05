@@ -184,10 +184,14 @@ func material_settings_for(role: String, key: String) -> Dictionary:
 	return settings.get(key, {}).duplicate()
 
 
-func set_furniture_material(key: String, preset: String, color: Color) -> bool:
+func set_furniture_material(key: String, preset: String, color: Color,
+		tile_u: float = 1.0, tile_v: float = 1.0,
+		flip_u: bool = false, flip_v: bool = false) -> bool:
 	if not active or not gesture.is_empty() or not placing_role.is_empty() or group_selection.size() > 1:
 		return false
 	if not placed_instances.has(selected) or not MaterialSlots.valid_preset(preset):
+		return false
+	if not MaterialSlots.valid_tile(tile_u) or not MaterialSlots.valid_tile(tile_v):
 		return false
 	var found := false
 	for slot: Dictionary in material_slots_for(selected):
@@ -199,7 +203,8 @@ func set_furniture_material(key: String, preset: String, color: Color) -> bool:
 	var before := _draft()
 	var uid := str(placed_instances[selected])
 	var settings: Dictionary = furniture_materials.get(uid, {}).duplicate(true)
-	settings[key] = {"preset": preset, "color": color.to_html(false)}
+	settings[key] = {"preset": preset, "color": color.to_html(false),
+		"tile_u": tile_u, "tile_v": tile_v, "flip_u": flip_u, "flip_v": flip_v}
 	furniture_materials[uid] = settings
 	_apply_furniture_appearance()
 	_remember(before)
