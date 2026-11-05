@@ -19,6 +19,10 @@ jobs:
       - uses: actions/setup-python@v4
         with:
           python-version: "3.12"
+      - uses: chickensoft-games/setup-godot@v2
+        with:
+          version: "4.6.0"
+          use-dotnet: false
       - run: python -m pip install Pillow
       - run: python -m unittest discover -s tests -p "test_chair_material_bake.py" -v
       - run: python -m unittest discover -s tests -p "test_chair_gaming_bake.py" -v
@@ -33,3 +37,20 @@ jobs:
           path: build/chair/chair_gaming_finished.glb
           if-no-files-found: error
           retention-days: 14
+      - name: Import candidate into Godot and verify real furniture scene
+        shell: bash
+        run: |
+          set -euo pipefail
+          cp build/chair/chair_gaming_finished.glb assets/models/room/seating/chair_gaming.glb
+          godot --headless --path . --editor --import
+          for test in \
+            tests/life/test_chair_gaming_uv.gd \
+            tests/life/test_furniture_catalog.gd \
+            tests/life/test_workstation_layout.gd \
+            tests/life/test_workstation_collision.gd
+          do
+            echo "Candidate GLB regression: $test"
+            timeout 90s godot --headless --path . --script "res://$test" -- --fresh
+          done
+          # This validation only changes the ephemeral CI workspace.
+          # We never commit or upload a modified source repository.
