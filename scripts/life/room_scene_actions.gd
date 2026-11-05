@@ -5,7 +5,6 @@ extends Node
 const Icons = preload("res://scripts/life/room_ui_icons.gd")
 const Taxonomy = preload("res://scripts/items/item_taxonomy.gd")
 const Finishes = preload("res://scripts/items/furniture_finishes.gd")
-const MaterialSlots = preload("res://scripts/items/furniture_material_slots.gd")
 const InventoryData = preload("res://scripts/items/inventory_data.gd")
 
 var host
@@ -44,15 +43,6 @@ var action_buttons: Dictionary = {}
 var color_buttons: Array[Button] = []
 var custom_color_picker: ColorPickerButton
 var _picker_opening_color := Color.WHITE
-var material_slot_picker: OptionButton
-var material_preset_picker: OptionButton
-var material_color_picker: ColorPickerButton
-var material_tile_u: SpinBox
-var material_tile_v: SpinBox
-var material_flip_u: CheckBox
-var material_flip_v: CheckBox
-var material_uv_hint: Label
-var _material_role := ""
 var _current_selection := ""
 var _current_group_size := 0
 
@@ -361,70 +351,6 @@ func _build_object_actions(canvas: Control) -> void:
 	custom_color_picker.custom_minimum_size = Vector2(180, 34)
 	custom_color_picker.tooltip_text = "选择自定义颜色，关闭选择器时提交一次，可撤销"
 	palette_content.add_child(custom_color_picker)
-	var section := Label.new()
-	section.text = "部件材质（独立于整件换色）"
-	palette_content.add_child(section)
-	material_slot_picker = OptionButton.new()
-	material_slot_picker.name = "MaterialSlotPicker"
-	material_slot_picker.tooltip_text = "选择需要修改的网格表面"
-	palette_content.add_child(material_slot_picker)
-	material_slot_picker.item_selected.connect(func(_index: int) -> void: _load_current_part_material())
-	material_preset_picker = OptionButton.new()
-	material_preset_picker.name = "MaterialPresetPicker"
-	for preset: String in MaterialSlots.PRESETS:
-		material_preset_picker.add_item(MaterialSlots.preset_label(preset))
-		material_preset_picker.set_item_tooltip(material_preset_picker.item_count - 1, preset)
-	palette_content.add_child(material_preset_picker)
-	material_color_picker = ColorPickerButton.new()
-	material_color_picker.name = "MaterialColorPicker"
-	material_color_picker.text = "部件 RGB / HEX"
-	material_color_picker.edit_alpha = false
-	material_color_picker.color = Color.WHITE
-	palette_content.add_child(material_color_picker)
-	var tile_row := HBoxContainer.new()
-	palette_content.add_child(tile_row)
-	for axis: String in ["U", "V"]:
-		var caption := Label.new()
-		caption.text = axis + " 倍率"
-		tile_row.add_child(caption)
-		var spin := SpinBox.new()
-		spin.name = "MaterialTile" + axis
-		spin.min_value = MaterialSlots.TILE_MIN
-		spin.max_value = MaterialSlots.TILE_MAX
-		spin.step = 0.25
-		spin.value = 1.0
-		spin.custom_minimum_size.x = 78
-		spin.tooltip_text = "相对材质默认重复倍率；1.0 保持原样"
-		tile_row.add_child(spin)
-		if axis == "U":
-			material_tile_u = spin
-		else:
-			material_tile_v = spin
-	var flip_row := HBoxContainer.new()
-	palette_content.add_child(flip_row)
-	material_flip_u = CheckBox.new()
-	material_flip_u.name = "MaterialFlipU"
-	material_flip_u.text = "水平镜像"
-	flip_row.add_child(material_flip_u)
-	material_flip_v = CheckBox.new()
-	material_flip_v.name = "MaterialFlipV"
-	material_flip_v.text = "垂直镜像"
-	flip_row.add_child(material_flip_v)
-	material_uv_hint = Label.new()
-	material_uv_hint.name = "MaterialUVHint"
-	material_uv_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	material_uv_hint.text = "贴图方向取决于模型 UV。此处支持缩放与镜像，不支持 90° 旋转。"
-	palette_content.add_child(material_uv_hint)
-	var material_apply := Button.new()
-	material_apply.name = "ApplyPartMaterial"
-	material_apply.text = "应用部件材质"
-	material_apply.pressed.connect(_apply_part_material)
-	palette_content.add_child(material_apply)
-	var material_clear := Button.new()
-	material_clear.name = "ClearPartMaterial"
-	material_clear.text = "恢复部件原始材质"
-	material_clear.pressed.connect(_clear_part_material)
-	palette_content.add_child(material_clear)
 	custom_color_picker.popup_closed.connect(func() -> void:
 		if custom_color_picker.color.to_html(false) != _picker_opening_color.to_html(false):
 			apply_custom_color(custom_color_picker.color)
@@ -787,7 +713,6 @@ func perform_action(id: String) -> void:
 				if current_finish >= 0:
 					custom_color_picker.color = Finishes.color_for(current_finish)
 				_picker_opening_color = custom_color_picker.color
-				_refresh_material_slots()
 		"arrange":
 			hide_colors()
 			arrange_panel.visible = not arrange_panel.visible
@@ -857,74 +782,6 @@ func perform_arrangement(id: String) -> void:
 			reason = "附近没有可安全对齐的家具" if is_alignment else "至少需要 3 件已摆放的同类家具" if layout._matching_furniture(role).size() < 3 else "位置已均匀或移动受到阻挡"
 		room_ui.show_keyboard_feedback("未改变布局 · " + reason)
 	room_ui.sync()
-
-func _refresh_material_slots() -> void:
-	var layout = host.world.layout
-	material_slot_picker.clear()
-	_material_role = str(layout.selected)
-	var multi: bool = layout.group_selection.size() > 1
-	material_slot_picker.disabled = multi
-	material_preset_picker.disabled = multi
-	material_color_picker.disabled = multi
-	material_tile_u.editable = not multi
-	material_tile_v.editable = not multi
-	material_flip_u.disabled = multi
-	material_flip_v.disabled = multi
-	if multi:
-		return
-	for slot: Dictionary in layout.material_slots_for(_material_role):
-		material_slot_picker.add_item(MaterialSlots.slot_label(slot))
-		material_slot_picker.set_item_tooltip(material_slot_picker.item_count - 1, str(slot["key"]))
-		material_slot_picker.set_item_metadata(material_slot_picker.item_count - 1, str(slot["key"]))
-	if material_slot_picker.item_count > 0:
-		material_slot_picker.select(0)
-		_load_current_part_material()
-
-
-func _load_current_part_material() -> void:
-	if material_slot_picker.selected < 0:
-		return
-	var key := str(material_slot_picker.get_selected_metadata())
-	var layout = host.world.layout
-	for slot: Dictionary in layout.material_slots_for(_material_role):
-		if str(slot["key"]) == key:
-			material_uv_hint.text = ("已检测到模型 UV；" if bool(slot.get("has_uv", false)) else "未检测到 UV，贴图可能无法正确显示；") + "支持缩放和镜像，不支持直接旋转。"
-			break
-	var current: Dictionary = host.world.layout.material_settings_for(_material_role, key)
-	material_tile_u.value = MaterialSlots.tile_for(current, "tile_u")
-	material_tile_v.value = MaterialSlots.tile_for(current, "tile_v")
-	material_flip_u.button_pressed = bool(current.get("flip_u", false))
-	material_flip_v.button_pressed = bool(current.get("flip_v", false))
-	if current.is_empty():
-		material_color_picker.color = Color.WHITE
-		return
-	for index in range(MaterialSlots.PRESETS.size()):
-		if MaterialSlots.PRESETS[index] == str(current["preset"]):
-			material_preset_picker.select(index)
-			break
-	material_color_picker.color = Color("#" + str(current["color"]))
-
-
-func _apply_part_material() -> void:
-	if material_slot_picker.selected < 0 or material_preset_picker.selected < 0:
-		return
-	var key := str(material_slot_picker.get_selected_metadata())
-	var preset: String = MaterialSlots.PRESETS[material_preset_picker.selected]
-	if host.world.layout.set_furniture_material(key, preset, material_color_picker.color,
-			material_tile_u.value, material_tile_v.value,
-			material_flip_u.button_pressed, material_flip_v.button_pressed):
-		room_ui.show_keyboard_feedback("部件材质已更新 · Ctrl+Z 撤销")
-	room_ui.sync()
-
-
-func _clear_part_material() -> void:
-	if material_slot_picker.selected < 0:
-		return
-	var key := str(material_slot_picker.get_selected_metadata())
-	if host.world.layout.clear_furniture_material(key):
-		room_ui.show_keyboard_feedback("已恢复原始材质 · Ctrl+Z 撤销")
-	room_ui.sync()
-
 
 func apply_color(index: int) -> void:
 	if index < 0 or index >= color_buttons.size(): return
@@ -1080,8 +937,6 @@ func sync(active: bool) -> void:
 		action_buttons["duplicate"].tooltip_text = "复制一件库存中的同款家具 · Ctrl+D" if has_copy else "同款家具没有可用库存 · 请先购买"
 	_reposition()
 	if swatches.visible:
-		if _material_role != role:
-			_refresh_material_slots()
 		for i in range(color_buttons.size()):
 			var style := color_buttons[i].get_theme_stylebox("normal") as StyleBoxFlat
 			var selected_color: int = layout.group_color_index() if multi else layout.color_for(role)
