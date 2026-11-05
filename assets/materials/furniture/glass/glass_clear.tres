@@ -1,0 +1,10 @@
+[gd_resource type="StandardMaterial3D" format=3]
+
+[resource]
+resource_name = "glass_clear"
+albedo_color = Color(0.81961, 0.89804, 0.92941, 1)
+metallic = 0
+roughness = 0.12
+transparency = 1
+refraction_enabled = true
+refraction_scale = 0.03

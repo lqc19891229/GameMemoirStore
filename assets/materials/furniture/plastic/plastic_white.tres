@@ -1,0 +1,7 @@
+[gd_resource type="StandardMaterial3D" format=3]
+
+[resource]
+resource_name = "plastic_white"
+albedo_color = Color(0.89804, 0.89804, 0.88627, 1)
+metallic = 0
+roughness = 0.54
