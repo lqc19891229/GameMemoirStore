@@ -40,6 +40,22 @@ func run() -> void:
 	if browser == null:
 		quit(1)
 		return
+	# A high-priced chair is intentionally not clickable without funds.
+	# It must explain why instead of appearing as an empty, broken button.
+	check(browser.get_node("%Wallet").get_parent() == browser.get_node("%ContentScroll").get_parent(), "wallet balance stays visible above the scrolling shop list")
+	session.state.wallet = 100
+	browser.refresh()
+	check(browser.purchase_buttons.has("chair_gaming") and browser.quick_buttons.has("chair_gaming"), "gaming chair is registered for both purchase actions")
+	if browser.purchase_buttons.has("chair_gaming") and browser.quick_buttons.has("chair_gaming"):
+		var buy_chair: Button = browser.purchase_buttons["chair_gaming"]
+		var place_chair: Button = browser.quick_buttons["chair_gaming"]
+		check(buy_chair.disabled and buy_chair.text == "差 1400 点", "unaﬀordable gaming chair has an explicit shortfall instead of an empty-looking purchase button")
+		check(place_chair.disabled and place_chair.text == "差 1400 点", "unaffordable buy-and-place shows the same shortfall")
+		check(buy_chair.tooltip_text.contains("余额不足"), "disabled chair purchase explains why it cannot be clicked")
+	check(browser.get_node("%Wallet").text.contains("100 点"), "fixed wallet label displays current funds")
+	session.state.wallet = 2500
+	browser.refresh()
+	check(not browser.purchase_buttons["chair_gaming"].disabled and browser.purchase_buttons["chair_gaming"].text == "购买", "chair purchase becomes available automatically when wallet has enough funds")
 	var origin: Dictionary = layout.snapshot()
 	var orig_placements: Dictionary = session.state.life["placements"].duplicate()
 	var picker: OptionButton = browser.get_node("%ShopPreviewFinish")
