@@ -1,38 +1,72 @@
-# 模型制作与导出
+# 3D 模型制作、导出和验收
 
-本目录保存电脑硬件模型源文件、Blender 导出脚本和房间模型生成脚本。游戏运行只加载 assets/models/ 中已提交的 GLB，不会执行制作脚本。
+**当前约定：GLB 是具备完整默认外观的成品资产。** 设计阶段应准备几何模型、稳定的部件名称、UV、法线、PBR 材质与必要的贴图；导入 Godot 后不依赖额外脚本重新生成家具默认材质。
 
-## 电脑硬件与电脑桌展示资产
+## 目录
 
-hardware.blend 是可编辑的 Blender 模型库。每个型号位于独立 Collection。制作脚本 build_hardware.py 使用 Blender 3.6 LTS，固定随机种子，可重复生成 9 个电脑硬件 GLB 和 1 个电竞椅 GLB：
+- `assets/models/hardware/`：机箱、显示器、键盘、鼠标和桌面，共九个 GLB。
+- `assets/models/room/room_shell.glb`：房间外壳。
+- `assets/models/room/{tables,seating,storage,lighting,decor}/`：正式家具模型。
+- `scenes/room/<类型>/`：包裹 GLB 的家具场景，维护碰撞、位置和商品对应关系。
 
-    blender --background --threads 1 --factory-startup --python tools/models/build_hardware.py
+## 美术制作标准
 
-输出：
-- assets/models/hardware/：case_beige、case_charcoal、monitor_crt、monitor_lcd、keyboard_beige、keyboard_charcoal、mouse_beige、mouse_charcoal、desk。
-- assets/models/room/chair.glb：电竞椅，作为房间可布置家具。
+1. 单位为米，Godot 使用 Y 轴向上；家具底部和原点要便于摆放。
+2. 给座椅、支架、滚轮、包边等部件使用稳定的语义名称；合适的材质分区有利于维护。
+3. 完成正确的网格法线、UV、三角形方向和材质纹理密度。
+4. 在 GLB 中附带 Base Color、Metallic/Roughness、Normal 等需要的 PBR 通道与贴图。尽量嵌入素材，若使用外部纹理则将文件和引用一起提交。
+5. 用 Blender 或其他 glTF 查看器**直接打开 GLB**，确认无需任何 Godot 脚本即可看到默认外观。
+6. 导入 Godot 后检查模型体积、朝向、拾取盒、占地和 GL Compatibility 下的实际材质表现。
 
-脚本会覆盖上述 GLB 和 hardware.blend。修改源模型后再执行；手工调整过的源文件或导出模型应先备份。
+可参考 `docs/MODEL_QUALITY_STANDARD.md`。注意：部分现有旧模型未完全达到以上规范；本说明定义的是**新资源及后续精修目标**。
 
-模型按材质合并网格。键帽、散热口、按钮和结构细节为真实几何；木纹使用打包在 GLB 内的 64 像素材质。高阶机箱、键盘和鼠标包含独立 Emissive 材质。机箱风扇的环与轮毂保留在 GLB 中，旋转叶片由 Godot 的 workstation_lighting.gd 独立生成和驱动，避免把动画部件合并进静态网格。电竞椅的坐垫、靠背、头枕、腰靠、扶手、气压杆、五星脚和滚轮分别建模。
+## 现有离线工具
 
-## 像素房间模型
+### 电脑展示设备
 
-build_room.py 是独立的离线房间模型生成器，使用 Python 3 和 Pillow：
+`build_hardware.py` 基于 Blender 3.6.23 LTS 生成九个硬件/桌面 GLB，并生成历史 `assets/models/room/chair.glb`（不是 `chair_gaming.glb`）：
 
-    python tools/models/build_room.py
+```bash
+blender --background --threads 1 --factory-startup --python tools/models/build_hardware.py
+```
 
-脚本输出 assets/models/room/ 下的 5 个 GLB：room_shell、bookcase、lamp、rug、plant。电竞椅由 build_hardware.py 生成，避免两套脚本互相覆盖椅子模型。
+会覆盖目标 GLB 和 `tools/models/hardware.blend`；如果该文件或 GLB 已被手工精修，运行前须保存备份并审核生成差异。
 
-房间使用 Godot 原生 Y 向上坐标，家具底部中心为原点。对应场景位于 scenes/room/。修改模型后应同步检查 room_furniture.bounds；修改房间或桌面几何后应检查 LayoutEditor 的尺寸与占地参数。
+### 历史房间模型
 
-## 统一制作规范
+`build_room.py` 使用 Python 3 和 Pillow，重建 `assets/models/room/` 根目录的历史 `room_shell.glb`、`bookcase.glb`、`lamp.glb`、`rug.glb`、`plant.glb`：
 
-- docs/MODEL_QUALITY_STANDARD.md：全项目模型精细化规范。
-- docs/DESKTOP_SHOWCASE_V1.md：第一批电脑桌区域资产、尺寸和验收范围。
+```bash
+python -m pip install Pillow
+python tools/models/build_room.py
+```
 
-## 导入设置与保留规则
+当前正式家具已按分类移动。该脚本不会自动维护分类目录下的正式家具版本；**不要把它当作批量重建整个家具目录的工具**。
 
-Godot 通过每个 GLB 旁边的 .import 文件保存导入设置。这些文件应与 GLB 一起提交，不要加入 .gitignore。工具源目录中的 .gdignore 防止 Godot 自动导入 .blend 和 Excel 等开发文件。
+### 暂停使用：游戏椅材质烘焙脚本
 
-模型生成脚本只用于离线制作；正常运行只依赖已提交的 GLB 和场景。
+仓库还保留 `bake_chair_gaming_materials.py`，原意是将独立材质库的贴图烘焙进 `chair_gaming.glb`。但材质库 `assets/materials/furniture/` 已删除，**该脚本当前存在失效依赖，不能直接运行**。重新实现或替换为直接使用源纹理的烘焙器前，不应把它作为正式家具制作流程；更不要对成品 GLB 使用 `--in-place`。
+
+目前 `chair_gaming.glb` 保留原有默认材质以及修复后的 UV/法线，但不保证有完整的精修 PBR 贴图。独立 `MaterialProfile` 已从对应家具场景移除。
+
+## Godot 导入与资源登记
+
+1. 将完成的家具 GLB 放在 `assets/models/room/<分类>/` 中。
+2. 等待 Godot 自动导入，保留模型和相关纹理的 `.import` 文件。
+3. 用编辑器底部 `Furniture Manager` 的「家具导入」生成分类 `.tscn`。
+4. 审核 `bounds`、`PickArea/Hit`、模型朝向和可选承载面，再到「家具注册」建立商品条目。
+5. 在「家具资源」预览并检查商品是否关联到正确场景。
+
+详见 [家具管理器](../../addons/furniture_manager/README.md) 与 [编辑器指南](../../EDITOR_WORKFLOW.md)。
+
+## 验证
+
+```bash
+godot --headless --path . --editor --import
+python tools/project_audit.py
+python -m unittest discover -s tests -p "test_showcase_models.py" -v
+godot --headless --path . --script res://tests/life/test_furniture_model_import.gd -- --fresh
+godot --headless --path . --script res://tests/life/test_chair_gaming_uv.gd -- --fresh
+```
+
+测试成功只能验证部分结构与兼容性。材质颜色、反光、纹理拉伸和接缝仍需人工观察。
