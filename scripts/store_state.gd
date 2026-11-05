@@ -12,7 +12,7 @@ const START_YM := 200309
 const MAX_MONTH := 5
 
 var catalog: Array = []
-var wallet: int = 160
+var wallet: int = 2000
 var month_index: int = 0
 var owned: Array[String] = []
 var wishlist: Array[String] = []

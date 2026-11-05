@@ -1,6 +1,6 @@
-[gd_resource type="Theme" format=3]
+[gd_resource type="Theme" format=3 uid="uid://ddwusrkxgplfy"]
 
-[ext_resource type="FontFile" path="res://assets/fonts/ArkPixel12.ttf" id="font"]
+[ext_resource type="FontFile" uid="uid://ciqlrh0a5ty1h" path="res://assets/fonts/ArkPixel12.ttf" id="font"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_276x7"]
 content_margin_left = 8.0
