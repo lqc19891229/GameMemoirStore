@@ -9,6 +9,12 @@
 - `tools/models/bake_chair_gaming_materials.py` 现在**离线独立**生成贴图，不再读取已经删除的 `assets/materials/furniture`。
 - **当前仓库中的 GLB 尚未替换为烘焙结果**。本次只修复可重复生产和验证工具，不宣称美术成品已完成。
 
+## GitHub Actions 生成候选 GLB
+
+`.github/workflows/chair-glb-material-bake.yml` 在修改制作脚本或此工作流的 PR 上执行烘焙，成功时会上传 `chair-gaming-pbr-candidate` 构建产物（保留 14 天）。下载解压得到 `chair_gaming_finished.glb`，可以在 Blender 或 Godot 中单独导入进行视觉审查；它**尚未写回**仓库原始 GLB。
+
+候选品需要验证材质视觉、粗糙度、法线方向、纹理接缝、物体尺寸和拾取区域。确认后才能替换正式 GLB 并跑全部回归。
+
 ## 预览与验收
 
 需要 Python 3.12、Pillow 和当前项目中的真实原始 GLB：
