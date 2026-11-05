@@ -12,6 +12,26 @@ spec.loader.exec_module(baker)
 
 
 class ChairBakeTest(unittest.TestCase):
+    def test_polished_material_palette_and_roughness(self):
+        # Offline parameters are authoritative for the generated GLB, not
+        # transient runtime material overrides.
+        expected = {
+            "graphite": ("343b44", "plastic"),
+            "steel": ("646b73", "metal"),
+            "wheel_hub": ("444c55", "metal"),
+            "leather_cream": ("ded5c7", "leather"),
+            "leather_pearl": ("d0c9bd", "leather"),
+            "edge_welt": ("666c72", "leather"),
+        }
+        for part, (hex_color, family) in expected.items():
+            preset, color = baker.PARTS[part]
+            self.assertEqual(color, hex_color)
+            self.assertEqual(preset.split("/")[0], family)
+        self.assertGreaterEqual(baker.PRESETS["leather"][1], 0.8)
+        self.assertGreaterEqual(baker.PRESETS["plastic"][1], 0.8)
+        self.assertGreater(baker.PRESETS["rubber"][1], baker.PRESETS["metal"][1])
+        self.assertLess(baker.PRESETS["metal"][0], 1.0)
+
     def test_bake_is_self_contained_and_preserves_geometry(self):
         self.assertTrue(baker.SOURCE.is_file())
         source, binary = baker.parse(baker.SOURCE.read_bytes())
