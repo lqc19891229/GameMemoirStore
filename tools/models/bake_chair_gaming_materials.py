@@ -96,10 +96,22 @@ def maps(family):
 def bake(source,target):
     gltf,binary=parse(Path(source).read_bytes())
     # Once finalized, rebuilding the GLB must be idempotent.
-    names = {m.get("name") for m in gltf.get("materials", [])}
-    if set(PARTS).issubset(names):
-        if len(gltf.get("images", [])) < 9:
-            raise ValueError("Chair materials exist but embedded PBR images are missing")
+    # GLB may already contain 12 named flat-color materials without baked
+    # textures. Names alone must NEVER be treated as proof of completion.
+    named = {m.get("name"): m for m in gltf.get("materials", [])}
+    textured = [n for n, (preset_name, _color) in PARTS.items()
+                if preset_name.split("/")[0] in PATTERNS]
+    complete = (
+        len(gltf.get("images", [])) >= 9
+        and all(n in named for n in PARTS)
+        and all(
+            "baseColorTexture" in named[n].get("pbrMetallicRoughness", {})
+            and "metallicRoughnessTexture" in named[n].get("pbrMetallicRoughness", {})
+            and "normalTexture" in named[n]
+            for n in textured
+        )
+    )
+    if complete:
         target=Path(target)
         target.parent.mkdir(parents=True,exist_ok=True)
         if Path(source).resolve() != target.resolve():
