@@ -36,11 +36,8 @@ jobs:
           spec = importlib.util.spec_from_file_location('chair_bake', 'tools/models/bake_chair_gaming_materials.py')
           baker = importlib.util.module_from_spec(spec)
           spec.loader.exec_module(baker)
-          gltf, _ = baker.parse(baker.SOURCE.read_bytes())
-          if all(any(m.get('name') == name for m in gltf.get('materials', [])) for name in baker.PARTS):
-              print('Approved chair PBR materials already embedded; no second bake.')
-          else:
-              print(baker.bake(baker.SOURCE, baker.SOURCE))
+          # The baker checks texture bindings as well as names, and is idempotent.
+          print(baker.bake(baker.SOURCE, baker.SOURCE))
           PY
       - name: Verify embedded PBR materials and original mesh structure
         shell: bash
