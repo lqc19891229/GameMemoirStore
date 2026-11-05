@@ -1,16 +1,28 @@
-# 统一物品目录（第一阶段）
-商品、库存和物理摆放不再共用一个 role。 `item_id` 是商品类型，`uid` 是拥有的单件物品，`role` 是旧编辑器中的摆放节点名称。
+# 统一物品与家具商品目录
 
-- `_catalog.tres` 包含现有商品及首批现代家具、独立键鼠；新增物品时编辑资源目录。
-- `placement_surface = desk` 的主机、显示器、外设只能在电脑桌面上；桌面局部坐标与碰撞由 `workstation_layout.gd` 负责。
-- `placement_surface = floor` 的家具只能放在地面；`pc_case` 的内部组件预留给后续 DIY 装机。
-- 旧 `life.items` 与 `equipped.peripheral` 保留以兼容历史存档；新购买与重复家具用 `life.inventory` 的单件 UID 表示。
-- 旧 `data/hardware/_catalog.tres` 仍负责 3D 设备外观切换，`visual_id` 用于关联，避免重复复制 GLB 资源。
+`_catalog.tres` 是当前商城物品定义来源。区分三个身份：
 
-## 家具商城展示（P15）
+- **`item_id`**：某类商品的稳定标识。
+- **库存 `uid`**：玩家实际拥有的单件物品标识，可重复购买同款家具。
+- **摆放 `role`**：场景中的摆放角色/实例节点标识，不应当替代 UID。
 
-- 商城商品卡新增真实家具 3D 缩略图、分类、二级类型与模型尺寸，通过单一 SubViewport 离屏渲染并缓存，避免 27 个常驻 3D 视口。
-- 商城可切换 9 种配色试色，试色仅影响商品预览；购买后在房间编辑器对单个家具进行改色。
-- 商店与房间编辑器共享 scripts/items/furniture_finishes.gd，保持原存档 0–5 色彩编号，增加深胡桃木、石墨黑和陶土橙色彩涂层。涂层不替换原有木材、金属或织物基底材质。
-- tests/life/test_furniture_showcase.gd 验证展示、试色和存档兼容；实际缩略图画质需要图形界面复核。
-- 电脑主机、显示器、键鼠仍必须放在专用电脑桌面上。
+`MemoirItemDefinition.furniture_scene` 关联可实例化的家具 `.tscn`，而不是直接引用商品贴图。家具模型归档在 `assets/models/room/` 分类目录，场景在 `scenes/room/` 对应目录。
+
+## 家具导入与注册
+
+在 Blender 完成 GLB 的默认外观（网格、UV、法线、PBR 贴图），导入项目后通过编辑器底部的 **家具导入 → 家具注册 → 家具资源** 流程审核。注册时检查商品 ID 唯一性、价格、分类、场景路径、角色及摆放许可。具体操作见 [家具管理器说明](../../addons/furniture_manager/README.md)。
+
+## 摆放与库存
+
+- `placement_surface=desk` 的电脑、显示器和外设只能放置在适合的工作台区域。
+- `placement_surface=floor` 的家具按地面占地、碰撞和承载面许可检查。
+- 家具支持购买多份，位置与独立库存 UID 保持关联。
+- 历史的 `life.items` 与旧外设字段通过存档校验逻辑兼容。
+
+## 外观与商城预览
+
+商城家具缩略图使用真实场景的 3D 离屏渲染并进行缓存。原有 **整件换色** 功能与 `furniture_colors` 存档仍然保留。此前的共享家具材质库、单部件材质替换、UV 调节和 `furniture_materials` 运行时存档功能已经移除。
+
+**默认材质应随 GLB 本身制作完成。** 只有完成模型材质、法线和尺寸检查的资产才应作为正式家具注册；现有部分旧 GLB 仍需要单独美术精修。
+
+参见：[家具资源管理](../../addons/furniture_manager/README.md)、[模型制作](../../tools/models/README.md)、[房间布置](../../docs/WORKSTATION_LAYOUT.md)。

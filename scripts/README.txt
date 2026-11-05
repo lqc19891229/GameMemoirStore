@@ -1,12 +1,14 @@
 运行脚本目录
 
-client.gd：游戏平台导航、历史、菜单、下载计时、游玩窗口和通知。
-client_pages.gd：将商店、商品、搜索、库、愿望单、购物车和创作页面绑定到数据与信号。
-client_ui.gd：封面、展示图和客户端图片资源辅助方法。
-store_state.gd：唯一玩家状态、游戏目录、交易、月份和兼容旧版本的存档。
-game.gd：单款游戏 Resource 字段定义。
-game_catalog.gd：游戏资源清单与按 ID、月份查询的方法。
-life/：共享活动时钟、电脑桌面、窗口、设备、玩家能力、直播、攻略与房间布置逻辑。
-room/：房间外观预设、灯光、墙体遮挡和家具拾取脚本。
+client.gd / client_pages.gd / client_ui.gd：游戏平台导航、页面数据绑定与 UI 辅助。
+store_state.gd：共享玩家状态、交易和存档入口。
+game.gd / game_catalog.gd：游戏 Resource 与查询。
+life/：活动时钟、电脑桌面、应用窗口、库存、房间布置和交互。
+room/：墙体、户型、房间表现、家具拾取和承载面。
+items/：商品、库存、分类、家具整体换色等通用数据逻辑。
 
-*.gd.uid 是 Godot 为脚本保存的稳定资源标识。移动或重命名脚本时必须一同保留对应 UID 文件。
+家具部件材质槽与共享 PBR 资源系统已移除；默认材质应写入 GLB。
+整件家具颜色、工作台设备灯效和布置预览材质属于其他独立功能，不在此次移除范围。
+
+移动或改名 GDScript 时保留相应 *.gd.uid 文件，避免场景资源引用失效。
+参见 life/README.txt 和 ../CLIENT_STRUCTURE.md。

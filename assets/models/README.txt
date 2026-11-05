@@ -1,7 +1,16 @@
-3D 模型资源
+3D 模型资源（GLB / glTF）
 
-hardware/：9 个电脑设备与桌面 GLB，包括两款机箱、两款显示器、两套键盘、两只鼠标和桌面。
-room/：6 个房间 GLB，包括房间外壳、椅子、书架、落地灯、地毯和绿植。
-*.glb.import：Godot 的模型导入配置，应与 GLB 一起保留。
+hardware/：9 个硬件和桌面 GLB（机箱、显示器、键盘、鼠标和桌面）。
+room/room_shell.glb：房间外壳。
+room/tables/：桌类家具。
+room/seating/：椅子、游戏椅、沙发与软垫座椅。
+room/storage/：书架、展示柜和收纳类家具。
+room/lighting/：落地灯等家具。
+room/decor/：地毯、绿植和其他装饰家具。
 
-电脑设备源文件与重建脚本位于 tools/models/；房间模型由 build_room.py 离线生成。游戏只加载已提交的 GLB，不需要 Blender，也不在运行时生成模型几何。
+新增家具：完成网格、UV、法线和默认 PBR 材质后再导出 GLB；按分类存放，并用 Furniture Manager 生成场景、审核并注册商品。
+GLB 的 *.import 文件应随模型保留；部分模型的贴图 PNG 位于模型旁，移动时必须一起检查引用。
+GLB 不等于可售商品：正式商品必须在 data/items/_catalog.tres 中注册并关联独立家具场景。
+
+已移除旧版家具材质库/运行时部件材质系统；chair_gaming.glb 目前仍使用 GLB 内置的默认材质。
+模型制作参考 ../../tools/models/README.md；家具导入参考 ../../addons/furniture_manager/README.md。

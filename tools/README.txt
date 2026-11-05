@@ -1,12 +1,13 @@
-开发与资源维护工具
+离线制作、数据导入与项目维护
 
-catalog/：Excel 游戏资料工作簿、字段规范、Python 导入器和详细说明。
-models/：电脑硬件 Blender 源文件、硬件导出脚本、房间 GLB 生成脚本和模型制作说明。
-project_audit.py：检查 res:// 路径、动态资源模板、UID、导入配置、GLB 外部依赖、未引用场景/脚本/Resource/素材候选和重复素材。
+catalog/：游戏 Excel 目录及导入器，详见 catalog/README.md。
+models/：Blender 硬件源文件、GLB 离线生成与模型制作规范，详见 models/README.md。
+project_audit.py：检查 res:// 引用、UID、导入配置及可疑未使用资产。
+migrate_furniture_folders.py：历史家具路径分类迁移工具（当前已迁移完成，无需重复执行）。
 
-Windows 双击项目根目录 import_games.bat，可将已保存的表格导入 data/games。需要 Python 3.10 或以上版本；导入器本身只使用 Python 标准库。
+Windows 可运行根目录 import_games.bat 导入游戏资料；Python 版本要求见 catalog/README.md。
+运行资源审计：python tools/project_audit.py
 
-运行资源审计：
-    python tools/project_audit.py
+家具默认材质应在 GLB 中制作。原 Furniture Material Library 已删除；models/ 下残留的游戏椅材质烘焙脚本依赖已删掉的共享材质库，当前不能直接运行，不应当作为正式制作流程。
 
-审计输出中的未引用文件只是人工复核候选，不会自动删除。模型生成脚本只用于离线制作；游戏运行直接加载 assets/models/ 中已提交的 GLB。
+工具只在开发阶段使用；正常游戏运行不执行 Blender、模型生成器或 Python 导入器。
