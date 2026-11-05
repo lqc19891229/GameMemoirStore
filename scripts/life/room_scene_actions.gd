@@ -47,6 +47,11 @@ var _picker_opening_color := Color.WHITE
 var material_slot_picker: OptionButton
 var material_preset_picker: OptionButton
 var material_color_picker: ColorPickerButton
+var material_tile_u: SpinBox
+var material_tile_v: SpinBox
+var material_flip_u: CheckBox
+var material_flip_v: CheckBox
+var material_uv_hint: Label
 var _material_role := ""
 var _current_selection := ""
 var _current_group_size := 0
@@ -376,6 +381,40 @@ func _build_object_actions(canvas: Control) -> void:
 	material_color_picker.edit_alpha = false
 	material_color_picker.color = Color.WHITE
 	palette_content.add_child(material_color_picker)
+	var tile_row := HBoxContainer.new()
+	palette_content.add_child(tile_row)
+	for axis: String in ["U", "V"]:
+		var caption := Label.new()
+		caption.text = axis + " 倍率"
+		tile_row.add_child(caption)
+		var spin := SpinBox.new()
+		spin.name = "MaterialTile" + axis
+		spin.min_value = MaterialSlots.TILE_MIN
+		spin.max_value = MaterialSlots.TILE_MAX
+		spin.step = 0.25
+		spin.value = 1.0
+		spin.custom_minimum_size.x = 78
+		spin.tooltip_text = "相对材质默认重复倍率；1.0 保持原样"
+		tile_row.add_child(spin)
+		if axis == "U":
+			material_tile_u = spin
+		else:
+			material_tile_v = spin
+	var flip_row := HBoxContainer.new()
+	palette_content.add_child(flip_row)
+	material_flip_u = CheckBox.new()
+	material_flip_u.name = "MaterialFlipU"
+	material_flip_u.text = "水平镜像"
+	flip_row.add_child(material_flip_u)
+	material_flip_v = CheckBox.new()
+	material_flip_v.name = "MaterialFlipV"
+	material_flip_v.text = "垂直镜像"
+	flip_row.add_child(material_flip_v)
+	material_uv_hint = Label.new()
+	material_uv_hint.name = "MaterialUVHint"
+	material_uv_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	material_uv_hint.text = "贴图方向取决于模型 UV。此处支持缩放与镜像，不支持 90° 旋转。"
+	palette_content.add_child(material_uv_hint)
 	var material_apply := Button.new()
 	material_apply.name = "ApplyPartMaterial"
 	material_apply.text = "应用部件材质"
@@ -827,6 +866,10 @@ func _refresh_material_slots() -> void:
 	material_slot_picker.disabled = multi
 	material_preset_picker.disabled = multi
 	material_color_picker.disabled = multi
+	material_tile_u.editable = not multi
+	material_tile_v.editable = not multi
+	material_flip_u.disabled = multi
+	material_flip_v.disabled = multi
 	if multi:
 		return
 	for slot: Dictionary in layout.material_slots_for(_material_role):
@@ -842,7 +885,16 @@ func _load_current_part_material() -> void:
 	if material_slot_picker.selected < 0:
 		return
 	var key := str(material_slot_picker.get_selected_metadata())
+	var layout = host.world.layout
+	for slot: Dictionary in layout.material_slots_for(_material_role):
+		if str(slot["key"]) == key:
+			material_uv_hint.text = ("已检测到模型 UV；" if bool(slot.get("has_uv", false)) else "未检测到 UV，贴图可能无法正确显示；") + "支持缩放和镜像，不支持直接旋转。"
+			break
 	var current: Dictionary = host.world.layout.material_settings_for(_material_role, key)
+	material_tile_u.value = MaterialSlots.tile_for(current, "tile_u")
+	material_tile_v.value = MaterialSlots.tile_for(current, "tile_v")
+	material_flip_u.button_pressed = bool(current.get("flip_u", false))
+	material_flip_v.button_pressed = bool(current.get("flip_v", false))
 	if current.is_empty():
 		material_color_picker.color = Color.WHITE
 		return
@@ -858,7 +910,9 @@ func _apply_part_material() -> void:
 		return
 	var key := str(material_slot_picker.get_selected_metadata())
 	var preset: String = MaterialSlots.PRESETS[material_preset_picker.selected]
-	if host.world.layout.set_furniture_material(key, preset, material_color_picker.color):
+	if host.world.layout.set_furniture_material(key, preset, material_color_picker.color,
+			material_tile_u.value, material_tile_v.value,
+			material_flip_u.button_pressed, material_flip_v.button_pressed):
 		room_ui.show_keyboard_feedback("部件材质已更新 · Ctrl+Z 撤销")
 	room_ui.sync()
 

@@ -50,6 +50,14 @@ func run() -> void:
 		"wood_linear_pattern.png", "metal_brushed_pattern.png"
 	]:
 		check(ResourceLoader.exists(Slots.ROOT + "textures/" + filename), "authored seamless texture: " + filename)
+	# UV controls are per instance and do not modify the shared source preset.
+	var wood := load(Slots.ROOT + "wood/wood_oak_light.tres") as StandardMaterial3D
+	var shifted := Slots.build_material("wood/wood_oak_light", "ffffff",
+		{"tile_u": 2.0, "tile_v": 0.5, "flip_u": true, "flip_v": false})
+	check(shifted != null and is_equal_approx(shifted.uv1_scale.x, -wood.uv1_scale.x * 2.0)
+		and is_equal_approx(shifted.uv1_scale.y, wood.uv1_scale.y * 0.5), "per-slot U/V scaling and mirroring")
+	check(is_equal_approx(wood.uv1_scale.x, 2.0), "shared source material not modified")
+	check(not Slots.valid_tile(0.0) and not Slots.valid_tile(100.0), "invalid UV scale rejected")
 	var known := {"inventory_123": true}
 	var raw := {
 		"inventory_123": {
@@ -61,6 +69,16 @@ func run() -> void:
 	var clean: Dictionary = Slots.clean(raw, known)
 	check(clean.size() == 1 and clean["inventory_123"].size() == 1, "UID and preset sanitization")
 	check(Slots.clean({}, known).is_empty(), "old saves without materials remain compatible")
+	var with_uv := {"inventory_123": {"Model/Chair:0":
+		{"preset": "wood/wood_oak_light", "color": "ffffff", "tile_u": 2.0,
+		"tile_v": 0.5, "flip_u": true, "flip_v": false}}}
+	var restored: Dictionary = Slots.clean(with_uv, known)
+	check(restored["inventory_123"]["Model/Chair:0"]["flip_u"]
+		and restored["inventory_123"]["Model/Chair:0"]["tile_v"] == 0.5, "UV controls persist")
+	var invalid_uv := {"inventory_123": {"Model/Chair:0":
+		{"preset": "wood/wood_oak_light", "color": "ffffff", "tile_u": -3.0}}}
+	check(Slots.clean(invalid_uv, known)["inventory_123"]["Model/Chair:0"].get("tile_u", 1.0) == 1.0,
+		"invalid UV scale sanitized")
 	var furniture := Node3D.new()
 	root.add_child(furniture)
 	var mesh := MeshInstance3D.new()
