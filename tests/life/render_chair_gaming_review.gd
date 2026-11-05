@@ -20,8 +20,8 @@ func render_previews() -> void:
     env.background_mode = Environment.BG_COLOR
     env.background_color = Color(0.13, 0.16, 0.20)
     env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
-    env.ambient_light_color = Color(0.72, 0.78, 0.88)
-    env.ambient_light_energy = 0.75
+    env.ambient_light_color = Color(0.72, 0.74, 0.78)
+    env.ambient_light_energy = 0.38
     environment.environment = env
     stage.add_child(environment)
     var camera := Camera3D.new()
@@ -29,12 +29,12 @@ func render_previews() -> void:
     camera.fov = 38.0
     stage.add_child(camera)
     var key := DirectionalLight3D.new()
-    key.light_energy = 1.45
-    key.light_color = Color(1.0, 0.91, 0.81)
+    key.light_energy = 0.92
+    key.light_color = Color(1.0, 0.96, 0.91)
     key.rotation_degrees = Vector3(-52, -28, 0)
     stage.add_child(key)
     var fill := DirectionalLight3D.new()
-    fill.light_energy = 0.55
+    fill.light_energy = 0.26
     fill.light_color = Color(0.71, 0.82, 1.0)
     fill.rotation_degrees = Vector3(-18, 140, 0)
     stage.add_child(fill)

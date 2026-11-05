@@ -10,25 +10,25 @@ ROOT=Path(__file__).resolve().parents[2]
 SOURCE=ROOT/"assets/models/room/seating/chair_gaming.glb"
 # Offline PBR presets: the retired runtime material library is not a dependency.
 PRESETS={
-    "plastic": (0.0, 0.68, 0.10),
-    "metal": (0.80, 0.38, 0.16),
-    "rubber": (0.0, 0.88, 0.12),
-    "fabric": (0.0, 0.84, 0.26),
-    "leather": (0.0, 0.63, 0.25),
+    "plastic": (0.0, 0.82, 0.07),
+    "metal": (0.68, 0.53, 0.10),
+    "rubber": (0.0, 0.92, 0.05),
+    "fabric": (0.0, 0.94, 0.17),
+    "leather": (0.0, 0.88, 0.12),
 }
 PARTS={
-"graphite":("plastic/plastic_black","30343a"),
-"gunmetal":("metal/metal_black_matte","61676d"),
+"graphite":("plastic/plastic_black","343b44"),
+"gunmetal":("metal/metal_black_matte","59616b"),
 "rubber":("rubber/rubber_black","24282c"),
-"wheel_hub":("metal/metal_brushed_steel","656b70"),
-"steel":("metal/metal_brushed_steel","9da2a6"),
-"dark_shell":("plastic/plastic_black","222a30"),
-"grey_inset":("fabric/fabric_gray","888b8d"),
-"leather_pearl":("leather/leather_white","d4cec4"),
-"leather_cream":("leather/leather_white","e2dcd3"),
-"stitch":("fabric/fabric_beige","b5aaa0"),
-"edge_welt":("leather/leather_black","77797b"),
-"leather_shadow":("leather/leather_white","bbb6b0")}
+"wheel_hub":("metal/metal_brushed_steel","444c55"),
+"steel":("metal/metal_brushed_steel","646b73"),
+"dark_shell":("plastic/plastic_black","343b44"),
+"grey_inset":("fabric/fabric_gray","7d8288"),
+"leather_pearl":("leather/leather_white","d0c9bd"),
+"leather_cream":("leather/leather_white","ded5c7"),
+"stitch":("fabric/fabric_beige","a79c8c"),
+"edge_welt":("leather/leather_black","666c72"),
+"leather_shadow":("leather/leather_white","aea79d")}
 PATTERNS={"leather","fabric","metal","wood"}
 
 def parse(data):
@@ -72,7 +72,7 @@ def maps(family):
             elif family=="fabric":
                 detail=(5 if x%4==0 else -3)+(5 if y%4==0 else -3)+grain//3
             elif family=="leather":
-                detail=grain+(3 if (x//5+y//7)%2==0 else -3)
+                detail=grain//2+(2 if (x//5+y//7)%2==0 else -2)
             else:
                 detail=grain//2+(5 if y%8==0 else -2)
             raw.append(max(215,min(250,236+detail)))
@@ -83,7 +83,7 @@ def maps(family):
     mpx=[];npx=[]
     for y in range(h):
         for x in range(w):
-            variation=max(0,min(255,240+(at(x,y)-236)//2))
+            variation=max(0,min(255,245+(at(x,y)-236)//3))
             # glTF G channel carries roughness; B channel metallic.
             mpx.append((255,variation,255))
             dx=(at(x+1,y)-at(x-1,y))/255*.9
