@@ -1,6 +1,6 @@
 # Shared furniture materials (Godot 4.6)
 
-This directory contains 12 shared StandardMaterial3D resources across 7 categories: leather, fabric, wood, metal, plastic, rubber and glass. They are lightweight parameter-only PBR presets; high-resolution texture maps are not included.
+This directory contains 12 shared StandardMaterial3D resources across 7 categories: leather, fabric, wood, metal, plastic, rubber and glass. They are lightweight shared PBR presets; some include procedural maps, while high-resolution scanned PBR textures are not included.
 
 ## Use in the editor
 
@@ -43,3 +43,30 @@ Validation:
 and visually inspect seating and table meshes using the Compatibility renderer.
 UVs must be present for the effect; imported GLBs without UVs will not receive
 the intended mapped detail.
+
+## P1.2: Albedo and roughness microvariation
+
+The eight leather, fabric, wood and metal presets now share an additional
+**two noise textures per material family**, alongside the normal map:
+
+- A near-white albedo modulation map that is **multiplied by** the user-selected
+  base RGB without obscuring the chosen hue. The map values deliberately stay
+  near white (approximately 0.80–1.0 depending on the family).
+- A grayscale roughness multiplier (approximately 0.78–1.0) that produces
+  subtle highlight breakup while retaining each preset's roughness scalar.
+
+All maps are deterministic, seamless `NoiseTexture2D` resources with
+`FastNoiseLite` and `Gradient` ramps. They use the preset's existing UV
+repetition settings and are shared between furniture instances.
+
+This is an incremental procedural surface finish, **not** authored wood
+grain, fabric weave or photogrammetry. Smooth/no-UV GLB meshes may not show
+the intended detail. Plastic, rubber and glass are unchanged.
+
+The library resources and save-preset strings are stable; old RGB and
+per-slot saved appearance data remain compatible.
+
+Validation:
+`godot --headless --path . --script res://tests/life/test_furniture_materials.gd`
+Then inspect the gaming chair, a cloth seat and a wood table with the
+Compatibility renderer under both bright and indirect light.

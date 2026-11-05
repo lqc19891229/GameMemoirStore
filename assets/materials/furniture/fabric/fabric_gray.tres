@@ -1,6 +1,9 @@
-[gd_resource type="StandardMaterial3D" load_steps=2 format=3]
+[gd_resource type="StandardMaterial3D" load_steps=4 format=3]
 
 [ext_resource type="NoiseTexture2D" path="res://assets/materials/furniture/textures/fabric_weave.tres" id="1_micro"]
+
+[ext_resource type="NoiseTexture2D" path="res://assets/materials/furniture/textures/fabric_albedo.tres" id="2_albedo"]
+[ext_resource type="NoiseTexture2D" path="res://assets/materials/furniture/textures/fabric_roughness.tres" id="3_rough"]
 
 [resource]
 resource_name = "fabric_gray"
@@ -12,3 +15,5 @@ normal_scale = 0.24
 normal_texture = ExtResource("1_micro")
 uv1_scale = Vector3(5, 5, 1)
 texture_filter = 3
+albedo_texture = ExtResource("2_albedo")
+roughness_texture = ExtResource("3_rough")

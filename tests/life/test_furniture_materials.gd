@@ -31,6 +31,20 @@ func run() -> void:
 		check(resource != null and resource.normal_texture is NoiseTexture2D, "shared procedural texture: " + preset)
 		var custom := Slots.build_material(preset, "ffffff")
 		check(custom != null and custom.normal_texture == resource.normal_texture, "recolored instance retains shared normal map: " + preset)
+	# P1: albedo brightness variation and roughness noise share the same
+	# read-only resource across differently tinted furniture instances.
+	for preset: String in [
+		"leather/leather_black", "leather/leather_white",
+		"fabric/fabric_gray", "fabric/fabric_beige",
+		"wood/wood_oak_light", "wood/wood_walnut",
+		"metal/metal_black_matte", "metal/metal_brushed_steel"
+	]:
+		var source := load(Slots.ROOT + preset + ".tres") as StandardMaterial3D
+		var recolored := Slots.build_material(preset, "f0f0f0")
+		check(source != null and source.albedo_texture is NoiseTexture2D, "albedo detail texture: " + preset)
+		check(source != null and source.roughness_texture is NoiseTexture2D, "roughness detail texture: " + preset)
+		check(recolored != null and recolored.albedo_texture == source.albedo_texture, "tint keeps albedo detail: " + preset)
+		check(recolored != null and recolored.roughness_texture == source.roughness_texture, "tint keeps roughness detail: " + preset)
 	var known := {"inventory_123": true}
 	var raw := {
 		"inventory_123": {
