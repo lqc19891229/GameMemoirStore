@@ -213,7 +213,7 @@ func run() -> void:
 	ui._apply_layout_size(Vector2(1280,800))
 	check(desktop.get_node("%FurnitureCatalogItems").columns == 2 and ui.dock.offset_left == 73.0, "desktop layout uses a two-column left drawer and large unobstructed 3D canvas")
 	check(desktop.get_node("%FurnitureCatalogItems").get_parent() is ScrollContainer, "catalog remains scrollable inside left drawer")
-	check(desktop.furniture_cards.cards.size() == 36 and desktop.furniture_cards.cards.has("room_wall_sconce"), "all 36 purchasable furniture SKUs include the new wall-light product")
+	check(desktop.furniture_cards.cards.size() == preload("res://data/items/_catalog.tres").room_furniture().size() and desktop.furniture_cards.cards.has("room_wall_sconce") and desktop.furniture_cards.cards.has("chair_gaming"), "catalog cards include all registered furniture, wall sconce and gaming chair")
 	check(desktop.furniture_cards.renderer.get_child_count() == 1, "all catalog cards continue using the same 3D thumbnail cache")
 	var sample_card: Dictionary = desktop.furniture_cards.cards["room_sofa"]
 	check(sample_card.button.get_node("VisualCard/FurniturePreview") == sample_card.image, "item card still shows its true GLB model")
