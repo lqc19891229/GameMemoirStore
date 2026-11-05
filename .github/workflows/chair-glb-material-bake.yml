@@ -1,0 +1,22 @@
+name: Gaming chair GLB bake recipe
+on:
+  pull_request:
+    paths:
+      - "tools/models/bake_chair_gaming_materials.py"
+      - "tests/test_chair_material_bake.py"
+      - "assets/materials/furniture/**"
+      - "assets/models/room/seating/chair_gaming.glb"
+      - ".github/workflows/chair-glb-material-bake.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  material-bake-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v4
+        with:
+          python-version: "3.12"
+      - run: python -m pip install Pillow
+      - run: python -m unittest discover -s tests -p "test_chair_material_bake.py" -v
