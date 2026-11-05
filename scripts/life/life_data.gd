@@ -33,7 +33,7 @@ static func defaults() -> Dictionary:
 		"equipped": {"computer": "starter_pc", "monitor": "starter_monitor", "peripheral": "starter_mouse", "keyboard": "starter_mouse", "mouse": "starter_mouse", "desk": "starter_desk", "cabinet": "starter_cabinet", "audio": "", "decor": ""},
 		"attributes": {"反应": 10.0, "操作": 10.0, "思考": 10.0, "探索": 10.0, "规划": 10.0, "协作": 10.0},
 		"progress": {}, "achievements": {}, "displayed": [], "guides": {}, "active": {},
-		"elapsed": 0, "stream_income": 0, "guide_income": 0, "followers": 0, "room_layout": 0, "workstation_layout": {}, "inventory": InventoryData.initial(), "placements": InventoryData.initial_placements(), "furniture_colors": {}, "furniture_mounts": {}, "wall_mounts": {}, "room_blueprint": BlueprintData.DEFAULT.duplicate(), "room_style": {"wall":0,"floor":0,"light":0,"rgb":0,"brightness":70,"effect":0,"wall_pattern":0,"floor_pattern":0,"atmosphere":0,"ambience_volume":70}}
+		"elapsed": 0, "stream_income": 0, "guide_income": 0, "followers": 0, "room_layout": 0, "workstation_layout": {}, "inventory": InventoryData.initial(), "placements": InventoryData.initial_placements(), "furniture_colors": {}, "furniture_materials": {}, "furniture_mounts": {}, "wall_mounts": {}, "room_blueprint": BlueprintData.DEFAULT.duplicate(), "room_style": {"wall":0,"floor":0,"light":0,"rgb":0,"brightness":70,"effect":0,"wall_pattern":0,"floor_pattern":0,"atmosphere":0,"ambience_volume":70}}
 
 static func number(value: Variant, maximum: float = 9999999.0) -> float:
 	if not (value is float or value is int) or not is_finite(float(value)):
@@ -72,6 +72,7 @@ static func clean(raw: Variant, owned: Array[String], installed: Array[String]) 
 			var value: Variant = raw["furniture_colors"][raw_uid]
 			if known_uids.has(uid) and (value is int or value is float) and is_finite(float(value)) and int(value) > 0 and Finishes.is_saved_finish(int(value)):
 				result["furniture_colors"][uid] = int(value)
+	result["furniture_materials"] = preload("res://scripts/items/furniture_material_slots.gd").clean(raw.get("furniture_materials", {}), known_uids)
 	# Older saves have a single bundled keyboard/mouse slot.
 	if raw.get("equipped") is Dictionary:
 		var previous: Dictionary = raw["equipped"]

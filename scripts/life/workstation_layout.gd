@@ -5,6 +5,7 @@ const InventoryData = preload("res://scripts/items/inventory_data.gd")
 const ItemCatalog: MemoirItemCatalog = preload("res://data/items/_catalog.tres")
 const BlueprintData = preload("res://scripts/room/room_blueprint_data.gd")
 const Finishes = preload("res://scripts/items/furniture_finishes.gd")
+const MaterialSlots = preload("res://scripts/items/furniture_material_slots.gd")
 const MountData = preload("res://scripts/room/furniture_mount_data.gd")
 const WallMountData = preload("res://scripts/room/room_wall_mount_data.gd")
 const SupportSurfaces = preload("res://scripts/room/furniture_support_surfaces.gd")
@@ -74,6 +75,9 @@ var placed_instances: Dictionary = {}
 var committed_placements: Dictionary = {}
 var furniture_colors: Dictionary = {}
 var committed_colors: Dictionary = {}
+var furniture_materials: Dictionary = {}
+var committed_materials: Dictionary = {}
+var material_originals: Dictionary = {}
 var surface_mounts: Dictionary = {}
 var committed_mounts: Dictionary = {}
 var wall_mounts: Dictionary = {}
@@ -121,6 +125,8 @@ func setup(owner_world: Node3D) -> void:
 	committed_placements = placed_instances.duplicate()
 	furniture_colors = {}
 	committed_colors = {}
+	furniture_materials = {}
+	committed_materials = {}
 
 func snapshot() -> Dictionary:
 	var result: Dictionary = {}
@@ -154,6 +160,71 @@ func load_colors(raw: Dictionary) -> void:
 			furniture_colors[uid] = int(value)
 	committed_colors = furniture_colors.duplicate()
 	_apply_furniture_appearance()
+
+func load_materials(raw: Variant) -> void:
+	if active:
+		return
+	var known: Dictionary = {}
+	for entry: Dictionary in available_inventory:
+		known[str(entry.uid)] = true
+	furniture_materials = MaterialSlots.clean(raw, known)
+	committed_materials = furniture_materials.duplicate(true)
+	_apply_furniture_appearance()
+
+
+func material_slots_for(role: String) -> Array[Dictionary]:
+	if not nodes.has(role) or not placed_instances.has(role):
+		return []
+	return MaterialSlots.list_slots(nodes[role])
+
+
+func material_settings_for(role: String, key: String) -> Dictionary:
+	var uid := str(placed_instances.get(role, ""))
+	var settings: Dictionary = furniture_materials.get(uid, {})
+	return settings.get(key, {}).duplicate()
+
+
+func set_furniture_material(key: String, preset: String, color: Color) -> bool:
+	if not active or not gesture.is_empty() or not placing_role.is_empty() or group_selection.size() > 1:
+		return false
+	if not placed_instances.has(selected) or not MaterialSlots.valid_preset(preset):
+		return false
+	var found := false
+	for slot: Dictionary in material_slots_for(selected):
+		if slot["key"] == key:
+			found = true
+			break
+	if not found:
+		return false
+	var before := _draft()
+	var uid := str(placed_instances[selected])
+	var settings: Dictionary = furniture_materials.get(uid, {}).duplicate(true)
+	settings[key] = {"preset": preset, "color": color.to_html(false)}
+	furniture_materials[uid] = settings
+	_apply_furniture_appearance()
+	_remember(before)
+	update()
+	return true
+
+
+func clear_furniture_material(key: String) -> bool:
+	if not active or not placed_instances.has(selected) or group_selection.size() > 1:
+		return false
+	var uid := str(placed_instances[selected])
+	var settings: Dictionary = furniture_materials.get(uid, {}).duplicate(true)
+	if not settings.has(key):
+		return false
+	var before := _draft()
+	settings.erase(key)
+	if settings.is_empty():
+		furniture_materials.erase(uid)
+	else:
+		furniture_materials[uid] = settings
+	_apply_furniture_appearance()
+	_remember(before)
+	update()
+	return true
+
 
 func load_mounts(raw: Variant) -> void:
 	if active: return
@@ -654,6 +725,21 @@ func _apply_furniture_appearance() -> void:
 				mesh.material_overlay = overlay
 				mesh.transparency = 0.0
 	if placing_role.is_empty(): preview_original_materials.clear()
+	# Each furniture instance gets independently duplicated materials; no edits to
+	# the shared .tres, GLB source or other inventory instances.
+	MaterialSlots.restore_all(material_originals)
+	for role: String in nodes:
+		if not placed_instances.has(role) or placing_role == role:
+			continue
+		var uid := str(placed_instances[role])
+		var overrides: Dictionary = furniture_materials.get(uid, {})
+		if overrides.is_empty():
+			continue
+		var furniture: Node3D = nodes[role]
+		for slot: Dictionary in MaterialSlots.list_slots(furniture):
+			if overrides.has(slot["key"]):
+				(slot["mesh"] as MeshInstance3D).material_overlay = null
+		MaterialSlots.apply(furniture, overrides, material_originals)
 
 func _next_furniture_role(base_role: String, uid: String) -> String:
 	# Replacing the original free starter piece keeps legacy room keys stable.
@@ -853,6 +939,9 @@ func duplicate_selected() -> void:
 		changed.emit()
 		return
 	placed_instances[role] = instance_uid
+	var source_uid := str(placed_instances.get(selected, ""))
+	if furniture_materials.has(source_uid):
+		furniture_materials[instance_uid] = furniture_materials[source_uid].duplicate(true)
 	selected = role
 	group_selection.clear()
 	group_selection.append(role)
@@ -959,6 +1048,9 @@ func duplicate_group(displacement: Variant = null, yaw: float = 0.0) -> bool:
 		var finish: int = color_for(source)
 		if finish == 0: furniture_colors.erase(uid)
 		else: furniture_colors[uid] = finish
+		var source_uid := str(placed_instances.get(source, ""))
+		if furniture_materials.has(source_uid):
+			furniture_materials[uid] = furniture_materials[source_uid].duplicate(true)
 		copied_roles.append(target_role)
 	_apply_furniture_appearance()
 	var contact: String = _layout_blocker()
@@ -1964,7 +2056,7 @@ func load_style(raw: Variant) -> void:
 	committed_style = world.get_node("Room").style.duplicate()
 
 func _draft() -> Dictionary:
-	return {"poses":snapshot(), "style":world.get_node("Room").style.duplicate(), "placements":placed_instances.duplicate(), "colors":furniture_colors.duplicate(), "mounts":surface_mounts.duplicate(true), "wall_mounts":wall_mounts.duplicate(true), "blueprint":blueprint.duplicate(true)}
+	return {"poses":snapshot(), "style":world.get_node("Room").style.duplicate(), "placements":placed_instances.duplicate(), "colors":furniture_colors.duplicate(), "materials":furniture_materials.duplicate(true), "mounts":surface_mounts.duplicate(true), "wall_mounts":wall_mounts.duplicate(true), "blueprint":blueprint.duplicate(true)}
 
 func _restore_draft(draft: Dictionary) -> void:
 	blueprint = draft.blueprint.duplicate(true)
@@ -1977,6 +2069,7 @@ func _restore_draft(draft: Dictionary) -> void:
 	_sync_mount_poses()
 	_sync_wall_mount_poses()
 	furniture_colors = draft.colors.duplicate()
+	furniture_materials = draft.get("materials", {}).duplicate(true)
 	_apply_furniture_appearance()
 	world.get_node("Room").apply_style(draft.style)
 
@@ -2045,6 +2138,7 @@ func begin() -> void:
 	restore(committed)
 	placed_instances = committed_placements.duplicate()
 	furniture_colors = committed_colors.duplicate()
+	furniture_materials = committed_materials.duplicate(true)
 	surface_mounts = committed_mounts.duplicate(true)
 	wall_mounts = committed_wall_mounts.duplicate(true)
 	_sync_mount_poses()
@@ -2067,6 +2161,7 @@ func finish(apply: bool) -> bool:
 		committed = snapshot()
 		committed_placements = placed_instances.duplicate()
 		committed_colors = furniture_colors.duplicate()
+		committed_materials = furniture_materials.duplicate(true)
 		committed_mounts = surface_mounts.duplicate(true)
 		committed_wall_mounts = wall_mounts.duplicate(true)
 		committed_style = world.get_node("Room").style.duplicate()
@@ -2076,6 +2171,7 @@ func finish(apply: bool) -> bool:
 		restore(committed)
 		placed_instances = committed_placements.duplicate()
 		furniture_colors = committed_colors.duplicate()
+		furniture_materials = committed_materials.duplicate(true)
 		surface_mounts = committed_mounts.duplicate(true)
 		wall_mounts = committed_wall_mounts.duplicate(true)
 		_sync_mount_poses()
@@ -2363,6 +2459,7 @@ func reset_layout() -> void:
 	surface_mounts.clear()
 	wall_mounts.clear()
 	furniture_colors.clear()
+	furniture_materials.clear()
 	_apply_furniture_appearance()
 	world.get_node("Room").apply_style({})
 	_remember(before)
