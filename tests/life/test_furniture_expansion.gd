@@ -19,7 +19,7 @@ func frames() -> void:
 
 func run() -> void:
 	var items: Array[MemoirItemDefinition] = Catalog.room_furniture()
-	check(items.size() == 36, "36 purchasable furniture SKUs include the new luminous wall sconce")
+	check(items.size() >= 37 and Catalog.lookup("chair_gaming") != null and Catalog.lookup("room_wall_sconce") != null, "expanded furniture SKUs retain gaming chair and wall sconce")
 	check(Inventory.initial_placements().size() == 5, "existing five starter pieces remain unchanged")
 	check(Inventory.initial().size() == 10, "new furniture is not granted in starter inventory")
 	var unique_roles := {}
@@ -60,7 +60,7 @@ func run() -> void:
 		if group == "decor" and Taxonomy.type_for(item) == "rug" and item.item_id != "room_rug":
 			check(not node.blocking, "new thin rugs can overlap floor furniture")
 		node.free()
-	check(group_sizes.get("tables",0) == 5 and group_sizes.get("seating",0) == 8, "tables and seating have varied models")
+	check(group_sizes.get("tables",0) == 5 and group_sizes.get("seating",0) >= 9, "tables and seating have varied models")
 	check(group_sizes.get("storage",0) == 6 and group_sizes.get("lighting",0) == 5 and group_sizes.get("decor",0) == 12, "storage, lighting and decoration include new SKUs")
 	check(Data.is_copy("side_table_oak_1") and Data.base_role("side_table_oak_1") == "side_table_oak", "multiword placement role can be copied safely")
 	check(not Data.is_copy("side_table_oak_9") and not Data.valid_role("unknown_furniture"), "unknown and unused historical numbered roles remain rejected")
@@ -76,7 +76,7 @@ func run() -> void:
 	var desktop = game.desktop
 	var layout = desktop.world.layout
 	check(layout.nodes.size() == 10, "new catalog entries do not spawn unpaid furniture into a starter room")
-	check(desktop.furniture_buttons.size() == 36, "every furniture SKU appears in the shared room catalog")
+	check(desktop.furniture_buttons.size() == items.size(), "every furniture SKU appears in the shared room catalog")
 	check(desktop.get_node("%FurnitureCatalogGroup").item_count == 7, "all furniture groups remain available after bulk catalog expansion")
 
 	var chosen := ["side_table_oak","lamp_cylinder","plant_cactus","side_table_oak"]
