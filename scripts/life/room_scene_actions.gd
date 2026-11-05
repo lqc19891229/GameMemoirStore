@@ -367,7 +367,8 @@ func _build_object_actions(canvas: Control) -> void:
 	material_preset_picker = OptionButton.new()
 	material_preset_picker.name = "MaterialPresetPicker"
 	for preset: String in MaterialSlots.PRESETS:
-		material_preset_picker.add_item(preset)
+		material_preset_picker.add_item(MaterialSlots.preset_label(preset))
+		material_preset_picker.set_item_tooltip(material_preset_picker.item_count - 1, preset)
 	palette_content.add_child(material_preset_picker)
 	material_color_picker = ColorPickerButton.new()
 	material_color_picker.name = "MaterialColorPicker"
@@ -829,7 +830,8 @@ func _refresh_material_slots() -> void:
 	if multi:
 		return
 	for slot: Dictionary in layout.material_slots_for(_material_role):
-		material_slot_picker.add_item(str(slot["key"]))
+		material_slot_picker.add_item(MaterialSlots.slot_label(slot))
+		material_slot_picker.set_item_tooltip(material_slot_picker.item_count - 1, str(slot["key"]))
 		material_slot_picker.set_item_metadata(material_slot_picker.item_count - 1, str(slot["key"]))
 	if material_slot_picker.item_count > 0:
 		material_slot_picker.select(0)
