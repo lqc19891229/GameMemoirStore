@@ -2,13 +2,20 @@
 Requires Pillow. Usage: python tools/models/bake_chair_gaming_materials.py --output /tmp/chair.glb
 Use --in-place ONLY after inspecting the preview in Blender.
 """
-import argparse, io, json, math, re, struct
+import argparse, io, json, math, struct
 from pathlib import Path
 from PIL import Image
 
 ROOT=Path(__file__).resolve().parents[2]
 SOURCE=ROOT/"assets/models/room/seating/chair_gaming.glb"
-LIB=ROOT/"assets/materials/furniture"
+# Offline PBR presets: the retired runtime material library is not a dependency.
+PRESETS={
+    "plastic": (0.0, 0.68, 0.10),
+    "metal": (0.80, 0.38, 0.16),
+    "rubber": (0.0, 0.88, 0.12),
+    "fabric": (0.0, 0.84, 0.26),
+    "leather": (0.0, 0.63, 0.25),
+}
 PARTS={
 "graphite":("plastic/plastic_black","30343a"),
 "gunmetal":("metal/metal_black_matte","61676d"),
@@ -22,7 +29,7 @@ PARTS={
 "stitch":("fabric/fabric_beige","b5aaa0"),
 "edge_welt":("leather/leather_black","77797b"),
 "leather_shadow":("leather/leather_white","bbb6b0")}
-PATTERNS={"leather":"leather_grain_pattern.png","fabric":"fabric_woven_pattern.png","metal":"metal_brushed_pattern.png","wood":"wood_linear_pattern.png"}
+PATTERNS={"leather","fabric","metal","wood"}
 
 def parse(data):
     if data[:4]!=b"glTF" or struct.unpack_from("<I",data,4)[0]!=2 or struct.unpack_from("<I",data,8)[0]!=len(data):
@@ -42,25 +49,43 @@ def pack(meta,buf):
     return b"glTF"+struct.pack("<II",2,28+len(j)+len(buf))+struct.pack("<I4s",len(j),b"JSON")+j+struct.pack("<I4s",len(buf),b"BIN\x00")+buf
 
 def preset(p):
-    text=(LIB/(p+".tres")).read_text(encoding="utf-8")
-    def read(k,default):
-        m=re.search(r"^"+k+r"\s*=\s*([0-9.]+)",text,re.M)
-        return float(m.group(1)) if m else default
-    return read("metallic",0),read("roughness",.8),read("normal_scale",.2)
+    family=p.split("/")[0]
+    if family not in PRESETS:
+        raise ValueError("Unsupported material family: "+family)
+    return PRESETS[family]
 
 def png(im):
     b=io.BytesIO();im.save(b,format="PNG",optimize=True);return b.getvalue()
 
 def maps(family):
-    im=Image.open(LIB/"textures"/PATTERNS[family]).convert("L")
-    w,h=im.size;raw=list(im.getdata())
+    """Generate deterministic, seamless 64px microdetail without external assets."""
+    if family not in PATTERNS:
+        raise ValueError("Unsupported texture family: "+family)
+    w=h=64
+    im=Image.new("L",(w,h))
+    raw=[]
+    for y in range(h):
+        for x in range(w):
+            grain=((x*37+y*61+(x*y)%31)%19)-9
+            if family=="metal":
+                detail=((y%8)-4)*2+grain//4
+            elif family=="fabric":
+                detail=(5 if x%4==0 else -3)+(5 if y%4==0 else -3)+grain//3
+            elif family=="leather":
+                detail=grain+(3 if (x//5+y//7)%2==0 else -3)
+            else:
+                detail=grain//2+(5 if y%8==0 else -2)
+            raw.append(max(215,min(250,236+detail)))
+    im.putdata(raw)
     def at(x,y):return raw[(y%h)*w+x%w]
-    mr=Image.new("RGB",(w,h));normal=Image.new("RGB",(w,h))
+    mr=Image.new("RGB",(w,h))
+    normal=Image.new("RGB",(w,h))
     mpx=[];npx=[]
     for y in range(h):
         for x in range(w):
-            g=min(255,round((.9+.1*at(x,y)/255)*255))
-            mpx.append((255,g,255))
+            variation=max(0,min(255,240+(at(x,y)-236)//2))
+            # glTF G channel carries roughness; B channel metallic.
+            mpx.append((255,variation,255))
             dx=(at(x+1,y)-at(x-1,y))/255*.9
             dy=(at(x,y+1)-at(x,y-1))/255*.9
             length=math.sqrt(dx*dx+dy*dy+1)
