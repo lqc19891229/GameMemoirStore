@@ -939,6 +939,9 @@ func duplicate_selected() -> void:
 		changed.emit()
 		return
 	placed_instances[role] = instance_uid
+	var source_uid := str(placed_instances.get(selected, ""))
+	if furniture_materials.has(source_uid):
+		furniture_materials[instance_uid] = furniture_materials[source_uid].duplicate(true)
 	selected = role
 	group_selection.clear()
 	group_selection.append(role)
@@ -1045,6 +1048,9 @@ func duplicate_group(displacement: Variant = null, yaw: float = 0.0) -> bool:
 		var finish: int = color_for(source)
 		if finish == 0: furniture_colors.erase(uid)
 		else: furniture_colors[uid] = finish
+		var source_uid := str(placed_instances.get(source, ""))
+		if furniture_materials.has(source_uid):
+			furniture_materials[uid] = furniture_materials[source_uid].duplicate(true)
 		copied_roles.append(target_role)
 	_apply_furniture_appearance()
 	var contact: String = _layout_blocker()
