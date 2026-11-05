@@ -154,11 +154,13 @@ func refresh() -> void:
 				quick.text = "购买并摆放"
 				quick.name = "BuyPlace_" + id
 				quick.disabled = session.state.wallet < item.price
+				quick.tooltip_text = "余额不足，还差 %d 点" % (item.price - session.state.wallet) if session.state.wallet < item.price else ""
 				quick.pressed.connect(func() -> void: message.text = session.buy_and_place_furniture(key,%ShopPreviewFinish.selected))
 				quick_buttons[id] = quick
 			purchase_buttons[id] = button
 			button.name = "Buy_" + id
 			button.disabled = (count > 0 and not repeatable) or session.state.wallet < item.price
+			button.tooltip_text = "余额不足，还差 %d 点" % (item.price - session.state.wallet) if session.state.wallet < item.price else ""
 		else:
 			button.name = "Equip_" + id
 			if item.retired:
@@ -182,6 +184,9 @@ func refresh() -> void:
 				button.text = "使用中" if equipped else "安装"
 				button.disabled = equipped
 				button.pressed.connect(func() -> void: message.text = session.equip_item(key))
+	# Purchase controls were created after the first _tick() in this refresh.
+	# Set their initial enabled state and shortage text immediately.
+	_tick()
 
 func _tick() -> void:
 	if session == null: return
@@ -191,8 +196,14 @@ func _tick() -> void:
 		if not is_instance_valid(purchase_buttons[id]): continue
 		var item: MemoirItemDefinition = Catalog.lookup(id)
 		var owned := InventoryData.owns(session.state.life["inventory"], id)
-		purchase_buttons[id].disabled = (owned and item.category != "furniture") or session.state.wallet < item.price
+		var shortfall: int = maxi(0, item.price - session.state.wallet)
+		purchase_buttons[id].disabled = (owned and item.category != "furniture") or shortfall > 0
+		purchase_buttons[id].text = "差 %d 点" % shortfall if shortfall > 0 else "已拥有" if owned and item.category != "furniture" else "购买"
+		purchase_buttons[id].tooltip_text = "余额不足，还差 %d 点才能购买 %s" % [shortfall, item.name] if shortfall > 0 else ""
 	for id: String in quick_buttons:
 		if not is_instance_valid(quick_buttons[id]): continue
 		var item: MemoirItemDefinition = Catalog.lookup(id)
-		quick_buttons[id].disabled = session.state.wallet < item.price
+		var shortfall: int = maxi(0, item.price - session.state.wallet)
+		quick_buttons[id].disabled = shortfall > 0
+		quick_buttons[id].text = "差 %d 点" % shortfall if shortfall > 0 else "购买并摆放"
+		quick_buttons[id].tooltip_text = "余额不足，还差 %d 点才能购买并摆放 %s" % [shortfall, item.name] if shortfall > 0 else ""
