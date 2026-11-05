@@ -49,7 +49,15 @@ class ChairBakeTest(unittest.TestCase):
             self.assertEqual(source["nodes"], baked["nodes"])
             self.assertEqual(source["accessors"], baked["accessors"])
             self.assertEqual(source["buffers"][0]["byteLength"], len(binary))
-            self.assertGreater(len(baked_binary), len(binary))
+            already_baked = all(
+                any(material.get("name") == name for material in source.get("materials", []))
+                for name in baker.PARTS
+            )
+            if already_baked:
+                self.assertEqual(baked_binary, binary)
+                self.assertEqual(out.read_bytes(), baker.SOURCE.read_bytes())
+            else:
+                self.assertGreater(len(baked_binary), len(binary))
             self.assertGreaterEqual(len(baked.get("images", [])), 9)
             for name in baker.PARTS:
                 node = next(n for n in baked["nodes"] if n.get("name") == name)
