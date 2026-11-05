@@ -45,6 +45,7 @@ jobs:
           godot --headless --path . --editor --import
           for test in \
             tests/life/test_chair_gaming_uv.gd \
+            tests/life/test_chair_gaming_pbr.gd \
             tests/life/test_furniture_catalog.gd \
             tests/life/test_workstation_layout.gd \
             tests/life/test_workstation_collision.gd
@@ -54,3 +55,19 @@ jobs:
           done
           # This validation only changes the ephemeral CI workspace.
           # We never commit or upload a modified source repository.
+      - name: Render candidate furniture material review screenshots
+        shell: bash
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y xvfb libgl1-mesa-dri
+          xvfb-run -a -s "-screen 0 1280x800x24" \
+            timeout 120s godot --path . --script res://tests/life/render_chair_gaming_review.gd -- --fresh
+      - name: Upload Godot-rendered chair previews
+        uses: actions/upload-artifact@v4
+        with:
+          name: chair-gaming-godot-previews
+          path: |
+            build/chair/chair_gaming_front.png
+            build/chair/chair_gaming_rear.png
+          if-no-files-found: error
+          retention-days: 14
