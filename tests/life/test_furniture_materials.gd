@@ -18,6 +18,19 @@ func run() -> void:
 	for preset: String in Slots.PRESETS:
 		check(ResourceLoader.exists(Slots.ROOT + preset + ".tres"), "exists: " + preset)
 		check(Slots.build_material(preset, "ffffff") != null, "loads: " + preset)
+	# The high-detail presets share four procedural normal textures. No GLB
+	# edits or external image imports are required.
+	for preset: String in [
+		"leather/leather_black", "leather/leather_white",
+		"fabric/fabric_gray", "fabric/fabric_beige",
+		"wood/wood_oak_light", "wood/wood_walnut",
+		"metal/metal_black_matte", "metal/metal_brushed_steel"
+	]:
+		var resource := load(Slots.ROOT + preset + ".tres") as StandardMaterial3D
+		check(resource != null and resource.normal_enabled, "micro normal enabled: " + preset)
+		check(resource != null and resource.normal_texture is NoiseTexture2D, "shared procedural texture: " + preset)
+		var custom := Slots.build_material(preset, "ffffff")
+		check(custom != null and custom.normal_texture == resource.normal_texture, "recolored instance retains shared normal map: " + preset)
 	var known := {"inventory_123": true}
 	var raw := {
 		"inventory_123": {
