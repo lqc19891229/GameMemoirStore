@@ -41,10 +41,15 @@ func run() -> void:
 	]:
 		var source := load(Slots.ROOT + preset + ".tres") as StandardMaterial3D
 		var recolored := Slots.build_material(preset, "f0f0f0")
-		check(source != null and source.albedo_texture is NoiseTexture2D, "albedo detail texture: " + preset)
+		check(source != null and source.albedo_texture is Texture2D, "albedo detail texture: " + preset)
 		check(source != null and source.roughness_texture is NoiseTexture2D, "roughness detail texture: " + preset)
 		check(recolored != null and recolored.albedo_texture == source.albedo_texture, "tint keeps albedo detail: " + preset)
 		check(recolored != null and recolored.roughness_texture == source.roughness_texture, "tint keeps roughness detail: " + preset)
+	for filename: String in [
+		"leather_grain_pattern.png", "fabric_woven_pattern.png",
+		"wood_linear_pattern.png", "metal_brushed_pattern.png"
+	]:
+		check(ResourceLoader.exists(Slots.ROOT + "textures/" + filename), "authored seamless texture: " + filename)
 	var known := {"inventory_123": true}
 	var raw := {
 		"inventory_123": {

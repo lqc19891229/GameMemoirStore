@@ -70,3 +70,22 @@ Validation:
 `godot --headless --path . --script res://tests/life/test_furniture_materials.gd`
 Then inspect the gaming chair, a cloth seat and a wood table with the
 Compatibility renderer under both bright and indirect light.
+
+## P1.3: Seamless structured grayscale pattern textures
+
+Four deterministic grayscale PNG pattern tiles replace the generic albedo
+noise on eight presets: cellular leather pores, basket woven fabric,
+directional linear wood grain and fine brushed metal. The pixels remain
+near white, so they multiply player-selected RGB without replacing the hue.
+All existing normal and roughness maps remain shared and unchanged.
+
+These are stylized generated textures rather than photographic PBR scans.
+The same material preset paths and save schema are preserved; no GLB files
+are touched. Ensure Godot imports the new PNG assets before running tests.
+
+Run:
+`godot --headless --editor --path . --quit`
+`godot --headless --path . --script res://tests/life/test_furniture_materials.gd`
+
+Inspect the gaming chair and wooden furniture in GL Compatibility mode.
+Visual quality depends on UV layout and mesh texel density.
