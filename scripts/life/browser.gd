@@ -184,6 +184,9 @@ func refresh() -> void:
 				button.text = "使用中" if equipped else "安装"
 				button.disabled = equipped
 				button.pressed.connect(func() -> void: message.text = session.equip_item(key))
+	# Purchase controls were created after the first _tick() in this refresh.
+	# Set their initial enabled state and shortage text immediately.
+	_tick()
 
 func _tick() -> void:
 	if session == null: return
