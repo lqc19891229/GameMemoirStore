@@ -95,6 +95,16 @@ def maps(family):
 
 def bake(source,target):
     gltf,binary=parse(Path(source).read_bytes())
+    # Once finalized, rebuilding the GLB must be idempotent.
+    names = {m.get("name") for m in gltf.get("materials", [])}
+    if set(PARTS).issubset(names):
+        if len(gltf.get("images", [])) < 9:
+            raise ValueError("Chair materials exist but embedded PBR images are missing")
+        target=Path(target)
+        target.parent.mkdir(parents=True,exist_ok=True)
+        if Path(source).resolve() != target.resolve():
+            target.write_bytes(Path(source).read_bytes())
+        return {"parts":len(PARTS),"embedded_textures":len(gltf["images"]),"bytes":len(Path(source).read_bytes())}
     buf=bytearray(binary)
     views=gltf.setdefault("bufferViews",[])
     images=gltf.setdefault("images",[])
