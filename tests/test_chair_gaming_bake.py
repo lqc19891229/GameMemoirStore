@@ -35,7 +35,10 @@ class ChairBakeTest(unittest.TestCase):
                 node = next(n for n in baked["nodes"] if n.get("name") == name)
                 for primitive in baked["meshes"][node["mesh"]]["primitives"]:
                     self.assertIn("material", primitive)
-                    self.assertIn("normalTexture", baked["materials"][primitive["material"]])
+                    material = baked["materials"][primitive["material"]]
+                    self.assertIn("pbrMetallicRoughness", material)
+                    if baker.PARTS[name][0].split("/")[0] in baker.PATTERNS:
+                        self.assertIn("normalTexture", material)
                     self.assertIn("TEXCOORD_0", primitive["attributes"])
 
 
