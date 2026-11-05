@@ -120,10 +120,11 @@ static func list_slots(furniture: Node3D) -> Array[Dictionary]:
 			continue
 		for surface in range(mesh.mesh.get_surface_count()):
 			var key := "%s:%d" % [str(furniture.get_path_to(mesh)), surface]
-			var arrays := mesh.mesh.surface_get_arrays(surface)
-			var uv: PackedVector2Array = arrays[Mesh.ARRAY_TEX_UV]
+			# Read the surface format flag instead of pulling all vertex arrays
+			# on every furniture appearance refresh.
+			var has_uv := (mesh.mesh.surface_get_format(surface) & Mesh.ARRAY_FORMAT_TEX_UV) != 0
 			result.append({"key": key, "mesh": mesh, "surface": surface,
-				"has_uv": not uv.is_empty()})
+				"has_uv": has_uv})
 	return result
 
 static func build_material(preset: String, color_hex: String, settings: Dictionary = {}) -> StandardMaterial3D:
