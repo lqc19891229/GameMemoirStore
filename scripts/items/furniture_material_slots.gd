@@ -122,7 +122,7 @@ static func list_slots(furniture: Node3D) -> Array[Dictionary]:
 			var key := "%s:%d" % [str(furniture.get_path_to(mesh)), surface]
 			# Read the surface format flag instead of pulling all vertex arrays
 			# on every furniture appearance refresh.
-			var has_uv := (mesh.mesh.surface_get_format(surface) & Mesh.ARRAY_FORMAT_TEX_UV) != 0
+			var has_uv: bool = (mesh.mesh.surface_get_format(surface) & Mesh.ARRAY_FORMAT_TEX_UV) != 0
 			result.append({"key": key, "mesh": mesh, "surface": surface,
 				"has_uv": has_uv})
 	return result

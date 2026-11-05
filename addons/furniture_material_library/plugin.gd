@@ -108,7 +108,7 @@ func _collect_slots(node: Node, root: Node) -> void:
 		var mesh_instance := node as MeshInstance3D
 		if mesh_instance.mesh != null:
 			for index in range(mesh_instance.mesh.get_surface_count()):
-				var surface_name := mesh_instance.mesh.surface_get_name(index)
+				var surface_name: String = mesh_instance.mesh.surface_get_name(index)
 				if surface_name.is_empty():
 					surface_name = "Surface %d" % index
 				var node_path := str(root.get_path_to(node))
