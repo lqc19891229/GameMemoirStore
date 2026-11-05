@@ -4,6 +4,7 @@ on:
     paths:
       - "tools/models/bake_chair_gaming_materials.py"
       - "tests/test_chair_material_bake.py"
+      - "tests/test_chair_gaming_bake.py"
       - "assets/materials/furniture/**"
       - "assets/models/room/seating/chair_gaming.glb"
       - ".github/workflows/chair-glb-material-bake.yml"
@@ -20,3 +21,15 @@ jobs:
           python-version: "3.12"
       - run: python -m pip install Pillow
       - run: python -m unittest discover -s tests -p "test_chair_material_bake.py" -v
+      - run: python -m unittest discover -s tests -p "test_chair_gaming_bake.py" -v
+      - name: Generate gaming chair GLB candidate
+        run: |
+          mkdir -p build/chair
+          python tools/models/bake_chair_gaming_materials.py --output build/chair/chair_gaming_finished.glb
+      - name: Upload GLB candidate for visual approval
+        uses: actions/upload-artifact@v4
+        with:
+          name: chair-gaming-pbr-candidate
+          path: build/chair/chair_gaming_finished.glb
+          if-no-files-found: error
+          retention-days: 14
