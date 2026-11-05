@@ -2,6 +2,8 @@
 
 这是一个用于**开发阶段**的小型家具资源浏览面板。它直接读取现有 `data/items/_catalog.tres`，不建立第二套商品数据库，也不修改 `item_id`、实例 UID 或玩家存档。
 
+新增家具请先阅读 [家具制作标准工作流](../../docs/FURNITURE_PRODUCTION_WORKFLOW.md)：从 GLB 成品、独立场景、承载面，到商店注册、购买摆放和 CI 验收。这里是编辑器工具的操作详解。
+
 ## 打开方式
 
 使用 Godot 4.6 打开项目，编辑器底部选择 **家具资源**。插件已在项目的 `[editor_plugins]` 启用；若未显示，可在 **项目设置 → 插件** 中启用 Furniture Manager。
