@@ -3,7 +3,8 @@ extends EditorPlugin
 
 const MATERIAL_DIR := "res://assets/materials/furniture"
 
-var dock: VBoxContainer
+var dock: ScrollContainer
+var content: VBoxContainer
 var scene_label: Label
 var slot_list: ItemList
 var preset_list: ItemList
@@ -13,55 +14,64 @@ var presets: Array[String] = []
 
 
 func _enter_tree() -> void:
-	dock = VBoxContainer.new()
+	# Keep the dock's minimum height at zero. Two tall ItemLists previously
+	# propagated their minimum sizes to the editor dock; on a short window
+	# this can hide the bottom panel and other editor docks entirely.
+	dock = ScrollContainer.new()
 	dock.name = "Furniture Materials"
 	dock.custom_minimum_size = Vector2(270, 0)
+	dock.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	dock.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+
+	content = VBoxContainer.new()
+	content.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	dock.add_child(content)
 
 	var heading := Label.new()
 	heading.text = "Furniture Material Library"
-	dock.add_child(heading)
+	content.add_child(heading)
 
 	scene_label = Label.new()
 	scene_label.text = "Open a furniture scene (.tscn)"
-	dock.add_child(scene_label)
+	content.add_child(scene_label)
 
 	var refresh_button := Button.new()
 	refresh_button.text = "Refresh"
 	refresh_button.pressed.connect(_refresh)
-	dock.add_child(refresh_button)
+	content.add_child(refresh_button)
 
 	var slot_heading := Label.new()
 	slot_heading.text = "1. Mesh / surface"
-	dock.add_child(slot_heading)
+	content.add_child(slot_heading)
 
 	slot_list = ItemList.new()
 	slot_list.custom_minimum_size.y = 180
 	slot_list.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	dock.add_child(slot_list)
+	content.add_child(slot_list)
 
 	var preset_heading := Label.new()
 	preset_heading.text = "2. Shared material"
-	dock.add_child(preset_heading)
+	content.add_child(preset_heading)
 
 	preset_list = ItemList.new()
 	preset_list.custom_minimum_size.y = 190
 	preset_list.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	dock.add_child(preset_list)
+	content.add_child(preset_list)
 
 	var apply_button := Button.new()
 	apply_button.text = "Apply surface override"
 	apply_button.pressed.connect(_apply_override)
-	dock.add_child(apply_button)
+	content.add_child(apply_button)
 
 	var clear_button := Button.new()
 	clear_button.text = "Clear surface override"
 	clear_button.pressed.connect(_clear_override)
-	dock.add_child(clear_button)
+	content.add_child(clear_button)
 
 	message_label = Label.new()
 	message_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	message_label.text = "For GLB instances, enable Editable Children, then save the .tscn (Ctrl+S)."
-	dock.add_child(message_label)
+	content.add_child(message_label)
 
 	add_control_to_dock(DOCK_SLOT_RIGHT_UL, dock)
 	_refresh.call_deferred()
@@ -70,6 +80,8 @@ func _enter_tree() -> void:
 func _exit_tree() -> void:
 	remove_control_from_docks(dock)
 	dock.queue_free()
+	dock = null
+	content = null
 
 
 func _refresh() -> void:
