@@ -1,40 +1,26 @@
-生活系统、房间与工作台回归
+# 生活系统、房间和家具回归测试
 
-test_life_flow.gd：共享钱包、窗口寿命、直播和攻略收入、设备安装、历史家具数据及存档迁移。
-test_workstation_view.gd：原生 3D 主视口、总览旋转缩放、设备点击、3D 射线拾取、屏幕镜头切换、设备安装、屏幕 UV 输入、任务栏与弹窗。
-test_workstation_layout.gd：真实鼠标输入、布置手柄、吸附、桌沿、碰撞、设备跟随、应用/取消、存档恢复和编辑中退出。
-test_workstation_collision.gd：模型边界、快速拖动防穿透、旋转过程碰撞、接触后移开、变换后的桌面和旧布局恢复。
-test_pixel_room.gd：家具模型边界、房间与桌面碰撞、地毯、复制/删除/撤销、配色 UI、灯具副本、取消、磁盘读回、墙体遮挡和旧存档校验。
-test_audit_regressions.gd：独立网页预览、屏幕投影、显示器背面输入、截图预览和异常存档数值。
+本目录主要覆盖 `scripts/life/`、`scripts/room/` 和家具资源工作流，测试脚本均以当前仓库实际文件名为准。
 
-测试使用 --fresh 和独立临时存档，不修改正常玩家进度。*.gd.uid 是 Godot 脚本稳定标识。各脚本的完整命令见根目录 README.md。
-test_item_system.gd：物品目录、桌面/地面约束、实例库存、家具多份购买与历史数据迁移。
+## 主要分组
 
-test_room_placement.gd：房间家具目录、原始家具收回、实时摆放预览、取消/确认、单件改色、存档往返及桌面设备约束。
+- **游玩生活**：`test_life_flow.gd`、`test_item_system.gd`、`test_shop_room_flow.gd`。
+- **3D 工作台**：`test_workstation_view.gd`、`test_workstation_layout.gd`、`test_workstation_collision.gd`、`test_workstation_lighting.gd`。
+- **房间建造**：`test_room_blueprint.gd`、`test_room_partitions.gd`、`test_room_footprint.gd`、`test_room_grid_outline.gd`、`test_room_finishes.gd`、`test_room_zones.gd`、`test_room_regions.gd`。
+- **家具交互**：`test_room_placement.gd`、`test_furniture_assists.gd`、`test_furniture_instances.gd`、`test_furniture_batch.gd`、`test_furniture_direct_interaction.gd`、`test_furniture_showcase.gd`。
+- **家具工具**：`test_furniture_model_import.gd`、`test_furniture_catalog_registration.gd`、`test_furniture_resource_manager.gd`、`test_furniture_support_authoring.gd`。
+- **家具模型**：`test_furniture_expansion.gd`、`test_furniture_pbr.gd`、`test_chair_gaming_uv.gd`。
+- **其他表现和交互**：`test_room_visual_polish.gd`、`test_room_art_direction.gd`、`test_room_cinematic.gd`、`test_room_scene_actions_clicks.gd`。
 
-test_room_blueprint.gd：矩形房间长宽与门窗编辑、几何重建、边界约束、无效缩小拒绝、撤销/重做、取消/应用和存档读回。
+`test_furniture_pbr.gd` 检查既有导入模型的 UV/贴图情况，并非已删除的 Furniture Material Library 的单部件材质编辑测试。
 
-test_room_partitions.gd：网格内墙/门洞建造、墙体碰撞、无效存档过滤、撤销/删除、蓝图尺寸约束、取消/应用和新会话重建。
+## 使用
 
-test_room_footprint.gd：L 型户型地板裁切、外墙、家具越界、内墙承托、撤销/重做、应用/取消、JSON 存档与旧档兼容。
+```bash
+godot --headless --path . --editor --import
+godot --headless --path . --script res://tests/life/test_chair_gaming_uv.gd -- --fresh
+godot --headless --path . --script res://tests/life/test_furniture_model_import.gd -- --fresh
+godot --headless --path . --script res://tests/life/test_workstation_layout.gd -- --fresh
+```
 
-test_room_grid_outline.gd：自由网格轮廓、地板挖除与恢复、连通性、墙体/家具约束、撤销重做和存档重建。
-
-test_room_finishes.gd：每单元地板装修、内墙分段颜色、外墙独立窗/门洞、存档过滤、撤销重做与重新加载。
-
-test_room_zones.gd：功能区分配与清理、三区材质/灯光、局部材质优先级、装修预设、撤销重做及存档加载。
-
-test_room_regions.gd：实体墙/门洞连通区域自动识别、一键区域填充、三个装修方案槽位、卫生校验、撤销和 JSON 恢复。\n
-test_blueprint_ux.gd：网格显示开关、整区高亮、缺口更新、固定门窗拖动、单次撤销及取消还原。
-
-test_room_build_feedback.gd：连续墙段红绿预览、快速拖动补间、自由外墙门窗移动/碰撞和撤销、家具尺寸提示及取消还原。
-
-test_room_smart_build.gd：整次连续画墙的撤销、双段门窗、已有装修防覆盖、靠墙智能吸附、JSON 存档回读。
-
-test_furniture_assists.gd：内墙吸附独立开关、家具对齐、三件以上同类家具等距排列、尺寸距离提示、单步撤销和旧布局取消还原。
-
-test_room_visual_polish.gd：新家具沙发与矮凳的购买/放置、材质纹理、四种环境光影、雨景切换和跨会话存档恢复。
-
-test_furniture_catalog.gd：家具/硬件统一分类、二级类型、商店与房间目录搜索筛选、旧家具与设备约束、库存角色兼容。
-
-test_furniture_expansion.gd：27 种商品场景模型及包围盒、20 款新家具分类和灯光、购物/重复购买、自由摆放与碰撞、独立改色、带下划线的摆放角色与副本跨存档还原。
+需要真实图形窗口的用例不能仅凭 headless 检查。完整 CI 工作流位于 `../../.github/workflows/`，并可通过 `--fresh` 隔离正常存档。原家具材质槽测试已经移除，不应继续调用。

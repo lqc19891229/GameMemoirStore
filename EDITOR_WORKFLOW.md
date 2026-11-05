@@ -1,75 +1,67 @@
-# 编辑像素 3D 房间、电脑设备与应用界面
+# Godot 编辑器与资源维护指南
 
-固定场景和模型保存在资源文件中。运行时负责切换模型、绑定数据和处理交互，不在运行时生成房间或家具几何。
+本项目使用 **Godot 4.6 / GL Compatibility**。固定模型与 UI 由 `.glb`、`.tscn` 和资源文件维护；运行时负责数据、玩家交互和可选整件换色，不为每件家具额外生成默认 PBR 材质。
 
-## 编辑入口
+## 常用入口
 
-| 要编辑的内容 | 打开的文件或位置 |
+| 内容 | 打开位置 |
 |---|---|
-| 房间外壳、家具实例、桌面和设备 | scenes/computer/computer_desktop.tscn，展开 Workstation3D |
-| 房间外观与家具 | Workstation3D/Room；初始家具位于 Room/Furniture |
-| 房间外壳 GLB | assets/models/room/room_shell.glb |
-| 家具 GLB | assets/models/room/chair.glb、bookcase.glb、lamp.glb、rug.glb、plant.glb |
-| 家具独立场景与拾取范围 | scenes/room/*.tscn |
-| 房间模型生成源 | tools/models/build_room.py |
-| 设备位置、旋转、相机和灯光 | scenes/computer/computer_desktop.tscn 的 Workstation3D |
-| 单件设备及默认 / 升级模型 | scenes/computer/hardware/*.tscn |
-| 硬件模型源文件 | tools/models/hardware.blend |
-| 设备 ID、bounds、屏幕尺寸与位置 | data/hardware/*.tres |
-| 布置控制面板和操作手柄 | ComputerDesktop/HUD/Interface/LayoutPanel、scenes/computer/ui/layout_gizmo.tscn |
-| 显示器中的系统、快捷方式和任务栏 | scenes/computer/ui/desktop_screen.tscn |
-| 应用标题栏与窗口操作 | scenes/computer/ui/app_window.tscn |
-| 平台页面和组件 | scenes/apps/platform/store.tscn、pages/、components/、dialogs/ |
-| 购物网页和游玩界面 | scenes/apps/browser/browser.tscn、scenes/apps/game/game_player.tscn |
+| 游戏主场景 | `scenes/main/game_root.tscn` |
+| 工作台与房间 | `scenes/computer/computer_desktop.tscn`、`scenes/computer/workstation_3d.tscn` |
+| 房间本体、地板和墙体 | `scenes/room/room.tscn`、`scenes/room/modern_room_shell.tscn` |
+| 家具 GLB | `assets/models/room/{tables,seating,storage,lighting,decor}/` |
+| 家具独立场景 | `scenes/room/{tables,seating,storage,lighting,decor}/` |
+| 家具管理 | Godot 底部「家具资源」「家具导入」「家具注册」 |
+| 硬件 GLB | `assets/models/hardware/` |
+| 设备槽位 | `scenes/computer/hardware/` |
+| 商品目录 | `data/items/_catalog.tres` |
+| 3D 布置逻辑 | `scripts/life/workstation_layout.gd` |
+| 游戏平台、浏览器、游玩 UI | `scenes/apps/platform/`、`scenes/apps/browser/`、`scenes/apps/game/` |
 
-## 3D 房间与工作台编辑
+## 完整 GLB 家具制作与注册
 
-打开 scenes/computer/computer_desktop.tscn，展开 Workstation3D。workstation_3d.tscn 是可复用的房间、工作台、相机、灯光和默认布局源场景；computer_desktop.tscn 是实际运行入口。
+1. 在建模工具中完成几何、分组、UV、法线、默认 PBR 贴图和材质；**直接打开导出的 GLB 应能看到最终默认外观**。
+2. 以分类路径存放 GLB，保留相关纹理和 `.import` 设置。不要覆盖不相关的已注册家具资产。
+3. 让 Godot 导入新模型，打开底部「家具导入」，扫描资源并生成对应分类下的独立家具 `.tscn`。
+4. 检查模型尺寸、`bounds`、`PickArea/Hit`、地面原点、朝向和承载面。
+5. 进入「家具注册」，人工审核后登记商品 ID、分类、价格和家具场景；在「家具资源」中再次检查。
+6. 启动游戏验证商店缩略图、购买、实例摆放、存档与原始材质。
 
-Room/Shell 保存房间墙体、窗和地面；Room/Furniture 保存椅子、书架、灯、地毯和绿植。TableGroup 保存桌子与 Equipment。设备始终位于 Equipment 下，设备坐标相对桌面，移动或旋转桌子时会一起跟随。
+完整导入细节见 `addons/furniture_manager/README.md`。不要把 GLB 当作已经自动上架的商品，商品定义以 `data/items/_catalog.tres` 为准。
 
-KeyLight、FillLight 和 Environment 控制房间光照与背景；Camera 控制默认总览视角。Room 的外观预设由 scripts/room/pixel_room.gd 管理。改变房间几何时，应同步检查 LayoutEditor 的 room_half_size。
+## 材质策略
 
-## 房间模型重建
+- **默认外观**：在 GLB 中直接完成（Base Color、Metallic/Roughness、Normal 贴图等）。
+- **保留功能**：原有整件家具换色 `furniture_colors`、设备 RGB 灯效、摆放预览的半透明覆盖。
+- **已移除**：Furniture Material Library 插件、共享家具 `.tres` 材质库、按网格表面选材质/调整 UV、`MaterialProfile` 和 `furniture_materials` 运行时覆盖。
+- `chair_gaming.glb` 的 UV/法线已经修复，但仍需将更丰富的纹理真正制作进 GLB 后才算精修完成。
 
-房间模型由 tools/models/build_room.py 离线生成，使用 Python 3 和 Pillow：
+`tools/models/bake_chair_gaming_materials.py` 仍依赖已经删除的材质库，当前不能直接使用。参阅 `tools/models/README.md`。
 
-    python tools/models/build_room.py
+## 房间与设备
 
-脚本会重建 assets/models/room/ 下的 room_shell、chair、bookcase、lamp、rug 和 plant 六个 GLB。它不依赖 Blender；游戏运行也不会执行此脚本。
+`Workstation3D` 包含 Room、TableGroup、设备实例、相机及布置逻辑。桌面设备跟随桌子变换；家具按地面/支撑面许可和碰撞规则摆放。房间编辑支持墙体、开口、功能区、吸附、拖动、撤销与应用/取消，详情见 `docs/WORKSTATION_LAYOUT.md`。
 
-模型底部中心为原点，Godot 坐标 Y 向上。改动家具几何后，应同步检查 scenes/room/*.tscn 中 room_furniture.bounds，确保碰撞范围覆盖全部可见网格。改动房间尺寸或桌面几何后，应同步检查 LayoutEditor 的 room_half_size、tabletop_half_size、tabletop_height 和 edge_margin。
+模型的尺寸、原点或节点结构变化后，应同步检查物品目录场景引用、`bounds`、选择碰撞及相应测试。不要在操作系统文件管理器里随意移动已注册资源，而不更新 `res://` 引用。
 
-## 玩家布置与碰撞
+## 离线模型生成（历史资产）
 
-玩家点击顶栏“布置房间”进入编辑模式。选择家具或设备后，可拖动平面手柄或轴手柄移动；R 旋转，Q / E 每步旋转 15°。默认吸附为 5 cm / 15°，可在 LayoutEditor 检查器中调整。
+```bash
+blender --background --threads 1 --factory-startup --python tools/models/build_hardware.py
+python tools/models/build_room.py
+```
 
-实心物件之间通过凸占地检测阻挡。移动检查整个扫掠路径，旋转以不超过 1° 的步长检查中间位置，避免起点和终点都空闲但中途穿过障碍物。地毯允许压在家具下方；设备只能留在桌面范围内。碰撞规则是放置约束，不是刚体推挤模拟。
-
-房间、桌面尺寸和边距由 LayoutEditor 导出属性控制。调整模型后要同步更新 bounds 和占地参数，并运行工作台布置、碰撞和房间专项测试。
-
-草稿只有点击“应用布置”才会写入共享存档。取消 / Esc 会丢弃草稿；后台保存和屏幕操作不会覆盖未确认的编辑。
-
-## 电脑设备模型
-
-hardware.blend 使用 Blender 3.6.23 LTS 编辑。每种设备位于独立 Collection；运行时加载 assets/models/hardware/*.glb。重建命令：
-
-    blender --background --threads 1 --factory-startup --python tools/models/build_hardware.py
-
-该脚本会重建 9 个硬件 GLB 和 Blender 源文件。模型底部原点 Y=0，单位为米，正面 +Z。新增型号时同步修改 scenes/computer/hardware/、data/hardware/_catalog.tres 和 scripts/life/life_data.gd。
-
-## 2D 系统与应用界面
-
-显示器内系统在 1280 × 800 DesktopViewport 中运行。相机射线与 Screen 表面相交后映射到系统坐标；应用、菜单和弹窗都保留在显示器纹理中。切换总览、布置和屏幕操作不会销毁应用或中断会话。
-
-页面预览使用场景中的示例数据，运行时由共享 GameSession 填入钱包、游戏和库存。列表按数据数量实例化已有模板，静态布局保存在场景中。不要随意重命名带 % 唯一标识的节点。
+这些脚本只覆盖特定历史资产，不会维护分类目录下所有家具。直接重跑可能覆盖已有模型，请先备份并检查输出路径。
 
 ## 验证
 
-    godot --headless --path . --script res://tests/test_editor_scenes.gd -- --fresh
-    godot --headless --path . --script res://tests/life/test_workstation_view.gd -- --fresh
-    godot --headless --path . --script res://tests/life/test_workstation_layout.gd -- --fresh
-    godot --headless --path . --script res://tests/life/test_workstation_collision.gd -- --fresh
-    godot --headless --path . --script res://tests/life/test_pixel_room.gd -- --fresh
+```bash
+godot --headless --path . --editor --import
+python tools/project_audit.py
+godot --headless --path . --script res://tests/test_editor_scenes.gd -- --fresh
+godot --headless --path . --script res://tests/life/test_furniture_model_import.gd -- --fresh
+godot --headless --path . --script res://tests/life/test_workstation_layout.gd -- --fresh
+godot --headless --path . --script res://tests/life/test_chair_gaming_uv.gd -- --fresh
+```
 
-场景按功能放在 main/、computer/、room/、apps/ 和 shared/；不要在旧目录中另建重复副本。
+图形 UI 点击测试需要图形显示环境。全部自动化流程请查看 `.github/workflows/`。

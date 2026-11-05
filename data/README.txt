@@ -1,9 +1,10 @@
-游戏与硬件数据
+项目数据资源
 
-games/：Excel 导入生成的单款游戏 Resource 和 _catalog.tres，是游戏平台正式游戏列表的来源。
-hardware/：电脑设备模型映射、占地尺寸、显示器屏幕尺寸和位置校准。
-catalog.json：按 game_id 补充英文名、标签、评价、安装大小、版本说明和演示折扣。
+games/：由 tools/catalog/game_catalog.xlsx 和导入器生成的游戏 Resource 与正式游戏目录。
+items/：统一物品与家具商品目录；家具和设备按商品 ID / 库存 UID 管理，详见 items/README.md。
+hardware/：设备模型映射、尺寸与显示器表面参数，详见 hardware/README.md。
+catalog.json：按 game_id 补充游戏介绍与展示字段。
 
-游戏基础资料在 tools/catalog/game_catalog.xlsx 修改，再运行 tools/catalog/import_games.py 导入。data/games/ 由导入器维护，不要手工修改生成的游戏资源。
-
-玩家钱包、游戏进度、能力、设备安装、房间布局和活动状态保存在 user://memoir_store_v01.json，不保存在本目录。
+修改游戏基础数据请从 Excel 经 tools/catalog/import_games.py 导入；不要直接维护生成的 games/*.tres。
+家具商品定义以 items/_catalog.tres 为准。玩家状态及房间布局保存在 user://memoir_store_v01.json，不在 data/ 下。
+旧家具按部件材质字段 furniture_materials 已停用，原有 furniture_colors 整件换色仍可使用。

@@ -1,13 +1,15 @@
-场景目录按运行职责组织
+场景目录（按运行职责划分）
 
-main/：game_root.tscn 是主入口，组合唯一 GameSession 与 ComputerDesktop。
-computer/：原生 3D 电脑工作台、设备模型场景、房间实例和电脑内系统界面。
-room/：房间外壳、椅子、书架、落地灯、地毯和绿植独立场景。
-apps/platform/：游戏平台 store.tscn、页面、专用列表组件和弹窗。
-apps/browser/：购物网页 browser.tscn 与库存商品行组件。
-apps/game/：游玩、成就和直播界面 game_player.tscn。
-shared/：跨应用复用的通用按钮组件。
+main/game_root.tscn：游戏主入口，连接共享 GameSession 和 ComputerDesktop。
+computer/：3D 工作台、设备模型场景、电脑内桌面和应用窗口。
+room/：房间本体与家具独立场景；家具按 tables、seating、storage、lighting、decor 分类。
+apps/platform/：游戏平台商城、游戏库、下载和其他页面。
+apps/browser/：购物与库存应用。
+apps/game/：游玩、挑战和直播界面。
+shared/：共用 UI 场景。
 
-固定界面和模型由真实 .tscn 节点保存；运行时脚本负责数据绑定、交互和状态更新。不要为同一页面或房间模型复制旧路径场景。
+家具场景通常引用 assets/models/room/ 下的 GLB，额外定义拾取和摆放配置；默认材质由 GLB 提供。
+新增家具先通过 Furniture Manager 创建 .tscn 并审核，再注册到 data/items/_catalog.tres。
+修改模型路径或场景路径时，必须同步检查商品目录和相关测试中的 res:// 引用。
 
-编辑入口见根目录 EDITOR_WORKFLOW.md；房间布置规则见 docs/WORKSTATION_LAYOUT.md；项目结构见 CLIENT_STRUCTURE.md。
+参见 ../EDITOR_WORKFLOW.md、../addons/furniture_manager/README.md 和 ../CLIENT_STRUCTURE.md。
