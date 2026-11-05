@@ -1,0 +1,94 @@
+name: Finalize approved gaming chair GLB
+on:
+  push:
+    branches:
+      - feat/chair-gaming-official-asset-20261105
+
+# Only this dedicated owner-authored integration branch can write the generated GLB.
+# pull_request builds stay read-only via the normal project validation workflows.
+permissions:
+  contents: write
+
+jobs:
+  finalize-chair:
+    if: github.repository == 'lqc19891229/GameMemoirStore' && github.ref == 'refs/heads/feat/chair-gaming-official-asset-20261105'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+      - uses: chickensoft-games/setup-godot@v2
+        with:
+          version: '4.6.0'
+          use-dotnet: false
+      - name: Install bake prerequisites
+        run: python -m pip install Pillow
+      - name: Bake final PBR GLB once
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import importlib.util
+          spec = importlib.util.spec_from_file_location('chair_bake', 'tools/models/bake_chair_gaming_materials.py')
+          baker = importlib.util.module_from_spec(spec)
+          spec.loader.exec_module(baker)
+          gltf, _ = baker.parse(baker.SOURCE.read_bytes())
+          if all(any(m.get('name') == name for m in gltf.get('materials', [])) for name in baker.PARTS):
+              print('Approved chair PBR materials already embedded; no second bake.')
+          else:
+              print(baker.bake(baker.SOURCE, baker.SOURCE))
+          PY
+      - name: Verify embedded PBR materials and original mesh structure
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import importlib.util
+          spec = importlib.util.spec_from_file_location('chair_bake', 'tools/models/bake_chair_gaming_materials.py')
+          baker = importlib.util.module_from_spec(spec)
+          spec.loader.exec_module(baker)
+          gltf, data = baker.parse(baker.SOURCE.read_bytes())
+          names = {m.get('name') for m in gltf['materials']}
+          assert set(baker.PARTS).issubset(names), names
+          assert len(gltf.get('images', [])) >= 9
+          for name in baker.PARTS:
+              node = next(n for n in gltf['nodes'] if n.get('name') == name)
+              for prim in gltf['meshes'][node['mesh']]['primitives']:
+                  assert {'NORMAL', 'TEXCOORD_0'}.issubset(prim['attributes'])
+                  assert gltf['materials'][prim['material']]['name'] == name
+          print('Approved GLB validation passed:', len(data), 'bytes')
+          PY
+      - name: Import and test official chair in Godot
+        shell: bash
+        run: |
+          set -euo pipefail
+          godot --headless --path . --editor --import
+          for test in \
+            tests/life/test_chair_gaming_uv.gd \
+            tests/life/test_chair_gaming_pbr.gd \
+            tests/life/test_furniture_catalog.gd \
+            tests/life/test_workstation_layout.gd \
+            tests/life/test_workstation_collision.gd \
+            tests/life/test_room_save_recovery.gd \
+            tests/life/test_shop_room_flow.gd
+          do
+            echo "Official GLB regression: $test"
+            timeout 90s godot --headless --path . --script "res://$test" -- --fresh
+          done
+      - name: Commit generated binary on integration branch only
+        shell: bash
+        run: |
+          set -euo pipefail
+          if git diff --quiet -- assets/models/room/seating/chair_gaming.glb; then
+            echo "GLB is already finalized."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- assets/models/room/seating/chair_gaming.glb
+          git commit -m "art(chair): embed reviewed PBR materials into official GLB"
+          git push origin HEAD:feat/chair-gaming-official-asset-20261105
