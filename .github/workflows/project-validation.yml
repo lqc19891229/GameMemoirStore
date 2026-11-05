@@ -98,6 +98,9 @@ jobs:
       - name: Run Python importer tests
         run: python -m unittest discover -s tests -p "test_catalog_importer.py" -v
 
+      - name: Validate offline gaming chair PBR bake
+        run: python -m unittest discover -s tests -p "test_chair_gaming_bake.py" -v
+
       - name: Import Godot resources
         run: godot --headless --path . --editor --import
 

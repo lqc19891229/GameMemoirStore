@@ -1,28 +1,42 @@
-# GLB-first furniture finishing
+# GLB-first 家具资产制作规范（电竞椅首版）
 
-The model itself must be the finished asset. This recipe produces a standalone
-GLB with embedded Base Color, normal and metallic-roughness PNG textures.
-It uses the current chair's 12 existing named mesh groups, color palette and
-shared furniture library roughness/metallic parameters. It does not alter
-mesh vertex data, UVs, normals, hierarchy or collision metadata.
+房间家具采用 **GLB 自带最终 PBR 材质**。游戏内不使用已移除的 Furniture Material Library、逐部件材质覆盖或 MaterialProfile。
 
-Requires Python 3.12 and Pillow. Generate a preview:
-python tools/models/bake_chair_gaming_materials.py --output chair_gaming_finished.glb
+## 目前状态
 
-Open the finished GLB in Blender and inspect chair upholstery, seams, shell,
-armrests, base and wheels. After approval:
+- `chair_gaming.tscn` 已实例化 `assets/models/room/seating/chair_gaming.glb`，其 `bounds` 与拾取体为 `(0.81, 1.25, 0.71)` 米。
+- 已有 12 个命名网格、UV、法线及独立家具场景。名称保留，避免破坏资产验证。
+- `tools/models/bake_chair_gaming_materials.py` 现在**离线独立**生成贴图，不再读取已经删除的 `assets/materials/furniture`。
+- **当前仓库中的 GLB 尚未替换为烘焙结果**。本次只修复可重复生产和验证工具，不宣称美术成品已完成。
+
+## GitHub Actions 生成候选 GLB
+
+`.github/workflows/chair-glb-material-bake.yml` 在修改制作脚本或此工作流的 PR 上执行烘焙，成功时会上传 `chair-gaming-pbr-candidate` 构建产物（保留 14 天）。下载解压得到 `chair_gaming_finished.glb`，可以在 Blender 或 Godot 中单独导入进行视觉审查；它**尚未写回**仓库原始 GLB。
+
+候选品需要验证材质视觉、粗糙度、法线方向、纹理接缝、物体尺寸和拾取区域。确认后才能替换正式 GLB 并跑全部回归。
+
+## 预览与验收
+
+需要 Python 3.12、Pillow 和当前项目中的真实原始 GLB：
+
+```bash
+python -m pip install Pillow
+python tools/models/bake_chair_gaming_materials.py --output /tmp/chair_gaming_finished.glb
+python -m unittest discover -s tests -p "test_chair_gaming_bake.py" -v
+```
+
+烘焙结果带有嵌入式 Base Color、Metallic-Roughness、Normal PNG，且保留原网格、节点及几何 accessor。当前纹理是可重复生成的**基础微细节占位美术**，仍需在 Blender 中审查皮革、织物、塑胶、金属、缝线颜色和粗糙度，不能仅凭自动测试决定最终风格。
+
+人工确认之后才允许执行：
+
+```bash
 python tools/models/bake_chair_gaming_materials.py --in-place
+godot --headless --path . --editor --import
+godot --headless --path . --script res://tests/life/test_chair_gaming_uv.gd -- --fresh
+```
 
-After baking in place, remove the MaterialProfile node from
-scenes/room/seating/chair_gaming.tscn. Do not remove it before baking:
-otherwise the existing chair will lose its current Godot PBR appearance.
+提交二进制 GLB 时应另外进行 Godot 图形窗口检查、不同光照和近距离材质审查；确认选择碰撞、物件摆放、存档和购买均不回退。
 
-The actual GLB has NOT been rewritten in this preparation PR because the
-connected GitHub binary retrieval returned no file bytes for the large asset.
-Run the recipe against the complete GLB checked out in the local repository.
+## 通用资产交付要求
 
-All embedded images live in the GLB BIN chunk; no Godot runtime material
-profile is needed after finalization. Player-specific material overrides
-still work as a separate layer. Repeat this process for other furniture
-to standardize import: meshes+UV+normals+finished PBR in GLB, then register
-the furniture for use in Godot.
+每件家具应具备：独立 GLB、稳定节点命名与 UV/法线、内嵌材质贴图、合理的米制尺寸、独立 `.tscn`、包围盒与拾取体、唯一 `item_id`/摆放角色、必要时显式承载面、缩略图和购买-摆放-读档回归。严格区分 **GLB 美术资产** 和 **Godot 游戏摆放元数据**。
