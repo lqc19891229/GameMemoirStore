@@ -9,8 +9,60 @@ const PRESETS := [
 	"plastic/plastic_black", "plastic/plastic_white",
 	"rubber/rubber_black", "glass/glass_clear"
 ]
+const PRESET_NAMES := {
+	"leather/leather_black": "皮革 · 黑色",
+	"leather/leather_white": "皮革 · 浅色",
+	"fabric/fabric_gray": "布料 · 灰色",
+	"fabric/fabric_beige": "布料 · 米色",
+	"wood/wood_oak_light": "木材 · 浅橡木",
+	"wood/wood_walnut": "木材 · 深胡桃木",
+	"metal/metal_black_matte": "金属 · 哑光黑",
+	"metal/metal_brushed_steel": "金属 · 拉丝钢",
+	"plastic/plastic_black": "塑料 · 黑色",
+	"plastic/plastic_white": "塑料 · 白色",
+	"rubber/rubber_black": "橡胶 · 黑色",
+	"glass/glass_clear": "玻璃 · 透明"
+}
 const MAX_SLOTS := 96
 const MAX_UIDS := 512
+
+static func preset_label(preset: String) -> String:
+	return str(PRESET_NAMES.get(preset, preset))
+
+
+static func slot_label(slot: Dictionary) -> String:
+	# Human-readable labels are only hints, never persisted identifiers.
+	# Keep imported GLB mesh paths/surface indices unchanged in saves.
+	var key := str(slot.get("key", ""))
+	var mesh := slot.get("mesh") as MeshInstance3D
+	var name := str(mesh.name) if mesh != null else key
+	var surface := int(slot.get("surface", 0))
+	var source: Material = mesh.get_surface_override_material(surface) if mesh != null else null
+	if source == null and mesh != null and mesh.mesh != null:
+		source = mesh.mesh.surface_get_material(surface)
+	var material_name := source.resource_name if source != null else ""
+	var lowered := (name + " " + material_name).to_lower()
+	var category := "网格"
+	for rule: Dictionary in [
+		{"words": ["seat", "cushion", "坐垫", "座垫"], "label": "坐垫"},
+		{"words": ["back", "靠背", "椅背"], "label": "靠背"},
+		{"words": ["arm", "扶手"], "label": "扶手"},
+		{"words": ["wheel", "caster", "滚轮"], "label": "滚轮"},
+		{"words": ["base", "leg", "frame", "支架", "底座"], "label": "支架"},
+		{"words": ["leather", "皮革"], "label": "皮革表面"},
+		{"words": ["fabric", "cloth", "布料"], "label": "布料表面"},
+		{"words": ["metal", "steel", "金属"], "label": "金属表面"},
+		{"words": ["plastic", "塑料"], "label": "塑料表面"}
+	]:
+		for word: String in rule["words"]:
+			if lowered.contains(word):
+				category = str(rule["label"])
+				break
+		if category != "网格":
+			break
+	var detail := material_name if not material_name.is_empty() else name
+	return "%s · %s [%d]" % [category, detail, surface]
+
 
 static func valid_preset(preset: String) -> bool:
 	return PRESETS.has(preset)
@@ -63,7 +115,12 @@ static func build_material(preset: String, color_hex: String) -> StandardMateria
 	if material == null:
 		return null
 	# Preserve base texture and PBR values, tint only albedo.
-	material.albedo_color = resource.albedo_color * Color("#" + color_hex)
+	# An RGB picker is an absolute color, not a multiplier of the preset base
+	# (multiplying black leather by white makes it impossible to recolor).
+	# Preserve base material alpha, texture maps, roughness and metallic values.
+	var chosen := Color("#" + color_hex)
+	chosen.a = resource.albedo_color.a
+	material.albedo_color = chosen
 	material.resource_local_to_scene = true
 	return material
 

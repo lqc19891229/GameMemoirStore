@@ -46,6 +46,10 @@ func run() -> void:
 	var changed := mesh.get_surface_override_material(0) as StandardMaterial3D
 	check(changed != null and changed != original, "runtime material uses independent instance")
 	check(changed != null and changed.albedo_color.r > changed.albedo_color.g, "RGB tint is applied")
+	var bright := Slots.build_material("leather/leather_black", "ffffff")
+	check(bright != null and bright.albedo_color.r > 0.95, "black leather can be recolored to white")
+	check(Slots.preset_label("leather/leather_black") != "leather/leather_black", "localized preset label")
+	check(Slots.slot_label(slots[0]).contains("Seat"), "mesh surface label exposes source identity")
 	Slots.restore_all(originals)
 	check(mesh.get_surface_override_material(0) == original, "clearing preserves authored override")
 	furniture.queue_free()
