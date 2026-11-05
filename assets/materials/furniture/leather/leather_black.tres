@@ -2,7 +2,7 @@
 
 [ext_resource type="NoiseTexture2D" path="res://assets/materials/furniture/textures/leather_pores.tres" id="1_micro"]
 
-[ext_resource type="NoiseTexture2D" path="res://assets/materials/furniture/textures/leather_albedo.tres" id="2_albedo"]
+[ext_resource type="Texture2D" path="res://assets/materials/furniture/textures/leather_grain_pattern.png" id="2_albedo"]
 [ext_resource type="NoiseTexture2D" path="res://assets/materials/furniture/textures/leather_roughness.tres" id="3_rough"]
 
 [resource]
