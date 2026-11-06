@@ -94,6 +94,28 @@ def audit(project: Path) -> dict:
                 if uri and not uri.startswith("data:"):
                     problems.append(f"{relative}: unexpected external model dependency {uri}")
 
+    # Godot editor plugin entry scripts use relative paths in plugin.cfg.
+    # Static res:// scanning does not see these, so do not label plugin.gd
+    # as unused (or miss a genuinely broken plugin.cfg entry).
+    for config in files:
+        if config.name != "plugin.cfg":
+            continue
+        relative_config = config.relative_to(project).as_posix()
+        cfg_text = config.read_text(encoding="utf-8")
+        match = re.search(r'^\\s*script\\s*=\\s*"([^"]+)"', cfg_text, re.MULTILINE)
+        if not match:
+            problems.append(f"{relative_config}: missing plugin script")
+            continue
+        entry = match.group(1)
+        if entry.startswith("res://"):
+            script_path = project / entry[6:]
+        else:
+            script_path = config.parent / entry
+        if not script_path.is_file() or not script_path.is_relative_to(project):
+            problems.append(f"{relative_config}: missing plugin script {entry}")
+        else:
+            incoming[script_path.relative_to(project).as_posix()].add(relative_config)
+
     # Resolve global class_name references as well as explicit res:// script paths.
     class_names: dict[str, list[str]] = defaultdict(list)
     for relative, content in source_texts.items():
