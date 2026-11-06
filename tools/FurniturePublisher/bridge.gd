@@ -17,7 +17,7 @@ func _run() -> void:
         fail("Missing publication manifest")
         return
     var manifest_path := str(args[0])
-    if not manifest_path.begins_with("res://tools/_furniture_publish_") or not manifest_path.ends_with(".json"):
+    if not manifest_path.begins_with("res:" + "//tools/_furniture_publish_") or not manifest_path.ends_with(".json"):
         fail("Invalid manifest path")
         return
     var data = JSON.parse_string(FileAccess.get_file_as_string(manifest_path))

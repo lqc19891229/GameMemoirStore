@@ -10,3 +10,4 @@ shaders/：房间表现和交互视觉相关着色器。
 当前家具以 GLB 内置的默认材质、UV 和法线为准；已移除独立的 furniture 材质预设库。
 旧模型可能具有外部贴图依赖，不能假设所有 GLB 均完全嵌入贴图。导入前检查依赖，保留相应 PNG 和 *.import 文件。
 详见 models/README.txt、../tools/models/README.md 和 ../EDITOR_WORKFLOW.md。
+外部家具发布器参见 ../tools/FurniturePublisher/README.md，可辅助将已完成材质的 GLB 自动归档、创建独立场景并注册商品。

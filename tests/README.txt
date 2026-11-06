@@ -3,7 +3,8 @@
 Python：
 - test_catalog_importer.py：游戏 Excel 导入、清单、资源和防覆盖规则。
 - test_showcase_models.py：设备/房间 GLB 内容和生成结构。
-- 其他测试请以 tests/ 下实际文件为准。
+- test_chair_gaming_bake.py、test_chair_material_bake.py：电竞椅离线 PBR GLB 烘焙及材质校验。
+- 家具发布器独立测试位于 tools/FurniturePublisher/；其他测试请以 tests/ 下实际文件为准。
 
 Godot Headless（tests/ 与 tests/life/）：
 - test_catalog_resources.gd、test_catalog_integration.gd、test_client.gd、test_store.gd：游戏数据、商城与状态。

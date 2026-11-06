@@ -33,6 +33,7 @@
 | `assets/` | 模型、贴图、字体和界面资源 | [素材目录](assets/README.txt) |
 | `addons/furniture_manager/` | 家具编辑器工具 | [导入与注册](addons/furniture_manager/README.md) |
 | `tools/` | 离线资产制作、数据导入与资源审计 | [工具目录](tools/README.txt) |
+| `tools/FurniturePublisher/` | 外部 Windows 家具发布器（Python/Tkinter） | [外部家具发布器](tools/FurniturePublisher/README.md) |
 | `tests/` | Python、Godot 与图形界面回归测试 | [测试目录](tests/README.txt) |
 | `docs/` | 美术、建造、架构及专题记录 | [专题索引](docs/README.md) |
 
@@ -46,7 +47,7 @@
 4. 在「家具注册」人工审核后注册到 `data/items/_catalog.tres`，再到「家具资源」核查。
 5. 游戏运行时直接使用 GLB 的原始材质；**此前独立的 Furniture Material Library、按部件材质覆盖和 UV 编辑功能已移除**。原有整件家具换色和摆放预览效果仍保留。
 
-目前 `chair_gaming.glb` 已完成正式 PBR GLB 接入和对应自动化验证；其他部分旧家具仍需按新标准逐步制作。**完整的可重复操作和验收步骤**见 [家具制作标准工作流](docs/FURNITURE_PRODUCTION_WORKFLOW.md)，模型技术细节见 [模型制作指南](tools/models/README.md)。
+目前 `chair_gaming.glb` 已完成正式 PBR GLB 接入和对应自动化验证；其他部分旧家具仍需按新标准逐步制作。新增家具也可使用 **外部家具发布器** 输入完成的 GLB 和商品信息，自动生成场景并注册商品（首次使用仍需检查 Godot 版本和视觉效果）。**完整的可重复操作和验收步骤**见 [家具制作标准工作流](docs/FURNITURE_PRODUCTION_WORKFLOW.md)，模型技术细节见 [模型制作指南](tools/models/README.md)。
 
 ## 数据与保存
 

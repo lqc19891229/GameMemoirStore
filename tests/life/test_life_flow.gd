@@ -32,6 +32,8 @@ func run() -> void:
 	var session: MemoirGameSession = game.session
 	session.timer.stop()
 	var state = session.state
+	# Keep transaction expectations stable if the default starting wallet changes.
+	state.wallet = 160
 	var id: String = state.catalog[0]["id"]
 	check(game.desktop.visible and not game.has_node("PlayerRoom"), "new game starts directly at the desktop without a room")
 	var client = game.desktop.open_app("platform")

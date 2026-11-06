@@ -104,6 +104,9 @@ jobs:
       - name: Import Godot resources
         run: godot --headless --path . --editor --import
 
+      - name: Validate resource audit plugin path handling
+        run: python -m unittest discover -s tests -p "test_project_audit.py" -v
+
       - name: Audit repository resources
         run: |
           python tools/project_audit.py
