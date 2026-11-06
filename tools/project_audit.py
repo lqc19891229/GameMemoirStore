@@ -102,7 +102,7 @@ def audit(project: Path) -> dict:
             continue
         relative_config = config.relative_to(project).as_posix()
         cfg_text = config.read_text(encoding="utf-8")
-        match = re.search(r'^\\s*script\\s*=\\s*"([^"]+)"', cfg_text, re.MULTILINE)
+        match = re.search(r'^\s*script\s*=\s*"([^"]+)"', cfg_text, re.MULTILINE)
         if not match:
             problems.append(f"{relative_config}: missing plugin script")
             continue
