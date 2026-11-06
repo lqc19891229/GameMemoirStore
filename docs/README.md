@@ -17,7 +17,7 @@
 ## 历史记录与已停用设计
 
 - [独立家具材质系统移除说明](GLB_ONLY_FURNITURE_MATERIALS.md)：现行状态记录。
-- [GLB 优先材质流程草案](GLB_FIRST_FURNITURE_MATERIALS.md)：**历史草案**，其中的材质烘焙工具目前依赖已删除的资源，不能直接运行。
+- [电竞椅 GLB-first 制作记录](GLB_FIRST_FURNITURE_MATERIALS.md)：保留历史候选过程；正式电竞椅 PBR GLB 已接入，离线烘焙器不再依赖已删除材质库。
 - [家具材质槽](FURNITURE_MATERIAL_SLOTS.md) 与 [材质编辑体验](FURNITURE_MATERIAL_UX.md)：**已停用**，原运行时材质库和按部件编辑 UI 已删除。
 - [游戏椅 UV 修复记录](CHAIR_GAMING_UV.md)：记录此前对游戏椅网格 UV/法线的改动，与材质编辑功能不同。
 
