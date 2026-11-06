@@ -5,6 +5,8 @@
 ## 当前流程
 
 - [家具默认外观与 GLB 资产规范](../tools/models/README.md)
+- [家具端到端制作与上架标准](FURNITURE_PRODUCTION_WORKFLOW.md)
+- [外部 Windows 家具发布器](../tools/FurniturePublisher/README.md)
 - [家具编辑器导入/注册](../addons/furniture_manager/README.md)
 - [美术模型质量标准](MODEL_QUALITY_STANDARD.md)
 - [项目编辑器工作流](../EDITOR_WORKFLOW.md)
