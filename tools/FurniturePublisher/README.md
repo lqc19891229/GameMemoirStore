@@ -44,7 +44,7 @@ Windows 10/11：安装 **Python 3.10 或更高版本**（勾选“Add Python to 
 - **不会制作模型材质**：输入必须是已经完成默认外观的 GLB；支持检查是否存在外部贴图 URI，不能替代 Blender 视觉审核。
 - **不会自动修改玩家钱包或存档**，不会在游戏里真正下单；自动上架后会被已有商店/库存/摆放逻辑识别。
 - 失败时可能保留部分新模型或新场景用于排障；原商品目录还会保留备份，程序不自动清除潜在有价值的制作数据。
-- 项目已随仓库提供 `tools/FurniturePublisher/bridge.gd` 作为固定桥接脚本；发布时会在项目 `tools/` 下临时生成 `_furniture_publish_*.json` 清单，结束后清理。使用期间不要运行其他编辑器插件注册同一个商品。
+- 程序以仓库内 `tools/FurniturePublisher/bridge.gd` 为模板，在项目 `tools/` 下临时生成 `_furniture_publish_*.gd` 执行脚本与 `_furniture_publish_*.json` 清单，执行结束后清理。使用期间不要运行其他编辑器插件注册同一个商品。
 - 为确保不会误写入其他 Godot 项目，必须使用具有 `addons/furniture_manager` 相应接口的 GameMemoirStore 版本。
 - 无需接入云服务，不会自动上传源 GLB；完成后可用 Git 管理新资产并提交 PR。
 
