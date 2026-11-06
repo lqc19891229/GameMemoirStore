@@ -8,6 +8,7 @@ migrate_furniture_folders.py：历史家具路径分类迁移工具（当前已�
 Windows 可运行根目录 import_games.bat 导入游戏资料；Python 版本要求见 catalog/README.md。
 运行资源审计：python tools/project_audit.py
 
-家具默认材质应在 GLB 中制作。原 Furniture Material Library 已删除；models/ 下残留的游戏椅材质烘焙脚本依赖已删掉的共享材质库，当前不能直接运行，不应当作为正式制作流程。
+家具默认材质应在 GLB 中制作。原 Furniture Material Library 已删除；models/bake_chair_gaming_materials.py 现可用于电竞椅专项离线、幂等 PBR 烘焙，不是任意家具的通用材质工具。
+FurniturePublisher/：外部 Windows 桌面家具发布器（Python + Tkinter，非预编译 EXE），输入成品 GLB 和商品信息后调用现有导入及注册器。详见 FurniturePublisher/README.md。
 
 工具只在开发阶段使用；正常游戏运行不执行 Blender、模型生成器或 Python 导入器。
