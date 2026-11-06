@@ -17,6 +17,8 @@ func _initialize() -> void:
 func _run() -> void:
 	var model = State.new(FIXTURE_CATALOG)
 	model.persistence_enabled = false
+	# This fixed-price regression uses its own budget, not the player default.
+	model.wallet = 160
 	check(model.catalog.size() == 12, "catalog loads all twelve sample entries")
 	check(model.price("distant_signal") == 66, "discounted price rounds consistently")
 	check(model.price("mist_valley") == 38, "fractional discount rounds to integer")
