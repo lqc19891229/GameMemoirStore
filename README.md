@@ -46,7 +46,7 @@
 4. 在「家具注册」人工审核后注册到 `data/items/_catalog.tres`，再到「家具资源」核查。
 5. 游戏运行时直接使用 GLB 的原始材质；**此前独立的 Furniture Material Library、按部件材质覆盖和 UV 编辑功能已移除**。原有整件家具换色和摆放预览效果仍保留。
 
-目前 `chair_gaming.glb` 保留已修复的 UV/法线，但尚未完成将此前共享材质 PBR 贴图烘焙进 GLB。不要将“GLB 优先”误理解为每个现有家具都已经完成精修。见 [模型制作指南](tools/models/README.md)。
+目前 `chair_gaming.glb` 已完成正式 PBR GLB 接入和对应自动化验证；其他部分旧家具仍需按新标准逐步制作。**完整的可重复操作和验收步骤**见 [家具制作标准工作流](docs/FURNITURE_PRODUCTION_WORKFLOW.md)，模型技术细节见 [模型制作指南](tools/models/README.md)。
 
 ## 数据与保存
 

@@ -43,11 +43,21 @@ python tools/models/build_room.py
 
 当前正式家具已按分类移动。该脚本不会自动维护分类目录下的正式家具版本；**不要把它当作批量重建整个家具目录的工具**。
 
-### 暂停使用：游戏椅材质烘焙脚本
+### 电竞椅 GLB-first 材质烘焙（已恢复）
 
-仓库还保留 `bake_chair_gaming_materials.py`，原意是将独立材质库的贴图烘焙进 `chair_gaming.glb`。但材质库 `assets/materials/furniture/` 已删除，**该脚本当前存在失效依赖，不能直接运行**。重新实现或替换为直接使用源纹理的烘焙器前，不应把它作为正式家具制作流程；更不要对成品 GLB 使用 `--in-place`。
+`bake_chair_gaming_materials.py` 现已采用自包含离线 PBR 参数，不依赖已删除的 `assets/materials/furniture/`。电竞椅的正式 `chair_gaming.glb` 已包含完成审核的默认 PBR 材质；烘焙器对已完成资产具备幂等保护，不会重复附加纹理。**它是电竞椅专项制作工具，不能作为其他家具的自动通用上色工具。**
 
-目前 `chair_gaming.glb` 保留原有默认材质以及修复后的 UV/法线，但不保证有完整的精修 PBR 贴图。独立 `MaterialProfile` 已从对应家具场景移除。
+一般新家具应在 Blender 中完成材质后直接导出成品 GLB，无需额外调用电竞椅脚本。需制作电竞椅候选时可以：
+
+```bash
+python -m pip install Pillow
+python tools/models/bake_chair_gaming_materials.py --output chair_gaming_review.glb
+python -m unittest discover -s tests -p "test_chair_gaming_bake.py" -v
+```
+
+如需二次修改电竞椅的成品材质，应从可编辑源模型或明确的烘焙输入重新制作；不得依赖对已发布二进制 GLB 反复累积贴图。审核候选截图后，在独立 PR 中提交变更，并执行 Godot 材质、碰撞、购买和存档回归。
+
+完整的家具制作、入库与商品验收流程参见 [家具制作工作流](../../docs/FURNITURE_PRODUCTION_WORKFLOW.md)。
 
 ## Godot 导入与资源登记
 

@@ -7,13 +7,13 @@
 - `chair_gaming.tscn` 已实例化 `assets/models/room/seating/chair_gaming.glb`，其 `bounds` 与拾取体为 `(0.81, 1.25, 0.71)` 米。
 - 已有 12 个命名网格、UV、法线及独立家具场景。名称保留，避免破坏资产验证。
 - `tools/models/bake_chair_gaming_materials.py` 现在**离线独立**生成贴图，不再读取已经删除的 `assets/materials/furniture`。
-- **当前仓库中的 GLB 尚未替换为烘焙结果**。本次只修复可重复生产和验证工具，不宣称美术成品已完成。
+- **正式电竞椅 GLB 已经替换为经过 PBR 烘焙与 Godot 检查的版本**（见历史 PR #117）。今后制作其他家具应遵循通用 [家具制作工作流](FURNITURE_PRODUCTION_WORKFLOW.md)，不能机械使用电竞椅专用脚本。
 
 ## GitHub Actions 生成候选 GLB
 
 `.github/workflows/chair-glb-material-bake.yml` 在修改制作脚本或此工作流的 PR 上执行烘焙，成功时会上传 `chair-gaming-pbr-candidate` 构建产物（保留 14 天）。下载解压得到 `chair_gaming_finished.glb`，可以在 Blender 或 Godot 中单独导入进行视觉审查；它**尚未写回**仓库原始 GLB。
 
-候选品需要验证材质视觉、粗糙度、法线方向、纹理接缝、物体尺寸和拾取区域。确认后才能替换正式 GLB 并跑全部回归。
+针对后续电竞椅修改，仍需验证材质视觉、粗糙度、法线方向、纹理接缝、物体尺寸和拾取区域；现有正式 GLB 已完成这一轮接入流程。
 
 ## 预览与验收
 
@@ -25,9 +25,9 @@ python tools/models/bake_chair_gaming_materials.py --output /tmp/chair_gaming_fi
 python -m unittest discover -s tests -p "test_chair_gaming_bake.py" -v
 ```
 
-烘焙结果带有嵌入式 Base Color、Metallic-Roughness、Normal PNG，且保留原网格、节点及几何 accessor。当前纹理是可重复生成的**基础微细节占位美术**，仍需在 Blender 中审查皮革、织物、塑胶、金属、缝线颜色和粗糙度，不能仅凭自动测试决定最终风格。
+烘焙结果带有嵌入式 Base Color、Metallic-Roughness、Normal PNG，且保留原网格、节点及几何 accessor。烘焙器生成可重复的基础微细节，正式电竞椅资产已经历皮革、织物、塑胶、金属和缝线的 Godot 预览审核。之后对参数或源模型的更改仍须重新审查外观，不能仅凭自动测试决定美术质量。
 
-人工确认之后才允许执行：
+仅当需要**重新发布**电竞椅、且已核对可编辑源模型与烘焙配方时，才允许在独立分支执行：
 
 ```bash
 python tools/models/bake_chair_gaming_materials.py --in-place
@@ -49,4 +49,4 @@ godot --headless --path . --script res://tests/life/test_chair_gaming_uv.gd -- -
 - Godot 预览：降低环境光与两盏方向灯能量，保留亮部细节；灯光仅影响离线验收截图，不改变游戏房间照明。
 - Python 测试锁定关键材质颜色与粗糙度参数，烘焙仍保持 12 个网格与原几何/碰撞数据。
 
-这仍是**候选 GLB**，通过 CI 不等同于替换正式二进制资产。应对比构建 Artifact 中前后视图，确认色彩、灯光与纹理效果，再考虑提交正式模型。
+本段记录的是当时的候选精修过程；后续已通过视觉验收并在 PR #117 正式替换模型。今后的新家具仍需先看 Godot 预览，再单独提交正式模型。
