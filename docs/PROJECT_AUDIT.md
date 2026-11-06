@@ -1,3 +1,20 @@
+# 2026-11-06 维护审计（当前 main 基线）
+
+> 本节是最新审计记录。下方旧的「检查基线 6342fa1」和场景/文件数量、现代样板间进行中等表述均为**历史快照**，不是今天仓库的状态。
+
+- 基准 commit：`e2024548bc651be75c8836bd05761780e4b5f035`；GitHub Git Tree 共 **631 个条目**（包含目录以外的 Godot UID、资源文件等），仓库找到 **28 份 README/README.txt**。
+- 当前家具已形成 GLB-first 完整链路：`chair_gaming.glb` 的正式 PBR、独立场景、商品目录、购买和房间摆放；外部 `tools/FurniturePublisher/` 提供独立 Tkinter GUI + Godot 桥接。历史说明仍提到共享家具材质库/烘焙脚本失效的文字，应以新制作规范替代。
+- 最新主分支 Project validation 在 `Audit repository resources` 阶段失败，日志确定两条路径：`project.godot` 引用了**已删除**的 `addons/furniture_material_library/plugin.cfg`；`tools/FurniturePublisher/bridge.gd` 中的临时 JSON 文件名前缀被静态 `res://` 扫描误当成必须存在的常量文件。前者是真实失效配置，后者是静态审计误报；本维护分支已分别修复。
+- 审计列出的 **`addons/furniture_manager/plugin.gd`** 是编辑器插件入口，虽然普通代码的静态引用计数为零，但通过 `plugin.cfg` 启动；绝不能当作无用脚本删除。
+- `assets/models/room/` 根目录旧 `bookcase.glb`、`lamp.glb`、`plant.glb`、`rug.glb` 与分类文件夹的部分资产 SHA 完全相同。这是**可以进一步整理的二进制候选项**，但其上游 `tools/models/build_room.py`、旧场景、生成器/测试配置仍需独立审查；本轮不删除。
+- 多份 `*_P22_fabric_micrograin.png`、`*_P22_wood_micrograin.png` 及部分空白 PNG 为相同字节哈希，不代表可直接删除：这些文件可能用于离线美术制作或生成检查，而 GLB 里可能同时已经嵌入纹理。
+- `*.gd.uid`、`*.import`、固定测试资源 `tests/fixtures/`、许可证、字体及正式源 GLB 均保留；不根据未引用候选自动删除。`tools/catalog/README.md` 与 `README.txt` 是完整指南/短索引两个职责，暂不去重。
+- **代码清理范围**：仅删除实际失效插件启用项，修正桥接脚本静态审计误报，保持现有商品 ID、UID、旧存档迁移、BLEND/GLB 构建工具与资源路径不变。后续如做二进制资产去重，另开 PR，先搜完整引用、跑项目审计、Godot 导入与 CI，并做真实房间视觉确认。
+
+参考：`README.md`、`docs/FURNITURE_PRODUCTION_WORKFLOW.md`、`tools/FurniturePublisher/README.md`、`tools/project_audit.py`。**本报告记录整改和待复核项；验证是否通过以该 PR 对应 CI 结果为准。**
+
+---
+
 # GameMemoirStore 项目结构与维护审计
 
 检查基线：main 分支 commit `6342fa1ffa8afafcc62831016db76d13ea892194`；本报告同步现代样板间改造分支的结构。
