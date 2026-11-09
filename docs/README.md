@@ -4,6 +4,8 @@
 
 ## 当前流程
 
+- [房间与家具真实尺度、重制计划](REAL_SCALE_FURNITURE.md)
+
 - [家具默认外观与 GLB 资产规范](../tools/models/README.md)
 - [家具端到端制作与上架标准](FURNITURE_PRODUCTION_WORKFLOW.md)
 - [外部 Windows 家具发布器](../tools/FurniturePublisher/README.md)
