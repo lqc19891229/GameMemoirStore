@@ -39,6 +39,10 @@
 
 架构总览：[CLIENT_STRUCTURE.md](CLIENT_STRUCTURE.md)；编辑操作：[EDITOR_WORKFLOW.md](EDITOR_WORKFLOW.md)。
 
+## 真实尺寸规则
+
+房间与家具统一使用 **1 Godot 单位 = 1 米**；当前默认房间是 **8 × 6 米**，墙体高度约 **3.2 米**。新版家具严格按外包围实测，首个候选为 **160 × 75 × 75 厘米电竞桌**。详见 [房间与家具真实尺度规范](docs/REAL_SCALE_FURNITURE.md)。旧家具逐件重制，不一次性修改正式商品或用户存档。
+
 ## 家具资源工作流（GLB 为成品）
 
 1. 在 Blender 或其他 DCC 工具中完成模型、部件分组、UV、法线和默认 PBR 材质。
