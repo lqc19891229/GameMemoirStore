@@ -126,7 +126,7 @@ position = Vector3(-0.18, 0.78, 0.20)
 
 [node name="Mouse" parent="TableGroup/Equipment" instance=ExtResource("6")]
 unique_name_in_owner = true
-position = Vector3(0.38, 0.78, 0.20)
+position = Vector3(0.24, 0.78, 0.20)
 
 [node name="BlueprintOverlay" type="Node3D" parent="."]
 visible = false
