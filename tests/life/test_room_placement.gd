@@ -86,10 +86,11 @@ func run() -> void:
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(state.save_path))
 	state.persistence_enabled = false
 	# The PC tower is floor-standing beside desk_basic; monitor and inputs remain on the tabletop.
-	# All devices stay parented under Equipment to preserve the existing computer interaction system.
+	# Monitor and input devices remain under Equipment; the same PC node stands on the room floor.
 	for role: String in desktop.world.devices:
 		var expected_surface := "floor" if role == "computer" else "desk"
-		check(layout.surface_for(role) == expected_surface and desktop.world.devices[role].get_parent() == desktop.world.get_node("%Equipment"), "hardware retains correct support and parent: " + role)
+		var expected_parent: Node = desktop.world if role == "computer" else desktop.world.get_node("%Equipment")
+		check(layout.surface_for(role) == expected_surface and desktop.world.devices[role].get_parent() == expected_parent, "hardware retains correct support and parent: " + role)
 	game.queue_free()
 	await frames()
 	print("ROOM_PLACEMENT_CHECKS: %d / %d passed" % [checks - failures, checks])
