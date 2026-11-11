@@ -16,12 +16,10 @@ func dispatch(event: InputEvent) -> void:
 	root.window_input.emit(event.xformed_by(root.get_final_transform()))
 	root.push_input(event,true)
 func clear(layout: Node) -> bool:
-	var roles: Array = layout.world.devices.keys()
-	for i in range(roles.size()):
-		for p: Vector2 in layout.footprint(roles[i]):
-			if absf(p.x)>layout.tabletop_half_size.x or absf(p.y)>layout.tabletop_half_size.y: return false
-		for j in range(i+1,roles.size()):
-			if Data.overlap(layout.footprint(roles[i]),layout.footprint(roles[j])): return false
+	# The PC tower is now a floor-standing object, not a desktop footprint.
+	# Use the same surface-aware collision predicate as the room editor.
+	for role: String in layout.world.devices:
+		if not layout._blocker(role, layout.footprint(role, layout.collision_margin)).is_empty(): return false
 	return true
 func run() -> void:
 	var game = load("res://scenes/main/game_root.tscn").instantiate()
@@ -83,10 +81,8 @@ func run() -> void:
 	# Nearly half a turn has a free endpoint, but its middle hits the mouse.
 	for yaw in [deg_to_rad(170),deg_to_rad(-170)]:
 		layout.restore(original)
-		world.devices.monitor.position = Vector3(-.52,.78,-.15)
-		world.devices.computer.position = Vector3(.55,.78,-.15)
-		world.devices.keyboard.position = Vector3(-.2,.78,.2)
-		world.devices.mouse.position = Vector3(.3,.78,.2)
+		# The authored arrangement already fits the compact desk; use it as the
+		# regression starting point instead of obsolete wide-table coordinates.
 		layout.update()
 		check(clear(layout) and layout.valid,"rotation regression starts with separate equipment")
 		layout.select("keyboard")
@@ -109,9 +105,9 @@ func run() -> void:
 	check(clear(layout) and layout.valid,"table edge constraint and rotation remain non-overlapping")
 	desktop.finish_layout(false)
 	# Recover old externally authored overlapping saves, while retaining the table pose.
-	layout.load_saved({"desk":{"x":-.4,"z":-.8,"yaw":.1},"mouse":{"x":-.6,"z":.67,"yaw":0}})
+	layout.load_saved({"desk":{"x":-.6,"z":-.8,"yaw":.1},"mouse":{"x":-.6,"z":.67,"yaw":0}})
 	check(clear(layout),"overlapping loaded equipment recovers to default arrangement")
-	check(is_equal_approx(layout.nodes.desk.position.x,-.4),"save recovery preserves table placement")
+	check(is_equal_approx(layout.nodes.desk.position.x,-.6),"save recovery preserves a non-overlapping table placement")
 	check(world.devices.mouse.transform.is_equal_approx(original.mouse),"save recovery restores equipment rather than retaining penetration")
 	layout.load_saved({})
 	check(clear(layout),"empty legacy save remains usable")
