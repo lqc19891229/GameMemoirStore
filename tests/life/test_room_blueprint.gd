@@ -18,8 +18,8 @@ func frames() -> void:
 
 func run() -> void:
 	var bad: Dictionary = Blueprint.clean({"width": INF, "depth": -99, "door_x": 100, "window_z": -100})
-	check(bad.width == 8.0 and bad.depth == 5.0, "blueprint sanitizes unsafe dimensions")
-	check(absf(bad.door_x) <= 3.301 and absf(bad.window_z) <= 1.151, "openings remain wholly inside walls")
+	check(bad.width == 4.0 and bad.depth == 2.5, "blueprint sanitizes unsafe dimensions")
+	check(absf(bad.door_x) <= 1.401 and absf(bad.window_z) <= .451, "openings remain wholly inside walls")
 	var game = load("res://scenes/main/game_root.tscn").instantiate()
 	root.add_child(game)
 	await frames()
@@ -31,8 +31,8 @@ func run() -> void:
 	var room = world.get_node("Room")
 	var shell = room.get_node("Shell")
 	var layout = world.layout
-	check(room.blueprint == Blueprint.DEFAULT and layout.room_half_size == Vector2(4,3), "existing room starts at 8 x 6 metres")
-	check(is_equal_approx((shell.get_node("Floor") as MeshInstance3D).mesh.size.x, 8.24), "default floor remains unchanged")
+	check(room.blueprint == Blueprint.DEFAULT and layout.room_half_size == Vector2(2,1.25), "new room starts at 4 x 2.5 metres (10 square metres)")
+	check(is_equal_approx((shell.get_node("Floor") as MeshInstance3D).mesh.size.x, 4.24), "default floor remains unchanged")
 	var camera_before: Transform3D = world.camera.transform
 	desktop.begin_layout()
 	desktop.set_blueprint_mode(true)
@@ -58,8 +58,8 @@ func run() -> void:
 	desktop.set_blueprint_mode(false)
 	check(world.camera.transform.is_equal_approx(camera_before), "leaving blueprint restores previous camera")
 	desktop.finish_layout(false)
-	check(room.blueprint == Blueprint.DEFAULT and layout.room_half_size == Vector2(4,3), "cancel restores complete original floor plan")
-	check(is_equal_approx(shell.get_node("Back_Wall/DoorLeaf").position.x, -2.75), "cancel restores door position")
+	check(room.blueprint == Blueprint.DEFAULT and layout.room_half_size == Vector2(2,1.25), "cancel restores complete original floor plan")
+	check(is_equal_approx(shell.get_node("Back_Wall/DoorLeaf").position.x, -1.0), "cancel restores door position")
 	desktop.begin_layout()
 	desktop.set_blueprint_mode(true)
 	layout.set_blueprint_value("width", 10.0)
