@@ -41,7 +41,8 @@ func _run() -> void:
 	var texture := ImageTexture.create_from_image(pixels)
 	world.set_screen_texture(texture)
 	var screen: MeshInstance3D = world.devices["monitor"].get_node("Screen")
-	check(screen.material_override is StandardMaterial3D and screen.material_override.albedo_texture == texture, "desktop screen texture still connects to the monitor")
+	var material := screen.material_override as StandardMaterial3D
+	check(material != null and material.albedo_texture == texture, "desktop screen texture still connects to the monitor")
 	check(layout._layout_blocker().is_empty(), "default workstation layout has no collisions or desk-edge violations")
 	world.queue_free()
 	await process_frame
