@@ -19,6 +19,12 @@ func _ready() -> void:
 	overview_camera = camera.transform
 	reset_overview()
 	devices = {"monitor": %Monitor, "computer": %Computer, "keyboard": %Keyboard, "mouse": %Mouse}
+	# The registered desk_basic furniture scene includes its own shop picking area.
+	# Keep only the workstation picker here so a click resolves to the stable "desk"
+	# editing role rather than the catalog SKU role "desk_basic".
+	var catalog_pick: Area3D = $TableGroup/Desk/PickArea
+	catalog_pick.collision_layer = 0
+	catalog_pick.monitoring = false
 	layout.setup(self)
 	var room: MemoirRoomView = $Room as MemoirRoomView
 	var lighting: MemoirWorkstationLighting = $Lighting as MemoirWorkstationLighting
