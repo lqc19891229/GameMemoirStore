@@ -51,6 +51,8 @@ on:
       - "tests/life/test_room_decor_collectibles.gd"
       - "tests/life/test_furniture_pbr.gd"
       - "tests/life/test_workstation_view.gd"
+      - "tests/life/test_desk_basic_workstation.gd"
+      - "scenes/computer/computer_desktop.tscn"
       - ".github/workflows/room-ui-smoke.yml"
   workflow_dispatch:
 permissions:
@@ -71,6 +73,7 @@ jobs:
         run: |
           set -euo pipefail
           for test in \
+            tests/life/test_desk_basic_workstation.gd \
             tests/life/test_room_support_surfaces.gd \
             tests/life/test_room_surface_mounts.gd \
             tests/life/test_room_wall_mounts.gd \
