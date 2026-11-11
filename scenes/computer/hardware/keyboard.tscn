@@ -12,14 +12,16 @@ role = "keyboard"
 appearance = ExtResource("2")
 [node name="Models" type="Node3D" parent="."]
 [node name="DefaultModel" parent="Models" instance=ExtResource("3")]
-[node name="UpgradeModel" parent="Models" instance=ExtResource("4")]
+scale = Vector3(0.4, 0.4, 0.4)
+[node name="UpgradeModel" parent= "Models" instance=ExtResource("4")]
+scale = Vector3(0.4, 0.4, 0.4)
 visible = false
 [node name="KeyboardGlow" type="OmniLight3D" parent="."]
 unique_name_in_owner = true
-position = Vector3(0, 0.12, 0)
+position = Vector3(0, 0.048, 0)
 light_color = Color(0.18, 0.72, 0.92, 1)
 light_energy = 0.12
-omni_range = 1.0
+omni_range = 0.6
 [node name="PickArea" type="Area3D" parent="."]
 position = Vector3(0,0.05,0)
 collision_layer = 1
