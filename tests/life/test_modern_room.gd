@@ -46,7 +46,7 @@ func run() -> void:
 	check(environment.ambient_light_energy <= 0.4, "room ambient light preserves material contrast")
 	check(layout.nodes.size() == 10, "room and equipment share one placement controller")
 	check(layout._layout_blocker().is_empty(), "authored room starts without intersections")
-	var starter_desk: Node3D = layout.nodes["desk"].get_node("Desk")
+	var starter_desk = layout.nodes["desk"].get_node("Desk")
 	check(starter_desk.scene_file_path == "res://scenes/room/tables/desk_basic.tscn", "workstation uses the registered desk_basic furniture scene")
 	check(starter_desk.bounds.is_equal_approx(Vector3(1.0, .75, .6)), "workstation furniture is 1.0 x 0.6 x 0.75 metres")
 	check(layout.tabletop_half_size.is_equal_approx(Vector2(.5,.3)) and is_equal_approx(layout.tabletop_height,.75) and layout.room_half_size.is_equal_approx(Vector2(2,1.25)), "tabletop and room placement bounds match the new desk in the 10 sqm room")
