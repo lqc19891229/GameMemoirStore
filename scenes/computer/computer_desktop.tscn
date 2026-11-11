@@ -1,44 +1,114 @@
-[gd_scene load_steps=7 format=3]
-[ext_resource type="Theme" path="res://assets/client_theme.tres" id="1"]
-[ext_resource type="Theme" path="res://assets/room_minimal_theme.tres" id="6"]
-[ext_resource type="Script" path="res://scripts/life/computer_desktop.gd" id="2"]
+[gd_scene format=3 uid="uid://c8xxpk3oc1l6o"]
+
+[ext_resource type="Script" uid="uid://6ff8yqotqpm5" path="res://scripts/life/computer_desktop.gd" id="2"]
 [ext_resource type="PackedScene" path="res://scenes/computer/workstation_3d.tscn" id="3"]
 [ext_resource type="PackedScene" path="res://scenes/computer/ui/desktop_screen.tscn" id="4"]
 [ext_resource type="Resource" path="res://data/hardware/_catalog.tres" id="5"]
-[node name="ComputerDesktop" type="Node3D"]
+[ext_resource type="Theme" uid="uid://bhd66le17ujvp" path="res://assets/room_minimal_theme.tres" id="6"]
+
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_s6ugd"]
+sky_top_color = Color(0.5176471, 0.62352943, 0.72156864, 1)
+sky_horizon_color = Color(0.9490196, 0.8901961, 0.78431374, 1)
+ground_bottom_color = Color(0.29803923, 0.3254902, 0.34509805, 1)
+ground_horizon_color = Color(0.7019608, 0.68235296, 0.6392157, 1)
+
+[sub_resource type="Sky" id="Sky_4au5s"]
+sky_material = SubResource("ProceduralSkyMaterial_s6ugd")
+
+[sub_resource type="Environment" id="Environment_jmcxh"]
+background_mode = 1
+background_color = Color(0.72, 0.76, 0.77, 1)
+sky = SubResource("Sky_4au5s")
+ambient_light_source = 2
+ambient_light_color = Color(1, 1, 1, 1)
+ambient_light_energy = 0.34
+reflected_light_source = 2
+tonemap_mode = 2
+tonemap_exposure = 1.02
+ssao_enabled = true
+ssao_radius = 0.55
+ssao_intensity = 1.15
+ssao_power = 1.28
+
+[node name="ComputerDesktop" type="Node3D" unique_id=2145229827]
 script = ExtResource("2")
 hardware_catalog = ExtResource("5")
-[node name="Workstation3D" parent="." instance=ExtResource("3")]
+
+[node name="Workstation3D" parent="." unique_id=1697229838 instance=ExtResource("3")]
 unique_name_in_owner = true
-[node name="DesktopViewport" type="SubViewport" parent="."]
+
+[node name="Environment" parent="Workstation3D" index="0"]
+environment = SubResource("Environment_jmcxh")
+
+[node name="KeyLight" parent="Workstation3D" index="1"]
+transform = Transform3D(0.8660254, 0.3409992, -0.36567685, 0, 0.7313537, 0.6819984, 0.5, -0.5906279, 0.6333709, 0, 0, 0)
+light_color = Color(1, 0.9411765, 0.8627451, 1)
+
+[node name="FillLight" parent="Workstation3D" index="2"]
+transform = Transform3D(-0.76604444, -0.2716538, 0.5825634, 0, 0.90630776, 0.42261827, -0.64278764, 0.3237444, -0.69427204, 0, 0, 0)
+light_color = Color(0.8509804, 0.89411765, 0.8745098, 1)
+
+[node name="CeilingLight" parent="Workstation3D" index="3"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.78, -0.2)
+light_color = Color(1, 0.9411765, 0.8627451, 1)
+
+[node name="Camera" parent="Workstation3D" index="4"]
+transform = Transform3D(0.77395076, -0.33058724, 0.54010403, 0, 0.8529137, 0.522052, -0.6332458, -0.40404254, 0.66011316, 9, 9.8, 11)
+
+[node name="TableGroup" parent="Workstation3D" index="6"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.7, 0, -0.8)
+
+[node name="DeskGlow" parent="Workstation3D/TableGroup" index="1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.63, 1.06)
+
+[node name="DeskPickArea" parent="Workstation3D/TableGroup" index="2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.73, 0)
+
+[node name="Monitor" parent="Workstation3D/TableGroup/Equipment" index="0"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.75, 0.78, -0.18)
+
+[node name="Computer" parent="Workstation3D/TableGroup/Equipment" index="1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.4, 0.78, -0.24)
+
+[node name="Keyboard" parent="Workstation3D/TableGroup/Equipment" index="2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.6, 0.78, 0.67)
+
+[node name="Mouse" parent="Workstation3D/TableGroup/Equipment" index="3"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.45, 0.78, 0.74)
+
+[node name="DesktopViewport" type="SubViewport" parent="." unique_id=205984288]
 unique_name_in_owner = true
 disable_3d = true
 gui_embed_subwindows = true
-size = Vector2i(1280,800)
+size = Vector2i(1280, 800)
 render_target_update_mode = 4
-[node name="DesktopScreen" parent="DesktopViewport" instance=ExtResource("4")]
+
+[node name="DesktopScreen" parent="DesktopViewport" unique_id=1524319369 instance=ExtResource("4")]
 unique_name_in_owner = true
-[node name="HUD" type="CanvasLayer" parent="."]
-layer = 1
-[node name="Interface" type="Control" parent="HUD"]
-theme = ExtResource("6")
-layout_mode = 1
+
+[node name="HUD" type="CanvasLayer" parent="." unique_id=1532920498]
+
+[node name="Interface" type="Control" parent="HUD" unique_id=1221023235]
+layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
+theme = ExtResource("6")
 
-[node name="HeaderBackground" type="ColorRect" parent="HUD/Interface"]
+[node name="HeaderBackground" type="ColorRect" parent="HUD/Interface" unique_id=1100960338]
 layout_mode = 1
+anchors_preset = 10
 anchor_right = 1.0
 offset_bottom = 64.0
 mouse_filter = 2
 color = Color(0.958, 0.961, 0.952, 0.96)
 
-[node name="Header" type="HBoxContainer" parent="HUD/Interface"]
+[node name="Header" type="HBoxContainer" parent="HUD/Interface" unique_id=313414683]
 layout_mode = 1
+anchors_preset = 10
 anchor_right = 1.0
 offset_left = 28.0
 offset_top = 16.0
@@ -46,89 +116,92 @@ offset_right = -28.0
 offset_bottom = 56.0
 theme_override_constants/separation = 12
 
-[node name="ViewTitle" type="Label" parent="HUD/Interface/Header"]
+[node name="ViewTitle" type="Label" parent="HUD/Interface/Header" unique_id=1619916744]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
-text = "我的房间"
 theme_override_font_sizes/font_size = 21
+text = "我的房间"
 
-[node name="ResetView" type="Button" parent="HUD/Interface/Header"]
+[node name="ResetView" type="Button" parent="HUD/Interface/Header" unique_id=1401492105]
 unique_name_in_owner = true
 layout_mode = 2
+theme_type_variation = &"DarkButton"
 text = "重置视角"
-theme_type_variation = "DarkButton"
 
-[node name="EditLayout" type="Button" parent="HUD/Interface/Header"]
+[node name="EditLayout" type="Button" parent="HUD/Interface/Header" unique_id=2052953037]
 unique_name_in_owner = true
 layout_mode = 2
+theme_type_variation = &"DarkButton"
 text = "编辑房间"
-theme_type_variation = "DarkButton"
-[node name="BlueprintToggle" type="Button" parent="HUD/Interface/Header"]
+
+[node name="BlueprintToggle" type="Button" parent="HUD/Interface/Header" unique_id=1987391364]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
-text = "房间蓝图"
+theme_type_variation = &"DarkButton"
 toggle_mode = true
-theme_type_variation = "DarkButton"
-[node name="ApplyLayout" type="Button" parent="HUD/Interface/Header"]
+text = "房间蓝图"
+
+[node name="ApplyLayout" type="Button" parent="HUD/Interface/Header" unique_id=1086724256]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
+theme_type_variation = &"BlueButton"
 text = "保存设计"
-theme_type_variation = "BlueButton"
-[node name="CancelLayout" type="Button" parent="HUD/Interface/Header"]
+
+[node name="CancelLayout" type="Button" parent="HUD/Interface/Header" unique_id=1105037067]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
+theme_type_variation = &"DarkButton"
 text = "取消"
-theme_type_variation = "DarkButton"
-[node name="ManageDevices" type="Button" parent="HUD/Interface/Header"]
+
+[node name="ManageDevices" type="Button" parent="HUD/Interface/Header" unique_id=484481198]
 unique_name_in_owner = true
 layout_mode = 2
+theme_type_variation = &"DarkButton"
 text = "管理设备"
-theme_type_variation = "DarkButton"
 
-[node name="ReturnOverview" type="Button" parent="HUD/Interface/Header"]
+[node name="ReturnOverview" type="Button" parent="HUD/Interface/Header" unique_id=1524629605]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
+theme_type_variation = &"DarkButton"
 text = "返回房间 · Esc"
-theme_type_variation = "DarkButton"
 
-[node name="FocusToggle" type="Button" parent="HUD/Interface/Header"]
+[node name="FocusToggle" type="Button" parent="HUD/Interface/Header" unique_id=1178208511]
 unique_name_in_owner = true
-layout_mode = 2
 custom_minimum_size = Vector2(160, 36)
+layout_mode = 2
+theme_type_variation = &"BlueButton"
 text = "使用电脑  >"
-theme_type_variation = "BlueButton"
 
-[node name="OverviewHelp" type="VBoxContainer" parent="HUD/Interface"]
+[node name="OverviewHelp" type="VBoxContainer" parent="HUD/Interface" unique_id=1628176597]
 unique_name_in_owner = true
 layout_mode = 1
+anchors_preset = 12
 anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
 offset_left = 28.0
-offset_right = -28.0
 offset_top = -40.0
+offset_right = -28.0
 offset_bottom = -8.0
 mouse_filter = 2
 theme_override_constants/separation = 4
 
-[node name="Title" type="Label" parent="HUD/Interface/OverviewHelp"]
+[node name="Title" type="Label" parent="HUD/Interface/OverviewHelp" unique_id=1317428701]
 layout_mode = 2
-mouse_filter = 2
-text = "我的空间"
 theme_override_font_sizes/font_size = 14
+text = "我的空间"
 
-[node name="Controls" type="Label" parent="HUD/Interface/OverviewHelp"]
+[node name="Controls" type="Label" parent="HUD/Interface/OverviewHelp" unique_id=349443569]
 layout_mode = 2
-mouse_filter = 2
-text = "拖动查看 · 滚轮缩放 · 编辑后按 F 聚焦家具 · 点击屏幕使用电脑"
 theme_override_font_sizes/font_size = 12
+text = "拖动查看 · 滚轮缩放 · 编辑后按 F 聚焦家具 · 点击屏幕使用电脑"
 
-[node name="LayoutPanel" type="PanelContainer" parent="HUD/Interface"]
+[node name="LayoutPanel" type="PanelContainer" parent="HUD/Interface" unique_id=206344634]
 unique_name_in_owner = true
 visible = false
 layout_mode = 0
@@ -139,566 +212,673 @@ offset_left = -326.0
 offset_top = 138.0
 offset_right = -22.0
 offset_bottom = -18.0
-[node name="Margin" type="MarginContainer" parent="HUD/Interface/LayoutPanel"]
+
+[node name="Margin" type="MarginContainer" parent="HUD/Interface/LayoutPanel" unique_id=1775935519]
 layout_mode = 2
 theme_override_constants/margin_left = 14
-theme_override_constants/margin_right = 14
 theme_override_constants/margin_top = 14
+theme_override_constants/margin_right = 14
 theme_override_constants/margin_bottom = 14
-[node name="Scroll" type="ScrollContainer" parent="HUD/Interface/LayoutPanel/Margin"]
+
+[node name="Scroll" type="ScrollContainer" parent="HUD/Interface/LayoutPanel/Margin" unique_id=1050736603]
 layout_mode = 2
 horizontal_scroll_mode = 0
-[node name="Content" type="VBoxContainer" parent="HUD/Interface/LayoutPanel/Margin/Scroll"]
+
+[node name="Content" type="VBoxContainer" parent="HUD/Interface/LayoutPanel/Margin/Scroll" unique_id=544357484]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 8
-[node name="LayoutSelection" type="Label" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content"]
+
+[node name="LayoutSelection" type="Label" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content" unique_id=715224605]
 unique_name_in_owner = true
 layout_mode = 2
 text = "选中：桌子（整套）"
-[node name="Objects" type="GridContainer" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content"]
+
+[node name="Objects" type="GridContainer" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content" unique_id=1482643679]
 layout_mode = 2
 columns = 2
-[node name="Layout_desk" type="Button" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content/Objects"]
-size_flags_horizontal = 3
+
+[node name="Layout_desk" type="Button" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content/Objects" unique_id=2094474069]
 unique_name_in_owner = true
 layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"DarkButton"
+toggle_mode = true
 text = "桌子整套"
-toggle_mode = true
-theme_type_variation = "DarkButton"
-[node name="Layout_monitor" type="Button" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content/Objects"]
-size_flags_horizontal = 3
+
+[node name="Layout_monitor" type="Button" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content/Objects" unique_id=874700604]
 unique_name_in_owner = true
 layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"DarkButton"
+toggle_mode = true
 text = "显示器"
-toggle_mode = true
-theme_type_variation = "DarkButton"
-[node name="Layout_computer" type="Button" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content/Objects"]
-size_flags_horizontal = 3
+
+[node name="Layout_computer" type="Button" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content/Objects" unique_id=1941082296]
 unique_name_in_owner = true
 layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"DarkButton"
+toggle_mode = true
 text = "机箱"
-toggle_mode = true
-theme_type_variation = "DarkButton"
-[node name="Layout_keyboard" type="Button" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content/Objects"]
-size_flags_horizontal = 3
+
+[node name="Layout_keyboard" type="Button" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content/Objects" unique_id=104932422]
 unique_name_in_owner = true
 layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"DarkButton"
+toggle_mode = true
 text = "键盘"
-toggle_mode = true
-theme_type_variation = "DarkButton"
-[node name="Layout_mouse" type="Button" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content/Objects"]
-size_flags_horizontal = 3
+
+[node name="Layout_mouse" type="Button" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content/Objects" unique_id=608971705]
 unique_name_in_owner = true
 layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"DarkButton"
+toggle_mode = true
 text = "鼠标"
-toggle_mode = true
-theme_type_variation = "DarkButton"
-[node name="Layout_chair" type="Button" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content/Objects"]
+
+[node name="Layout_chair" type="Button" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content/Objects" unique_id=665631466]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
+theme_type_variation = &"DarkButton"
+toggle_mode = true
 text = "椅子"
-toggle_mode = true
-theme_type_variation = "DarkButton"
-[node name="Layout_bookcase" type="Button" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content/Objects"]
+
+[node name="Layout_bookcase" type="Button" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content/Objects" unique_id=1035276619]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
+theme_type_variation = &"DarkButton"
+toggle_mode = true
 text = "书架"
-toggle_mode = true
-theme_type_variation = "DarkButton"
-[node name="Layout_lamp" type="Button" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content/Objects"]
+
+[node name="Layout_lamp" type="Button" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content/Objects" unique_id=1080223431]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
+theme_type_variation = &"DarkButton"
+toggle_mode = true
 text = "落地灯"
-toggle_mode = true
-theme_type_variation = "DarkButton"
-[node name="Layout_rug" type="Button" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content/Objects"]
+
+[node name="Layout_rug" type="Button" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content/Objects" unique_id=130159705]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
+theme_type_variation = &"DarkButton"
+toggle_mode = true
 text = "地毯"
-toggle_mode = true
-theme_type_variation = "DarkButton"
-[node name="Layout_plant" type="Button" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content/Objects"]
+
+[node name="Layout_plant" type="Button" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content/Objects" unique_id=1763515982]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
+theme_type_variation = &"DarkButton"
+toggle_mode = true
 text = "绿植"
-toggle_mode = true
-theme_type_variation = "DarkButton"
-[node name="Tools" type="HBoxContainer" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content"]
+
+[node name="Tools" type="HBoxContainer" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content" unique_id=2111698246]
 layout_mode = 2
-[node name="MoveTool" type="Button" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content/Tools"]
+
+[node name="MoveTool" type="Button" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content/Tools" unique_id=258828998]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
-text = "移动 G"
 tooltip_text = "红色手柄沿 X 轴，蓝色沿 Z 轴；黄色方块在平面移动"
 toggle_mode = true
 button_pressed = true
-[node name="RotateTool" type="Button" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content/Tools"]
+text = "移动 G"
+
+[node name="RotateTool" type="Button" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content/Tools" unique_id=687229906]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
-text = "旋转 R"
 tooltip_text = "拖动黄色圆点旋转；Q / E 每次调整 15°"
 toggle_mode = true
-[node name="Angles" type="HBoxContainer" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content"]
+text = "旋转 R"
+
+[node name="Angles" type="HBoxContainer" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content" unique_id=1096106184]
 layout_mode = 2
-[node name="RotateLeft" type="Button" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content/Angles"]
+
+[node name="RotateLeft" type="Button" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content/Angles" unique_id=873666063]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 text = "-15° Q"
-[node name="RotateRight" type="Button" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content/Angles"]
+
+[node name="RotateRight" type="Button" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content/Angles" unique_id=412455573]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 text = "+15° E"
-[node name="SnapLayout" type="CheckButton" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content"]
+
+[node name="SnapLayout" type="CheckButton" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content" unique_id=212846406]
 unique_name_in_owner = true
 layout_mode = 2
-text = "吸附 5 cm / 15°"
 button_pressed = true
-[node name="LayoutPose" type="Label" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content"]
+text = "吸附 5 cm / 15°"
+
+[node name="LayoutPose" type="Label" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content" unique_id=321738804]
 unique_name_in_owner = true
 layout_mode = 2
-text = "X 0.00  Z 0.00\n旋转 0°"
-[node name="LayoutSize" type="Label" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content"]
+text = "X 0.00  Z 0.00
+旋转 0°"
+
+[node name="LayoutSize" type="Label" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content" unique_id=139838569]
 unique_name_in_owner = true
 layout_mode = 2
 text = "占地 0.00 × 0.00 米 · 高 0.00 米"
 autowrap_mode = 2
-[node name="LayoutMessage" type="Label" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content"]
+
+[node name="LayoutMessage" type="Label" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content" unique_id=2109155751]
 unique_name_in_owner = true
+custom_minimum_size = Vector2(200, 70)
 layout_mode = 2
-custom_minimum_size = Vector2(200,70)
 text = "右键环绕 · 滚轮缩放"
 autowrap_mode = 2
-[node name="History" type="HBoxContainer" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content"]
+
+[node name="History" type="HBoxContainer" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content" unique_id=115203245]
 layout_mode = 2
-[node name="UndoLayout" type="Button" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content/History"]
+
+[node name="UndoLayout" type="Button" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content/History" unique_id=974709731]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
-text = "撤销"
 tooltip_text = "Ctrl + Z"
-[node name="RedoLayout" type="Button" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content/History"]
+text = "撤销"
+
+[node name="RedoLayout" type="Button" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content/History" unique_id=419033111]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
-text = "重做"
 tooltip_text = "Ctrl + Shift + Z / Ctrl + Y"
-[node name="Copies" type="HBoxContainer" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content"]
+text = "重做"
+
+[node name="Copies" type="HBoxContainer" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content" unique_id=1697747760]
 layout_mode = 2
-[node name="CopyFurniture" type="Button" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content/Copies"]
+
+[node name="CopyFurniture" type="Button" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content/Copies" unique_id=824856837]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
-text = "复制家具"
 tooltip_text = "Ctrl + D；椅子、书架、灯、地毯、绿植可复制"
-[node name="DeleteFurniture" type="Button" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content/Copies"]
+text = "复制家具"
+
+[node name="DeleteFurniture" type="Button" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content/Copies" unique_id=462805170]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
-text = "收回家具"
 tooltip_text = "Delete；把选中家具收回库存，可再次摆放"
-[node name="StyleLabel" type="Label" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content"]
+text = "收回家具"
+
+[node name="StyleLabel" type="Label" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content" unique_id=843753813]
 layout_mode = 2
 text = "房间配色与灯光"
-[node name="Style_wall" type="OptionButton" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content"]
+
+[node name="Style_wall" type="OptionButton" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content" unique_id=1488394270]
 unique_name_in_owner = true
 layout_mode = 2
-[node name="Style_floor" type="OptionButton" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content"]
+
+[node name="Style_floor" type="OptionButton" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content" unique_id=31164414]
 unique_name_in_owner = true
 layout_mode = 2
-[node name="Style_light" type="OptionButton" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content"]
+
+[node name="Style_light" type="OptionButton" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content" unique_id=1484771955]
 unique_name_in_owner = true
 layout_mode = 2
-[node name="RestoreLayout" type="Button" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content"]
+
+[node name="RestoreLayout" type="Button" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content" unique_id=1692079306]
 unique_name_in_owner = true
 layout_mode = 2
+theme_type_variation = &"DarkButton"
 text = "恢复默认布置"
-theme_type_variation = "DarkButton"
-[node name="RgbLabel" type="Label" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content"]
+
+[node name="RgbLabel" type="Label" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content" unique_id=1054833562]
 layout_mode = 2
 text = "RGB 灯光颜色"
-[node name="Style_rgb" type="OptionButton" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content"]
+
+[node name="Style_rgb" type="OptionButton" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content" unique_id=1672431004]
 unique_name_in_owner = true
 layout_mode = 2
-[node name="EffectLabel" type="Label" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content"]
+
+[node name="EffectLabel" type="Label" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content" unique_id=380214614]
 layout_mode = 2
 text = "RGB 灯效"
-[node name="Style_effect" type="OptionButton" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content"]
+
+[node name="Style_effect" type="OptionButton" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content" unique_id=280180539]
 unique_name_in_owner = true
 layout_mode = 2
-[node name="BrightnessLabel" type="Label" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content"]
+
+[node name="BrightnessLabel" type="Label" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content" unique_id=2139759104]
 layout_mode = 2
 text = "RGB 亮度"
-[node name="Style_brightness" type="HSlider" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content"]
+
+[node name="Style_brightness" type="HSlider" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content" unique_id=843022084]
 unique_name_in_owner = true
 layout_mode = 2
-min_value = 0.0
-max_value = 100.0
 step = 5.0
 value = 70.0
 
-[node name="FurnitureInventory" type="VBoxContainer" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content"]
+[node name="FurnitureInventory" type="VBoxContainer" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content" unique_id=2076873013]
 layout_mode = 2
 theme_override_constants/separation = 6
-[node name="FurnitureCatalogLabel" type="Label" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content/FurnitureInventory"]
+
+[node name="FurnitureCatalogLabel" type="Label" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content/FurnitureInventory" unique_id=411742213]
 layout_mode = 2
 text = "家具库存 · 点击开始摆放"
-[node name="Place_chair" type="Button" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content/FurnitureInventory"]
+
+[node name="Place_chair" type="Button" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content/FurnitureInventory" unique_id=51556792]
 unique_name_in_owner = true
 layout_mode = 2
 text = "办公椅"
-[node name="Place_bookcase" type="Button" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content/FurnitureInventory"]
+
+[node name="Place_bookcase" type="Button" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content/FurnitureInventory" unique_id=1951622627]
 unique_name_in_owner = true
 layout_mode = 2
 text = "书架"
-[node name="Place_lamp" type="Button" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content/FurnitureInventory"]
+
+[node name="Place_lamp" type="Button" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content/FurnitureInventory" unique_id=28233111]
 unique_name_in_owner = true
 layout_mode = 2
 text = "落地灯"
-[node name="Place_rug" type="Button" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content/FurnitureInventory"]
+
+[node name="Place_rug" type="Button" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content/FurnitureInventory" unique_id=500274121]
 unique_name_in_owner = true
 layout_mode = 2
 text = "地毯"
-[node name="Place_plant" type="Button" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content/FurnitureInventory"]
+
+[node name="Place_plant" type="Button" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content/FurnitureInventory" unique_id=1483408719]
 unique_name_in_owner = true
 layout_mode = 2
 text = "绿植"
-[node name="Place_sofa" type="Button" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content/FurnitureInventory"]
+
+[node name="Place_sofa" type="Button" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content/FurnitureInventory" unique_id=1380928826]
 unique_name_in_owner = true
 layout_mode = 2
 text = "双人沙发"
-[node name="Place_stool" type="Button" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content/FurnitureInventory"]
+
+[node name="Place_stool" type="Button" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content/FurnitureInventory" unique_id=460905197]
 unique_name_in_owner = true
 layout_mode = 2
 text = "软垫矮凳"
-[node name="FurnitureCatalogControls" type="VBoxContainer" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content/FurnitureInventory"]
+
+[node name="FurnitureCatalogControls" type="VBoxContainer" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content/FurnitureInventory" unique_id=762080428]
 layout_mode = 2
 theme_override_constants/separation = 5
-[node name="FurnitureCatalogGroup" type="OptionButton" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content/FurnitureInventory/FurnitureCatalogControls"]
+
+[node name="FurnitureCatalogGroup" type="OptionButton" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content/FurnitureInventory/FurnitureCatalogControls" unique_id=873556011]
 unique_name_in_owner = true
 layout_mode = 2
-[node name="FurnitureCatalogType" type="OptionButton" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content/FurnitureInventory/FurnitureCatalogControls"]
+
+[node name="FurnitureCatalogType" type="OptionButton" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content/FurnitureInventory/FurnitureCatalogControls" unique_id=799027876]
 unique_name_in_owner = true
 layout_mode = 2
-[node name="FurnitureCatalogSearch" type="LineEdit" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content/FurnitureInventory/FurnitureCatalogControls"]
+
+[node name="FurnitureCatalogSearch" type="LineEdit" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content/FurnitureInventory/FurnitureCatalogControls" unique_id=2049459377]
 unique_name_in_owner = true
 layout_mode = 2
 placeholder_text = "搜索家具名称或商品型号"
-[node name="FurnitureCatalogStatus" type="Label" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content/FurnitureInventory/FurnitureCatalogControls"]
+
+[node name="FurnitureCatalogStatus" type="Label" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content/FurnitureInventory/FurnitureCatalogControls" unique_id=553440784]
 unique_name_in_owner = true
 layout_mode = 2
 text = "家具分类目录"
-[node name="FurnitureCatalogItems" type="GridContainer" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content/FurnitureInventory"]
+
+[node name="FurnitureCatalogItems" type="GridContainer" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content/FurnitureInventory" unique_id=1211173895]
 unique_name_in_owner = true
 layout_mode = 2
-columns = 3
 theme_override_constants/h_separation = 7
 theme_override_constants/v_separation = 6
-[node name="FurnitureCatalogTemplate" type="Button" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content/FurnitureInventory/FurnitureCatalogItems"]
+columns = 3
+
+[node name="FurnitureCatalogTemplate" type="Button" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content/FurnitureInventory/FurnitureCatalogItems" unique_id=1414680090]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
 size_flags_horizontal = 3
 text = "家具商品模板"
-[node name="FurniturePaletteLabel" type="Label" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content/FurnitureInventory"]
+
+[node name="FurniturePaletteLabel" type="Label" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content/FurnitureInventory" unique_id=1882819336]
 layout_mode = 2
 text = "选中家具 · 独立改色"
-[node name="FurniturePalette" type="OptionButton" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content/FurnitureInventory"]
+
+[node name="FurniturePalette" type="OptionButton" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content/FurnitureInventory" unique_id=625582179]
 unique_name_in_owner = true
 layout_mode = 2
 
-[node name="WallSnapToggle" type="CheckButton" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content"]
+[node name="WallSnapToggle" type="CheckButton" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content" unique_id=129713469]
 unique_name_in_owner = true
 layout_mode = 2
 text = "智能靠外墙吸附（安全距离）"
 
-[node name="FurnitureAssistsTitle" type="Label" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content"]
+[node name="FurnitureAssistsTitle" type="Label" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content" unique_id=1248864074]
 layout_mode = 2
-text = "家具高级摆放辅助"
 theme_override_font_sizes/font_size = 16
-[node name="InnerWallSnapToggle" type="CheckButton" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content"]
+text = "家具高级摆放辅助"
+
+[node name="InnerWallSnapToggle" type="CheckButton" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content" unique_id=2017893528]
 unique_name_in_owner = true
 layout_mode = 2
 text = "靠内墙吸附（独立开关）"
-[node name="FurnitureAssistHint" type="Label" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content"]
-unique_name_in_owner = true
-layout_mode = 2
-autowrap_mode = 3
-text = "显示内墙距离与同类家具中心间距"
-[node name="FurnitureAlignmentTools" type="HBoxContainer" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content"]
-layout_mode = 2
-theme_override_constants/separation = 5
-[node name="AlignFurnitureX" type="Button" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content/FurnitureAlignmentTools"]
-unique_name_in_owner = true
-layout_mode = 2
-size_flags_horizontal = 3
-text = "对齐 X"
-tooltip_text = "把选中地面家具的 X 坐标与附近另一件家具对齐，不穿过碰撞物"
-[node name="AlignFurnitureZ" type="Button" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content/FurnitureAlignmentTools"]
-unique_name_in_owner = true
-layout_mode = 2
-size_flags_horizontal = 3
-text = "对齐 Z"
-tooltip_text = "把选中地面家具的 Z 坐标与附近另一件家具对齐，不穿过碰撞物"
-[node name="FurnitureDistributeTools" type="HBoxContainer" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content"]
-layout_mode = 2
-theme_override_constants/separation = 5
-[node name="DistributeFurnitureX" type="Button" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content/FurnitureDistributeTools"]
-unique_name_in_owner = true
-layout_mode = 2
-size_flags_horizontal = 3
-text = "同类等距 X"
-tooltip_text = "三件以上同类地面家具之间按 X 方向等距摆放，保持两端不动"
-[node name="DistributeFurnitureZ" type="Button" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content/FurnitureDistributeTools"]
-unique_name_in_owner = true
-layout_mode = 2
-size_flags_horizontal = 3
-text = "同类等距 Z"
-tooltip_text = "三件以上同类地面家具之间按 Z 方向等距摆放，保持两端不动"
 
-[node name="MaterialLibraryTitle" type="Label" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content"]
+[node name="FurnitureAssistHint" type="Label" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content" unique_id=449806675]
+unique_name_in_owner = true
 layout_mode = 2
-text = "材质纹理与光影氛围"
-theme_override_font_sizes/font_size = 16
-[node name="MaterialLibraryHint" type="Label" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content"]
-layout_mode = 2
+text = "显示内墙距离与同类家具中心间距"
 autowrap_mode = 3
+
+[node name="FurnitureAlignmentTools" type="HBoxContainer" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content" unique_id=776468535]
+layout_mode = 2
+theme_override_constants/separation = 5
+
+[node name="AlignFurnitureX" type="Button" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content/FurnitureAlignmentTools" unique_id=36661491]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+tooltip_text = "把选中地面家具的 X 坐标与附近另一件家具对齐，不穿过碰撞物"
+text = "对齐 X"
+
+[node name="AlignFurnitureZ" type="Button" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content/FurnitureAlignmentTools" unique_id=861397012]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+tooltip_text = "把选中地面家具的 Z 坐标与附近另一件家具对齐，不穿过碰撞物"
+text = "对齐 Z"
+
+[node name="FurnitureDistributeTools" type="HBoxContainer" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content" unique_id=2072527782]
+layout_mode = 2
+theme_override_constants/separation = 5
+
+[node name="DistributeFurnitureX" type="Button" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content/FurnitureDistributeTools" unique_id=910535077]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+tooltip_text = "三件以上同类地面家具之间按 X 方向等距摆放，保持两端不动"
+text = "同类等距 X"
+
+[node name="DistributeFurnitureZ" type="Button" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content/FurnitureDistributeTools" unique_id=1431577482]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+tooltip_text = "三件以上同类地面家具之间按 Z 方向等距摆放，保持两端不动"
+text = "同类等距 Z"
+
+[node name="MaterialLibraryTitle" type="Label" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content" unique_id=926217460]
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+text = "材质纹理与光影氛围"
+
+[node name="MaterialLibraryHint" type="Label" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content" unique_id=1264234491]
+layout_mode = 2
 text = "墙面和地板纹理可与现有颜色组合。氛围改变室内日照、环境色和窗外景色，均随房间保存。"
-[node name="Style_wall_pattern" type="OptionButton" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content"]
+autowrap_mode = 3
+
+[node name="Style_wall_pattern" type="OptionButton" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content" unique_id=1548974069]
 unique_name_in_owner = true
 layout_mode = 2
 tooltip_text = "纯色粉刷 / 亚麻纤维 / 错缝砖纹"
-[node name="Style_floor_pattern" type="OptionButton" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content"]
+
+[node name="Style_floor_pattern" type="OptionButton" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content" unique_id=669998233]
 unique_name_in_owner = true
 layout_mode = 2
 tooltip_text = "基础地板 / 橡木纹理 / 石材地砖"
-[node name="Style_atmosphere" type="OptionButton" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content"]
+
+[node name="Style_atmosphere" type="OptionButton" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content" unique_id=791306919]
 unique_name_in_owner = true
 layout_mode = 2
 tooltip_text = "晴昼 / 日落 / 夜晚 / 雨天"
 
-[node name="AmbienceVolumeLabel" type="Label" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content"]
+[node name="AmbienceVolumeLabel" type="Label" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content" unique_id=764846718]
 unique_name_in_owner = true
 layout_mode = 2
 text = "雨声音量 · 70%（0 为静音）"
 
-[node name="Style_ambience_volume" type="HSlider" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content"]
+[node name="Style_ambience_volume" type="HSlider" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content" unique_id=1338894982]
 unique_name_in_owner = true
 layout_mode = 2
-min_value = 0.0
-max_value = 100.0
-step = 1.0
-value = 70.0
 tooltip_text = "雨天的环境音量；随装修方案保存，其他天气无雨声"
+value = 70.0
 
-[node name="Layout_sofa" type="Button" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content"]
+[node name="Layout_sofa" type="Button" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content" unique_id=594957173]
 unique_name_in_owner = true
 layout_mode = 2
 text = "选中双人沙发"
-[node name="Layout_stool" type="Button" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content"]
+
+[node name="Layout_stool" type="Button" parent="HUD/Interface/LayoutPanel/Margin/Scroll/Content" unique_id=1464643750]
 unique_name_in_owner = true
 layout_mode = 2
 text = "选中软垫矮凳"
 
-[node name="BlueprintPanel" type="VBoxContainer" parent="HUD/Interface/LayoutPanel/Margin/Scroll"]
+[node name="BlueprintPanel" type="VBoxContainer" parent="HUD/Interface/LayoutPanel/Margin/Scroll" unique_id=438190883]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 12
-[node name="BlueprintTitle" type="Label" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel"]
+
+[node name="BlueprintTitle" type="Label" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel" unique_id=1224006559]
 layout_mode = 2
-text = "房间蓝图 · 自由户型与分区"
 theme_override_font_sizes/font_size = 18
-[node name="BlueprintHint" type="Label" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel"]
+text = "房间蓝图 · 自由户型与分区"
+
+[node name="BlueprintHint" type="Label" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel" unique_id=1464097427]
 layout_mode = 2
-autowrap_mode = 3
 text = "矩形、L 型或自由地板网格。外墙修改不会穿过已有家具或内墙；支持撤销、取消与保存。"
-[node name="BlueprintQuickToolsTitle" type="Label" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel"]
+autowrap_mode = 3
+
+[node name="BlueprintQuickToolsTitle" type="Label" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel" unique_id=1699557950]
 layout_mode = 2
-text = "建造快捷工具"
 theme_override_font_sizes/font_size = 16
-[node name="BlueprintQuickTools" type="HBoxContainer" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel"]
+text = "建造快捷工具"
+
+[node name="BlueprintQuickTools" type="HBoxContainer" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel" unique_id=1062391839]
 layout_mode = 2
 theme_override_constants/separation = 4
-[node name="BlueprintQuickWall" type="Button" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel/BlueprintQuickTools"]
+
+[node name="BlueprintQuickWall" type="Button" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel/BlueprintQuickTools" unique_id=454754818]
 unique_name_in_owner = true
 layout_mode = 2
 toggle_mode = true
 text = "墙"
-[node name="BlueprintQuickFloor" type="Button" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel/BlueprintQuickTools"]
+
+[node name="BlueprintQuickFloor" type="Button" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel/BlueprintQuickTools" unique_id=1383987008]
 unique_name_in_owner = true
 layout_mode = 2
 toggle_mode = true
 text = "地板"
-[node name="BlueprintQuickOpening" type="Button" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel/BlueprintQuickTools"]
+
+[node name="BlueprintQuickOpening" type="Button" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel/BlueprintQuickTools" unique_id=1416232995]
 unique_name_in_owner = true
 layout_mode = 2
 toggle_mode = true
 text = "门窗"
-[node name="BlueprintQuickEdgeMove" type="Button" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel/BlueprintQuickTools"]
+
+[node name="BlueprintQuickEdgeMove" type="Button" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel/BlueprintQuickTools" unique_id=678992701]
 unique_name_in_owner = true
 layout_mode = 2
 toggle_mode = true
 text = "移窗"
-[node name="BlueprintGridToggle" type="CheckButton" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel"]
+
+[node name="BlueprintGridToggle" type="CheckButton" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel" unique_id=1238612974]
 unique_name_in_owner = true
 layout_mode = 2
 button_pressed = true
 text = "显示 0.5 米地板网格"
-[node name="BlueprintApertureHint" type="Label" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel"]
+
+[node name="BlueprintApertureHint" type="Label" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel" unique_id=777007913]
 layout_mode = 2
-autowrap_mode = 3
 text = "固定后墙门/左墙窗：选择“拖动原有门窗位置”。自由外墙门窗：选择“移动自定义外墙门窗”，从已有开口拖到另一空墙段。每次拖动可一次撤销。"
-[node name="BlueprintApertureTarget" type="OptionButton" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel"]
+autowrap_mode = 3
+
+[node name="BlueprintApertureTarget" type="OptionButton" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel" unique_id=2043922431]
 unique_name_in_owner = true
 layout_mode = 2
 
-[node name="BlueprintShapeLabel" type="Label" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel"]
+[node name="BlueprintShapeLabel" type="Label" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel" unique_id=660288276]
 layout_mode = 2
 text = "外轮廓：矩形 / L 型 / 自由轮廓"
-[node name="BlueprintShape" type="OptionButton" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel"]
+
+[node name="BlueprintShape" type="OptionButton" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel" unique_id=1744038528]
 unique_name_in_owner = true
 layout_mode = 2
-[node name="BlueprintNotchWidthLabel" type="Label" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel"]
+
+[node name="BlueprintNotchWidthLabel" type="Label" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel" unique_id=1724069469]
 unique_name_in_owner = true
 layout_mode = 2
 text = "右前角缺口宽度：1.5 米"
-[node name="BlueprintNotchWidth" type="HSlider" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel"]
+
+[node name="BlueprintNotchWidth" type="HSlider" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel" unique_id=118689653]
 unique_name_in_owner = true
 layout_mode = 2
 min_value = 1.0
 max_value = 4.0
 step = 0.5
 value = 1.5
-[node name="BlueprintNotchDepthLabel" type="Label" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel"]
+
+[node name="BlueprintNotchDepthLabel" type="Label" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel" unique_id=1120945471]
 unique_name_in_owner = true
 layout_mode = 2
 text = "右前角缺口深度：1.5 米"
-[node name="BlueprintNotchDepth" type="HSlider" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel"]
+
+[node name="BlueprintNotchDepth" type="HSlider" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel" unique_id=443006557]
 unique_name_in_owner = true
 layout_mode = 2
 min_value = 1.0
 max_value = 4.0
 step = 0.5
 value = 1.5
-[node name="BlueprintWidthLabel" type="Label" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel"]
+
+[node name="BlueprintWidthLabel" type="Label" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel" unique_id=2101315909]
 unique_name_in_owner = true
 layout_mode = 2
 text = "房间宽度：8 米"
-[node name="BlueprintWidth" type="HSlider" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel"]
+
+[node name="BlueprintWidth" type="HSlider" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel" unique_id=1204843494]
 unique_name_in_owner = true
 layout_mode = 2
 min_value = 6.0
 max_value = 12.0
 step = 0.5
 value = 8.0
-[node name="BlueprintDepthLabel" type="Label" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel"]
+
+[node name="BlueprintDepthLabel" type="Label" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel" unique_id=2045966789]
 unique_name_in_owner = true
 layout_mode = 2
 text = "房间深度：6 米"
-[node name="BlueprintDepth" type="HSlider" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel"]
+
+[node name="BlueprintDepth" type="HSlider" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel" unique_id=1550636282]
 unique_name_in_owner = true
 layout_mode = 2
 min_value = 5.0
 max_value = 10.0
 step = 0.5
 value = 6.0
-[node name="BlueprintDoorLabel" type="Label" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel"]
+
+[node name="BlueprintDoorLabel" type="Label" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel" unique_id=338658598]
 unique_name_in_owner = true
 layout_mode = 2
 text = "后墙门位置：-2.75 米"
-[node name="BlueprintDoorX" type="HSlider" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel"]
+
+[node name="BlueprintDoorX" type="HSlider" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel" unique_id=329478039]
 unique_name_in_owner = true
 layout_mode = 2
 min_value = -5.3
 max_value = 5.3
 step = 0.05
 value = -2.75
-[node name="BlueprintWindowLabel" type="Label" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel"]
+
+[node name="BlueprintWindowLabel" type="Label" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel" unique_id=45509437]
 unique_name_in_owner = true
 layout_mode = 2
 text = "左墙窗位置：-0.8 米"
-[node name="BlueprintWindowZ" type="HSlider" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel"]
+
+[node name="BlueprintWindowZ" type="HSlider" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel" unique_id=937419152]
 unique_name_in_owner = true
 layout_mode = 2
 min_value = -3.65
 max_value = 3.65
 step = 0.05
-value = -0.8
-[node name="BlueprintFloorTitle" type="Label" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel"]
+value = -0.7999999999999998
+
+[node name="BlueprintFloorTitle" type="Label" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel" unique_id=438522119]
 layout_mode = 2
+theme_override_font_sizes/font_size = 16
 text = "外轮廓 · 地板单元"
-theme_override_font_sizes/font_size = 16
-[node name="BlueprintFloorHint" type="Label" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel"]
+
+[node name="BlueprintFloorHint" type="Label" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel" unique_id=464445887]
 layout_mode = 2
-autowrap_mode = 3
 text = "选自由轮廓，再选择挖除或恢复地板。左键拖动绘制，右键反向操作。不能切断房间，也不能移除家具下方地板。"
-[node name="BlueprintFloorTool" type="OptionButton" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel"]
-unique_name_in_owner = true
-layout_mode = 2
-
-[node name="BlueprintFinishTitle" type="Label" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel"]
-layout_mode = 2
-text = "自由装修 · 地板与墙面"
-theme_override_font_sizes/font_size = 16
-[node name="BlueprintFinishHint" type="Label" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel"]
-layout_mode = 2
 autowrap_mode = 3
-text = "选择上方的地板材质 / 自定义外墙 / 内墙改色画笔。左键拖动涂刷，右键恢复默认。外墙窗户和门洞每段宽 0.5 米。"
-[node name="BlueprintTileFinish" type="OptionButton" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel"]
-unique_name_in_owner = true
-layout_mode = 2
-[node name="BlueprintWallFinish" type="OptionButton" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel"]
-unique_name_in_owner = true
-layout_mode = 2
-[node name="BlueprintOpeningKind" type="OptionButton" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel"]
+
+[node name="BlueprintFloorTool" type="OptionButton" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel" unique_id=1921696824]
 unique_name_in_owner = true
 layout_mode = 2
 
-[node name="BlueprintOpeningWidthLabel" type="Label" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel"]
+[node name="BlueprintFinishTitle" type="Label" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel" unique_id=799756553]
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+text = "自由装修 · 地板与墙面"
+
+[node name="BlueprintFinishHint" type="Label" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel" unique_id=2128079745]
+layout_mode = 2
+text = "选择上方的地板材质 / 自定义外墙 / 内墙改色画笔。左键拖动涂刷，右键恢复默认。外墙窗户和门洞每段宽 0.5 米。"
+autowrap_mode = 3
+
+[node name="BlueprintTileFinish" type="OptionButton" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel" unique_id=2057941742]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="BlueprintWallFinish" type="OptionButton" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel" unique_id=1702055913]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="BlueprintOpeningKind" type="OptionButton" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel" unique_id=1366426712]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="BlueprintOpeningWidthLabel" type="Label" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel" unique_id=454709667]
 layout_mode = 2
 text = "连续门窗宽度（自定义外墙）"
-[node name="BlueprintOpeningWidth" type="OptionButton" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel"]
+
+[node name="BlueprintOpeningWidth" type="OptionButton" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel" unique_id=799231897]
 unique_name_in_owner = true
 layout_mode = 2
-[node name="BlueprintWallsTitle" type="Label" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel"]
+
+[node name="BlueprintWallsTitle" type="Label" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel" unique_id=1928412844]
 layout_mode = 2
-text = "内墙绘制"
 theme_override_font_sizes/font_size = 16
-[node name="BlueprintWallHint" type="Label" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel"]
+text = "内墙绘制"
+
+[node name="BlueprintWallHint" type="Label" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel" unique_id=2129564721]
 layout_mode = 2
-autowrap_mode = 3
 text = "0.5 米网格 · 左键点击/拖动绘制 · 右键拆除 · 内墙和门洞每段长 1 米"
-[node name="BlueprintStrokeInfo" type="Label" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel"]
+autowrap_mode = 3
+
+[node name="BlueprintStrokeInfo" type="Label" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel" unique_id=1374054001]
 unique_name_in_owner = true
 layout_mode = 2
 text = "沿墙拖动连续建造 · 绿色成功 / 红色阻挡 · 松开后一次撤销"
 autowrap_mode = 3
-[node name="WallAxis" type="OptionButton" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel"]
+
+[node name="WallAxis" type="OptionButton" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel" unique_id=524997404]
 unique_name_in_owner = true
 layout_mode = 2
-[node name="WallKind" type="OptionButton" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel"]
+
+[node name="WallKind" type="OptionButton" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel" unique_id=1438003072]
 unique_name_in_owner = true
 layout_mode = 2
-[node name="WallRemoveMode" type="CheckButton" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel"]
+
+[node name="WallRemoveMode" type="CheckButton" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel" unique_id=988694301]
 unique_name_in_owner = true
 layout_mode = 2
 text = "拆除模式 · 左键点击墙段"
-[node name="BlueprintStatus" type="Label" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel"]
+
+[node name="BlueprintStatus" type="Label" parent="HUD/Interface/LayoutPanel/Margin/Scroll/BlueprintPanel" unique_id=1825827787]
 unique_name_in_owner = true
 layout_mode = 2
-autowrap_mode = 3
 text = "应用布置后保存蓝图，取消则还原。"
+autowrap_mode = 3
 
 [editable path="Workstation3D"]

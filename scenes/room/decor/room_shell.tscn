@@ -1,0 +1,22 @@
+[gd_scene format=3 uid="uid://dngkgq1jvppkp"]
+
+[ext_resource type="Script" uid="uid://bjouphuphmd3a" path="res://scripts/room/room_furniture.gd" id="1_8naig"]
+[ext_resource type="PackedScene" uid="uid://8uy7ldekx7i7" path="res://assets/models/room/room_shell.glb" id="2_24f8u"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_l4krm"]
+size = Vector3(8.24, 3.3999999, 6.24)
+
+[node name="room_shell" type="Node3D" unique_id=2113711980]
+script = ExtResource("1_8naig")
+bounds = Vector3(8.24, 3.3999999, 6.24)
+role = "room_shell"
+
+[node name="Model" type="Node3D" parent="." unique_id=255910072 instance=ExtResource("2_24f8u")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.2, 0)
+
+[node name="PickArea" type="Area3D" parent="." unique_id=353467253]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.6999999, 0)
+collision_mask = 0
+
+[node name="Hit" type="CollisionShape3D" parent="PickArea" unique_id=1717188235]
+shape = SubResource("BoxShape3D_l4krm")

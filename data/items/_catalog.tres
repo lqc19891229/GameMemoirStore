@@ -1,10 +1,11 @@
 [gd_resource type="Resource" script_class="MemoirItemCatalog" format=3 uid="uid://d3pdjkyimqqj3"]
 
-[ext_resource type="Script" uid="uid://b3ilypcb0cnql" path="res://scripts/items/item_definition.gd" id="1_71y6h"]
-[ext_resource type="Script" uid="uid://uvb78r526nb1" path="res://scripts/items/item_catalog.gd" id="39_ac6gt"]
+[ext_resource type="Script" uid="uid://b3ilypcb0cnql" path="res://scripts/items/item_definition.gd" id="1_ag6fn"]
+[ext_resource type="PackedScene" uid="uid://bknk1tuj3p3f6" path="res://scenes/room/tables/desk_basic.tscn" id="2_6wd1v"]
+[ext_resource type="Script" uid="uid://uvb78r526nb1" path="res://scripts/items/item_catalog.gd" id="3_muuja"]
 
 [sub_resource type="Resource" id="item_0"]
-script = ExtResource("1_71y6h")
+script = ExtResource("1_ag6fn")
 item_id = "starter_monitor"
 name = "旧日 CRT 显示器"
 subcategory = "monitor"
@@ -14,7 +15,7 @@ placement_surface = "desk"
 visual_id = "starter_monitor"
 
 [sub_resource type="Resource" id="item_1"]
-script = ExtResource("1_71y6h")
+script = ExtResource("1_ag6fn")
 item_id = "lcd_monitor"
 name = "轻薄液晶显示器"
 subcategory = "monitor"
@@ -25,7 +26,7 @@ placement_surface = "desk"
 visual_id = "lcd_monitor"
 
 [sub_resource type="Resource" id="item_2"]
-script = ExtResource("1_71y6h")
+script = ExtResource("1_ag6fn")
 item_id = "starter_pc"
 name = "旧日主机"
 subcategory = "computer"
@@ -35,7 +36,7 @@ placement_surface = "desk"
 visual_id = "starter_pc"
 
 [sub_resource type="Resource" id="item_3"]
-script = ExtResource("1_71y6h")
+script = ExtResource("1_ag6fn")
 item_id = "starter_mouse"
 name = "有线键鼠"
 subcategory = "input"
@@ -45,7 +46,7 @@ placement_surface = "desk"
 visual_id = "starter_mouse"
 
 [sub_resource type="Resource" id="item_4"]
-script = ExtResource("1_71y6h")
+script = ExtResource("1_ag6fn")
 item_id = "precise_mouse"
 name = "精准键鼠套装"
 subcategory = "input"
@@ -57,7 +58,7 @@ visual_id = "precise_mouse"
 speed = 1.15
 
 [sub_resource type="Resource" id="item_5"]
-script = ExtResource("1_71y6h")
+script = ExtResource("1_ag6fn")
 item_id = "stream_mic"
 name = "桌面麦克风"
 subcategory = "microphone"
@@ -68,7 +69,7 @@ placement_surface = "desk"
 income = 1
 
 [sub_resource type="Resource" id="item_6"]
-script = ExtResource("1_71y6h")
+script = ExtResource("1_ag6fn")
 item_id = "workstation"
 name = "进阶游戏主机"
 subcategory = "computer"
@@ -81,7 +82,7 @@ speed = 1.2
 income = 1
 
 [sub_resource type="Resource" id="item_7"]
-script = ExtResource("1_71y6h")
+script = ExtResource("1_ag6fn")
 item_id = "starter_desk"
 name = "旧木书桌"
 category = "furniture"
@@ -92,7 +93,7 @@ placement_surface = "floor"
 retired = true
 
 [sub_resource type="Resource" id="item_8"]
-script = ExtResource("1_71y6h")
+script = ExtResource("1_ag6fn")
 item_id = "starter_cabinet"
 name = "纪念小架"
 category = "furniture"
@@ -104,7 +105,7 @@ capacity = 1
 retired = true
 
 [sub_resource type="Resource" id="item_9"]
-script = ExtResource("1_71y6h")
+script = ExtResource("1_ag6fn")
 item_id = "oak_desk"
 name = "橡木工作台"
 category = "furniture"
@@ -116,7 +117,7 @@ placement_surface = "floor"
 retired = true
 
 [sub_resource type="Resource" id="item_10"]
-script = ExtResource("1_71y6h")
+script = ExtResource("1_ag6fn")
 item_id = "reading_lamp"
 name = "暖光台灯"
 category = "furniture"
@@ -128,7 +129,7 @@ placement_surface = "floor"
 retired = true
 
 [sub_resource type="Resource" id="item_11"]
-script = ExtResource("1_71y6h")
+script = ExtResource("1_ag6fn")
 item_id = "display_cabinet"
 name = "玻璃成就柜"
 category = "furniture"
@@ -141,7 +142,7 @@ capacity = 3
 retired = true
 
 [sub_resource type="Resource" id="item_17"]
-script = ExtResource("1_71y6h")
+script = ExtResource("1_ag6fn")
 item_id = "mechanical_keyboard"
 name = "机械键盘"
 subcategory = "keyboard"
@@ -153,7 +154,7 @@ visual_id = "precise_mouse"
 speed = 1.03
 
 [sub_resource type="Resource" id="item_18"]
-script = ExtResource("1_71y6h")
+script = ExtResource("1_ag6fn")
 item_id = "optical_mouse"
 name = "光学游戏鼠标"
 subcategory = "mouse"
@@ -163,6 +164,19 @@ description = "独立升级鼠标。"
 placement_surface = "desk"
 visual_id = "precise_mouse"
 speed = 1.1
+
+[sub_resource type="Resource" id="Resource_wpygg"]
+script = ExtResource("1_ag6fn")
+item_id = "desk_basic"
+name = "基础电脑桌"
+category = "furniture"
+subcategory = "desk_basic"
+catalog_group = "tables"
+catalog_type = "computer_desk"
+price = 1
+placement_surface = "floor"
+furniture_scene = ExtResource("2_6wd1v")
+
 [resource]
-script = ExtResource("39_ac6gt")
-items = Array[ExtResource("1_71y6h")]([SubResource("item_0"), SubResource("item_1"), SubResource("item_2"), SubResource("item_3"), SubResource("item_4"), SubResource("item_5"), SubResource("item_6"), SubResource("item_7"), SubResource("item_8"), SubResource("item_9"), SubResource("item_10"), SubResource("item_11"), SubResource("item_17"), SubResource("item_18")])
+script = ExtResource("3_muuja")
+items = Array[ExtResource("1_ag6fn")]([SubResource("item_0"), SubResource("item_1"), SubResource("item_2"), SubResource("item_3"), SubResource("item_4"), SubResource("item_5"), SubResource("item_6"), SubResource("item_7"), SubResource("item_8"), SubResource("item_9"), SubResource("item_10"), SubResource("item_11"), SubResource("item_17"), SubResource("item_18"), SubResource("Resource_wpygg")])
