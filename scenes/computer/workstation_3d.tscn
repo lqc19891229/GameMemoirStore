@@ -116,9 +116,9 @@ unique_name_in_owner = true
 unique_name_in_owner = true
 position = Vector3(0, 0.75, -0.12)
 
-[node name="Computer" parent="TableGroup/Equipment" instance=ExtResource("4")]
+[node name="Computer" parent="." instance=ExtResource("4")]
 unique_name_in_owner = true
-position = Vector3(0.80, 0, 0)
+position = Vector3(0.10, 0, -0.8)
 
 [node name="Keyboard" parent="TableGroup/Equipment" instance=ExtResource("5")]
 unique_name_in_owner = true
