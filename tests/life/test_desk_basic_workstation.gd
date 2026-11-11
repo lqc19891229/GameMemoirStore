@@ -12,12 +12,12 @@ func _initialize() -> void:
 	_run.call_deferred()
 
 func _run() -> void:
-	var world: Node3D = load("res://scenes/computer/workstation_3d.tscn").instantiate()
+	var world = load("res://scenes/computer/workstation_3d.tscn").instantiate()
 	root.add_child(world)
 	await process_frame
 	await physics_frame
-	var layout: Node = world.layout
-	var desk: Node3D = world.get_node("TableGroup/Desk")
+	var layout = world.layout
+	var desk = world.get_node("TableGroup/Desk")
 	check(desk.scene_file_path == "res://scenes/room/tables/desk_basic.tscn", "workstation instances the catalog desk_basic scene")
 	check(desk.bounds.is_equal_approx(Vector3(1.0, 0.75, 0.6)), "desk_basic is 100 x 60 x 75 cm")
 	check(layout.tabletop_half_size.is_equal_approx(Vector2(0.5, 0.3)), "workstation placement matches the desk footprint")
