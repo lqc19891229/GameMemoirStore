@@ -31,8 +31,8 @@ func run() -> void:
 	var room = world.get_node("Room")
 	var shell = room.get_node("Shell")
 	var layout = world.layout
-	check(room.blueprint == Blueprint.DEFAULT and layout.room_half_size == Vector2(2,1.25), "existing room starts at 8 x 6 metres")
-	check(is_equal_approx((shell.get_node("Floor") as MeshInstance3D).mesh.size.x, 4.24), "default floor remains unchanged")
+	check(room.blueprint == Blueprint.DEFAULT and layout.room_half_size == Vector2(2,1.25), "new room starts at 4 x 2.5 metres (10 square metres)")
+	check(is_equal_approx((shell.get_node("Floor") as MeshInstance3D).mesh.size.x, 4.24), "default floor mesh matches the 4 metre room width")
 	var camera_before: Transform3D = world.camera.transform
 	desktop.begin_layout()
 	desktop.set_blueprint_mode(true)
