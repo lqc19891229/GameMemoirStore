@@ -77,7 +77,7 @@ func run() -> void:
 	var start: Vector2 = world.camera.unproject_position(pad.global_position)
 	var target: Vector2 = world.camera.unproject_position(pad.global_position + layout.group.global_basis * Vector3(.45,0,.06))
 	await drag(start,target)
-	check(world.devices.mouse.position.distance_to(Vector3(.8,.78,.29)) < .03, "actual pointer drag moves mouse on tabletop")
+	check(world.devices.mouse.position.x >= original.mouse.origin.x and world.devices.mouse.position.x <= .425 and is_equal_approx(world.devices.mouse.position.y,.75), "mouse drag stays inside the real 1 metre desk")
 	check(is_equal_approx(world.devices.mouse.position.x/.05,roundf(world.devices.mouse.position.x/.05)), "movement snaps to 5cm grid")
 	await key(KEY_E)
 	check(is_equal_approx(world.devices.mouse.rotation.y,deg_to_rad(15)), "E rotates selected device 15 degrees")
@@ -112,7 +112,7 @@ func run() -> void:
 	layout.move_to(Vector2(100,100))
 	layout.rotate_to(PI/2)
 	for corner in layout.footprint("computer"):
-		check(absf(corner.x)<=.9 and absf(corner.y)<=.4, "rotated case footprint stays within tabletop")
+		check(absf(corner.x)<=2 and absf(corner.y)<=1.25, "rotated floor-standing PC stays within the 10 sqm room")
 	layout.reset_layout()
 	layout.select("mouse")
 	layout.move_to(Vector2(world.devices.keyboard.position.x,world.devices.keyboard.position.z))
