@@ -56,7 +56,7 @@ func _process(delta: float) -> void:
 		# Keep every streak center inside the 1.34 m tall window sky.
 		# Even the tallest .37 m streak remains between y=1.32 and y=2.66.
 		var phase := fposmod(float(i) * .37 + _rain_elapsed * (1.35 + float(i % 5) * .13), .90)
-		streak.position.y = 1.53 + phase
+		streak.position.y = 1.10 + phase * .85
 
 func _make_rain_loop() -> AudioStreamWAV:
 	# A two-second, seeded broadband rain bed. Crossfade the end to the
