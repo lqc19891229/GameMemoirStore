@@ -28,7 +28,7 @@ static func clean(raw: Variant) -> Dictionary:
 	result.shape = requested_shape if requested_shape in ["rectangle", "l", "custom"] else "rectangle"
 	result.notch_width = snappedf(clampf(result.notch_width, 1.0, minf(4.0, result.width - 2.0)), 0.5)
 	result.notch_depth = snappedf(clampf(result.notch_depth, 1.0, minf(4.0, result.depth - 1.5)), 0.5)
-	# A door needs 1 m and a window needs 2.36 m of uninterrupted wall.
+	# The default door is 0.9 m wide; the window opening is 1.5 m wide.
 	result.door_x = snappedf(clampf(result.door_x, -result.width / 2.0 + 0.6, result.width / 2.0 - 0.6), 0.05)
 	result.window_z = snappedf(clampf(result.window_z, -result.depth / 2.0 + 0.8, result.depth / 2.0 - 0.8), 0.05)
 	if result.shape == "custom":
