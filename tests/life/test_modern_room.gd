@@ -46,6 +46,9 @@ func run() -> void:
 	check(environment.ambient_light_energy <= 0.4, "room ambient light preserves material contrast")
 	check(layout.nodes.size() == 10, "room and equipment share one placement controller")
 	check(layout._layout_blocker().is_empty(), "authored room starts without intersections")
+	var desktop_mesh: BoxMesh = layout.nodes["desk"].get_node("Desk/Model/OakDesktop").mesh as BoxMesh
+	check(desktop_mesh.size.is_equal_approx(Vector3(1.8,.12,.8)), "workstation desk uses a realistic 1.8 x 0.8 metre footprint")
+	check(layout.tabletop_half_size.is_equal_approx(Vector2(.9,.4)) and layout.room_half_size.is_equal_approx(Vector2(2,1.25)), "tabletop and room placement bounds match the 10 sqm plan")
 	check(world.overview_pitch > .5 and world.overview_pitch < .8, "default camera shows an elevated room overview")
 	check(not world.has_node("PixelPass"), "room overview renders at full resolution without pixel post-process")
 	var shelf: Node3D = layout.nodes["bookcase"].get_node("Model")
