@@ -114,19 +114,19 @@ unique_name_in_owner = true
 
 [node name="Monitor" parent="TableGroup/Equipment" instance=ExtResource("3")]
 unique_name_in_owner = true
-position = Vector3(-0.42, 0.78, -0.12)
+position = Vector3(-0.32, 0.78, -0.18)
 
 [node name="Computer" parent="TableGroup/Equipment" instance=ExtResource("4")]
 unique_name_in_owner = true
-position = Vector3(0.62, 0.78, -0.12)
+position = Vector3(0.55, 0.78, -0.05)
 
 [node name="Keyboard" parent="TableGroup/Equipment" instance=ExtResource("5")]
 unique_name_in_owner = true
-position = Vector3(-0.22, 0.78, 0.23)
+position = Vector3(-0.18, 0.78, 0.20)
 
 [node name="Mouse" parent="TableGroup/Equipment" instance=ExtResource("6")]
 unique_name_in_owner = true
-position = Vector3(0.34, 0.78, 0.23)
+position = Vector3(0.38, 0.78, 0.20)
 
 [node name="BlueprintOverlay" type="Node3D" parent="."]
 visible = false
