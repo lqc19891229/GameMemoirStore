@@ -12,14 +12,16 @@ role = "mouse"
 appearance = ExtResource("2")
 [node name="Models" type="Node3D" parent="."]
 [node name="DefaultModel" parent="Models" instance=ExtResource("3")]
+scale = Vector3(0.55, 0.55, 0.55)
 [node name="UpgradeModel" parent="Models" instance=ExtResource("4")]
+scale = Vector3(0.55, 0.55, 0.55)
 visible = false
 [node name="MouseGlow" type="OmniLight3D" parent="."]
 unique_name_in_owner = true
-position = Vector3(0, 0.12, -0.02)
+position = Vector3(0, 0.066, -0.011)
 light_color = Color(0.18, 0.72, 0.92, 1)
 light_energy = 0.06
-omni_range = 0.65
+omni_range = 0.45
 [node name="PickArea" type="Area3D" parent="."]
 position = Vector3(0,0.065,0)
 collision_layer = 1
