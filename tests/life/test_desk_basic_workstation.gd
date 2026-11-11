@@ -37,6 +37,11 @@ func _run() -> void:
 		var expected_parent: Node = world if role == "computer" else world.get_node("%Equipment")
 		check(world.devices[role].get_parent() == expected_parent, role + " retains the correct parent for safe floor/tabletop layout")
 	check(world.devices["monitor"].has_node("Screen"), "monitor screen for computer interaction is retained")
+	var pixels := Image.create(2, 2, false, Image.FORMAT_RGBA8)
+	var texture := ImageTexture.create_from_image(pixels)
+	world.set_screen_texture(texture)
+	var screen: MeshInstance3D = world.devices["monitor"].get_node("Screen")
+	check(screen.material_override is StandardMaterial3D and screen.material_override.albedo_texture == texture, "desktop screen texture still connects to the monitor")
 	check(layout._layout_blocker().is_empty(), "default workstation layout has no collisions or desk-edge violations")
 	world.queue_free()
 	await process_frame
