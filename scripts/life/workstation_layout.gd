@@ -2498,12 +2498,13 @@ func _blocker(role: String, polygon: PackedVector2Array, ignored: Array[String] 
 func _layout_blocker() -> String:
 	_sync_mount_poses()
 	_sync_wall_mount_poses()
-	# Hardware stays under the workstation Equipment node; the PC tower is
-	# positioned on the floor beside the smaller desk, while other devices
-	# stay on the tabletop.
+	# Display and input devices must remain under the workstation Equipment node.
+	# The PC tower is a separate floor node so its world-space floor collisions
+	# stay correct when the desk moves or rotates.
 	for role: String in world.devices:
-		if nodes[role].get_parent() != world.get_node("%Equipment"):
-			return name_for(role) + "必须放在电脑桌上"
+		var expected_parent: Node = world if role == "computer" else world.get_node("%Equipment")
+		if nodes[role].get_parent() != expected_parent:
+			return name_for(role) + "的挂载节点无效"
 	for role: String in nodes:
 		if InventoryData.is_room_furniture_role(Data.base_role(role)) and not placed_instances.has(role): continue
 		var blocker := _blocker(role, footprint(role, collision_margin))
