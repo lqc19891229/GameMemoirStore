@@ -81,65 +81,10 @@ visual_id = "workstation"
 speed = 1.2
 income = 1
 
-[sub_resource type="Resource" id="item_7"]
-script = ExtResource("1_ag6fn")
-item_id = "starter_desk"
-name = "旧木书桌"
-category = "furniture"
-subcategory = "desk"
-slot = "desk"
-description = "历史收藏记录。"
-placement_surface = "floor"
-retired = true
 
-[sub_resource type="Resource" id="item_8"]
-script = ExtResource("1_ag6fn")
-item_id = "starter_cabinet"
-name = "纪念小架"
-category = "furniture"
-subcategory = "cabinet"
-slot = "cabinet"
-description = "历史收藏记录。"
-placement_surface = "floor"
-capacity = 1
-retired = true
 
-[sub_resource type="Resource" id="item_9"]
-script = ExtResource("1_ag6fn")
-item_id = "oak_desk"
-name = "橡木工作台"
-category = "furniture"
-subcategory = "desk"
-slot = "desk"
-price = 60
-description = "历史收藏记录。"
-placement_surface = "floor"
-retired = true
 
-[sub_resource type="Resource" id="item_10"]
-script = ExtResource("1_ag6fn")
-item_id = "reading_lamp"
-name = "暖光台灯"
-category = "furniture"
-subcategory = "lamp"
-slot = "decor"
-price = 24
-description = "历史收藏记录。"
-placement_surface = "floor"
-retired = true
 
-[sub_resource type="Resource" id="item_11"]
-script = ExtResource("1_ag6fn")
-item_id = "display_cabinet"
-name = "玻璃成就柜"
-category = "furniture"
-subcategory = "cabinet"
-slot = "cabinet"
-price = 80
-description = "历史收藏记录。"
-placement_surface = "floor"
-capacity = 3
-retired = true
 
 [sub_resource type="Resource" id="item_17"]
 script = ExtResource("1_ag6fn")
@@ -179,4 +124,4 @@ furniture_scene = ExtResource("2_6wd1v")
 
 [resource]
 script = ExtResource("3_muuja")
-items = Array[ExtResource("1_ag6fn")]([SubResource("item_0"), SubResource("item_1"), SubResource("item_2"), SubResource("item_3"), SubResource("item_4"), SubResource("item_5"), SubResource("item_6"), SubResource("item_7"), SubResource("item_8"), SubResource("item_9"), SubResource("item_10"), SubResource("item_11"), SubResource("item_17"), SubResource("item_18"), SubResource("Resource_wpygg")])
+items = Array[ExtResource("1_ag6fn")]([SubResource("item_0"), SubResource("item_1"), SubResource("item_2"), SubResource("item_3"), SubResource("item_4"), SubResource("item_5"), SubResource("item_6"), SubResource("item_17"), SubResource("item_18"), SubResource("Resource_wpygg")])
