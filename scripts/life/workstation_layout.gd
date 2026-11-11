@@ -11,8 +11,8 @@ const SupportSurfaces = preload("res://scripts/room/furniture_support_surfaces.g
 const FURNITURE_COLOR_LABELS = Finishes.LABELS
 const FURNITURE_COLOR_HEX = Finishes.HEX
 const NAMES := {"desk":"桌子（整套）", "monitor":"显示器", "computer":"机箱", "keyboard":"键盘", "mouse":"鼠标", "chair":"椅子", "bookcase":"书架", "lamp":"落地灯", "rug":"地毯", "plant":"盆栽", "sofa":"双人沙发", "stool":"软垫矮凳"}
-@export var tabletop_half_size := Vector2(.9, .4)
-@export var tabletop_height := 0.78
+@export var tabletop_half_size := Vector2(.5, .3)
+@export var tabletop_height := 0.75
 @export var edge_margin := 0.025
 @export var room_half_size := Vector2(2, 1.25)
 @export var grid_step := 0.05
@@ -2381,7 +2381,7 @@ func _footprint_at(role: String, pose: Transform3D, padding: float) -> PackedVec
 func surface_for(role: String) -> String:
 	if wall_mounts.has(role): return "wall"
 	if surface_mounts.has(role): return "mount"
-	return "desk" if world.devices.has(role) else "floor"
+	return "desk" if world.devices.has(role) and role != "computer" else "floor"
 
 func is_floor(role: String) -> bool:
 	return surface_for(role) == "floor"
@@ -2498,8 +2498,9 @@ func _blocker(role: String, polygon: PackedVector2Array, ignored: Array[String] 
 func _layout_blocker() -> String:
 	_sync_mount_poses()
 	_sync_wall_mount_poses()
-	# Desktop hardware must stay under the table's Equipment node. It is
-	# never a free floor item, even when a save or caller bypasses the UI.
+	# Hardware stays under the workstation Equipment node; the PC tower is
+	# positioned on the floor beside the smaller desk, while other devices
+	# stay on the tabletop.
 	for role: String in world.devices:
 		if nodes[role].get_parent() != world.get_node("%Equipment"):
 			return name_for(role) + "必须放在电脑桌上"
