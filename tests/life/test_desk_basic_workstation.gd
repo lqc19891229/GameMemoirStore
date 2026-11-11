@@ -34,7 +34,8 @@ func _run() -> void:
 	check(layout.surface_for("computer") == "floor", "PC tower is floor-standing")
 	check(is_equal_approx(world.devices["computer"].position.y, 0), "PC tower stands at floor height")
 	for role in world.devices:
-		check(world.devices[role].get_parent() == world.get_node("%Equipment"), role + " remains attached to Equipment and functional")
+		var expected_parent: Node = world if role == "computer" else world.get_node("%Equipment")
+		check(world.devices[role].get_parent() == expected_parent, role + " retains the correct parent for safe floor/tabletop layout")
 	check(world.devices["monitor"].has_node("Screen"), "monitor screen for computer interaction is retained")
 	check(layout._layout_blocker().is_empty(), "default workstation layout has no collisions or desk-edge violations")
 	world.queue_free()
