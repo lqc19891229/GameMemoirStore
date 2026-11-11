@@ -4,14 +4,18 @@
 [ext_resource type="PackedScene" uid="uid://cycgap6vhqg55" path="res://assets/models/room/tables/desk_basic.glb" id="2_b8w1s"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_7xdkr"]
-size = Vector3(1.1999999, 0.75, 0.59999996)
+size = Vector3(1, 0.75, 0.6)
 
 [node name="desk_basic" type="Node3D" unique_id=855937028]
 script = ExtResource("1_kusxv")
-bounds = Vector3(1.1999999, 0.75, 0.59999996)
+bounds = Vector3(1, 0.75, 0.6)
 role = "desk_basic"
+use_custom_support_surfaces = true
+custom_support_surfaces = Array[Dictionary]([{
+"top": Vector3(0, 0.75, 0)
+}])
 
-[node name="Model" type="Node3D" parent="." unique_id=988603942 instance=ExtResource("2_b8w1s")]
+[node name="Model" parent="." unique_id=988603942 instance=ExtResource("2_b8w1s")]
 
 [node name="PickArea" type="Area3D" parent="." unique_id=276955637]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.375, 0)
