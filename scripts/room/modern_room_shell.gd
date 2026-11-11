@@ -187,10 +187,10 @@ func _build_floor() -> void:
 	var base := _material(Color("b99572"), .68)
 	if cutout:
 		# Two adjoining rectangles make a real hole in the floor mesh (not a color mask).
-		_box(self, "Floor", Vector3(width + .24, .2, depth - notch_d + .12), Vector3(0, -.1, -(notch_d + .12) * .5), base, "floor")
-		_box(self, "FloorWing", Vector3(width - notch_w + .12, .2, notch_d + .12), Vector3(-(notch_w + .12) * .5, -.1, depth * .5 - notch_d * .5 + .06), base, "floor")
+		_box(self, "Floor", Vector3(width + .24, .1, depth - notch_d + .12), Vector3(0, -.05, -(notch_d + .12) * .5), base, "floor")
+		_box(self, "FloorWing", Vector3(width - notch_w + .12, .1, notch_d + .12), Vector3(-(notch_w + .12) * .5, -.05, depth * .5 - notch_d * .5 + .06), base, "floor")
 	else:
-		_box(self, "Floor", Vector3(width + .24, .2, depth + .24), Vector3(0, -.1, 0), base, "floor")
+		_box(self, "Floor", Vector3(width + .24, .1, depth + .24), Vector3(0, -.05, 0), base, "floor")
 	var tones := [.96, 1.02, .99, 1.04]
 	for row in range(roundi(depth / .5)):
 		var tone: float = tones[row % tones.size()]
@@ -207,42 +207,42 @@ func _build_left_wall(wall: Material, trim: Material, wood: Material, metal: Mat
 	var half_z: float = blueprint.depth * 0.5
 	var window_z: float = blueprint.window_z
 	var x := -half_x - .06
-	var left_end := window_z - 1.18
-	var right_start := window_z + 1.16
+	var left_end := window_z - .78
+	var right_start := window_z + .78
 	var lower_z := -half_z - .12
 	var upper_z := half_z + .12
-	_box(left, "WallSurface_Lower", Vector3(.12, 1.26, blueprint.depth + .24), Vector3(x, .63, 0), wall, "wall")
-	_box(left, "WallSurface_Upper", Vector3(.12, .48, blueprint.depth + .24), Vector3(x, 2.96, 0), wall, "wall")
-	_box(left, "WallSurface_WindowLeft", Vector3(.12, 1.44, left_end - lower_z), Vector3(x, 2.0, (lower_z + left_end) * .5), wall, "wall")
-	_box(left, "WallSurface_WindowRight", Vector3(.12, 1.44, upper_z - right_start), Vector3(x, 2.0, (right_start + upper_z) * .5), wall, "wall")
-	_box(left, "WindowGlass", Vector3(.025, 1.43, 2.25), Vector3(x + .07, 1.99, window_z), glass)
-	_box(left, "WindowSill", Vector3(.2, .065, 2.48), Vector3(x + .18, 1.245, window_z), wood)
-	_box(left, "WindowSillApron", Vector3(.09,.10,2.36), Vector3(x+.25,1.166,window_z), trim)
-	_box(left, "WindowSillHighlight", Vector3(.26,.018,2.49), Vector3(x+.18,1.283,window_z), _material(Color("e9ddcb"),.48))
-	for z in [window_z - 1.16, window_z + 1.16]:
-		_box(left, "WindowFrame", Vector3(.10, 1.55, .075), Vector3(x + .15, 1.99, z), trim)
-	for y in [1.22, 2.76]:
-		_box(left, "WindowFrame", Vector3(.10, .075, 2.43), Vector3(x + .15, y, window_z), trim)
-	_box(left, "WindowMullion", Vector3(.055, 1.43, .045), Vector3(x + .135, 1.99, window_z), trim)
-	_box(left, "WindowMullion", Vector3(.055, .045, 2.25), Vector3(x + .135, 1.99, window_z), trim)
-	var rail := _cylinder(left, "CurtainRail", .025, .025, 2.72, Vector3(x + .24, 2.84, window_z), metal, 20)
+	_box(left, "WallSurface_Lower", Vector3(.12, .9, blueprint.depth + .24), Vector3(x, .45, 0), wall, "wall")
+	_box(left, "WallSurface_Upper", Vector3(.12, .6, blueprint.depth + .24), Vector3(x, 2.4, 0), wall, "wall")
+	_box(left, "WallSurface_WindowLeft", Vector3(.12, 1.2, left_end - lower_z), Vector3(x, 1.5, (lower_z + left_end) * .5), wall, "wall")
+	_box(left, "WallSurface_WindowRight", Vector3(.12, 1.2, upper_z - right_start), Vector3(x, 1.5, (right_start + upper_z) * .5), wall, "wall")
+	_box(left, "WindowGlass", Vector3(.025, 1.2, 1.5), Vector3(x + .07, 1.5, window_z), glass)
+	_box(left, "WindowSill", Vector3(.2, .06, 1.68), Vector3(x + .18, .9, window_z), wood)
+	_box(left, "WindowSillApron", Vector3(.09,.08,1.58), Vector3(x+.25,.83,window_z), trim)
+	_box(left, "WindowSillHighlight", Vector3(.26,.018,1.69), Vector3(x+.18,.93,window_z), _material(Color("e9ddcb"),.48))
+	for z in [window_z - .78, window_z + .78]:
+		_box(left, "WindowFrame", Vector3(.10, 1.32, .075), Vector3(x + .15, 1.5, z), trim)
+	for y in [.9, 2.1]:
+		_box(left, "WindowFrame", Vector3(.10, .06, 1.56), Vector3(x + .15, y, window_z), trim)
+	_box(left, "WindowMullion", Vector3(.055, 1.2, .045), Vector3(x + .135, 1.5, window_z), trim)
+	_box(left, "WindowMullion", Vector3(.055, .045, 1.5), Vector3(x + .135, 1.5, window_z), trim)
+	var rail := _cylinder(left, "CurtainRail",  .025, .025, 1.85, Vector3(x + .24, 2.18, window_z), metal, 20)
 	rail.rotation.x = PI / 2.0
 	for panel_index in range(2):
-		var center_z: float = window_z+(-.92 if panel_index == 0 else .92)
-		_curtain_panel(left,Vector3(x+.25,2.01,center_z),.45,1.50,linen,"CurtainPanel" if panel_index == 0 else "CurtainPanel_%d" % panel_index)
-		_box(left,"CurtainHeader" if panel_index == 0 else "CurtainHeader_%d" % panel_index,Vector3(.042,.055,.45),Vector3(x+.25,2.781,center_z),linen)
-		_box(left,"CurtainHem" if panel_index == 0 else "CurtainHem_%d" % panel_index,Vector3(.048,.028,.46),Vector3(x+.25,1.27,center_z),linen)
+		var center_z: float = window_z+(-.62 if panel_index == 0 else .62)
+		_curtain_panel(left,Vector3(x+.25,1.5,center_z),.30,1.2,linen,"CurtainPanel" if panel_index == 0 else "CurtainPanel_%d" % panel_index)
+		_box(left,"CurtainHeader" if panel_index == 0 else "CurtainHeader_%d" % panel_index,Vector3(.042,.045,.30),Vector3(x+.25,2.13,center_z),linen)
+		_box(left,"CurtainHem" if panel_index == 0 else "CurtainHem_%d" % panel_index,Vector3(.048,.025,.31),Vector3(x+.25,.91,center_z),linen)
 		for hook in range(4):
-			var hook_z := center_z-.165+float(hook)*.11
+			var hook_z := center_z-.11+float(hook)*.073
 			_box(left,"CurtainHook_%d_%d" % [panel_index,hook],
-				Vector3(.045,.070,.026),Vector3(x+.25,2.814,hook_z),metal)
+				Vector3(.045,.055,.026),Vector3(x+.25,2.16,hook_z),metal)
 	var sky := _material(Color("c6d7d8"), 1.0)
 	sky.albedo_texture = _sky_gradient_texture()
 	sky.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
 	sky.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	var distant := _material(Color("a8b8b5"), 1.0)
 	var near_building := _material(Color("899d9b"), .96)
-	_box(left, "WindowSky", Vector3(.04, 1.34, 2.18), Vector3(x - .94, 1.99, window_z), sky)
+	_box(left, "WindowSky", Vector3(.04, 1.1, 1.42), Vector3(x - .64, 1.5, window_z), sky)
 	# Exterior rain strips share the window group so cutaway hides them too.
 	# Streaks are deliberately outside the real pane, not inside the room.
 	var streaks := _group(left, "RainStreaks")
@@ -288,8 +288,8 @@ func _build_left_wall(wall: Material, trim: Material, wood: Material, metal: Mat
 				_box(facade_lights,"WarmWindow_%d_%d_%d" % [section,level,column],Vector3(.012,.075,.063),
 					Vector3(x-.601,pane_y,pane_z),warm_panes)
 	facade_lights.visible = false
-	_box(left, "Left_Skirting", Vector3(.10, .16, blueprint.depth + .05), Vector3(x + .12, .08, 0), trim)
-	_box(left, "Left_CapTrim", Vector3(.16, .055, blueprint.depth + .12), Vector3(x + .06, 3.19, 0), trim)
+	_box(left, "Left_Skirting", Vector3(.10, .08, blueprint.depth + .05), Vector3(x + .12, .04, 0), trim)
+	_box(left, "Left_CapTrim", Vector3(.16, .045, blueprint.depth + .12), Vector3(x + .06, 2.68, 0), trim)
 
 func _build_back_wall(wall: Material, trim: Material, wood: Material, dark_wood: Material, metal: Material, canvas: Material, art_blue: Material, art_sage: Material, art_ochre: Material) -> void:
 	var back := _group(self, "Back_Wall")
@@ -300,35 +300,35 @@ func _build_back_wall(wall: Material, trim: Material, wood: Material, dark_wood:
 	var right_edge := half_x + .12
 	var door_left := door_x - .5
 	var door_right := door_x + .5
-	_box(back, "WallSurface_DoorLeft", Vector3(door_left - left_edge, 3.2, .12), Vector3((left_edge + door_left) * .5, 1.6, z), wall, "wall")
-	_box(back, "WallSurface_DoorRight", Vector3(right_edge - door_right, 3.2, .12), Vector3((right_edge + door_right) * .5, 1.6, z), wall, "wall")
-	_box(back, "WallSurface_DoorLintel", Vector3(1.0, .95, .12), Vector3(door_x, 2.725, z), wall, "wall")
-	_box(back, "DoorLeaf", Vector3(.92, 2.18, .055), Vector3(door_x, 1.09, z + .085), dark_wood)
-	_box(back, "DoorInset", Vector3(.72, 1.75, .018), Vector3(door_x, 1.16, z + .12), wood)
-	for dx in [-.505, .505]:
-		_box(back, "DoorFrame", Vector3(.075, 2.28, .09), Vector3(door_x + dx, 1.14, z + .15), trim)
-	_box(back, "DoorHeader", Vector3(1.08, .08, .09), Vector3(door_x, 2.30, z + .15), trim)
-	_sphere(back, "DoorHandle", Vector3(.075, .075, .075), Vector3(door_x + .37, 1.05, z + .18), metal)
+	_box(back, "WallSurface_DoorLeft", Vector3(door_left - left_edge, 2.7, .12), Vector3((left_edge + door_left) * .5, 1.35, z), wall, "wall")
+	_box(back, "WallSurface_DoorRight", Vector3(right_edge - door_right, 2.7, .12), Vector3((right_edge + door_right) * .5, 1.35, z), wall, "wall")
+	_box(back, "WallSurface_DoorLintel", Vector3(1.0, .6, .12), Vector3(door_x, 2.4, z), wall, "wall")
+	_box(back, "DoorLeaf", Vector3(.86, 2.1, .055), Vector3(door_x, 1.05, z + .085), dark_wood)
+	_box(back, "DoorInset", Vector3(.68, 1.7, .018), Vector3(door_x, 1.1, z + .12), wood)
+	for dx in [-.465, .465]:
+		_box(back, "DoorFrame", Vector3(.065, 2.18, .09), Vector3(door_x + dx, 1.09, z + .15), trim)
+	_box(back, "DoorHeader", Vector3(1.0, .07, .09), Vector3(door_x, 2.16, z + .15), trim)
+	_sphere(back, "DoorHandle", Vector3(.075, .075, .075), Vector3(door_x + .34, 1.0, z + .18), metal)
 	# Keep wall art on the longer uninterrupted section away from the doorway.
 	var art_x: float = (door_right + right_edge) * .5 if right_edge - door_right >= door_left - left_edge else (left_edge + door_left) * .5
 	var art_available: float = maxf(right_edge - door_right, door_left - left_edge)
-	if art_available > 1.8:
-		_box(back, "WallArtFrame", Vector3(1.58, 1.08, .07), Vector3(art_x, 2.08, z + .105), dark_wood)
-		_box(back, "WallArtCanvas", Vector3(1.47, .97, .025), Vector3(art_x, 2.08, z + .15), canvas)
-		_box(back, "WallArtInnerBevel",Vector3(1.52,1.02,.012),Vector3(art_x,2.08,z+.132),metal)
-		_box(back, "WallArtBlue", Vector3(.48, .72, .025), Vector3(art_x - .32, 2.08, z + .175), art_blue)
-		_box(back, "WallArtSage", Vector3(.48, .30, .026), Vector3(art_x + .17, 1.86, z + .178), art_sage)
-		_box(back, "WallArtOchre", Vector3(.28, .28, .028), Vector3(art_x + .33, 2.35, z + .18), art_ochre)
-	_box(back, "Back_Skirting", Vector3(blueprint.width, .16, .10), Vector3(0, .08, z + .12), trim)
-	_box(back, "Back_CapTrim", Vector3(blueprint.width + .16, .055, .16), Vector3(0, 3.19, z + .06), trim)
+	if art_available > 1.4:
+		_box(back, "WallArtFrame", Vector3(1.2, .82, .07), Vector3(art_x, 1.8, z + .105), dark_wood)
+		_box(back, "WallArtCanvas", Vector3(1.1, .72, .025), Vector3(art_x, 1.8, z + .15), canvas)
+		_box(back, "WallArtInnerBevel",Vector3(1.16,.76,.012),Vector3(art_x,1.8,z+.132),metal)
+		_box(back, "WallArtBlue", Vector3(.36, .54, .025), Vector3(art_x - .24, 1.8, z + .175), art_blue)
+		_box(back, "WallArtSage", Vector3(.36, .24, .026), Vector3(art_x + .13, 1.64, z + .178), art_sage)
+		_box(back, "WallArtOchre", Vector3(.21, .21, .028), Vector3(art_x + .25, 1.99, z + .18), art_ochre)
+	_box(back, "Back_Skirting", Vector3(blueprint.width, .08, .10), Vector3(0, .04, z + .12), trim)
+	_box(back, "Back_CapTrim", Vector3(blueprint.width + .16, .045, .16), Vector3(0, 2.68, z + .06), trim)
 
 func _build_ceiling_trim(trim: Material, metal: Material) -> void:
 	var ceiling := _group(self, "CeilingDetails")
 	var half_x: float = blueprint.width * .5
 	var half_z: float = blueprint.depth * .5
-	_box(ceiling, "Left_CeilingCove", Vector3(.20, .11, blueprint.depth + .2), Vector3(-half_x + .01, 3.16, 0), trim)
-	_box(ceiling, "Back_CeilingCove", Vector3(blueprint.width + .2, .11, .20), Vector3(0, 3.16, -half_z + .01), trim)
-	_cylinder(ceiling, "RecessedSpotTrim", .12, .12, .035, Vector3(.1, 3.08, -half_z + .28), metal, 32)
+	_box(ceiling, "Left_CeilingCove", Vector3(.20, .11, blueprint.depth + .2), Vector3(-half_x + .01, 2.66, 0), trim)
+	_box(ceiling, "Back_CeilingCove", Vector3(blueprint.width + .2, .11, .20), Vector3(0, 2.66, -half_z + .01), trim)
+	_cylinder(ceiling, "RecessedSpotTrim", .12, .12, .035, Vector3(.1, 2.62, -half_z + .28), metal, 32)
 
 func _build_lighting_accents() -> void:
 	# Renderer-compatible, unshadowed diffuse bounce fills the dark half of
@@ -336,8 +336,8 @@ func _build_lighting_accents() -> void:
 	# never turns the actual lighting off.
 	var bounce := OmniLight3D.new()
 	bounce.name = "WindowBounce"
-	bounce.position = Vector3(-float(blueprint.width)*.5+.72,2.05,float(blueprint.window_z))
-	bounce.omni_range = 3.8
+	bounce.position = Vector3(-float(blueprint.width)*.5+.72,1.55,float(blueprint.window_z))
+	bounce.omni_range = 2.8
 	bounce.light_energy = .24
 	bounce.light_color = Color("ffe8c5")
 	bounce.shadow_enabled = false
@@ -347,7 +347,7 @@ func _build_lighting_accents() -> void:
 	add_child(bounce)
 	var cove := OmniLight3D.new()
 	cove.name = "WarmCoveFill"
-	cove.position = Vector3(.15,2.83,-float(blueprint.depth)*.5+.42)
+	cove.position = Vector3(.15,2.55,-float(blueprint.depth)*.5+.32)
 	cove.omni_range = 3.3
 	cove.light_energy = .12
 	cove.light_color = Color("ffdfb3")
@@ -366,14 +366,14 @@ func _build_partitions(wall: Material, trim: Material) -> void:
 		if part.kind == "door":
 			# Structural posts and lintel leave a real passable opening.
 			for sign in [-1.0, 1.0]:
-				var post: Vector3 = Vector3(sign * .47, 1.48, 0) if along_x else Vector3(0, 1.48, sign * .47)
-				var dims: Vector3 = Vector3(.06, 2.96, .14) if along_x else Vector3(.14, 2.96, .06)
+				var post: Vector3 = Vector3(sign * .47, 1.05, 0) if along_x else Vector3(0, 1.05, sign * .47)
+				var dims: Vector3 = Vector3(.06, 2.1, .14) if along_x else Vector3(.14, 2.1, .06)
 				_box(piece, "DoorPost", dims, post, trim, "wall")
-			_finish_box(piece, "DoorLintel", Vector3(1.0, .3, .14) if along_x else Vector3(.14, .3, 1.0), Vector3(0, 3.05, 0), wall, finish, "wall")
+			_finish_box(piece, "DoorLintel", Vector3(1.0, .6, .14) if along_x else Vector3(.14, .6, 1.0), Vector3(0, 2.4, 0), wall, finish, "wall")
 		else:
-			_finish_box(piece, "WallBody", Vector3(horizontal.x, 3.2, horizontal.z), Vector3(0, 1.6, 0), wall, finish, "wall")
+			_finish_box(piece, "WallBody", Vector3(horizontal.x, 2.7, horizontal.z), Vector3(0, 1.35, 0), wall, finish, "wall")
 		# A subtle top rail makes individual one-metre pieces readable from above.
-		_box(piece, "TopTrim", Vector3(horizontal.x, .045, horizontal.z), Vector3(0, 3.22, 0), trim)
+		_box(piece, "TopTrim", Vector3(horizontal.x, .045, horizontal.z), Vector3(0, 2.72, 0), trim)
 
 func _build_notch_walls(wall: Material, trim: Material) -> void:
 	if blueprint.shape != "l": return
@@ -385,10 +385,10 @@ func _build_notch_walls(wall: Material, trim: Material) -> void:
 	var notch_w: float = blueprint.notch_width
 	var notch_d: float = blueprint.notch_depth
 	# Concave outer contour: two return walls where the missing front-right corner begins.
-	_box(group, "NotchBack", Vector3(notch_w, 3.2, .12), Vector3(cut_x + notch_w * .5, 1.6, cut_z + .06), wall, "wall")
-	_box(group, "NotchSide", Vector3(.12, 3.2, notch_d), Vector3(cut_x + .06, 1.6, cut_z + notch_d * .5), wall, "wall")
-	_box(group, "NotchBackTrim", Vector3(notch_w, .07, .16), Vector3(cut_x + notch_w * .5, 3.19, cut_z + .06), trim)
-	_box(group, "NotchSideTrim", Vector3(.16, .07, notch_d), Vector3(cut_x + .06, 3.19, cut_z + notch_d * .5), trim)
+	_box(group, "NotchBack", Vector3(notch_w, 2.7, .12), Vector3(cut_x + notch_w * .5, 1.35, cut_z + .06), wall, "wall")
+	_box(group, "NotchSide", Vector3(.12, 2.7, notch_d), Vector3(cut_x + .06, 1.35, cut_z + notch_d * .5), wall, "wall")
+	_box(group, "NotchBackTrim", Vector3(notch_w, .07, .16), Vector3(cut_x + notch_w * .5, 2.68, cut_z + .06), trim)
+	_box(group, "NotchSideTrim", Vector3(.16, .07, notch_d), Vector3(cut_x + .06, 2.68, cut_z + notch_d * .5), trim)
 
 func _build_grid_floor() -> void:
 	# Generate contiguous runs of retained cells; no geometry remains below a hole.
@@ -414,8 +414,8 @@ func _build_grid_floor() -> void:
 			var center_x := -float(blueprint.width) * .5 + (float(ix + begin) * .5) * Blueprint.FLOOR_GRID
 			var center_z := -float(blueprint.depth) * .5 + (float(iz) + .5) * Blueprint.FLOOR_GRID
 			var floor_mesh := _finish_box(self, "Floor" if index == 0 else "FloorSegment_%03d" % index,
-				Vector3(length + .008, .2, Blueprint.FLOOR_GRID + .008),
-				Vector3(center_x, -.1, center_z), material, finish, "floor")
+				Vector3(length + .008, .1, Blueprint.FLOOR_GRID + .008),
+				Vector3(center_x, -.05, center_z), material, finish, "floor")
 			var tone: float = tones[iz % tones.size()]
 			var plank := _material(Color("b99572") * tone, .61)
 			var board := _finish_box(self, "FloorBoard_%02d_%02d" % [iz,begin],
@@ -439,8 +439,8 @@ func _build_custom_exterior(wall: Material, trim: Material) -> void:
 		var finish: int = Blueprint.effective_wall_finish(blueprint, adjacent_position, int(config.finish))
 		var center: Vector2 = Blueprint.edge_center(blueprint, edge)
 		var longitudinal: bool = edge.dx != 0
-		var span := Vector3(.12,3.2,Blueprint.FLOOR_GRID) if longitudinal else Vector3(Blueprint.FLOOR_GRID,3.2,.12)
-		var at := Vector3(center.x, 1.6, center.y)
+		var span := Vector3(.12,2.7,Blueprint.FLOOR_GRID) if longitudinal else Vector3(Blueprint.FLOOR_GRID,2.7,.12)
+		var at := Vector3(center.x, 1.35, center.y)
 		var section := _group(group, "Edge_%03d" % counter)
 		if kind == "wall":
 			_finish_box(section, "ReturnWall_%03d" % counter, span, at, wall, finish, "wall")
@@ -448,27 +448,27 @@ func _build_custom_exterior(wall: Material, trim: Material) -> void:
 			# One grid edge is a 0.5m narrow doorway module; door-sized
 			# openings can later span multiple neighboring edges.
 			var header := span
-			header.y = .88
-			_finish_box(section, "DoorHead", header, Vector3(center.x, 2.76, center.y), wall, finish, "wall")
+			header.y = .6
+			_finish_box(section, "DoorHead", header, Vector3(center.x, 2.4, center.y), wall, finish, "wall")
 			for direction in [-1,1]:
 				if Blueprint.same_opening_neighbor(blueprint,edge,direction): continue
 				var offset: float = float(direction) * (Blueprint.FLOOR_GRID * .5 - .025)
-				var post_at := Vector3(center.x, 1.16, center.y)
-				var post_size := Vector3(.05,2.32,.14) if not longitudinal else Vector3(.14,2.32,.05)
+				var post_at := Vector3(center.x, 1.05, center.y)
+				var post_size := Vector3(.05,2.1,.14) if not longitudinal else Vector3(.14,2.1,.05)
 				if longitudinal: post_at.z += offset
 				else: post_at.x += offset
 				_box(section, "DoorFrame", post_size, post_at, trim)
 		elif kind == "window":
 			var lower := span
-			lower.y = 1.05
-			_finish_box(section, "WindowLower", lower, Vector3(center.x,.525,center.y), wall, finish, "wall")
+			lower.y = .9
+			_finish_box(section, "WindowLower", lower, Vector3(center.x,.45,center.y), wall, finish, "wall")
 			var upper := span
-			upper.y = .85
-			_finish_box(section, "WindowUpper", upper, Vector3(center.x,2.775,center.y), wall, finish, "wall")
+			upper.y = .6
+			_finish_box(section, "WindowUpper", upper, Vector3(center.x,2.4,center.y), wall, finish, "wall")
 			var glass_length: float = Blueprint.FLOOR_GRID if Blueprint.same_opening_neighbor(blueprint,edge,-1) or Blueprint.same_opening_neighbor(blueprint,edge,1) else Blueprint.FLOOR_GRID-.08
-			var glass_size := Vector3(.026,1.30,glass_length) if longitudinal else Vector3(glass_length,1.30,.026)
-			_box(section, "WindowGlass", glass_size, Vector3(center.x,1.70,center.y), clear_glass)
+			var glass_size := Vector3(.026,1.2,glass_length) if longitudinal else Vector3(glass_length,1.2,.026)
+			_box(section, "WindowGlass", glass_size, Vector3(center.x,1.5,center.y), clear_glass)
 			var sill := Vector3(.2,.06,Blueprint.FLOOR_GRID+.03) if longitudinal else Vector3(Blueprint.FLOOR_GRID+.03,.06,.2)
-			_box(section, "WindowSill", sill, Vector3(center.x,1.06,center.y), trim)
+			_box(section, "WindowSill", sill, Vector3(center.x,.9,center.y), trim)
 		_box(section, "ReturnTrim_%03d" % counter,
-			Vector3(span.x,.06,span.z), Vector3(center.x,3.19,center.y), trim)
+			Vector3(span.x,.06,span.z), Vector3(center.x,2.72,center.y), trim)
