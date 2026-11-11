@@ -14,7 +14,7 @@ func _run() -> void:
 	root.add_child(panel)
 	await process_frame
 	_check(panel.catalog is MemoirItemCatalog, "catalog loads")
-	_check(panel.total_furniture >= 30, "existing furniture definitions listed")
+	_check(panel.total_furniture == 1, "only newly authored desk_basic remains in the furniture catalog")
 	_check(panel.group_filter.item_count == 6, "five furniture groups plus all categories")
 	_check(panel.item_tree.get_root() != null, "furniture tree built")
 	var id_set := {}
@@ -22,14 +22,19 @@ func _run() -> void:
 		_check(item.item_id != "", "furniture has stable item_id")
 		_check(not id_set.has(item.item_id), "no duplicate furniture item ID")
 		id_set[item.item_id] = true
-	panel.search_field.text = "room_wall_sconce"
+	for removed_id in ["starter_desk", "starter_cabinet", "oak_desk", "reading_lamp", "display_cabinet"]:
+		_check(panel.catalog.lookup(removed_id) == null, "removed legacy furniture SKU absent from authoritative catalog: " + removed_id)
+	panel.show_retired.button_pressed = true
 	panel._populate_list()
-	_check(panel.item_tree.get_root().get_child_count() == 1, "search filters by existing item ID")
+	_check(panel.item_tree.get_root().get_child_count() == 1, "show retired still only lists desk_basic")
+	panel.search_field.text = "desk_basic"
+	panel._populate_list()
+	_check(panel.item_tree.get_root().get_child_count() == 1, "search finds desk_basic")
 	panel.search_field.text = ""
-	panel.group_filter.select(4) # Lighting group in the shared taxonomy.
+	panel.group_filter.select(4) # No active lighting furniture on the reset branch.
 	panel._populate_list()
-	_check(panel.item_tree.get_root().get_child_count() >= 4, "group filter selects existing lighting")
-	_check(panel.invalid_furniture == 0, "existing active furniture has no resource validation errors")
+	_check(panel.item_tree.get_root().get_child_count() == 0, "cleared lighting group is empty")
+	_check(panel.invalid_furniture == 0, "desk_basic has no resource validation errors")
 	# The viewport must not create one renderer per catalog item.
 	_check(panel.preview != null and panel.preview.viewport != null, "single preview viewport available")
 	_check(panel.preview.model == null, "preview starts without an instantiated model")
@@ -57,17 +62,14 @@ func _run() -> void:
 		panel.bounds_toggle.button_pressed = true
 		panel._on_overlay_toggled(false)
 		_check(panel.preview.overlay != null, "bounds overlay can be shown independently")
-		var shelf := panel.catalog.lookup("room_bookcase")
-		_check(shelf != null and shelf.furniture_scene != null, "bookcase preview resource exists")
-		if shelf != null and shelf.furniture_scene != null:
-			panel.preview.show_furniture(shelf.furniture_scene)
-			_check(panel.preview.support_anchors.size() >= 1, "support shelves are read from furniture metadata")
-			panel.bounds_toggle.button_pressed = false
-			panel.surfaces_toggle.button_pressed = true
-			panel._on_overlay_toggled(false)
-			_check(panel.preview.overlay != null, "support surfaces can be shown separately")
+		_check(panel.selected_item.item_id == "desk_basic", "desk_basic is the only selectable furniture")
+		_check(panel.preview.support_anchors.size() >= 1, "desk_basic support surfaces are read from furniture metadata")
+		panel.bounds_toggle.button_pressed = false
+		panel.surfaces_toggle.button_pressed = true
+		panel._on_overlay_toggled(false)
+		_check(panel.preview.overlay != null, "desk support surface can be shown independently")
 
-	# Legacy retired items have no scene; selecting one should clear the viewport.
+	# Clearing the viewer must not retain the last selected model.
 	panel.preview.show_furniture(null)
 	_check(panel.preview.model == null, "clearing preview removes instantiated furniture")
 	panel.queue_free()
