@@ -40,12 +40,15 @@ func run() -> void:
 	var original: Dictionary = layout.snapshot()
 	var window_sky: MeshInstance3D = room.get_node("Shell/Left_Wall/WindowSky")
 	var sky_mesh := window_sky.mesh as BoxMesh
-	check(window_sky.position.y - sky_mesh.size.y * 0.5 >= 1.26 and window_sky.position.y + sky_mesh.size.y * 0.5 <= 2.72, "exterior sky stays inside the real window opening")
-	check(window_sky.position.z - sky_mesh.size.z * 0.5 >= -2.0 and window_sky.position.z + sky_mesh.size.z * 0.5 <= 0.36, "exterior background stays inside the window width")
+	check(window_sky.position.y - sky_mesh.size.y * 0.5 >= .9 and window_sky.position.y + sky_mesh.size.y * 0.5 <= 2.1, "exterior sky stays inside the real window opening")
+	check(window_sky.position.z - sky_mesh.size.z * 0.5 >= -.8 and window_sky.position.z + sky_mesh.size.z * 0.5 <= .8, "exterior background stays inside the window width")
 	var environment: Environment = world.get_node("Environment").environment
 	check(environment.ambient_light_energy <= 0.4, "room ambient light preserves material contrast")
 	check(layout.nodes.size() == 10, "room and equipment share one placement controller")
 	check(layout._layout_blocker().is_empty(), "authored room starts without intersections")
+	var desktop_mesh: BoxMesh = layout.nodes["desk"].get_node("Desk/Model/OakDesktop").mesh as BoxMesh
+	check(desktop_mesh.size.is_equal_approx(Vector3(1.8,.12,.8)), "workstation desk uses a realistic 1.8 x 0.8 metre footprint")
+	check(layout.tabletop_half_size.is_equal_approx(Vector2(.9,.4)) and layout.room_half_size.is_equal_approx(Vector2(2,1.25)), "tabletop and room placement bounds match the 10 sqm plan")
 	check(world.overview_pitch > .5 and world.overview_pitch < .8, "default camera shows an elevated room overview")
 	check(not world.has_node("PixelPass"), "room overview renders at full resolution without pixel post-process")
 	var shelf: Node3D = layout.nodes["bookcase"].get_node("Model")
@@ -111,14 +114,14 @@ func run() -> void:
 	layout.select("lamp")
 	layout.move_to(Vector2(100,100))
 	for corner in layout.footprint("lamp"):
-		check(absf(corner.x) <= 4 and absf(corner.y) <= 3, "floor furniture stays inside room")
+		check(absf(corner.x) <= 2 and absf(corner.y) <= 1.25, "floor furniture stays inside room")
 	layout.reset_layout()
 	layout.select("desk")
 	layout.move_to(Vector2(-100,-100))
 	layout.rotate_to(PI/2)
 	check(layout.valid, "table rotation and room edges remain valid")
 	for corner in layout.footprint("desk"):
-		check(absf(corner.x) <= 4 and absf(corner.y) <= 3, "rotated table remains within room")
+		check(absf(corner.x) <= 2 and absf(corner.y) <= 1.25, "rotated table remains within room")
 	for role: String in world.devices:
 		check(world.devices[role].transform.is_equal_approx(original[role]), "table carries local equipment unchanged: " + role)
 	layout.select("plant")

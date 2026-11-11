@@ -1,13 +1,13 @@
 class_name MemoirRoomBlueprintData
 extends RefCounted
 ## Rectangular, L and grid-painted orthogonal footprints with validated interior walls.
-const DEFAULT := {"width": 8.0, "depth": 6.0, "door_x": -2.75, "window_z": -0.8, "partitions": [], "shape":"rectangle", "notch_width":1.5, "notch_depth":1.5, "removed_cells":[], "floor_finishes":[], "edge_finishes":[]}
-const MIN_WIDTH := 6.0
+const DEFAULT := {"width": 4.0, "depth": 2.5, "door_x": -1.0, "window_z": 0.0, "partitions": [], "shape":"rectangle", "notch_width":1.5, "notch_depth":1.5, "removed_cells":[], "floor_finishes":[], "edge_finishes":[]}
+const MIN_WIDTH := 4.0
 const MAX_WIDTH := 12.0
-const MIN_DEPTH := 5.0
+const MIN_DEPTH := 2.5
 const MAX_DEPTH := 10.0
 const WALL_LENGTH := 1.0
-const WALL_THICKNESS := 0.14
+const WALL_THICKNESS := 0.12
 const WALL_GRID := 0.5
 const MAX_PARTITIONS := 96
 const FLOOR_GRID := 0.5
@@ -26,11 +26,11 @@ static func clean(raw: Variant) -> Dictionary:
 	result.depth = snappedf(clampf(result.depth, MIN_DEPTH, MAX_DEPTH), 0.5)
 	var requested_shape: String = str(raw.get("shape", "rectangle"))
 	result.shape = requested_shape if requested_shape in ["rectangle", "l", "custom"] else "rectangle"
-	result.notch_width = snappedf(clampf(result.notch_width, 1.0, minf(4.0, result.width - 3.0)), 0.5)
-	result.notch_depth = snappedf(clampf(result.notch_depth, 1.0, minf(4.0, result.depth - 2.5)), 0.5)
+	result.notch_width = snappedf(clampf(result.notch_width, 1.0, minf(4.0, result.width - 2.0)), 0.5)
+	result.notch_depth = snappedf(clampf(result.notch_depth, 1.0, minf(4.0, result.depth - 1.5)), 0.5)
 	# A door needs 1 m and a window needs 2.36 m of uninterrupted wall.
-	result.door_x = snappedf(clampf(result.door_x, -result.width / 2.0 + 0.7, result.width / 2.0 - 0.7), 0.05)
-	result.window_z = snappedf(clampf(result.window_z, -result.depth / 2.0 + 1.35, result.depth / 2.0 - 1.35), 0.05)
+	result.door_x = snappedf(clampf(result.door_x, -result.width / 2.0 + 0.6, result.width / 2.0 - 0.6), 0.05)
+	result.window_z = snappedf(clampf(result.window_z, -result.depth / 2.0 + 0.8, result.depth / 2.0 - 0.8), 0.05)
 	if result.shape == "custom":
 		var cutouts: Variant = raw.get("removed_cells", [])
 		if cutouts is Array:
