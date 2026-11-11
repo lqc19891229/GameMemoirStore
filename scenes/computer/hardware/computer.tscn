@@ -13,7 +13,7 @@ appearance = ExtResource("2")
 [node name="Models" type="Node3D" parent="."]
 [node name="DefaultModel" parent="Models" instance=ExtResource("3")]
 scale = Vector3(0.5, 0.5, 0.5)
-[node name="UpgradeModel" parent= "Models" instance=ExtResource("4")]
+[node name="UpgradeModel" parent="Models" instance=ExtResource("4")]
 scale = Vector3(0.5, 0.5, 0.5)
 visible = false
 [node name="CaseGlow" type="OmniLight3D" parent="."]
