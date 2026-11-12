@@ -1,4 +1,4 @@
-# 游戏回忆录 · 家具发布器 v1.0
+# 游戏回忆录 · 资产发布器 v2.0
 
 这是一个**外部 Windows 桌面程序（Python + Tkinter GUI）**，不用打开 Godot 编辑器进行手动商品注册。选择已经制作好的 GLB，填写信息，点击检查和确认后，它会调用 GameMemoirStore 的原有安全导入/注册接口，完成以下操作：
 
@@ -37,6 +37,19 @@ Windows 10/11：安装 **Python 3.10 或更高版本**（勾选“Add Python to 
 - 点击「检查 / 预览改动」，核对路径、商品价格和来源 GLB。
 - 关闭正在运行的 Godot 编辑器和游戏，勾选确认后，点击「确认并自动导入上架」。
 - 运行结束后在 Godot 中打开生成的 `.tscn`，检查模型方向、贴图、坐标、包围盒、碰撞、承载面；再在游戏里测试商店购买与摆放。**不能以自动化导入代替人工 3D 验收。**
+
+## 电脑设备：替换现有基础款或升级款
+
+主窗口顶部点击 **「电脑设备模型发布 / 替换现有型号…」**，使用同一个项目和 Godot 路径。新窗口选择完成 PBR 材质的 GLB，然后选择设备类型与已有商品 ID，填写真实外包围尺寸（**X 宽、Y 高、Z 深，单位米**）；显示器还必须填写屏幕 Quad 的宽、高与本地中心 X/Y/Z。
+
+- **现阶段只支持替换已注册型号**：显示器 `starter_monitor` / `lcd_monitor`、机箱 `starter_pc` / `workstation`、键盘和鼠标 `starter_mouse` / `precise_mouse`。键盘与鼠标分别替换，但保留原来共用的套装 SKU。
+- 程序用 Godot 既有设备映射定位目标 `assets/models/hardware/*.glb`、`data/hardware/*.tres` 和 `scenes/computer/hardware/*.tscn`，**不会创建家具商品，不会修改玩家存档、电脑逻辑或现有库存 ID**。
+- 每次操作先把以上三个原文件复制到用户目录 `~/.gamememoir_furniture_publisher/backups/hardware_*/`，替换 GLB 并将对应 `DefaultModel` / `UpgradeModel` 的历史缩放设置为 1（真实尺寸模型无需额外缩放）。
+- 自动运行 Godot 导入、更新设备 `bounds`，显示器还更新 `screen_size`、`screen_position`，确认结果才报告成功；失败时恢复 GLB、设备配置、场景的原始字节，Godot 缓存可能需要再次导入。
+- **模型必须以底部中心为原点、Y 向上、+Z 朝设备正面**。屏幕参数描述独立的 Godot 屏幕 Quad，建议屏幕网格与 GLB 的玻璃面重合，避免漂浮或被外壳遮挡。
+- 验收：用 Godot 查看外观和尺寸，再进入游戏点击显示器、移动键鼠与机箱、切换升级型号，检查拾取、碰撞和读档。
+
+新增完全独立的**新设备商品 ID** 需要同时扩展硬件目录和物品目录，不在本版一键替换模式范围内。现有家具功能完全不变。
 
 ## 限制和安全规则
 
