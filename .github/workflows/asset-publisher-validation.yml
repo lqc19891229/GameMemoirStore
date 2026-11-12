@@ -1,0 +1,37 @@
+name: Asset publisher and furniture category validation
+
+on:
+  pull_request:
+    paths:
+      - "tools/FurniturePublisher/**"
+      - "addons/furniture_manager/furniture_registration_panel.gd"
+      - "addons/furniture_manager/furniture_catalog_registrar.gd"
+      - "scripts/items/item_taxonomy.gd"
+      - "tests/life/test_furniture_category_linkage.gd"
+      - ".github/workflows/asset-publisher-validation.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  publisher-and-categories:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v4
+        with:
+          python-version: "3.12"
+      - name: Validate Python publisher modules
+        run: |
+          python -m compileall -q tools/FurniturePublisher
+          python -m unittest discover -s tools/FurniturePublisher/tests -p 'test_*.py' -v
+      - uses: chickensoft-games/setup-godot@v2
+        with:
+          version: 4.6.0
+          use-dotnet: false
+      - name: Import Godot assets
+        run: godot --headless --path . --editor --import
+      - name: Verify furniture primary/secondary category linkage
+        run: timeout 45s godot --headless --path . --script res://tests/life/test_furniture_category_linkage.gd -- --fresh
