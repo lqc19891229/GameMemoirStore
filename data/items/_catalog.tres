@@ -81,11 +81,6 @@ visual_id = "workstation"
 speed = 1.2
 income = 1
 
-
-
-
-
-
 [sub_resource type="Resource" id="item_17"]
 script = ExtResource("1_ag6fn")
 item_id = "mechanical_keyboard"
