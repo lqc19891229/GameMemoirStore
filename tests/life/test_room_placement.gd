@@ -85,9 +85,12 @@ func run() -> void:
 	check(layout.nodes.chair.find_children("*", "MeshInstance3D", true, false)[0].material_override == null, "preview overrides are restored on confirmation")
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(state.save_path))
 	state.persistence_enabled = false
-	# Built-in computers and all input peripherals remain restricted to the desk.
+	# The PC tower is floor-standing beside desk_basic; monitor and inputs remain on the tabletop.
+	# Monitor and input devices remain under Equipment; the same PC node stands on the room floor.
 	for role: String in desktop.world.devices:
-		check(layout.surface_for(role) == "desk" and desktop.world.devices[role].get_parent() == desktop.world.get_node("%Equipment"), "hardware is still desk-only: " + role)
+		var expected_surface := "floor" if role == "computer" else "desk"
+		var expected_parent: Node = desktop.world if role == "computer" else desktop.world.get_node("%Equipment")
+		check(layout.surface_for(role) == expected_surface and desktop.world.devices[role].get_parent() == expected_parent, "hardware retains correct support and parent: " + role)
 	game.queue_free()
 	await frames()
 	print("ROOM_PLACEMENT_CHECKS: %d / %d passed" % [checks - failures, checks])
