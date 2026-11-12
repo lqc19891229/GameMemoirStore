@@ -85,7 +85,8 @@ func _update_types() -> void:
 	if not options.is_empty():
 		var index := options.find(previous)
 		type_choice.select(index if index >= 0 else 0)
-	confirmation.button_pressed = false
+	if confirmation != null:
+		confirmation.button_pressed = false
 	if register_button != null:
 		_update_button()
 
