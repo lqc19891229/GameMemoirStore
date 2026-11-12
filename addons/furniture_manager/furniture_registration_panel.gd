@@ -44,12 +44,9 @@ func _ready() -> void:
 			group_choice.set_item_metadata(group_choice.item_count - 1, group.id)
 	add_child(group_choice)
 	type_choice = OptionButton.new()
-	var types: Array = Taxonomy.TYPES.keys()
-	types.sort()
-	for kind in types:
-		type_choice.add_item(Taxonomy.type_name(kind))
-		type_choice.set_item_metadata(type_choice.item_count - 1, kind)
 	add_child(type_choice)
+	group_choice.item_selected.connect(func(_index: int) -> void: _update_types())
+	_update_types()
 	price_input = SpinBox.new()
 	price_input.min_value = 0
 	price_input.max_value = 10000000
@@ -74,6 +71,23 @@ func _ready() -> void:
 	scene_choice.item_selected.connect(func(_index: int) -> void: _scene_changed())
 	refresh_scenes()
 
+
+func _update_types() -> void:
+	var previous := ""
+	if type_choice.selected >= 0:
+		previous = str(type_choice.get_item_metadata(type_choice.selected))
+	var group := str(group_choice.get_item_metadata(group_choice.selected)) if group_choice.selected >= 0 else ""
+	type_choice.clear()
+	var options: Array = Taxonomy.types_for_group(group)
+	for kind in options:
+		type_choice.add_item(Taxonomy.type_name(str(kind)))
+		type_choice.set_item_metadata(type_choice.item_count - 1, str(kind))
+	if not options.is_empty():
+		var index := options.find(previous)
+		type_choice.select(index if index >= 0 else 0)
+	confirmation.button_pressed = false
+	if register_button != null:
+		_update_button()
 
 func _field(hint: String, initial: String) -> LineEdit:
 	var line := LineEdit.new()
@@ -112,8 +126,8 @@ func _fields() -> Dictionary:
 	return {
 		"item_id": id_input.text, "name": name_input.text,
 		"role": role_input.text,
-		"group": group_choice.get_item_metadata(group_choice.selected),
-		"type": type_choice.get_item_metadata(type_choice.selected),
+		"group": group_choice.get_item_metadata(group_choice.selected) if group_choice.selected >= 0 else "",
+		"type": type_choice.get_item_metadata(type_choice.selected) if type_choice.selected >= 0 else "",
 		"price": int(price_input.value), "description": description_input.text,
 		"allow_surface_mount": surface_mount_choice.button_pressed
 	}
