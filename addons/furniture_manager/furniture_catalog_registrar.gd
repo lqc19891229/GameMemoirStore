@@ -55,8 +55,8 @@ static func validate_registration(scene_path: String, fields: Dictionary, catalo
 		errors.append("摆放角色必须为有效标识符，不能包含保留的 __instance__ 标记")
 	if group.is_empty() or group == "hardware" or not Taxonomy.valid_group(group):
 		errors.append("需要有效的家具一级分类")
-	if kind.is_empty() or not Taxonomy.TYPES.has(kind):
-		errors.append("需要有效的二级分类")
+	if not Taxonomy.valid_group_type(group, kind):
+		errors.append("二级分类不属于选定的一级分类")
 	if not (price is int or price is float) or price < 0 or price > 10000000:
 		errors.append("价格必须在 0 至 10000000 之间")
 	if not scene_path.begins_with(SCENE_ROOT) or scene_path.contains("..") or not scene_path.ends_with(".tscn"):
