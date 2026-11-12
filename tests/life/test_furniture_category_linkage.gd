@@ -1,6 +1,6 @@
 extends SceneTree
 ## Isolated regression for primary/secondary type filtering in Furniture Manager.
-const Panel = preload("res://addons/furniture_manager/furniture_registration_panel.gd")
+const RegistrationPanelScript = preload("res://addons/furniture_manager/furniture_registration_panel.gd")
 const Registrar = preload("res://addons/furniture_manager/furniture_catalog_registrar.gd")
 const Taxonomy = preload("res://scripts/items/item_taxonomy.gd")
 var failures := 0
@@ -14,7 +14,7 @@ func _check(ok: bool, message: String) -> void:
         push_error("CATEGORY_LINKAGE: " + message)
 
 func _run() -> void:
-    var panel := Panel.new()
+    var panel := RegistrationPanelScript.new()
     root.add_child(panel)
     await process_frame
     for i in range(panel.group_choice.item_count):
