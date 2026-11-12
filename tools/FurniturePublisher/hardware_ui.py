@@ -5,7 +5,7 @@ from pathlib import Path
 import queue
 import threading
 import tkinter as tk
-from tkinter import messagebox, ttk
+from tkinter import filedialog, messagebox, ttk
 
 from hardware_core import HardwareItem, HARDWARE, LABELS, preview_hardware, publish_hardware
 from publisher_core import PublishError
@@ -58,6 +58,7 @@ class HardwareWindow(tk.Toplevel):
         ]):
             ttk.Label(fields, text=label, width=20).grid(row=i, column=0, sticky="w", pady=5)
             ttk.Entry(fields, textvariable=variable).grid(row=i, column=1, sticky="ew", padx=8)
+            ttk.Button(fields, text="浏览…", command=lambda n=i: self._browse(n)).grid(row=i, column=2)
         picker = ttk.Frame(main)
         picker.pack(fill="x", pady=(12, 6))
         ttk.Label(picker, text="设备类型").pack(side="left")
@@ -86,6 +87,17 @@ class HardwareWindow(tk.Toplevel):
         for variable in [self.project, self.godot, self.source, self.role, self.item_id, *self.dims.values()]:
             variable.trace_add("write", lambda *_: self._invalidate())
         self._role_changed()
+
+    def _browse(self, index: int) -> None:
+        if index == 0:
+            value = filedialog.askdirectory(title="选择 Godot 项目目录", parent=self)
+            if value: self.project.set(value)
+        elif index == 1:
+            value = filedialog.askopenfilename(title="选择 Godot 4.6 程序", filetypes=[("Windows 可执行文件", "*.exe"), ("所有文件", "*")], parent=self)
+            if value: self.godot.set(value)
+        else:
+            value = filedialog.askopenfilename(title="选择已经完成的 GLB", filetypes=[("GLB 模型", "*.glb")], parent=self)
+            if value: self.source.set(value)
 
     def _role_changed(self):
         choices = [item_id for kind, item_id in HARDWARE if kind == self.role.get()]
