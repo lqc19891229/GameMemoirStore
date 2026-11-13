@@ -49,7 +49,8 @@ class PublisherApp(tk.Tk):
         batch = ttk.Frame(self.hardware_tabs)
         self.hardware_tabs.add(single, text="单个设备")
         self.hardware_tabs.add(batch, text="批量设备")
-        defaults = {key: self.vars[key].get() for key in ("project", "godot", "source")}
+        defaults = {"project_var": self.vars["project"], "godot_var": self.vars["godot"],
+                    "source": self.vars["source"].get()}
         self.hardware_single_panel = HardwarePanel(single, defaults)
         self.hardware_single_panel.pack(fill="both", expand=True)
         self.hardware_batch_panel = BatchHardwarePanel(batch, defaults)
