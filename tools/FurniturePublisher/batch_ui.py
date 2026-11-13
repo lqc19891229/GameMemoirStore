@@ -194,7 +194,7 @@ class BatchHardwarePanel(ttk.Frame):
                     self._controls()
                     if kind == "success":
                         self._write("成功：已导入 " + str(payload["count"]) + " 件；备份：" + payload["backup"])
-                        messagebox.showinfo("完成", f"已导入 {payload['count\']} 件设备。请在 Godot 检查屏幕和场景位置。", parent=self)
+                        messagebox.showinfo("完成", "已导入 " + str(payload["count"]) + " 件设备。请在 Godot 检查屏幕和场景位置。", parent=self)
                     else:
                         self._write("批量发布失败：" + payload)
                         messagebox.showerror("导入中断", payload, parent=self)
