@@ -38,6 +38,14 @@ Windows 10/11：安装 **Python 3.10 或更高版本**（勾选“Add Python to 
 - 关闭正在运行的 Godot 编辑器和游戏，勾选确认后，点击「确认并自动导入上架」。
 - 运行结束后在 Godot 中打开生成的 `.tscn`，检查模型方向、贴图、坐标、包围盒、碰撞、承载面；再在游戏里测试商店购买与摆放。**不能以自动化导入代替人工 3D 验收。**
 
+## 批量导入启航 2000（自动读取 model_specs.json）
+
+将 `qihang_m15_crt.glb`、`qihang_c100_tower.glb`、`qihang_k100_keyboard.glb`、`qihang_b100_ball_mouse.glb` 与 `model_specs.json` 放在同一个文件夹中。启动发布器，点击 **「批量导入启航 2000 · 自动读取 model_specs.json…」**，选择模型文件夹后点击「检查四件设备」，审阅四条映射并确认，再点击「批量导入四件设备」。
+
+规格文件使用 `schema_version: 2`，`models` 数组必须包含四个设备槽位（`monitor`、`computer`、`keyboard`、`mouse`），对应现有基础设备 ID：`starter_monitor`、`starter_pc`、`starter_mouse`、`starter_mouse`。每条至少包括同目录的 `file`、`role`、`item_id`、`expected_size_m`（宽、高、深）及 `actual_mesh_bounds_m`（最小点、最大点）。显示器还要填写 `screen_size_m` 和 `screen_position_m`。缺文件、参数异常、跨目录引用或重复槽位会直接阻止发布。
+
+一次批量操作统一备份全部四个 GLB、TRES 和对应硬件场景，统一执行 GLB 导入，再逐个让 Godot 保存并回读配置。任一中途失败，会恢复整个批次的 12 个原始文件；之后可能需要用 Godot 重新导入以刷新资源缓存。**发布器不能替代游戏内视觉验收**，特别是 CRT 屏幕纹理、键鼠位置及机箱落地情况。批量模式只替换已有设备的外观和参数，不新增 SKU 或修改存档。
+
 ## 电脑设备：替换现有基础款或升级款
 
 主窗口顶部点击 **「电脑设备模型发布 / 替换现有型号…」**，使用同一个项目和 Godot 路径。新窗口选择完成 PBR 材质的 GLB，然后选择设备类型与已有商品 ID，填写真实外包围尺寸（**X 宽、Y 高、Z 深，单位米**）；显示器还必须填写屏幕 Quad 的宽、高与本地中心 X/Y/Z。

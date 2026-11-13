@@ -1,0 +1,114 @@
+{
+  "schema_version": 2,
+  "collection": "启航 2000 / Qihang 2000 Starter Computer",
+  "scale": "1 glTF unit = 1 metre",
+  "up_axis": "+Y",
+  "origin": "bottom centre of device",
+  "models": [
+    {
+      "file": "qihang_m15_crt.glb",
+      "role": "monitor",
+      "item_id": "starter_monitor",
+      "product_name": "启航 M15 CRT 显示器",
+      "expected_size_m": [
+        0.36,
+        0.35,
+        0.32
+      ],
+      "actual_mesh_bounds_m": [
+        [
+          -0.1775,
+          0.004,
+          -0.148
+        ],
+        [
+          0.1775,
+          0.3465,
+          0.156
+        ]
+      ],
+      "screen_size_m": [
+        0.278,
+        0.208
+      ],
+      "screen_position_m": [
+        0,
+        0.211,
+        0.155
+      ],
+      "front_direction": "+Z"
+    },
+    {
+      "file": "qihang_c100_tower.glb",
+      "role": "computer",
+      "item_id": "starter_pc",
+      "product_name": "启航 C100 米白机箱",
+      "expected_size_m": [
+        0.19,
+        0.42,
+        0.4
+      ],
+      "actual_mesh_bounds_m": [
+        [
+          -0.0945,
+          0.0005,
+          -0.19488
+        ],
+        [
+          0.0945,
+          0.416,
+          0.1992
+        ]
+      ],
+      "front_direction": "+Z"
+    },
+    {
+      "file": "qihang_k100_keyboard.glb",
+      "role": "keyboard",
+      "item_id": "starter_mouse",
+      "product_name": "启航 K100 薄膜键盘",
+      "expected_size_m": [
+        0.43,
+        0.045,
+        0.16
+      ],
+      "actual_mesh_bounds_m": [
+        [
+          -0.2125,
+          0,
+          -0.079
+        ],
+        [
+          0.2125,
+          0.0385,
+          0.079
+        ]
+      ],
+      "front_direction": "+Z"
+    },
+    {
+      "file": "qihang_b100_ball_mouse.glb",
+      "role": "mouse",
+      "item_id": "starter_mouse",
+      "product_name": "启航 B100 滚珠鼠标",
+      "expected_size_m": [
+        0.065,
+        0.035,
+        0.11
+      ],
+      "actual_mesh_bounds_m": [
+        [
+          -0.032,
+          0.00007,
+          -0.054
+        ],
+        [
+          0.032,
+          0.03448,
+          0.052
+        ]
+      ],
+      "front_direction": "-Z cable front"
+    }
+  ]
+}
