@@ -35,6 +35,8 @@ jobs:
           use-dotnet: false
       - name: Import Godot assets
         run: godot --headless --path . --editor --import
+      - name: Verify old hardware is hidden and desk_basic is retained
+        run: timeout 45s godot --headless --path . --script res://tests/life/test_retired_hardware_clearance.gd -- --fresh
       - name: Exercise hardware replacement against real Godot resource
         shell: bash
         run: |
@@ -80,7 +82,5 @@ jobs:
                   assert pathlib.Path(f).is_file()
               print("HARDWARE_BATCH_GODOT: PASS")
           PY
-      - name: Verify old hardware is hidden and desk_basic is retained
-        run: timeout 45s godot --headless --path . --script res://tests/life/test_retired_hardware_clearance.gd -- --fresh
       - name: Verify furniture primary/secondary category linkage
         run: timeout 45s godot --headless --path . --script res://tests/life/test_furniture_category_linkage.gd -- --fresh
