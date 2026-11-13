@@ -55,7 +55,7 @@ class BatchPublisherTests(unittest.TestCase):
             scene.parent.mkdir(parents=True, exist_ok=True)
             node = "DefaultModel"
             scene.write_text('[ext_resource type="PackedScene" path="res://assets/models/hardware/' + basename +
-                             '.glb" id="3"]\n[node name="' + node +
+                             '.glb" id="3"]\n[node name="' + role[0].upper() + role[1:] + '" type="Node3D"]\nvisible = false\n[node name="' + node +
                              '" parent="Models" instance=ExtResource("3")]\nscale = Vector3(.4, .4, .4)\n',
                              encoding="utf-8")
 
