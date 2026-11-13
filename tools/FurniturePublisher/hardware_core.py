@@ -146,6 +146,28 @@ def _unity_scale_scene(scene: str, node: str) -> str:
     return updated
 
 
+
+def _activate_published_device(scene: str, role: str) -> str:
+    """Unhide only the device root after Godot confirms the replacement model."""
+    name = {"monitor": "Monitor", "computer": "Computer",
+            "keyboard": "Keyboard", "mouse": "Mouse"}.get(role)
+    if name is None:
+        raise PublishError("未知硬件槽位")
+    header = f'[node name="{name}" type="Node3D"]'
+    if scene.count(header) != 1:
+        raise PublishError("找不到唯一的设备场景根节点：" + name)
+    start = scene.index(header) + len(header)
+    end = scene.find("\n[node ", start)
+    if end == -1:
+        end = len(scene)
+    block = scene[start:end]
+    if "\nvisible = false" in block:
+        block = block.replace("\nvisible = false", "\nvisible = true", 1)
+    elif "\nvisible = true" not in block:
+        block = "\nvisible = true" + block
+    return scene[:start] + block + scene[end:]
+
+
 def preview_hardware(item: HardwareItem) -> str:
     glb = validate_hardware(item)
     extra = f"\n屏幕大小：{item.screen_width} × {item.screen_height} m；中心：{item.screen_position}" if item.role == "monitor" else ""
@@ -209,8 +231,10 @@ def publish_hardware(item: HardwareItem, log: Log = print) -> dict:
             raise PublishError("设备校验结果格式错误") from exc
         if not receipt.get("ok") or receipt.get("model") != "res://" + item.model_relative.as_posix():
             raise PublishError("设备资源校验失败：" + str(receipt.get("error", "结果不匹配")))
+        scene_file = root / item.scene_relative
+        scene_file.write_text(_activate_published_device(scene_file.read_text(encoding="utf-8-sig"), item.role), encoding="utf-8")
         success = True
-        log("设备基础外观已更新；请在 Godot 里检查屏幕画面、碰撞与设备位置。")
+        log("新设备模型已启用；请在 Godot 里检查屏幕画面、碰撞与设备位置。")
         return {"model": str(root / item.model_relative),
                 "resource": str(root / item.resource_relative),
                 "scene": str(root / item.scene_relative), "backup": str(backup)}

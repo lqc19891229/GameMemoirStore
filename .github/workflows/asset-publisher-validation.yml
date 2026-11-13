@@ -8,6 +8,8 @@ on:
       - "addons/furniture_manager/furniture_catalog_registrar.gd"
       - "scripts/items/item_taxonomy.gd"
       - "tests/life/test_furniture_category_linkage.gd"
+      - "tests/life/test_retired_hardware_clearance.gd"
+      - "scenes/computer/hardware/**"
       - ".github/workflows/asset-publisher-validation.yml"
   workflow_dispatch:
 
@@ -33,6 +35,8 @@ jobs:
           use-dotnet: false
       - name: Import Godot assets
         run: godot --headless --path . --editor --import
+      - name: Verify old hardware is hidden and desk_basic is retained
+        run: timeout 45s godot --headless --path . --script res://tests/life/test_retired_hardware_clearance.gd -- --fresh
       - name: Exercise hardware replacement against real Godot resource
         shell: bash
         run: |
