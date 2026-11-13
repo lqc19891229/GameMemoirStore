@@ -28,8 +28,8 @@ FIELDS = [
 class HardwarePanel(ttk.Frame):
     def __init__(self, parent, values: dict[str, str]):
         super().__init__(parent)
-        self.project = tk.StringVar(value=values.get("project", ""))
-        self.godot = tk.StringVar(value=values.get("godot", "godot"))
+        self.project = values.get("project_var") or tk.StringVar(value=values.get("project", ""))
+        self.godot = values.get("godot_var") or tk.StringVar(value=values.get("godot", "godot"))
         self.source = tk.StringVar(value=values.get("source", ""))
         self.role = tk.StringVar(value="monitor")
         self.item_id = tk.StringVar(value="starter_monitor")
