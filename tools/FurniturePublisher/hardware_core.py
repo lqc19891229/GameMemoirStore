@@ -128,44 +128,81 @@ def validate_hardware(item: HardwareItem) -> dict:
     if f'path="{model_ref}"' not in config:
         raise PublishError("现有硬件资源与目标模型不匹配")
     scene = (item.root / item.scene_relative).read_text(encoding="utf-8-sig")
-    block = re.search(r'(?m)^\[node name="' + re.escape(node) +
-                      r'" parent="Models" instance=ExtResource\("[^"]+"\)\]\s*\n'
-                      r'(?:scale = Vector3\([^\n]+\)\n)?', scene)
-    if block is None or f'path="{model_ref}"' not in scene:
+    try:
+        _find_scene_node(scene, node, parent="Models", require_instance=True)
+    except PublishError as exc:
+        raise PublishError(f"硬件场景结构不兼容：{exc}") from exc
+    if f'path="{model_ref}"' not in scene:
         raise PublishError("硬件场景缺少对应型号的 Model 实例")
     return inspect_glb(item.source_path)
 
 
-def _unity_scale_scene(scene: str, node: str) -> str:
-    pattern = (r'(?m)(^\[node name="' + re.escape(node) +
-               r'" parent="Models" instance=ExtResource\("[^"]+"\)\]\n)'
-               r'(?:scale = Vector3\([^\n]+\)\n)?')
-    updated, count = re.subn(pattern, r'\g<1>scale = Vector3(1, 1, 1)\n', scene)
-    if count != 1:
-        raise PublishError("无法安全设置硬件型号缩放，原场景结构不符合预期")
-    return updated
+def _find_scene_node(scene: str, name: str, *, parent: str | None = None,
+                     require_instance: bool = False) -> tuple[int, int, int]:
+    """Find a Godot text scene node regardless of attribute order/unique_id.
 
+    Godot 4.7 can add unique_id, re-order attributes or use CRLF when saving
+    scene files; neither should break publishing an already-registered model.
+    """
+    headers = list(re.finditer(r'(?m)^\[node\s+([^\r\n]*)\]\r?$', scene))
+    found = []
+    for i, header in enumerate(headers):
+        attrs = header.group(1)
+        if re.search(r'(?<!\w)name="' + re.escape(name) + r'"(?=\s|$)', attrs) is None:
+            continue
+        if parent is not None and re.search(r'(?<!\w)parent="' + re.escape(parent) + r'"(?=\s|$)', attrs) is None:
+            continue
+        if require_instance and not re.search(r'(?<!\w)instance=ExtResource\("[^"]+"\)', attrs):
+            continue
+        end = headers[i + 1].start() if i + 1 < len(headers) else len(scene)
+        found.append((header.start(), header.end(), end))
+    if len(found) != 1:
+        raise PublishError(f"需要唯一的 {name} 节点，实际匹配 {len(found)} 个")
+    return found[0]
+
+
+def _unity_scale_scene(scene: str, node: str) -> str:
+    """Reset one existing hardware model instance to real-world scale.
+
+    Only the scale field in its own node section is touched; other transform,
+    UID, visibility and upgrade model declarations remain unchanged.
+    """
+    _, header_end, end = _find_scene_node(scene, node, parent="Models", require_instance=True)
+    newline = "\r\n" if "\r\n" in scene else "\n"
+    block = scene[header_end:end]
+    scale = re.compile(r'(?m)^scale\s*=\s*Vector3\([^\r\n]*\)\s*\r?$')
+    hits = list(scale.finditer(block))
+    if len(hits) > 1:
+        raise PublishError(f"{node} 存在多个 scale 字段，无法安全替换")
+    if hits:
+        block = scale.sub("scale = Vector3(1, 1, 1)", block, count=1)
+    else:
+        block = newline + "scale = Vector3(1, 1, 1)" + block
+    return scene[:header_end] + block + scene[end:]
 
 
 def _activate_published_device(scene: str, role: str) -> str:
-    """Unhide only the device root after Godot confirms the replacement model."""
+    """Unhide the device root after the replacement GLB passes Godot validation."""
     name = {"monitor": "Monitor", "computer": "Computer",
             "keyboard": "Keyboard", "mouse": "Mouse"}.get(role)
     if name is None:
         raise PublishError("未知硬件槽位")
-    header = f'[node name="{name}" type="Node3D"]'
-    if scene.count(header) != 1:
-        raise PublishError("找不到唯一的设备场景根节点：" + name)
-    start = scene.index(header) + len(header)
-    end = scene.find("\n[node ", start)
-    if end == -1:
-        end = len(scene)
-    block = scene[start:end]
-    if "\nvisible = false" in block:
-        block = block.replace("\nvisible = false", "\nvisible = true", 1)
-    elif "\nvisible = true" not in block:
-        block = "\nvisible = true" + block
-    return scene[:start] + block + scene[end:]
+    _, header_end, end = _find_scene_node(scene, name)
+    header_start = scene.rfind("[node ", 0, header_end)
+    header = scene[header_start:header_end]
+    if not re.search(r'(?<!\w)type="Node3D"(?=\s|\])', header):
+        raise PublishError(f"{name} 场景根节点不是 Node3D")
+    newline = "\r\n" if "\r\n" in scene else "\n"
+    block = scene[header_end:end]
+    visibility = re.compile(r'(?m)^visible\s*=\s*(?:true|false)\s*\r?$')
+    hits = list(visibility.finditer(block))
+    if len(hits) > 1:
+        raise PublishError(f"{name} 存在多个 visible 属性，无法安全修改")
+    if hits:
+        block = visibility.sub("visible = true", block, count=1)
+    else:
+        block = newline + "visible = true" + block
+    return scene[:header_end] + block + scene[end:]
 
 
 def preview_hardware(item: HardwareItem) -> str:
