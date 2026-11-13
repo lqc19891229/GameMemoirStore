@@ -7,6 +7,7 @@
 resource_local_to_scene = true
 size = Vector3(0.23, 0.17, 0.35)
 [node name="Mouse" type="Node3D"]
+visible = false
 script = ExtResource("1")
 role = "mouse"
 appearance = ExtResource("2")
