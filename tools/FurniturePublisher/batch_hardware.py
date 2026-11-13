@@ -14,7 +14,7 @@ import sys
 import uuid
 
 from publisher_core import PublishError, inspect_glb, _execute
-from hardware_core import HardwareItem, validate_hardware, _unity_scale_scene
+from hardware_core import HardwareItem, validate_hardware, _unity_scale_scene, _activate_published_device
 
 STARTER_IDS = {
     "monitor": "starter_monitor", "computer": "starter_pc",
@@ -158,6 +158,11 @@ def publish_batch(project: str, godot: str, specs_file: str, log=print) -> dict:
             if not result.get("ok") or result.get("model") != "res://" + item.model_relative.as_posix():
                 raise PublishError("设备注册失败：" + item.role + " " + str(result.get("error", "")))
             log("已验证 " + item.role)
+        # Reveal devices only after ALL four Godot registrations have succeeded.
+        # If activation fails, the batch finally-block restores every original scene.
+        for item in items:
+            scene_file = root / item.scene_relative
+            scene_file.write_text(_activate_published_device(scene_file.read_text(encoding="utf-8-sig"), item.role), encoding="utf-8")
         success = True
         return {"count": len(items), "backup": str(backup), "models": [str(root / i.model_relative) for i in items]}
     finally:
