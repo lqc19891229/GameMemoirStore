@@ -48,7 +48,14 @@ class BatchHardwarePanel(ttk.Frame):
             ttk.Label(fields, text=name, width=21).grid(row=i, column=0, sticky="w", pady=5)
             ttk.Entry(fields, textvariable=value).grid(row=i, column=1, sticky="ew", padx=8)
             ttk.Button(fields, text="浏览…", command=lambda v=value, k=kind: self._browse(v, k)).grid(row=i, column=2)
-        ttk.Label(main, text="自动查找：模型文件夹 / model_specs.json（无需逐项输入尺寸）").pack(anchor="w", pady=(10, 7))
+        ttk.Label(main, text="自动查找：模型文件夹 / model_specs.json（无需逐项输入尺寸）").pack(anchor="w", pady=(6, 4))
+        list_actions = ttk.Frame(main)
+        list_actions.pack(fill="x", pady=(0, 4))
+        ttk.Button(list_actions, text="读取设备清单", command=self._refresh_models).pack(side="left", padx=(0, 10))
+        ttk.Label(list_actions, text="Ctrl / Shift 多选；默认选择全部").pack(side="left")
+        self.devices = tk.Listbox(main, height=5, selectmode="extended", exportselection=False)
+        self.devices.pack(fill="x")
+        self.devices.bind("<<ListboxSelect>>", lambda _event: self._invalidate())
         row = ttk.Frame(main)
         row.pack(fill="x", pady=8)
         self.preview_button = ttk.Button(row, text="1. 检查所选设备", command=self._preview)
@@ -74,6 +81,51 @@ class BatchHardwarePanel(ttk.Frame):
                                                filetypes=[("程序", "*.exe"), ("所有文件", "*")])
         if value:
             target.set(value)
+
+    def _folder_changed(self):
+        self.available_roles = []
+        self.loaded_folder = ""
+        self.devices.delete(0, "end")
+        self._invalidate()
+
+    def _refresh_models(self):
+        try:
+            path = Path(self._spec()).expanduser().resolve()
+            data = json.loads(path.read_text(encoding="utf-8-sig"))
+            entries = data.get("models", [])
+            if not isinstance(entries, list) or not 1 <= len(entries) <= 4:
+                raise PublishError("model_specs.json 必须列出 1～4 件设备")
+            from batch_hardware import STARTER_IDS
+            seen = set()
+            roles, labels = [], []
+            for entry in entries:
+                role = entry.get("role") if isinstance(entry, dict) else None
+                if role not in STARTER_IDS or role in seen:
+                    raise PublishError("清单包含未知或重复的设备类型")
+                seen.add(role)
+                roles.append(role)
+                labels.append(f"{role}  |  {entry.get('file', '')}  |  {entry.get('item_id', '')}")
+            self.devices.delete(0, "end")
+            for label in labels:
+                self.devices.insert("end", label)
+            self.available_roles = roles
+            self.loaded_folder = self.folder.get().strip()
+            self.devices.selection_set(0, "end")
+            self._invalidate()
+        except (OSError, ValueError, TypeError, AttributeError, PublishError) as exc:
+            self.available_roles = []
+            self.loaded_folder = ""
+            self.devices.delete(0, "end")
+            self._invalidate()
+            self._write("读取设备清单失败：" + str(exc))
+
+    def _selected_roles(self):
+        if not self.available_roles or self.loaded_folder != self.folder.get().strip():
+            raise PublishError("请先读取当前模型文件夹内的 model_specs.json")
+        selected = self.devices.curselection()
+        if not selected:
+            raise PublishError("请至少选择一件设备")
+        return [self.available_roles[index] for index in selected]
 
     def _spec(self):
         return str(Path(self.folder.get().strip()).expanduser() / "model_specs.json")
