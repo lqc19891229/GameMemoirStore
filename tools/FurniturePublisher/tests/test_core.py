@@ -7,7 +7,7 @@ from unittest.mock import patch
 import sys
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from publisher_core import Item, PublishError, inspect_glb, preview, publish
-from hardware_core import HardwareItem, _unity_scale_scene, preview_hardware, publish_hardware
+from hardware_core import HardwareItem, _unity_scale_scene, preview_hardware, publish_hardware, _activate_published_device
 
 
 def make_glb(mesh=True, external=False):
@@ -172,6 +172,25 @@ class HardwareTests(unittest.TestCase):
         self.assertEqual(self.model.read_bytes(), (self.root / "incoming.glb").read_bytes())
         self.assertIn("Vector3(1, 1, 1)", self.scene.read_text())
         self.assertEqual((Path(result["backup"]) / "assets/models/hardware/monitor_crt.glb").read_bytes(), original)
+
+
+
+
+class RetiredHardwareActivationTests(unittest.TestCase):
+    def test_reveal_root_and_preserve_nested_upgrade_visibility(self):
+        scene = ('[node name="Monitor" type="Node3D"]\\n'
+                 'visible = false\\n'
+                 'script = ExtResource("1")\\n'
+                 '[node name="UpgradeModel" parent="Models" instance=ExtResource("4")]\\n'
+                 'visible = false\\n')
+        result = _activate_published_device(scene, "monitor")
+        self.assertIn('[node name="Monitor" type="Node3D"]\\nvisible = true', result)
+        self.assertIn('[node name="UpgradeModel" parent="Models" instance=ExtResource("4")]\\nvisible = false', result)
+        self.assertEqual(result, _activate_published_device(result, "monitor"))
+
+    def test_reject_unknown_or_changed_scene_root(self):
+        with self.assertRaises(PublishError):
+            _activate_published_device('[node name="Something" type="Node3D"]', "mouse")
 
 
 
