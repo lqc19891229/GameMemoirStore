@@ -170,7 +170,1253 @@ def _unity_scale_scene(scene: str, node: str) -> str:
     _, header_end, end = _find_scene_node(scene, node, parent="Models", require_instance=True)
     newline = "\r\n" if "\r\n" in scene else "\n"
     block = scene[header_end:end]
-    scale = re.compile(r'(?m)^scale[ \t]*=[ \t]*Vector3\([^\r\n]*\)[ \t]*\r?
+    scale = re.compile(r'(?m)^scale[ \t]*=[ \t]*Vector3\([^\r\n]*\)[ \t]*\r?    hits = list(scale.finditer(block))
+    if len(hits) > 1:
+        raise PublishError(f"{node} 存在多个 scale 字段，无法安全替换")
+    if hits:
+        block = scale.sub("scale = Vector3(1, 1, 1)", block, count=1)
+    else:
+        block = newline + "scale = Vector3(1, 1, 1)" + block
+    return scene[:header_end] + block + scene[end:]
+
+
+def _activate_published_device(scene: str, role: str) -> str:
+    """Unhide the device root after the replacement GLB passes Godot validation."""
+    name = {"monitor": "Monitor", "computer": "Computer",
+            "keyboard": "Keyboard", "mouse": "Mouse"}.get(role)
+    if name is None:
+        raise PublishError("未知硬件槽位")
+    _, header_end, end = _find_scene_node(scene, name)
+    header_start = scene.rfind("[node ", 0, header_end)
+    header = scene[header_start:header_end]
+    if not re.search(r'(?<!\w)type="Node3D"(?=\s|\])', header):
+        raise PublishError(f"{name} 场景根节点不是 Node3D")
+    newline = "\r\n" if "\r\n" in scene else "\n"
+    block = scene[header_end:end]
+    visibility = re.compile(r'(?m)^visible[ \t]*=[ \t]*(?:true|false)[ \t]*\r?    hits = list(visibility.finditer(block))
+    if len(hits) > 1:
+        raise PublishError(f"{name} 存在多个 visible 属性，无法安全修改")
+    if hits:
+        block = visibility.sub("visible = true", block, count=1)
+    else:
+        block = newline + "visible = true" + block
+    return scene[:header_end] + block + scene[end:]
+
+
+def preview_hardware(item: HardwareItem) -> str:
+    glb = validate_hardware(item)
+    extra = f"\n屏幕大小：{item.screen_width} × {item.screen_height} m；中心：{item.screen_position}" if item.role == "monitor" else ""
+    return (f"设备：{LABELS[item.role]} / {item.item_id}（替换已有外观）\n"
+            f"目标模型：{item.root / item.model_relative}\n"
+            f"目标配置：{item.root / item.resource_relative}\n"
+            f"设备场景：{item.root / item.scene_relative}\n"
+            f"新尺寸（X/Y/Z）：{item.bounds} m{extra}\n"
+            f"网格：{glb['mesh_count']}  材质：{glb['material_count']}  内嵌图像：{glb['image_count']}\n"
+            f"原始 SHA256：{glb['sha256']}\n"
+            "将备份旧 GLB、设备配置和场景；导入成功后覆盖现有型号，不变更商品 ID/玩家存档。")
+
+
+def publish_hardware(item: HardwareItem, log: Log = print) -> dict:
+    glb = validate_hardware(item)
+    root = item.root
+    paths = [item.model_relative, item.resource_relative, item.scene_relative]
+    originals = {relative: (root / relative).read_bytes() for relative in paths}
+    if (root / item.model_relative).resolve() == item.source_path:
+        raise PublishError("不能直接选择项目内的同名目标 GLB，请从外部成品文件导入")
+    backup = (Path.home() / ".gamememoir_furniture_publisher" / "backups" /
+              ("hardware_" + datetime.now().strftime("%Y%m%d-%H%M%S-%f") +
+               "_" + item.mapping[0]))
+    backup.mkdir(parents=True, exist_ok=False)
+    for relative, contents in originals.items():
+        dest = backup / relative
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        dest.write_bytes(contents)
+    log("已备份旧模型、配置和场景至：" + str(backup))
+    scene_relative = item.scene_relative
+    script = root / "tools" / f"_hardware_publish_{uuid.uuid4().hex[:16]}.gd"
+    manifest = script.with_suffix(".json")
+    godot = str(Path(item.godot).expanduser()) if Path(item.godot).expanduser().is_file() else item.godot
+    success = False
+    try:
+        scene = originals[scene_relative].decode("utf-8-sig")
+        (root / scene_relative).write_text(_unity_scale_scene(scene, item.mapping[1]), encoding="utf-8")
+        shutil.copyfile(item.source_path, root / item.model_relative)
+        if inspect_glb(root / item.model_relative)["sha256"] != glb["sha256"]:
+            raise PublishError("模型复制后的 SHA256 校验失败")
+        template_root = Path(getattr(sys, "_MEIPASS", Path(__file__).resolve().parent))
+        script.write_text((template_root / "hardware_bridge.gd").read_text(encoding="utf-8"), encoding="utf-8")
+        manifest.write_text(json.dumps({
+            "resource_path": "res://" + item.resource_relative.as_posix(),
+            "model_path": "res://" + item.model_relative.as_posix(),
+            "bounds": item.bounds, "screen_size": item.screen_size,
+            "screen_position": item.screen_position, "role": item.role,
+        }), encoding="utf-8")
+        log("步骤 1/2：重新导入 GLB")
+        _execute([godot, "--headless", "--path", str(root), "--editor", "--import"], root, log, 240)
+        log("步骤 2/2：更新设备资源并由 Godot 验证")
+        output = _execute([godot, "--headless", "--path", str(root), "--script",
+                           "res://tools/" + script.name, "--", "res://tools/" + manifest.name], root, log, 180)
+        receipts = [line.split("HARDWARE_PUBLISH_RESULT=", 1)[1]
+                    for line in output.splitlines() if "HARDWARE_PUBLISH_RESULT=" in line]
+        if not receipts:
+            raise PublishError("Godot 未返回设备注册校验结果")
+        try:
+            receipt = json.loads(receipts[-1])
+        except ValueError as exc:
+            raise PublishError("设备校验结果格式错误") from exc
+        if not receipt.get("ok") or receipt.get("model") != "res://" + item.model_relative.as_posix():
+            raise PublishError("设备资源校验失败：" + str(receipt.get("error", "结果不匹配")))
+        scene_file = root / item.scene_relative
+        scene_file.write_text(_activate_published_device(scene_file.read_text(encoding="utf-8-sig"), item.role), encoding="utf-8")
+        success = True
+        log("新设备模型已启用；请在 Godot 里检查屏幕画面、碰撞与设备位置。")
+        return {"model": str(root / item.model_relative),
+                "resource": str(root / item.resource_relative),
+                "scene": str(root / item.scene_relative), "backup": str(backup)}
+    finally:
+        for p in (script, manifest, script.with_suffix(".gd.uid")):
+            p.unlink(missing_ok=True)
+        if not success:
+            for relative, contents in originals.items():
+                (root / relative).write_bytes(contents)
+            log("发布失败：已恢复旧 GLB、配置和场景文件；Godot 导入缓存可能需要再次导入。")
+)
+    hits = list(scale.finditer(block))
+    if len(hits) > 1:
+        raise PublishError(f"{node} 存在多个 scale 字段，无法安全替换")
+    if hits:
+        block = scale.sub("scale = Vector3(1, 1, 1)", block, count=1)
+    else:
+        block = newline + "scale = Vector3(1, 1, 1)" + block
+    return scene[:header_end] + block + scene[end:]
+
+
+def _activate_published_device(scene: str, role: str) -> str:
+    """Unhide the device root after the replacement GLB passes Godot validation."""
+    name = {"monitor": "Monitor", "computer": "Computer",
+            "keyboard": "Keyboard", "mouse": "Mouse"}.get(role)
+    if name is None:
+        raise PublishError("未知硬件槽位")
+    _, header_end, end = _find_scene_node(scene, name)
+    header_start = scene.rfind("[node ", 0, header_end)
+    header = scene[header_start:header_end]
+    if not re.search(r'(?<!\w)type="Node3D"(?=\s|\])', header):
+        raise PublishError(f"{name} 场景根节点不是 Node3D")
+    newline = "\r\n" if "\r\n" in scene else "\n"
+    block = scene[header_end:end]
+    visibility = re.compile(r'(?m)^visible\s*=\s*(?:true|false)\s*\r?$')
+    hits = list(visibility.finditer(block))
+    if len(hits) > 1:
+        raise PublishError(f"{name} 存在多个 visible 属性，无法安全修改")
+    if hits:
+        block = visibility.sub("visible = true", block, count=1)
+    else:
+        block = newline + "visible = true" + block
+    return scene[:header_end] + block + scene[end:]
+
+
+def preview_hardware(item: HardwareItem) -> str:
+    glb = validate_hardware(item)
+    extra = f"\n屏幕大小：{item.screen_width} × {item.screen_height} m；中心：{item.screen_position}" if item.role == "monitor" else ""
+    return (f"设备：{LABELS[item.role]} / {item.item_id}（替换已有外观）\n"
+            f"目标模型：{item.root / item.model_relative}\n"
+            f"目标配置：{item.root / item.resource_relative}\n"
+            f"设备场景：{item.root / item.scene_relative}\n"
+            f"新尺寸（X/Y/Z）：{item.bounds} m{extra}\n"
+            f"网格：{glb['mesh_count']}  材质：{glb['material_count']}  内嵌图像：{glb['image_count']}\n"
+            f"原始 SHA256：{glb['sha256']}\n"
+            "将备份旧 GLB、设备配置和场景；导入成功后覆盖现有型号，不变更商品 ID/玩家存档。")
+
+
+def publish_hardware(item: HardwareItem, log: Log = print) -> dict:
+    glb = validate_hardware(item)
+    root = item.root
+    paths = [item.model_relative, item.resource_relative, item.scene_relative]
+    originals = {relative: (root / relative).read_bytes() for relative in paths}
+    if (root / item.model_relative).resolve() == item.source_path:
+        raise PublishError("不能直接选择项目内的同名目标 GLB，请从外部成品文件导入")
+    backup = (Path.home() / ".gamememoir_furniture_publisher" / "backups" /
+              ("hardware_" + datetime.now().strftime("%Y%m%d-%H%M%S-%f") +
+               "_" + item.mapping[0]))
+    backup.mkdir(parents=True, exist_ok=False)
+    for relative, contents in originals.items():
+        dest = backup / relative
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        dest.write_bytes(contents)
+    log("已备份旧模型、配置和场景至：" + str(backup))
+    scene_relative = item.scene_relative
+    script = root / "tools" / f"_hardware_publish_{uuid.uuid4().hex[:16]}.gd"
+    manifest = script.with_suffix(".json")
+    godot = str(Path(item.godot).expanduser()) if Path(item.godot).expanduser().is_file() else item.godot
+    success = False
+    try:
+        scene = originals[scene_relative].decode("utf-8-sig")
+        (root / scene_relative).write_text(_unity_scale_scene(scene, item.mapping[1]), encoding="utf-8")
+        shutil.copyfile(item.source_path, root / item.model_relative)
+        if inspect_glb(root / item.model_relative)["sha256"] != glb["sha256"]:
+            raise PublishError("模型复制后的 SHA256 校验失败")
+        template_root = Path(getattr(sys, "_MEIPASS", Path(__file__).resolve().parent))
+        script.write_text((template_root / "hardware_bridge.gd").read_text(encoding="utf-8"), encoding="utf-8")
+        manifest.write_text(json.dumps({
+            "resource_path": "res://" + item.resource_relative.as_posix(),
+            "model_path": "res://" + item.model_relative.as_posix(),
+            "bounds": item.bounds, "screen_size": item.screen_size,
+            "screen_position": item.screen_position, "role": item.role,
+        }), encoding="utf-8")
+        log("步骤 1/2：重新导入 GLB")
+        _execute([godot, "--headless", "--path", str(root), "--editor", "--import"], root, log, 240)
+        log("步骤 2/2：更新设备资源并由 Godot 验证")
+        output = _execute([godot, "--headless", "--path", str(root), "--script",
+                           "res://tools/" + script.name, "--", "res://tools/" + manifest.name], root, log, 180)
+        receipts = [line.split("HARDWARE_PUBLISH_RESULT=", 1)[1]
+                    for line in output.splitlines() if "HARDWARE_PUBLISH_RESULT=" in line]
+        if not receipts:
+            raise PublishError("Godot 未返回设备注册校验结果")
+        try:
+            receipt = json.loads(receipts[-1])
+        except ValueError as exc:
+            raise PublishError("设备校验结果格式错误") from exc
+        if not receipt.get("ok") or receipt.get("model") != "res://" + item.model_relative.as_posix():
+            raise PublishError("设备资源校验失败：" + str(receipt.get("error", "结果不匹配")))
+        scene_file = root / item.scene_relative
+        scene_file.write_text(_activate_published_device(scene_file.read_text(encoding="utf-8-sig"), item.role), encoding="utf-8")
+        success = True
+        log("新设备模型已启用；请在 Godot 里检查屏幕画面、碰撞与设备位置。")
+        return {"model": str(root / item.model_relative),
+                "resource": str(root / item.resource_relative),
+                "scene": str(root / item.scene_relative), "backup": str(backup)}
+    finally:
+        for p in (script, manifest, script.with_suffix(".gd.uid")):
+            p.unlink(missing_ok=True)
+        if not success:
+            for relative, contents in originals.items():
+                (root / relative).write_bytes(contents)
+            log("发布失败：已恢复旧 GLB、配置和场景文件；Godot 导入缓存可能需要再次导入。")
+)
+    hits = list(visibility.finditer(block))
+    if len(hits) > 1:
+        raise PublishError(f"{name} 存在多个 visible 属性，无法安全修改")
+    if hits:
+        block = visibility.sub("visible = true", block, count=1)
+    else:
+        block = newline + "visible = true" + block
+    return scene[:header_end] + block + scene[end:]
+
+
+def preview_hardware(item: HardwareItem) -> str:
+    glb = validate_hardware(item)
+    extra = f"\n屏幕大小：{item.screen_width} × {item.screen_height} m；中心：{item.screen_position}" if item.role == "monitor" else ""
+    return (f"设备：{LABELS[item.role]} / {item.item_id}（替换已有外观）\n"
+            f"目标模型：{item.root / item.model_relative}\n"
+            f"目标配置：{item.root / item.resource_relative}\n"
+            f"设备场景：{item.root / item.scene_relative}\n"
+            f"新尺寸（X/Y/Z）：{item.bounds} m{extra}\n"
+            f"网格：{glb['mesh_count']}  材质：{glb['material_count']}  内嵌图像：{glb['image_count']}\n"
+            f"原始 SHA256：{glb['sha256']}\n"
+            "将备份旧 GLB、设备配置和场景；导入成功后覆盖现有型号，不变更商品 ID/玩家存档。")
+
+
+def publish_hardware(item: HardwareItem, log: Log = print) -> dict:
+    glb = validate_hardware(item)
+    root = item.root
+    paths = [item.model_relative, item.resource_relative, item.scene_relative]
+    originals = {relative: (root / relative).read_bytes() for relative in paths}
+    if (root / item.model_relative).resolve() == item.source_path:
+        raise PublishError("不能直接选择项目内的同名目标 GLB，请从外部成品文件导入")
+    backup = (Path.home() / ".gamememoir_furniture_publisher" / "backups" /
+              ("hardware_" + datetime.now().strftime("%Y%m%d-%H%M%S-%f") +
+               "_" + item.mapping[0]))
+    backup.mkdir(parents=True, exist_ok=False)
+    for relative, contents in originals.items():
+        dest = backup / relative
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        dest.write_bytes(contents)
+    log("已备份旧模型、配置和场景至：" + str(backup))
+    scene_relative = item.scene_relative
+    script = root / "tools" / f"_hardware_publish_{uuid.uuid4().hex[:16]}.gd"
+    manifest = script.with_suffix(".json")
+    godot = str(Path(item.godot).expanduser()) if Path(item.godot).expanduser().is_file() else item.godot
+    success = False
+    try:
+        scene = originals[scene_relative].decode("utf-8-sig")
+        (root / scene_relative).write_text(_unity_scale_scene(scene, item.mapping[1]), encoding="utf-8")
+        shutil.copyfile(item.source_path, root / item.model_relative)
+        if inspect_glb(root / item.model_relative)["sha256"] != glb["sha256"]:
+            raise PublishError("模型复制后的 SHA256 校验失败")
+        template_root = Path(getattr(sys, "_MEIPASS", Path(__file__).resolve().parent))
+        script.write_text((template_root / "hardware_bridge.gd").read_text(encoding="utf-8"), encoding="utf-8")
+        manifest.write_text(json.dumps({
+            "resource_path": "res://" + item.resource_relative.as_posix(),
+            "model_path": "res://" + item.model_relative.as_posix(),
+            "bounds": item.bounds, "screen_size": item.screen_size,
+            "screen_position": item.screen_position, "role": item.role,
+        }), encoding="utf-8")
+        log("步骤 1/2：重新导入 GLB")
+        _execute([godot, "--headless", "--path", str(root), "--editor", "--import"], root, log, 240)
+        log("步骤 2/2：更新设备资源并由 Godot 验证")
+        output = _execute([godot, "--headless", "--path", str(root), "--script",
+                           "res://tools/" + script.name, "--", "res://tools/" + manifest.name], root, log, 180)
+        receipts = [line.split("HARDWARE_PUBLISH_RESULT=", 1)[1]
+                    for line in output.splitlines() if "HARDWARE_PUBLISH_RESULT=" in line]
+        if not receipts:
+            raise PublishError("Godot 未返回设备注册校验结果")
+        try:
+            receipt = json.loads(receipts[-1])
+        except ValueError as exc:
+            raise PublishError("设备校验结果格式错误") from exc
+        if not receipt.get("ok") or receipt.get("model") != "res://" + item.model_relative.as_posix():
+            raise PublishError("设备资源校验失败：" + str(receipt.get("error", "结果不匹配")))
+        scene_file = root / item.scene_relative
+        scene_file.write_text(_activate_published_device(scene_file.read_text(encoding="utf-8-sig"), item.role), encoding="utf-8")
+        success = True
+        log("新设备模型已启用；请在 Godot 里检查屏幕画面、碰撞与设备位置。")
+        return {"model": str(root / item.model_relative),
+                "resource": str(root / item.resource_relative),
+                "scene": str(root / item.scene_relative), "backup": str(backup)}
+    finally:
+        for p in (script, manifest, script.with_suffix(".gd.uid")):
+            p.unlink(missing_ok=True)
+        if not success:
+            for relative, contents in originals.items():
+                (root / relative).write_bytes(contents)
+            log("发布失败：已恢复旧 GLB、配置和场景文件；Godot 导入缓存可能需要再次导入。")
+)
+    hits = list(scale.finditer(block))
+    if len(hits) > 1:
+        raise PublishError(f"{node} 存在多个 scale 字段，无法安全替换")
+    if hits:
+        block = scale.sub("scale = Vector3(1, 1, 1)", block, count=1)
+    else:
+        block = newline + "scale = Vector3(1, 1, 1)" + block
+    return scene[:header_end] + block + scene[end:]
+
+
+def _activate_published_device(scene: str, role: str) -> str:
+    """Unhide the device root after the replacement GLB passes Godot validation."""
+    name = {"monitor": "Monitor", "computer": "Computer",
+            "keyboard": "Keyboard", "mouse": "Mouse"}.get(role)
+    if name is None:
+        raise PublishError("未知硬件槽位")
+    _, header_end, end = _find_scene_node(scene, name)
+    header_start = scene.rfind("[node ", 0, header_end)
+    header = scene[header_start:header_end]
+    if not re.search(r'(?<!\w)type="Node3D"(?=\s|\])', header):
+        raise PublishError(f"{name} 场景根节点不是 Node3D")
+    newline = "\r\n" if "\r\n" in scene else "\n"
+    block = scene[header_end:end]
+    visibility = re.compile(r'(?m)^visible\s*=\s*(?:true|false)\s*\r?$')
+    hits = list(visibility.finditer(block))
+    if len(hits) > 1:
+        raise PublishError(f"{name} 存在多个 visible 属性，无法安全修改")
+    if hits:
+        block = visibility.sub("visible = true", block, count=1)
+    else:
+        block = newline + "visible = true" + block
+    return scene[:header_end] + block + scene[end:]
+
+
+def preview_hardware(item: HardwareItem) -> str:
+    glb = validate_hardware(item)
+    extra = f"\n屏幕大小：{item.screen_width} × {item.screen_height} m；中心：{item.screen_position}" if item.role == "monitor" else ""
+    return (f"设备：{LABELS[item.role]} / {item.item_id}（替换已有外观）\n"
+            f"目标模型：{item.root / item.model_relative}\n"
+            f"目标配置：{item.root / item.resource_relative}\n"
+            f"设备场景：{item.root / item.scene_relative}\n"
+            f"新尺寸（X/Y/Z）：{item.bounds} m{extra}\n"
+            f"网格：{glb['mesh_count']}  材质：{glb['material_count']}  内嵌图像：{glb['image_count']}\n"
+            f"原始 SHA256：{glb['sha256']}\n"
+            "将备份旧 GLB、设备配置和场景；导入成功后覆盖现有型号，不变更商品 ID/玩家存档。")
+
+
+def publish_hardware(item: HardwareItem, log: Log = print) -> dict:
+    glb = validate_hardware(item)
+    root = item.root
+    paths = [item.model_relative, item.resource_relative, item.scene_relative]
+    originals = {relative: (root / relative).read_bytes() for relative in paths}
+    if (root / item.model_relative).resolve() == item.source_path:
+        raise PublishError("不能直接选择项目内的同名目标 GLB，请从外部成品文件导入")
+    backup = (Path.home() / ".gamememoir_furniture_publisher" / "backups" /
+              ("hardware_" + datetime.now().strftime("%Y%m%d-%H%M%S-%f") +
+               "_" + item.mapping[0]))
+    backup.mkdir(parents=True, exist_ok=False)
+    for relative, contents in originals.items():
+        dest = backup / relative
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        dest.write_bytes(contents)
+    log("已备份旧模型、配置和场景至：" + str(backup))
+    scene_relative = item.scene_relative
+    script = root / "tools" / f"_hardware_publish_{uuid.uuid4().hex[:16]}.gd"
+    manifest = script.with_suffix(".json")
+    godot = str(Path(item.godot).expanduser()) if Path(item.godot).expanduser().is_file() else item.godot
+    success = False
+    try:
+        scene = originals[scene_relative].decode("utf-8-sig")
+        (root / scene_relative).write_text(_unity_scale_scene(scene, item.mapping[1]), encoding="utf-8")
+        shutil.copyfile(item.source_path, root / item.model_relative)
+        if inspect_glb(root / item.model_relative)["sha256"] != glb["sha256"]:
+            raise PublishError("模型复制后的 SHA256 校验失败")
+        template_root = Path(getattr(sys, "_MEIPASS", Path(__file__).resolve().parent))
+        script.write_text((template_root / "hardware_bridge.gd").read_text(encoding="utf-8"), encoding="utf-8")
+        manifest.write_text(json.dumps({
+            "resource_path": "res://" + item.resource_relative.as_posix(),
+            "model_path": "res://" + item.model_relative.as_posix(),
+            "bounds": item.bounds, "screen_size": item.screen_size,
+            "screen_position": item.screen_position, "role": item.role,
+        }), encoding="utf-8")
+        log("步骤 1/2：重新导入 GLB")
+        _execute([godot, "--headless", "--path", str(root), "--editor", "--import"], root, log, 240)
+        log("步骤 2/2：更新设备资源并由 Godot 验证")
+        output = _execute([godot, "--headless", "--path", str(root), "--script",
+                           "res://tools/" + script.name, "--", "res://tools/" + manifest.name], root, log, 180)
+        receipts = [line.split("HARDWARE_PUBLISH_RESULT=", 1)[1]
+                    for line in output.splitlines() if "HARDWARE_PUBLISH_RESULT=" in line]
+        if not receipts:
+            raise PublishError("Godot 未返回设备注册校验结果")
+        try:
+            receipt = json.loads(receipts[-1])
+        except ValueError as exc:
+            raise PublishError("设备校验结果格式错误") from exc
+        if not receipt.get("ok") or receipt.get("model") != "res://" + item.model_relative.as_posix():
+            raise PublishError("设备资源校验失败：" + str(receipt.get("error", "结果不匹配")))
+        scene_file = root / item.scene_relative
+        scene_file.write_text(_activate_published_device(scene_file.read_text(encoding="utf-8-sig"), item.role), encoding="utf-8")
+        success = True
+        log("新设备模型已启用；请在 Godot 里检查屏幕画面、碰撞与设备位置。")
+        return {"model": str(root / item.model_relative),
+                "resource": str(root / item.resource_relative),
+                "scene": str(root / item.scene_relative), "backup": str(backup)}
+    finally:
+        for p in (script, manifest, script.with_suffix(".gd.uid")):
+            p.unlink(missing_ok=True)
+        if not success:
+            for relative, contents in originals.items():
+                (root / relative).write_bytes(contents)
+            log("发布失败：已恢复旧 GLB、配置和场景文件；Godot 导入缓存可能需要再次导入。")
+)
+    hits = list(scale.finditer(block))
+    if len(hits) > 1:
+        raise PublishError(f"{node} 存在多个 scale 字段，无法安全替换")
+    if hits:
+        block = scale.sub("scale = Vector3(1, 1, 1)", block, count=1)
+    else:
+        block = newline + "scale = Vector3(1, 1, 1)" + block
+    return scene[:header_end] + block + scene[end:]
+
+
+def _activate_published_device(scene: str, role: str) -> str:
+    """Unhide the device root after the replacement GLB passes Godot validation."""
+    name = {"monitor": "Monitor", "computer": "Computer",
+            "keyboard": "Keyboard", "mouse": "Mouse"}.get(role)
+    if name is None:
+        raise PublishError("未知硬件槽位")
+    _, header_end, end = _find_scene_node(scene, name)
+    header_start = scene.rfind("[node ", 0, header_end)
+    header = scene[header_start:header_end]
+    if not re.search(r'(?<!\w)type="Node3D"(?=\s|\])', header):
+        raise PublishError(f"{name} 场景根节点不是 Node3D")
+    newline = "\r\n" if "\r\n" in scene else "\n"
+    block = scene[header_end:end]
+    visibility = re.compile(r'(?m)^visible[ \t]*=[ \t]*(?:true|false)[ \t]*\r?
+    hits = list(visibility.finditer(block))
+    if len(hits) > 1:
+        raise PublishError(f"{name} 存在多个 visible 属性，无法安全修改")
+    if hits:
+        block = visibility.sub("visible = true", block, count=1)
+    else:
+        block = newline + "visible = true" + block
+    return scene[:header_end] + block + scene[end:]
+
+
+def preview_hardware(item: HardwareItem) -> str:
+    glb = validate_hardware(item)
+    extra = f"\n屏幕大小：{item.screen_width} × {item.screen_height} m；中心：{item.screen_position}" if item.role == "monitor" else ""
+    return (f"设备：{LABELS[item.role]} / {item.item_id}（替换已有外观）\n"
+            f"目标模型：{item.root / item.model_relative}\n"
+            f"目标配置：{item.root / item.resource_relative}\n"
+            f"设备场景：{item.root / item.scene_relative}\n"
+            f"新尺寸（X/Y/Z）：{item.bounds} m{extra}\n"
+            f"网格：{glb['mesh_count']}  材质：{glb['material_count']}  内嵌图像：{glb['image_count']}\n"
+            f"原始 SHA256：{glb['sha256']}\n"
+            "将备份旧 GLB、设备配置和场景；导入成功后覆盖现有型号，不变更商品 ID/玩家存档。")
+
+
+def publish_hardware(item: HardwareItem, log: Log = print) -> dict:
+    glb = validate_hardware(item)
+    root = item.root
+    paths = [item.model_relative, item.resource_relative, item.scene_relative]
+    originals = {relative: (root / relative).read_bytes() for relative in paths}
+    if (root / item.model_relative).resolve() == item.source_path:
+        raise PublishError("不能直接选择项目内的同名目标 GLB，请从外部成品文件导入")
+    backup = (Path.home() / ".gamememoir_furniture_publisher" / "backups" /
+              ("hardware_" + datetime.now().strftime("%Y%m%d-%H%M%S-%f") +
+               "_" + item.mapping[0]))
+    backup.mkdir(parents=True, exist_ok=False)
+    for relative, contents in originals.items():
+        dest = backup / relative
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        dest.write_bytes(contents)
+    log("已备份旧模型、配置和场景至：" + str(backup))
+    scene_relative = item.scene_relative
+    script = root / "tools" / f"_hardware_publish_{uuid.uuid4().hex[:16]}.gd"
+    manifest = script.with_suffix(".json")
+    godot = str(Path(item.godot).expanduser()) if Path(item.godot).expanduser().is_file() else item.godot
+    success = False
+    try:
+        scene = originals[scene_relative].decode("utf-8-sig")
+        (root / scene_relative).write_text(_unity_scale_scene(scene, item.mapping[1]), encoding="utf-8")
+        shutil.copyfile(item.source_path, root / item.model_relative)
+        if inspect_glb(root / item.model_relative)["sha256"] != glb["sha256"]:
+            raise PublishError("模型复制后的 SHA256 校验失败")
+        template_root = Path(getattr(sys, "_MEIPASS", Path(__file__).resolve().parent))
+        script.write_text((template_root / "hardware_bridge.gd").read_text(encoding="utf-8"), encoding="utf-8")
+        manifest.write_text(json.dumps({
+            "resource_path": "res://" + item.resource_relative.as_posix(),
+            "model_path": "res://" + item.model_relative.as_posix(),
+            "bounds": item.bounds, "screen_size": item.screen_size,
+            "screen_position": item.screen_position, "role": item.role,
+        }), encoding="utf-8")
+        log("步骤 1/2：重新导入 GLB")
+        _execute([godot, "--headless", "--path", str(root), "--editor", "--import"], root, log, 240)
+        log("步骤 2/2：更新设备资源并由 Godot 验证")
+        output = _execute([godot, "--headless", "--path", str(root), "--script",
+                           "res://tools/" + script.name, "--", "res://tools/" + manifest.name], root, log, 180)
+        receipts = [line.split("HARDWARE_PUBLISH_RESULT=", 1)[1]
+                    for line in output.splitlines() if "HARDWARE_PUBLISH_RESULT=" in line]
+        if not receipts:
+            raise PublishError("Godot 未返回设备注册校验结果")
+        try:
+            receipt = json.loads(receipts[-1])
+        except ValueError as exc:
+            raise PublishError("设备校验结果格式错误") from exc
+        if not receipt.get("ok") or receipt.get("model") != "res://" + item.model_relative.as_posix():
+            raise PublishError("设备资源校验失败：" + str(receipt.get("error", "结果不匹配")))
+        scene_file = root / item.scene_relative
+        scene_file.write_text(_activate_published_device(scene_file.read_text(encoding="utf-8-sig"), item.role), encoding="utf-8")
+        success = True
+        log("新设备模型已启用；请在 Godot 里检查屏幕画面、碰撞与设备位置。")
+        return {"model": str(root / item.model_relative),
+                "resource": str(root / item.resource_relative),
+                "scene": str(root / item.scene_relative), "backup": str(backup)}
+    finally:
+        for p in (script, manifest, script.with_suffix(".gd.uid")):
+            p.unlink(missing_ok=True)
+        if not success:
+            for relative, contents in originals.items():
+                (root / relative).write_bytes(contents)
+            log("发布失败：已恢复旧 GLB、配置和场景文件；Godot 导入缓存可能需要再次导入。")
+)
+    hits = list(scale.finditer(block))
+    if len(hits) > 1:
+        raise PublishError(f"{node} 存在多个 scale 字段，无法安全替换")
+    if hits:
+        block = scale.sub("scale = Vector3(1, 1, 1)", block, count=1)
+    else:
+        block = newline + "scale = Vector3(1, 1, 1)" + block
+    return scene[:header_end] + block + scene[end:]
+
+
+def _activate_published_device(scene: str, role: str) -> str:
+    """Unhide the device root after the replacement GLB passes Godot validation."""
+    name = {"monitor": "Monitor", "computer": "Computer",
+            "keyboard": "Keyboard", "mouse": "Mouse"}.get(role)
+    if name is None:
+        raise PublishError("未知硬件槽位")
+    _, header_end, end = _find_scene_node(scene, name)
+    header_start = scene.rfind("[node ", 0, header_end)
+    header = scene[header_start:header_end]
+    if not re.search(r'(?<!\w)type="Node3D"(?=\s|\])', header):
+        raise PublishError(f"{name} 场景根节点不是 Node3D")
+    newline = "\r\n" if "\r\n" in scene else "\n"
+    block = scene[header_end:end]
+    visibility = re.compile(r'(?m)^visible\s*=\s*(?:true|false)\s*\r?$')
+    hits = list(visibility.finditer(block))
+    if len(hits) > 1:
+        raise PublishError(f"{name} 存在多个 visible 属性，无法安全修改")
+    if hits:
+        block = visibility.sub("visible = true", block, count=1)
+    else:
+        block = newline + "visible = true" + block
+    return scene[:header_end] + block + scene[end:]
+
+
+def preview_hardware(item: HardwareItem) -> str:
+    glb = validate_hardware(item)
+    extra = f"\n屏幕大小：{item.screen_width} × {item.screen_height} m；中心：{item.screen_position}" if item.role == "monitor" else ""
+    return (f"设备：{LABELS[item.role]} / {item.item_id}（替换已有外观）\n"
+            f"目标模型：{item.root / item.model_relative}\n"
+            f"目标配置：{item.root / item.resource_relative}\n"
+            f"设备场景：{item.root / item.scene_relative}\n"
+            f"新尺寸（X/Y/Z）：{item.bounds} m{extra}\n"
+            f"网格：{glb['mesh_count']}  材质：{glb['material_count']}  内嵌图像：{glb['image_count']}\n"
+            f"原始 SHA256：{glb['sha256']}\n"
+            "将备份旧 GLB、设备配置和场景；导入成功后覆盖现有型号，不变更商品 ID/玩家存档。")
+
+
+def publish_hardware(item: HardwareItem, log: Log = print) -> dict:
+    glb = validate_hardware(item)
+    root = item.root
+    paths = [item.model_relative, item.resource_relative, item.scene_relative]
+    originals = {relative: (root / relative).read_bytes() for relative in paths}
+    if (root / item.model_relative).resolve() == item.source_path:
+        raise PublishError("不能直接选择项目内的同名目标 GLB，请从外部成品文件导入")
+    backup = (Path.home() / ".gamememoir_furniture_publisher" / "backups" /
+              ("hardware_" + datetime.now().strftime("%Y%m%d-%H%M%S-%f") +
+               "_" + item.mapping[0]))
+    backup.mkdir(parents=True, exist_ok=False)
+    for relative, contents in originals.items():
+        dest = backup / relative
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        dest.write_bytes(contents)
+    log("已备份旧模型、配置和场景至：" + str(backup))
+    scene_relative = item.scene_relative
+    script = root / "tools" / f"_hardware_publish_{uuid.uuid4().hex[:16]}.gd"
+    manifest = script.with_suffix(".json")
+    godot = str(Path(item.godot).expanduser()) if Path(item.godot).expanduser().is_file() else item.godot
+    success = False
+    try:
+        scene = originals[scene_relative].decode("utf-8-sig")
+        (root / scene_relative).write_text(_unity_scale_scene(scene, item.mapping[1]), encoding="utf-8")
+        shutil.copyfile(item.source_path, root / item.model_relative)
+        if inspect_glb(root / item.model_relative)["sha256"] != glb["sha256"]:
+            raise PublishError("模型复制后的 SHA256 校验失败")
+        template_root = Path(getattr(sys, "_MEIPASS", Path(__file__).resolve().parent))
+        script.write_text((template_root / "hardware_bridge.gd").read_text(encoding="utf-8"), encoding="utf-8")
+        manifest.write_text(json.dumps({
+            "resource_path": "res://" + item.resource_relative.as_posix(),
+            "model_path": "res://" + item.model_relative.as_posix(),
+            "bounds": item.bounds, "screen_size": item.screen_size,
+            "screen_position": item.screen_position, "role": item.role,
+        }), encoding="utf-8")
+        log("步骤 1/2：重新导入 GLB")
+        _execute([godot, "--headless", "--path", str(root), "--editor", "--import"], root, log, 240)
+        log("步骤 2/2：更新设备资源并由 Godot 验证")
+        output = _execute([godot, "--headless", "--path", str(root), "--script",
+                           "res://tools/" + script.name, "--", "res://tools/" + manifest.name], root, log, 180)
+        receipts = [line.split("HARDWARE_PUBLISH_RESULT=", 1)[1]
+                    for line in output.splitlines() if "HARDWARE_PUBLISH_RESULT=" in line]
+        if not receipts:
+            raise PublishError("Godot 未返回设备注册校验结果")
+        try:
+            receipt = json.loads(receipts[-1])
+        except ValueError as exc:
+            raise PublishError("设备校验结果格式错误") from exc
+        if not receipt.get("ok") or receipt.get("model") != "res://" + item.model_relative.as_posix():
+            raise PublishError("设备资源校验失败：" + str(receipt.get("error", "结果不匹配")))
+        scene_file = root / item.scene_relative
+        scene_file.write_text(_activate_published_device(scene_file.read_text(encoding="utf-8-sig"), item.role), encoding="utf-8")
+        success = True
+        log("新设备模型已启用；请在 Godot 里检查屏幕画面、碰撞与设备位置。")
+        return {"model": str(root / item.model_relative),
+                "resource": str(root / item.resource_relative),
+                "scene": str(root / item.scene_relative), "backup": str(backup)}
+    finally:
+        for p in (script, manifest, script.with_suffix(".gd.uid")):
+            p.unlink(missing_ok=True)
+        if not success:
+            for relative, contents in originals.items():
+                (root / relative).write_bytes(contents)
+            log("发布失败：已恢复旧 GLB、配置和场景文件；Godot 导入缓存可能需要再次导入。")
+)
+    hits = list(visibility.finditer(block))
+    if len(hits) > 1:
+        raise PublishError(f"{name} 存在多个 visible 属性，无法安全修改")
+    if hits:
+        block = visibility.sub("visible = true", block, count=1)
+    else:
+        block = newline + "visible = true" + block
+    return scene[:header_end] + block + scene[end:]
+
+
+def preview_hardware(item: HardwareItem) -> str:
+    glb = validate_hardware(item)
+    extra = f"\n屏幕大小：{item.screen_width} × {item.screen_height} m；中心：{item.screen_position}" if item.role == "monitor" else ""
+    return (f"设备：{LABELS[item.role]} / {item.item_id}（替换已有外观）\n"
+            f"目标模型：{item.root / item.model_relative}\n"
+            f"目标配置：{item.root / item.resource_relative}\n"
+            f"设备场景：{item.root / item.scene_relative}\n"
+            f"新尺寸（X/Y/Z）：{item.bounds} m{extra}\n"
+            f"网格：{glb['mesh_count']}  材质：{glb['material_count']}  内嵌图像：{glb['image_count']}\n"
+            f"原始 SHA256：{glb['sha256']}\n"
+            "将备份旧 GLB、设备配置和场景；导入成功后覆盖现有型号，不变更商品 ID/玩家存档。")
+
+
+def publish_hardware(item: HardwareItem, log: Log = print) -> dict:
+    glb = validate_hardware(item)
+    root = item.root
+    paths = [item.model_relative, item.resource_relative, item.scene_relative]
+    originals = {relative: (root / relative).read_bytes() for relative in paths}
+    if (root / item.model_relative).resolve() == item.source_path:
+        raise PublishError("不能直接选择项目内的同名目标 GLB，请从外部成品文件导入")
+    backup = (Path.home() / ".gamememoir_furniture_publisher" / "backups" /
+              ("hardware_" + datetime.now().strftime("%Y%m%d-%H%M%S-%f") +
+               "_" + item.mapping[0]))
+    backup.mkdir(parents=True, exist_ok=False)
+    for relative, contents in originals.items():
+        dest = backup / relative
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        dest.write_bytes(contents)
+    log("已备份旧模型、配置和场景至：" + str(backup))
+    scene_relative = item.scene_relative
+    script = root / "tools" / f"_hardware_publish_{uuid.uuid4().hex[:16]}.gd"
+    manifest = script.with_suffix(".json")
+    godot = str(Path(item.godot).expanduser()) if Path(item.godot).expanduser().is_file() else item.godot
+    success = False
+    try:
+        scene = originals[scene_relative].decode("utf-8-sig")
+        (root / scene_relative).write_text(_unity_scale_scene(scene, item.mapping[1]), encoding="utf-8")
+        shutil.copyfile(item.source_path, root / item.model_relative)
+        if inspect_glb(root / item.model_relative)["sha256"] != glb["sha256"]:
+            raise PublishError("模型复制后的 SHA256 校验失败")
+        template_root = Path(getattr(sys, "_MEIPASS", Path(__file__).resolve().parent))
+        script.write_text((template_root / "hardware_bridge.gd").read_text(encoding="utf-8"), encoding="utf-8")
+        manifest.write_text(json.dumps({
+            "resource_path": "res://" + item.resource_relative.as_posix(),
+            "model_path": "res://" + item.model_relative.as_posix(),
+            "bounds": item.bounds, "screen_size": item.screen_size,
+            "screen_position": item.screen_position, "role": item.role,
+        }), encoding="utf-8")
+        log("步骤 1/2：重新导入 GLB")
+        _execute([godot, "--headless", "--path", str(root), "--editor", "--import"], root, log, 240)
+        log("步骤 2/2：更新设备资源并由 Godot 验证")
+        output = _execute([godot, "--headless", "--path", str(root), "--script",
+                           "res://tools/" + script.name, "--", "res://tools/" + manifest.name], root, log, 180)
+        receipts = [line.split("HARDWARE_PUBLISH_RESULT=", 1)[1]
+                    for line in output.splitlines() if "HARDWARE_PUBLISH_RESULT=" in line]
+        if not receipts:
+            raise PublishError("Godot 未返回设备注册校验结果")
+        try:
+            receipt = json.loads(receipts[-1])
+        except ValueError as exc:
+            raise PublishError("设备校验结果格式错误") from exc
+        if not receipt.get("ok") or receipt.get("model") != "res://" + item.model_relative.as_posix():
+            raise PublishError("设备资源校验失败：" + str(receipt.get("error", "结果不匹配")))
+        scene_file = root / item.scene_relative
+        scene_file.write_text(_activate_published_device(scene_file.read_text(encoding="utf-8-sig"), item.role), encoding="utf-8")
+        success = True
+        log("新设备模型已启用；请在 Godot 里检查屏幕画面、碰撞与设备位置。")
+        return {"model": str(root / item.model_relative),
+                "resource": str(root / item.resource_relative),
+                "scene": str(root / item.scene_relative), "backup": str(backup)}
+    finally:
+        for p in (script, manifest, script.with_suffix(".gd.uid")):
+            p.unlink(missing_ok=True)
+        if not success:
+            for relative, contents in originals.items():
+                (root / relative).write_bytes(contents)
+            log("发布失败：已恢复旧 GLB、配置和场景文件；Godot 导入缓存可能需要再次导入。")
+)
+    hits = list(scale.finditer(block))
+    if len(hits) > 1:
+        raise PublishError(f"{node} 存在多个 scale 字段，无法安全替换")
+    if hits:
+        block = scale.sub("scale = Vector3(1, 1, 1)", block, count=1)
+    else:
+        block = newline + "scale = Vector3(1, 1, 1)" + block
+    return scene[:header_end] + block + scene[end:]
+
+
+def _activate_published_device(scene: str, role: str) -> str:
+    """Unhide the device root after the replacement GLB passes Godot validation."""
+    name = {"monitor": "Monitor", "computer": "Computer",
+            "keyboard": "Keyboard", "mouse": "Mouse"}.get(role)
+    if name is None:
+        raise PublishError("未知硬件槽位")
+    _, header_end, end = _find_scene_node(scene, name)
+    header_start = scene.rfind("[node ", 0, header_end)
+    header = scene[header_start:header_end]
+    if not re.search(r'(?<!\w)type="Node3D"(?=\s|\])', header):
+        raise PublishError(f"{name} 场景根节点不是 Node3D")
+    newline = "\r\n" if "\r\n" in scene else "\n"
+    block = scene[header_end:end]
+    visibility = re.compile(r'(?m)^visible\s*=\s*(?:true|false)\s*\r?$')
+    hits = list(visibility.finditer(block))
+    if len(hits) > 1:
+        raise PublishError(f"{name} 存在多个 visible 属性，无法安全修改")
+    if hits:
+        block = visibility.sub("visible = true", block, count=1)
+    else:
+        block = newline + "visible = true" + block
+    return scene[:header_end] + block + scene[end:]
+
+
+def preview_hardware(item: HardwareItem) -> str:
+    glb = validate_hardware(item)
+    extra = f"\n屏幕大小：{item.screen_width} × {item.screen_height} m；中心：{item.screen_position}" if item.role == "monitor" else ""
+    return (f"设备：{LABELS[item.role]} / {item.item_id}（替换已有外观）\n"
+            f"目标模型：{item.root / item.model_relative}\n"
+            f"目标配置：{item.root / item.resource_relative}\n"
+            f"设备场景：{item.root / item.scene_relative}\n"
+            f"新尺寸（X/Y/Z）：{item.bounds} m{extra}\n"
+            f"网格：{glb['mesh_count']}  材质：{glb['material_count']}  内嵌图像：{glb['image_count']}\n"
+            f"原始 SHA256：{glb['sha256']}\n"
+            "将备份旧 GLB、设备配置和场景；导入成功后覆盖现有型号，不变更商品 ID/玩家存档。")
+
+
+def publish_hardware(item: HardwareItem, log: Log = print) -> dict:
+    glb = validate_hardware(item)
+    root = item.root
+    paths = [item.model_relative, item.resource_relative, item.scene_relative]
+    originals = {relative: (root / relative).read_bytes() for relative in paths}
+    if (root / item.model_relative).resolve() == item.source_path:
+        raise PublishError("不能直接选择项目内的同名目标 GLB，请从外部成品文件导入")
+    backup = (Path.home() / ".gamememoir_furniture_publisher" / "backups" /
+              ("hardware_" + datetime.now().strftime("%Y%m%d-%H%M%S-%f") +
+               "_" + item.mapping[0]))
+    backup.mkdir(parents=True, exist_ok=False)
+    for relative, contents in originals.items():
+        dest = backup / relative
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        dest.write_bytes(contents)
+    log("已备份旧模型、配置和场景至：" + str(backup))
+    scene_relative = item.scene_relative
+    script = root / "tools" / f"_hardware_publish_{uuid.uuid4().hex[:16]}.gd"
+    manifest = script.with_suffix(".json")
+    godot = str(Path(item.godot).expanduser()) if Path(item.godot).expanduser().is_file() else item.godot
+    success = False
+    try:
+        scene = originals[scene_relative].decode("utf-8-sig")
+        (root / scene_relative).write_text(_unity_scale_scene(scene, item.mapping[1]), encoding="utf-8")
+        shutil.copyfile(item.source_path, root / item.model_relative)
+        if inspect_glb(root / item.model_relative)["sha256"] != glb["sha256"]:
+            raise PublishError("模型复制后的 SHA256 校验失败")
+        template_root = Path(getattr(sys, "_MEIPASS", Path(__file__).resolve().parent))
+        script.write_text((template_root / "hardware_bridge.gd").read_text(encoding="utf-8"), encoding="utf-8")
+        manifest.write_text(json.dumps({
+            "resource_path": "res://" + item.resource_relative.as_posix(),
+            "model_path": "res://" + item.model_relative.as_posix(),
+            "bounds": item.bounds, "screen_size": item.screen_size,
+            "screen_position": item.screen_position, "role": item.role,
+        }), encoding="utf-8")
+        log("步骤 1/2：重新导入 GLB")
+        _execute([godot, "--headless", "--path", str(root), "--editor", "--import"], root, log, 240)
+        log("步骤 2/2：更新设备资源并由 Godot 验证")
+        output = _execute([godot, "--headless", "--path", str(root), "--script",
+                           "res://tools/" + script.name, "--", "res://tools/" + manifest.name], root, log, 180)
+        receipts = [line.split("HARDWARE_PUBLISH_RESULT=", 1)[1]
+                    for line in output.splitlines() if "HARDWARE_PUBLISH_RESULT=" in line]
+        if not receipts:
+            raise PublishError("Godot 未返回设备注册校验结果")
+        try:
+            receipt = json.loads(receipts[-1])
+        except ValueError as exc:
+            raise PublishError("设备校验结果格式错误") from exc
+        if not receipt.get("ok") or receipt.get("model") != "res://" + item.model_relative.as_posix():
+            raise PublishError("设备资源校验失败：" + str(receipt.get("error", "结果不匹配")))
+        scene_file = root / item.scene_relative
+        scene_file.write_text(_activate_published_device(scene_file.read_text(encoding="utf-8-sig"), item.role), encoding="utf-8")
+        success = True
+        log("新设备模型已启用；请在 Godot 里检查屏幕画面、碰撞与设备位置。")
+        return {"model": str(root / item.model_relative),
+                "resource": str(root / item.resource_relative),
+                "scene": str(root / item.scene_relative), "backup": str(backup)}
+    finally:
+        for p in (script, manifest, script.with_suffix(".gd.uid")):
+            p.unlink(missing_ok=True)
+        if not success:
+            for relative, contents in originals.items():
+                (root / relative).write_bytes(contents)
+            log("发布失败：已恢复旧 GLB、配置和场景文件；Godot 导入缓存可能需要再次导入。")
+)
+    hits = list(visibility.finditer(block))
+    if len(hits) > 1:
+        raise PublishError(f"{name} 存在多个 visible 属性，无法安全修改")
+    if hits:
+        block = visibility.sub("visible = true", block, count=1)
+    else:
+        block = newline + "visible = true" + block
+    return scene[:header_end] + block + scene[end:]
+
+
+def preview_hardware(item: HardwareItem) -> str:
+    glb = validate_hardware(item)
+    extra = f"\n屏幕大小：{item.screen_width} × {item.screen_height} m；中心：{item.screen_position}" if item.role == "monitor" else ""
+    return (f"设备：{LABELS[item.role]} / {item.item_id}（替换已有外观）\n"
+            f"目标模型：{item.root / item.model_relative}\n"
+            f"目标配置：{item.root / item.resource_relative}\n"
+            f"设备场景：{item.root / item.scene_relative}\n"
+            f"新尺寸（X/Y/Z）：{item.bounds} m{extra}\n"
+            f"网格：{glb['mesh_count']}  材质：{glb['material_count']}  内嵌图像：{glb['image_count']}\n"
+            f"原始 SHA256：{glb['sha256']}\n"
+            "将备份旧 GLB、设备配置和场景；导入成功后覆盖现有型号，不变更商品 ID/玩家存档。")
+
+
+def publish_hardware(item: HardwareItem, log: Log = print) -> dict:
+    glb = validate_hardware(item)
+    root = item.root
+    paths = [item.model_relative, item.resource_relative, item.scene_relative]
+    originals = {relative: (root / relative).read_bytes() for relative in paths}
+    if (root / item.model_relative).resolve() == item.source_path:
+        raise PublishError("不能直接选择项目内的同名目标 GLB，请从外部成品文件导入")
+    backup = (Path.home() / ".gamememoir_furniture_publisher" / "backups" /
+              ("hardware_" + datetime.now().strftime("%Y%m%d-%H%M%S-%f") +
+               "_" + item.mapping[0]))
+    backup.mkdir(parents=True, exist_ok=False)
+    for relative, contents in originals.items():
+        dest = backup / relative
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        dest.write_bytes(contents)
+    log("已备份旧模型、配置和场景至：" + str(backup))
+    scene_relative = item.scene_relative
+    script = root / "tools" / f"_hardware_publish_{uuid.uuid4().hex[:16]}.gd"
+    manifest = script.with_suffix(".json")
+    godot = str(Path(item.godot).expanduser()) if Path(item.godot).expanduser().is_file() else item.godot
+    success = False
+    try:
+        scene = originals[scene_relative].decode("utf-8-sig")
+        (root / scene_relative).write_text(_unity_scale_scene(scene, item.mapping[1]), encoding="utf-8")
+        shutil.copyfile(item.source_path, root / item.model_relative)
+        if inspect_glb(root / item.model_relative)["sha256"] != glb["sha256"]:
+            raise PublishError("模型复制后的 SHA256 校验失败")
+        template_root = Path(getattr(sys, "_MEIPASS", Path(__file__).resolve().parent))
+        script.write_text((template_root / "hardware_bridge.gd").read_text(encoding="utf-8"), encoding="utf-8")
+        manifest.write_text(json.dumps({
+            "resource_path": "res://" + item.resource_relative.as_posix(),
+            "model_path": "res://" + item.model_relative.as_posix(),
+            "bounds": item.bounds, "screen_size": item.screen_size,
+            "screen_position": item.screen_position, "role": item.role,
+        }), encoding="utf-8")
+        log("步骤 1/2：重新导入 GLB")
+        _execute([godot, "--headless", "--path", str(root), "--editor", "--import"], root, log, 240)
+        log("步骤 2/2：更新设备资源并由 Godot 验证")
+        output = _execute([godot, "--headless", "--path", str(root), "--script",
+                           "res://tools/" + script.name, "--", "res://tools/" + manifest.name], root, log, 180)
+        receipts = [line.split("HARDWARE_PUBLISH_RESULT=", 1)[1]
+                    for line in output.splitlines() if "HARDWARE_PUBLISH_RESULT=" in line]
+        if not receipts:
+            raise PublishError("Godot 未返回设备注册校验结果")
+        try:
+            receipt = json.loads(receipts[-1])
+        except ValueError as exc:
+            raise PublishError("设备校验结果格式错误") from exc
+        if not receipt.get("ok") or receipt.get("model") != "res://" + item.model_relative.as_posix():
+            raise PublishError("设备资源校验失败：" + str(receipt.get("error", "结果不匹配")))
+        scene_file = root / item.scene_relative
+        scene_file.write_text(_activate_published_device(scene_file.read_text(encoding="utf-8-sig"), item.role), encoding="utf-8")
+        success = True
+        log("新设备模型已启用；请在 Godot 里检查屏幕画面、碰撞与设备位置。")
+        return {"model": str(root / item.model_relative),
+                "resource": str(root / item.resource_relative),
+                "scene": str(root / item.scene_relative), "backup": str(backup)}
+    finally:
+        for p in (script, manifest, script.with_suffix(".gd.uid")):
+            p.unlink(missing_ok=True)
+        if not success:
+            for relative, contents in originals.items():
+                (root / relative).write_bytes(contents)
+            log("发布失败：已恢复旧 GLB、配置和场景文件；Godot 导入缓存可能需要再次导入。")
+)
+    hits = list(scale.finditer(block))
+    if len(hits) > 1:
+        raise PublishError(f"{node} 存在多个 scale 字段，无法安全替换")
+    if hits:
+        block = scale.sub("scale = Vector3(1, 1, 1)", block, count=1)
+    else:
+        block = newline + "scale = Vector3(1, 1, 1)" + block
+    return scene[:header_end] + block + scene[end:]
+
+
+def _activate_published_device(scene: str, role: str) -> str:
+    """Unhide the device root after the replacement GLB passes Godot validation."""
+    name = {"monitor": "Monitor", "computer": "Computer",
+            "keyboard": "Keyboard", "mouse": "Mouse"}.get(role)
+    if name is None:
+        raise PublishError("未知硬件槽位")
+    _, header_end, end = _find_scene_node(scene, name)
+    header_start = scene.rfind("[node ", 0, header_end)
+    header = scene[header_start:header_end]
+    if not re.search(r'(?<!\w)type="Node3D"(?=\s|\])', header):
+        raise PublishError(f"{name} 场景根节点不是 Node3D")
+    newline = "\r\n" if "\r\n" in scene else "\n"
+    block = scene[header_end:end]
+    visibility = re.compile(r'(?m)^visible\s*=\s*(?:true|false)\s*\r?$')
+    hits = list(visibility.finditer(block))
+    if len(hits) > 1:
+        raise PublishError(f"{name} 存在多个 visible 属性，无法安全修改")
+    if hits:
+        block = visibility.sub("visible = true", block, count=1)
+    else:
+        block = newline + "visible = true" + block
+    return scene[:header_end] + block + scene[end:]
+
+
+def preview_hardware(item: HardwareItem) -> str:
+    glb = validate_hardware(item)
+    extra = f"\n屏幕大小：{item.screen_width} × {item.screen_height} m；中心：{item.screen_position}" if item.role == "monitor" else ""
+    return (f"设备：{LABELS[item.role]} / {item.item_id}（替换已有外观）\n"
+            f"目标模型：{item.root / item.model_relative}\n"
+            f"目标配置：{item.root / item.resource_relative}\n"
+            f"设备场景：{item.root / item.scene_relative}\n"
+            f"新尺寸（X/Y/Z）：{item.bounds} m{extra}\n"
+            f"网格：{glb['mesh_count']}  材质：{glb['material_count']}  内嵌图像：{glb['image_count']}\n"
+            f"原始 SHA256：{glb['sha256']}\n"
+            "将备份旧 GLB、设备配置和场景；导入成功后覆盖现有型号，不变更商品 ID/玩家存档。")
+
+
+def publish_hardware(item: HardwareItem, log: Log = print) -> dict:
+    glb = validate_hardware(item)
+    root = item.root
+    paths = [item.model_relative, item.resource_relative, item.scene_relative]
+    originals = {relative: (root / relative).read_bytes() for relative in paths}
+    if (root / item.model_relative).resolve() == item.source_path:
+        raise PublishError("不能直接选择项目内的同名目标 GLB，请从外部成品文件导入")
+    backup = (Path.home() / ".gamememoir_furniture_publisher" / "backups" /
+              ("hardware_" + datetime.now().strftime("%Y%m%d-%H%M%S-%f") +
+               "_" + item.mapping[0]))
+    backup.mkdir(parents=True, exist_ok=False)
+    for relative, contents in originals.items():
+        dest = backup / relative
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        dest.write_bytes(contents)
+    log("已备份旧模型、配置和场景至：" + str(backup))
+    scene_relative = item.scene_relative
+    script = root / "tools" / f"_hardware_publish_{uuid.uuid4().hex[:16]}.gd"
+    manifest = script.with_suffix(".json")
+    godot = str(Path(item.godot).expanduser()) if Path(item.godot).expanduser().is_file() else item.godot
+    success = False
+    try:
+        scene = originals[scene_relative].decode("utf-8-sig")
+        (root / scene_relative).write_text(_unity_scale_scene(scene, item.mapping[1]), encoding="utf-8")
+        shutil.copyfile(item.source_path, root / item.model_relative)
+        if inspect_glb(root / item.model_relative)["sha256"] != glb["sha256"]:
+            raise PublishError("模型复制后的 SHA256 校验失败")
+        template_root = Path(getattr(sys, "_MEIPASS", Path(__file__).resolve().parent))
+        script.write_text((template_root / "hardware_bridge.gd").read_text(encoding="utf-8"), encoding="utf-8")
+        manifest.write_text(json.dumps({
+            "resource_path": "res://" + item.resource_relative.as_posix(),
+            "model_path": "res://" + item.model_relative.as_posix(),
+            "bounds": item.bounds, "screen_size": item.screen_size,
+            "screen_position": item.screen_position, "role": item.role,
+        }), encoding="utf-8")
+        log("步骤 1/2：重新导入 GLB")
+        _execute([godot, "--headless", "--path", str(root), "--editor", "--import"], root, log, 240)
+        log("步骤 2/2：更新设备资源并由 Godot 验证")
+        output = _execute([godot, "--headless", "--path", str(root), "--script",
+                           "res://tools/" + script.name, "--", "res://tools/" + manifest.name], root, log, 180)
+        receipts = [line.split("HARDWARE_PUBLISH_RESULT=", 1)[1]
+                    for line in output.splitlines() if "HARDWARE_PUBLISH_RESULT=" in line]
+        if not receipts:
+            raise PublishError("Godot 未返回设备注册校验结果")
+        try:
+            receipt = json.loads(receipts[-1])
+        except ValueError as exc:
+            raise PublishError("设备校验结果格式错误") from exc
+        if not receipt.get("ok") or receipt.get("model") != "res://" + item.model_relative.as_posix():
+            raise PublishError("设备资源校验失败：" + str(receipt.get("error", "结果不匹配")))
+        scene_file = root / item.scene_relative
+        scene_file.write_text(_activate_published_device(scene_file.read_text(encoding="utf-8-sig"), item.role), encoding="utf-8")
+        success = True
+        log("新设备模型已启用；请在 Godot 里检查屏幕画面、碰撞与设备位置。")
+        return {"model": str(root / item.model_relative),
+                "resource": str(root / item.resource_relative),
+                "scene": str(root / item.scene_relative), "backup": str(backup)}
+    finally:
+        for p in (script, manifest, script.with_suffix(".gd.uid")):
+            p.unlink(missing_ok=True)
+        if not success:
+            for relative, contents in originals.items():
+                (root / relative).write_bytes(contents)
+            log("发布失败：已恢复旧 GLB、配置和场景文件；Godot 导入缓存可能需要再次导入。")
+)
+    hits = list(visibility.finditer(block))
+    if len(hits) > 1:
+        raise PublishError(f"{name} 存在多个 visible 属性，无法安全修改")
+    if hits:
+        block = visibility.sub("visible = true", block, count=1)
+    else:
+        block = newline + "visible = true" + block
+    return scene[:header_end] + block + scene[end:]
+
+
+def preview_hardware(item: HardwareItem) -> str:
+    glb = validate_hardware(item)
+    extra = f"\n屏幕大小：{item.screen_width} × {item.screen_height} m；中心：{item.screen_position}" if item.role == "monitor" else ""
+    return (f"设备：{LABELS[item.role]} / {item.item_id}（替换已有外观）\n"
+            f"目标模型：{item.root / item.model_relative}\n"
+            f"目标配置：{item.root / item.resource_relative}\n"
+            f"设备场景：{item.root / item.scene_relative}\n"
+            f"新尺寸（X/Y/Z）：{item.bounds} m{extra}\n"
+            f"网格：{glb['mesh_count']}  材质：{glb['material_count']}  内嵌图像：{glb['image_count']}\n"
+            f"原始 SHA256：{glb['sha256']}\n"
+            "将备份旧 GLB、设备配置和场景；导入成功后覆盖现有型号，不变更商品 ID/玩家存档。")
+
+
+def publish_hardware(item: HardwareItem, log: Log = print) -> dict:
+    glb = validate_hardware(item)
+    root = item.root
+    paths = [item.model_relative, item.resource_relative, item.scene_relative]
+    originals = {relative: (root / relative).read_bytes() for relative in paths}
+    if (root / item.model_relative).resolve() == item.source_path:
+        raise PublishError("不能直接选择项目内的同名目标 GLB，请从外部成品文件导入")
+    backup = (Path.home() / ".gamememoir_furniture_publisher" / "backups" /
+              ("hardware_" + datetime.now().strftime("%Y%m%d-%H%M%S-%f") +
+               "_" + item.mapping[0]))
+    backup.mkdir(parents=True, exist_ok=False)
+    for relative, contents in originals.items():
+        dest = backup / relative
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        dest.write_bytes(contents)
+    log("已备份旧模型、配置和场景至：" + str(backup))
+    scene_relative = item.scene_relative
+    script = root / "tools" / f"_hardware_publish_{uuid.uuid4().hex[:16]}.gd"
+    manifest = script.with_suffix(".json")
+    godot = str(Path(item.godot).expanduser()) if Path(item.godot).expanduser().is_file() else item.godot
+    success = False
+    try:
+        scene = originals[scene_relative].decode("utf-8-sig")
+        (root / scene_relative).write_text(_unity_scale_scene(scene, item.mapping[1]), encoding="utf-8")
+        shutil.copyfile(item.source_path, root / item.model_relative)
+        if inspect_glb(root / item.model_relative)["sha256"] != glb["sha256"]:
+            raise PublishError("模型复制后的 SHA256 校验失败")
+        template_root = Path(getattr(sys, "_MEIPASS", Path(__file__).resolve().parent))
+        script.write_text((template_root / "hardware_bridge.gd").read_text(encoding="utf-8"), encoding="utf-8")
+        manifest.write_text(json.dumps({
+            "resource_path": "res://" + item.resource_relative.as_posix(),
+            "model_path": "res://" + item.model_relative.as_posix(),
+            "bounds": item.bounds, "screen_size": item.screen_size,
+            "screen_position": item.screen_position, "role": item.role,
+        }), encoding="utf-8")
+        log("步骤 1/2：重新导入 GLB")
+        _execute([godot, "--headless", "--path", str(root), "--editor", "--import"], root, log, 240)
+        log("步骤 2/2：更新设备资源并由 Godot 验证")
+        output = _execute([godot, "--headless", "--path", str(root), "--script",
+                           "res://tools/" + script.name, "--", "res://tools/" + manifest.name], root, log, 180)
+        receipts = [line.split("HARDWARE_PUBLISH_RESULT=", 1)[1]
+                    for line in output.splitlines() if "HARDWARE_PUBLISH_RESULT=" in line]
+        if not receipts:
+            raise PublishError("Godot 未返回设备注册校验结果")
+        try:
+            receipt = json.loads(receipts[-1])
+        except ValueError as exc:
+            raise PublishError("设备校验结果格式错误") from exc
+        if not receipt.get("ok") or receipt.get("model") != "res://" + item.model_relative.as_posix():
+            raise PublishError("设备资源校验失败：" + str(receipt.get("error", "结果不匹配")))
+        scene_file = root / item.scene_relative
+        scene_file.write_text(_activate_published_device(scene_file.read_text(encoding="utf-8-sig"), item.role), encoding="utf-8")
+        success = True
+        log("新设备模型已启用；请在 Godot 里检查屏幕画面、碰撞与设备位置。")
+        return {"model": str(root / item.model_relative),
+                "resource": str(root / item.resource_relative),
+                "scene": str(root / item.scene_relative), "backup": str(backup)}
+    finally:
+        for p in (script, manifest, script.with_suffix(".gd.uid")):
+            p.unlink(missing_ok=True)
+        if not success:
+            for relative, contents in originals.items():
+                (root / relative).write_bytes(contents)
+            log("发布失败：已恢复旧 GLB、配置和场景文件；Godot 导入缓存可能需要再次导入。")
+)
+    hits = list(scale.finditer(block))
+    if len(hits) > 1:
+        raise PublishError(f"{node} 存在多个 scale 字段，无法安全替换")
+    if hits:
+        block = scale.sub("scale = Vector3(1, 1, 1)", block, count=1)
+    else:
+        block = newline + "scale = Vector3(1, 1, 1)" + block
+    return scene[:header_end] + block + scene[end:]
+
+
+def _activate_published_device(scene: str, role: str) -> str:
+    """Unhide the device root after the replacement GLB passes Godot validation."""
+    name = {"monitor": "Monitor", "computer": "Computer",
+            "keyboard": "Keyboard", "mouse": "Mouse"}.get(role)
+    if name is None:
+        raise PublishError("未知硬件槽位")
+    _, header_end, end = _find_scene_node(scene, name)
+    header_start = scene.rfind("[node ", 0, header_end)
+    header = scene[header_start:header_end]
+    if not re.search(r'(?<!\w)type="Node3D"(?=\s|\])', header):
+        raise PublishError(f"{name} 场景根节点不是 Node3D")
+    newline = "\r\n" if "\r\n" in scene else "\n"
+    block = scene[header_end:end]
+    visibility = re.compile(r'(?m)^visible\s*=\s*(?:true|false)\s*\r?$')
+    hits = list(visibility.finditer(block))
+    if len(hits) > 1:
+        raise PublishError(f"{name} 存在多个 visible 属性，无法安全修改")
+    if hits:
+        block = visibility.sub("visible = true", block, count=1)
+    else:
+        block = newline + "visible = true" + block
+    return scene[:header_end] + block + scene[end:]
+
+
+def preview_hardware(item: HardwareItem) -> str:
+    glb = validate_hardware(item)
+    extra = f"\n屏幕大小：{item.screen_width} × {item.screen_height} m；中心：{item.screen_position}" if item.role == "monitor" else ""
+    return (f"设备：{LABELS[item.role]} / {item.item_id}（替换已有外观）\n"
+            f"目标模型：{item.root / item.model_relative}\n"
+            f"目标配置：{item.root / item.resource_relative}\n"
+            f"设备场景：{item.root / item.scene_relative}\n"
+            f"新尺寸（X/Y/Z）：{item.bounds} m{extra}\n"
+            f"网格：{glb['mesh_count']}  材质：{glb['material_count']}  内嵌图像：{glb['image_count']}\n"
+            f"原始 SHA256：{glb['sha256']}\n"
+            "将备份旧 GLB、设备配置和场景；导入成功后覆盖现有型号，不变更商品 ID/玩家存档。")
+
+
+def publish_hardware(item: HardwareItem, log: Log = print) -> dict:
+    glb = validate_hardware(item)
+    root = item.root
+    paths = [item.model_relative, item.resource_relative, item.scene_relative]
+    originals = {relative: (root / relative).read_bytes() for relative in paths}
+    if (root / item.model_relative).resolve() == item.source_path:
+        raise PublishError("不能直接选择项目内的同名目标 GLB，请从外部成品文件导入")
+    backup = (Path.home() / ".gamememoir_furniture_publisher" / "backups" /
+              ("hardware_" + datetime.now().strftime("%Y%m%d-%H%M%S-%f") +
+               "_" + item.mapping[0]))
+    backup.mkdir(parents=True, exist_ok=False)
+    for relative, contents in originals.items():
+        dest = backup / relative
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        dest.write_bytes(contents)
+    log("已备份旧模型、配置和场景至：" + str(backup))
+    scene_relative = item.scene_relative
+    script = root / "tools" / f"_hardware_publish_{uuid.uuid4().hex[:16]}.gd"
+    manifest = script.with_suffix(".json")
+    godot = str(Path(item.godot).expanduser()) if Path(item.godot).expanduser().is_file() else item.godot
+    success = False
+    try:
+        scene = originals[scene_relative].decode("utf-8-sig")
+        (root / scene_relative).write_text(_unity_scale_scene(scene, item.mapping[1]), encoding="utf-8")
+        shutil.copyfile(item.source_path, root / item.model_relative)
+        if inspect_glb(root / item.model_relative)["sha256"] != glb["sha256"]:
+            raise PublishError("模型复制后的 SHA256 校验失败")
+        template_root = Path(getattr(sys, "_MEIPASS", Path(__file__).resolve().parent))
+        script.write_text((template_root / "hardware_bridge.gd").read_text(encoding="utf-8"), encoding="utf-8")
+        manifest.write_text(json.dumps({
+            "resource_path": "res://" + item.resource_relative.as_posix(),
+            "model_path": "res://" + item.model_relative.as_posix(),
+            "bounds": item.bounds, "screen_size": item.screen_size,
+            "screen_position": item.screen_position, "role": item.role,
+        }), encoding="utf-8")
+        log("步骤 1/2：重新导入 GLB")
+        _execute([godot, "--headless", "--path", str(root), "--editor", "--import"], root, log, 240)
+        log("步骤 2/2：更新设备资源并由 Godot 验证")
+        output = _execute([godot, "--headless", "--path", str(root), "--script",
+                           "res://tools/" + script.name, "--", "res://tools/" + manifest.name], root, log, 180)
+        receipts = [line.split("HARDWARE_PUBLISH_RESULT=", 1)[1]
+                    for line in output.splitlines() if "HARDWARE_PUBLISH_RESULT=" in line]
+        if not receipts:
+            raise PublishError("Godot 未返回设备注册校验结果")
+        try:
+            receipt = json.loads(receipts[-1])
+        except ValueError as exc:
+            raise PublishError("设备校验结果格式错误") from exc
+        if not receipt.get("ok") or receipt.get("model") != "res://" + item.model_relative.as_posix():
+            raise PublishError("设备资源校验失败：" + str(receipt.get("error", "结果不匹配")))
+        scene_file = root / item.scene_relative
+        scene_file.write_text(_activate_published_device(scene_file.read_text(encoding="utf-8-sig"), item.role), encoding="utf-8")
+        success = True
+        log("新设备模型已启用；请在 Godot 里检查屏幕画面、碰撞与设备位置。")
+        return {"model": str(root / item.model_relative),
+                "resource": str(root / item.resource_relative),
+                "scene": str(root / item.scene_relative), "backup": str(backup)}
+    finally:
+        for p in (script, manifest, script.with_suffix(".gd.uid")):
+            p.unlink(missing_ok=True)
+        if not success:
+            for relative, contents in originals.items():
+                (root / relative).write_bytes(contents)
+            log("发布失败：已恢复旧 GLB、配置和场景文件；Godot 导入缓存可能需要再次导入。")
+)
     hits = list(scale.finditer(block))
     if len(hits) > 1:
         raise PublishError(f"{node} 存在多个 scale 字段，无法安全替换")
