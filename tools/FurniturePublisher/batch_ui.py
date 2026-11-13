@@ -15,8 +15,8 @@ from publisher_core import PublishError
 class BatchHardwarePanel(ttk.Frame):
     def __init__(self, parent, values: dict[str, str]):
         super().__init__(parent)
-        self.project = tk.StringVar(value=values.get("project", ""))
-        self.godot = tk.StringVar(value=values.get("godot", "godot"))
+        self.project = values.get("project_var") or tk.StringVar(value=values.get("project", ""))
+        self.godot = values.get("godot_var") or tk.StringVar(value=values.get("godot", "godot"))
         source = Path(values.get("source", "")).expanduser()
         candidate = source.parent / "model_specs.json" if source.is_file() else None
         self.folder = tk.StringVar(value=str(source.parent) if candidate and candidate.is_file() else "")
