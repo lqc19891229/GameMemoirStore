@@ -38,11 +38,20 @@ Windows 10/11：安装 **Python 3.10 或更高版本**（勾选“Add Python to 
 - 关闭正在运行的 Godot 编辑器和游戏，勾选确认后，点击「确认并自动导入上架」。
 - 运行结束后在 Godot 中打开生成的 `.tscn`，检查模型方向、贴图、坐标、包围盒、碰撞、承载面；再在游戏里测试商店购买与摆放。**不能以自动化导入代替人工 3D 验收。**
 
+## 资产发布器 v2.1：家具 / 电脑设备并列页面
+
+启动发布器后，主窗口顶部有并列的 **「家具」** 与 **「电脑设备」** 标签：
+
+- **家具**：显示完整的新增家具界面，包括 GLB 选择、商品 ID、商城名称、价格、一级/二级分类、承载面、预检与发布。
+- **电脑设备**：包含 **「单个设备」** 和 **「批量设备」** 两个子标签。单设备可以更新现有型号与屏幕参数；批量设备从同目录的 `model_specs.json` 自动识别文件和尺寸。
+- 批量模式可在读取清单后使用 Ctrl / Shift **选择本次需要导入的设备**，默认全部选中。支持清单中仅含 1、2、3 或 4 件基础电脑设备；不再要求始终具有四件。按钮统一显示「检查所选设备」「导入所选设备」，只改选中的设备文件，失败只恢复该批受影响的文件。
+- 原有 `schema_version: 2` 的四设备 JSON **不必修改**。例如只想重做鼠标，可继续使用包含四件的 JSON，在界面里只选择 `mouse`，其他三个设备保持不变。
+
 ## 批量导入启航 2000（自动读取 model_specs.json）
 
-将 `qihang_m15_crt.glb`、`qihang_c100_tower.glb`、`qihang_k100_keyboard.glb`、`qihang_b100_ball_mouse.glb` 与 `model_specs.json` 放在同一个文件夹中。启动发布器，点击 **「批量导入启航 2000 · 自动读取 model_specs.json…」**，选择模型文件夹后点击「检查四件设备」，审阅四条映射并确认，再点击「批量导入四件设备」。
+将本次需要导入的设备 GLB 和 `model_specs.json` 放在同一个文件夹中。启动发布器，切换到 **「电脑设备」→「批量设备」**，选择模型文件夹、读取设备清单，选择需要的型号，点击「检查所选设备」确认映射，再点击「导入所选设备」。
 
-规格文件使用 `schema_version: 2`，`models` 数组必须包含四个设备槽位（`monitor`、`computer`、`keyboard`、`mouse`），对应现有基础设备 ID：`starter_monitor`、`starter_pc`、`starter_mouse`、`starter_mouse`。每条至少包括同目录的 `file`、`role`、`item_id`、`expected_size_m`（宽、高、深）及 `actual_mesh_bounds_m`（最小点、最大点）。显示器还要填写 `screen_size_m` 和 `screen_position_m`。缺文件、参数异常、跨目录引用或重复槽位会直接阻止发布。
+规格文件使用 `schema_version: 2`，`models` 数组可包含 1～4 个不同设备槽位（`monitor`、`computer`、`keyboard`、`mouse`），对应现有基础设备 ID：`starter_monitor`、`starter_pc`、`starter_mouse`、`starter_mouse`。每条至少包括同目录的 `file`、`role`、`item_id`、`expected_size_m`（宽、高、深）及 `actual_mesh_bounds_m`（最小点、最大点）。显示器还要填写 `screen_size_m` 和 `screen_position_m`。缺文件、参数异常、跨目录引用或重复槽位会直接阻止发布。
 
 一次批量操作统一备份全部四个 GLB、TRES 和对应硬件场景，统一执行 GLB 导入，再逐个让 Godot 保存并回读配置。任一中途失败，会恢复整个批次的 12 个原始文件；之后可能需要用 Godot 重新导入以刷新资源缓存。**发布器不能替代游戏内视觉验收**，特别是 CRT 屏幕纹理、键鼠位置及机箱落地情况。批量模式只替换已有设备的外观和参数，不新增 SKU 或修改存档。
 

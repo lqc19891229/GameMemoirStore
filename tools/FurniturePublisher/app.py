@@ -7,8 +7,8 @@ import tkinter as tk
 from tkinter import filedialog, messagebox, ttk
 from pathlib import Path
 from publisher_core import GROUPS, TYPES, GROUP_TYPES, Item, PublishError, preview, publish
-from hardware_ui import HardwareWindow
-from batch_ui import BatchHardwareWindow
+from hardware_ui import HardwarePanel
+from batch_ui import BatchHardwarePanel
 
 GROUP_LABELS = {f"{v} ({k})": k for k, v in GROUPS.items()}
 
@@ -16,8 +16,8 @@ GROUP_LABELS = {f"{v} ({k})": k for k, v in GROUPS.items()}
 class PublisherApp(tk.Tk):
     def __init__(self) -> None:
         super().__init__()
-        self.title("游戏回忆录 · 资产发布器 v2.0")
-        self.geometry("1000x840")
+        self.title("游戏回忆录 · 资产发布器 v2.1")
+        self.geometry("1050x850")
         self.minsize(790, 680)
         self.vars = {key: tk.StringVar() for key in ("project", "godot", "source", "item_id", "name", "price", "description")}
         self.vars["godot"].set("godot")
@@ -33,12 +33,28 @@ class PublisherApp(tk.Tk):
         self.after(120, self._poll)
 
     def _build(self) -> None:
-        main = ttk.Frame(self, padding=16)
+        self.tabs = ttk.Notebook(self)
+        self.tabs.pack(fill="both", expand=True, padx=12, pady=12)
+        furniture_tab = ttk.Frame(self.tabs)
+        hardware_tab = ttk.Frame(self.tabs)
+        self.tabs.add(furniture_tab, text="家具")
+        self.tabs.add(hardware_tab, text="电脑设备")
+        main = ttk.Frame(furniture_tab, padding=16)
         main.pack(fill="both", expand=True)
-        ttk.Label(main, text="GLB → 家具 / 电脑设备发布", font=("Microsoft YaHei UI", 16, "bold")).pack(anchor="w")
-        ttk.Label(main, text="下方保留原有新增家具功能；电脑设备可通过独立窗口替换现有 GLB 和真实尺寸。", foreground="#666666").pack(anchor="w", pady=(2, 8))
-        ttk.Button(main, text="电脑设备模型发布 / 替换现有型号…", command=self._open_hardware).pack(anchor="w", pady=(0, 5))
-        ttk.Button(main, text="批量导入启航 2000 · 自动读取 model_specs.json…", command=self._open_hardware_batch).pack(anchor="w", pady=(0, 12))
+        ttk.Label(main, text="家具资源导入与商品发布", font=("Microsoft YaHei UI", 16, "bold")).pack(anchor="w")
+        ttk.Label(main, text="仅新增家具商品：导入 GLB → 创建家具场景 → 注册商城。", foreground="#666666").pack(anchor="w", pady=(3, 12))
+        self.hardware_tabs = ttk.Notebook(hardware_tab)
+        self.hardware_tabs.pack(fill="both", expand=True, padx=8, pady=8)
+        single = ttk.Frame(self.hardware_tabs)
+        batch = ttk.Frame(self.hardware_tabs)
+        self.hardware_tabs.add(single, text="单个设备")
+        self.hardware_tabs.add(batch, text="批量设备")
+        defaults = {"project_var": self.vars["project"], "godot_var": self.vars["godot"],
+                    "source": self.vars["source"].get()}
+        self.hardware_single_panel = HardwarePanel(single, defaults)
+        self.hardware_single_panel.pack(fill="both", expand=True)
+        self.hardware_batch_panel = BatchHardwarePanel(batch, defaults)
+        self.hardware_batch_panel.pack(fill="both", expand=True)
         form = ttk.Frame(main)
         form.pack(fill="x")
         form.columnconfigure(1, weight=1)
@@ -85,12 +101,6 @@ class PublisherApp(tk.Tk):
         for v in list(self.vars.values()) + [self.group, self.kind, self.support, self.mount]:
             v.trace_add("write", lambda *_: self._invalidate())
         self._preview_ok = False
-
-    def _open_hardware(self) -> None:
-        HardwareWindow(self, {key: self.vars[key].get() for key in ("project", "godot", "source")})
-
-    def _open_hardware_batch(self) -> None:
-        BatchHardwareWindow(self, {key: self.vars[key].get() for key in ("project", "godot", "source")})
 
     def _browse(self, key: str, browse: str) -> None:
         if browse == "dir": path = filedialog.askdirectory(title="选择 GameMemoirStore 项目根目录")

@@ -1,6 +1,6 @@
 """Batch-import starter hardware GLBs from a colocated model_specs.json.
 
-One preflight, one backup snapshot, one Godot GLB import, four validated hardware
+One preflight, one backup snapshot, one Godot GLB import, selected validated hardware
 resource updates. Any failure restores ALL changed source GLBs, TRES and TSCN.
 """
 from __future__ import annotations
@@ -24,10 +24,10 @@ ROLES = ("monitor", "computer", "keyboard", "mouse")
 BACKUP_FOLDER = Path.home() / ".gamememoir_furniture_publisher" / "backups"
 
 
-def load_batch_specs(project: str, godot: str, specs_file: str) -> list[HardwareItem]:
+def load_batch_specs(project: str, godot: str, specs_file: str, selected_roles: list[str] | None = None) -> list[HardwareItem]:
     path = Path(specs_file).expanduser().resolve()
     if path.name != "model_specs.json" or not path.is_file():
-        raise PublishError("请选择与四个 GLB 同目录的 model_specs.json")
+        raise PublishError("请选择与设备 GLB 同目录的 model_specs.json")
     try:
         data = json.loads(path.read_text(encoding="utf-8-sig"))
     except (ValueError, UnicodeError) as exc:
@@ -35,16 +35,23 @@ def load_batch_specs(project: str, godot: str, specs_file: str) -> list[Hardware
     if not isinstance(data, dict) or data.get("schema_version") != 2:
         raise PublishError("规格文件版本错误，需要启航 2000 的 schema_version=2 文件")
     models = data.get("models")
-    if not isinstance(models, list) or len(models) != 4:
-        raise PublishError("批量导入要求显示器、机箱、键盘、鼠标各一个模型")
+    if not isinstance(models, list) or not 1 <= len(models) <= 4:
+        raise PublishError("model_specs.json 必须包含 1～4 件不同类型的基础电脑设备")
+    requested = None if selected_roles is None else set(selected_roles)
+    if requested is not None and (not requested or len(requested) != len(selected_roles) or not requested.issubset(STARTER_IDS)):
+        raise PublishError("请至少选择一件有效设备，且设备类型不可重复")
     found = {}
+    seen = set()
     for entry in models:
         if not isinstance(entry, dict):
             raise PublishError("模型条目应为对象")
         role = entry.get("role")
         item_id = entry.get("item_id")
-        if role not in STARTER_IDS or item_id != STARTER_IDS[role] or role in found:
+        if role not in STARTER_IDS or item_id != STARTER_IDS[role] or role in seen:
             raise PublishError("设备类型或现有库存 ID 不匹配，或者存在重复设备槽位")
+        seen.add(role)
+        if requested is not None and role not in requested:
+            continue
         filename = entry.get("file", "")
         if (not isinstance(filename, str) or not filename.endswith(".glb")
                 or Path(filename).name != filename or "/" in filename or "\\" in filename):
@@ -86,25 +93,25 @@ def load_batch_specs(project: str, godot: str, specs_file: str) -> list[Hardware
         )
         validate_hardware(item)
         found[role] = item
-    if set(found) != set(ROLES):
-        raise PublishError("必须包含全部四个设备槽位")
-    return [found[role] for role in ROLES]
+    if not found or (requested is not None and set(found) != requested):
+        raise PublishError("选择的设备不在 model_specs.json 中")
+    return [found[role] for role in ROLES if role in found]
 
 
-def preview_batch(project: str, godot: str, specs_file: str) -> str:
-    items = load_batch_specs(project, godot, specs_file)
-    lines = ["启航 2000 基础款 · 批量替换预检（4/4）",
+def preview_batch(project: str, godot: str, specs_file: str, selected_roles: list[str] | None = None) -> str:
+    items = load_batch_specs(project, godot, specs_file, selected_roles)
+    lines = [f"电脑设备 · 导入预检（{len(items)} 件）",
              "规格文件：" + str(Path(specs_file).expanduser().resolve())]
     for item in items:
         glb = inspect_glb(item.source_path)
         lines.append(f"{item.role}: {item.source_path.name} → {item.model_relative} / {item.item_id}"
                      f"\n  尺寸 {item.bounds} m，mesh {glb['mesh_count']}，SHA256 {glb['sha256'][:16]}…")
-    lines.append("只更新原有基础款外观和尺寸；备份全部 4 GLB、4 TRES、4 TSCN；失败全部回滚。")
+    lines.append(f"仅更新选中的 {len(items)} 件设备；统一备份并在任何失败时恢复该批次所有原始资源。")
     return "\n".join(lines)
 
 
-def publish_batch(project: str, godot: str, specs_file: str, log=print) -> dict:
-    items = load_batch_specs(project, godot, specs_file)
+def publish_batch(project: str, godot: str, specs_file: str, log=print, selected_roles: list[str] | None = None) -> dict:
+    items = load_batch_specs(project, godot, specs_file, selected_roles)
     root = items[0].root
     pathset = set()
     for item in items:
@@ -134,9 +141,9 @@ def publish_batch(project: str, godot: str, specs_file: str, log=print) -> dict:
             if inspect_glb(root / item.model_relative)["sha256"] != inspect_glb(item.source_path)["sha256"]:
                 raise PublishError("GLB 拷贝校验失败：" + item.source_path.name)
         script.write_text((bundle_root / "hardware_bridge.gd").read_text(encoding="utf-8"), encoding="utf-8")
-        log("阶段 1/2：一次性导入全部四个 GLB")
+        log(f"阶段 1/2：一次性导入所选 {len(items)} 个 GLB")
         _execute([executable, "--headless", "--path", str(root), "--editor", "--import"], root, log, 300)
-        log("阶段 2/2：更新四个现有设备配置并逐一回读验证")
+        log(f"阶段 2/2：更新所选 {len(items)} 件设备配置并逐一回读验证")
         for item in items:
             manifest.write_text(json.dumps({
                 "resource_path": "res://" + item.resource_relative.as_posix(),
@@ -158,7 +165,7 @@ def publish_batch(project: str, godot: str, specs_file: str, log=print) -> dict:
             if not result.get("ok") or result.get("model") != "res://" + item.model_relative.as_posix():
                 raise PublishError("设备注册失败：" + item.role + " " + str(result.get("error", "")))
             log("已验证 " + item.role)
-        # Reveal devices only after ALL four Godot registrations have succeeded.
+        # Reveal selected devices only after ALL selected registrations have succeeded.
         # If activation fails, the batch finally-block restores every original scene.
         for item in items:
             scene_file = root / item.scene_relative
@@ -171,4 +178,4 @@ def publish_batch(project: str, godot: str, specs_file: str, log=print) -> dict:
         if not success:
             for relative, data in originals.items():
                 (root / relative).write_bytes(data)
-            log("整批导入失败：四套原 GLB / TRES / TSCN 全部恢复。请重新运行 Godot 资源导入刷新缓存。")
+            log("批量导入失败：已恢复本批次所有原始 GLB / TRES / TSCN。请重新运行 Godot 资源导入刷新缓存。")
