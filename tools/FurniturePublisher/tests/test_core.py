@@ -122,7 +122,8 @@ class HardwareTests(unittest.TestCase):
         self.config.write_text('[ext_resource type="PackedScene" path="res://assets/models/hardware/monitor_crt.glb" id="2"]\n', encoding="utf-8")
         self.scene = self.root / "scenes" / "computer" / "hardware" / "monitor.tscn"
         self.scene.write_text('[ext_resource type="PackedScene" path="res://assets/models/hardware/monitor_crt.glb" id="3"]\n'
-                              '[node name="Monitor" type="Node3D"]\nvisible = false\n'\n                              '[node name="DefaultModel" parent="Models" instance=ExtResource("3")]\n'
+                              '[node name="Monitor" type="Node3D"]\nvisible = false\n'
+                              '[node name="DefaultModel" parent="Models" instance=ExtResource("3")]\n'
                               'scale = Vector3(0.45, 0.45, 0.45)\n', encoding="utf-8")
         self.item = HardwareItem(project=str(self.root), godot=str(self.root/"godot.exe"),
                                  source=str(self.root/"incoming.glb"), role="monitor", item_id="starter_monitor",
