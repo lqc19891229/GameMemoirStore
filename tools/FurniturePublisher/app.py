@@ -8,6 +8,7 @@ from tkinter import filedialog, messagebox, ttk
 from pathlib import Path
 from publisher_core import GROUPS, TYPES, GROUP_TYPES, Item, PublishError, preview, publish
 from hardware_ui import HardwareWindow
+from batch_ui import BatchHardwareWindow
 
 GROUP_LABELS = {f"{v} ({k})": k for k, v in GROUPS.items()}
 
@@ -36,7 +37,8 @@ class PublisherApp(tk.Tk):
         main.pack(fill="both", expand=True)
         ttk.Label(main, text="GLB → 家具 / 电脑设备发布", font=("Microsoft YaHei UI", 16, "bold")).pack(anchor="w")
         ttk.Label(main, text="下方保留原有新增家具功能；电脑设备可通过独立窗口替换现有 GLB 和真实尺寸。", foreground="#666666").pack(anchor="w", pady=(2, 8))
-        ttk.Button(main, text="电脑设备模型发布 / 替换现有型号…", command=self._open_hardware).pack(anchor="w", pady=(0, 12))
+        ttk.Button(main, text="电脑设备模型发布 / 替换现有型号…", command=self._open_hardware).pack(anchor="w", pady=(0, 5))
+        ttk.Button(main, text="批量导入启航 2000 · 自动读取 model_specs.json…", command=self._open_hardware_batch).pack(anchor="w", pady=(0, 12))
         form = ttk.Frame(main)
         form.pack(fill="x")
         form.columnconfigure(1, weight=1)
@@ -86,6 +88,9 @@ class PublisherApp(tk.Tk):
 
     def _open_hardware(self) -> None:
         HardwareWindow(self, {key: self.vars[key].get() for key in ("project", "godot", "source")})
+
+    def _open_hardware_batch(self) -> None:
+        BatchHardwareWindow(self, {key: self.vars[key].get() for key in ("project", "godot", "source")})
 
     def _browse(self, key: str, browse: str) -> None:
         if browse == "dir": path = filedialog.askdirectory(title="选择 GameMemoirStore 项目根目录")
