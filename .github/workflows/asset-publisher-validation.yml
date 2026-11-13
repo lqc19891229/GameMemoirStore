@@ -81,6 +81,11 @@ jobs:
               for f in result["models"]:
                   assert pathlib.Path(f).is_file()
               print("HARDWARE_BATCH_GODOT: PASS")
+              subset = publish_batch(str(repo), "godot", str(incoming / "model_specs.json"),
+                                     selected_roles=["mouse"], log=print)
+              assert subset["count"] == 1
+              assert len(subset["models"]) == 1
+              print("HARDWARE_PARTIAL_BATCH_GODOT: PASS")
           PY
       - name: Verify furniture primary/secondary category linkage
         run: timeout 45s godot --headless --path . --script res://tests/life/test_furniture_category_linkage.gd -- --fresh
