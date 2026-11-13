@@ -66,7 +66,7 @@ class BatchPublisherTests(unittest.TestCase):
         items = self._items()
         self.assertEqual([i.role for i in items], ["monitor", "computer", "keyboard", "mouse"])
         self.assertEqual([i.item_id for i in items], ["starter_monitor", "starter_pc", "starter_mouse", "starter_mouse"])
-        self.assertIn("4/4", preview_batch(str(self.root), str(self.root / "godot"), str(self.spec_path)))
+        self.assertIn("4 件", preview_batch(str(self.root), str(self.root / "godot"), str(self.spec_path)))
 
     def test_reject_duplicate_role_and_directory_traversal(self):
         self.spec["models"][1]["role"] = "monitor"
@@ -85,6 +85,61 @@ class BatchPublisherTests(unittest.TestCase):
         self.spec["models"][1]["expected_size_m"] = [.19, .42, 5.0]
         self.spec_path.write_text(json.dumps(self.spec))
         with self.assertRaises(PublishError): self._items()
+
+
+    def test_partial_manifests_with_one_two_and_three_devices(self):
+        all_models = self.spec["models"][:]
+        for size in (1, 2, 3):
+            self.spec["models"] = all_models[:size]
+            self.spec_path.write_text(json.dumps(self.spec), encoding="utf-8")
+            items = self._items()
+            self.assertEqual(len(items), size)
+            self.assertIn(f"{size} 件", preview_batch(str(self.root), str(self.root / "godot"), str(self.spec_path)))
+        self.spec["models"] = all_models
+        self.spec_path.write_text(json.dumps(self.spec), encoding="utf-8")
+
+    def test_select_subset_from_four_models_and_reject_empty_selection(self):
+        one = load_batch_specs(str(self.root), str(self.root / "godot"), str(self.spec_path),
+                               selected_roles=["mouse"])
+        self.assertEqual([item.role for item in one], ["mouse"])
+        self.assertIn("1 件", preview_batch(str(self.root), str(self.root / "godot"),
+                                           str(self.spec_path), selected_roles=["mouse"]))
+        pair = load_batch_specs(str(self.root), str(self.root / "godot"), str(self.spec_path),
+                                selected_roles=["keyboard", "computer"])
+        self.assertEqual([item.role for item in pair], ["computer", "keyboard"])
+        with self.assertRaises(PublishError):
+            load_batch_specs(str(self.root), str(self.root / "godot"), str(self.spec_path),
+                             selected_roles=[])
+
+    def test_subset_publish_only_changes_selected_model_and_scene(self):
+        original_monitor = (self.root / "scenes/computer/hardware/monitor.tscn").read_bytes()
+        original_keyboard = (self.root / "scenes/computer/hardware/keyboard.tscn").read_bytes()
+        commands = []
+        def fake_execute(cmd, cwd, log, timeout):
+            commands.append(cmd)
+            if "--import" in cmd:
+                return ""
+            manifest = json.loads((self.root / "tools" / Path(cmd[-1]).name).read_text())
+            return 'HARDWARE_PUBLISH_RESULT=' + json.dumps({"ok": True, "model": manifest["model_path"]})
+        with patch("batch_hardware._execute", side_effect=fake_execute):
+            result = publish_batch(str(self.root), str(self.root / "godot"),
+                                   str(self.spec_path), selected_roles=["mouse"], log=lambda _: None)
+        self.assertEqual(result["count"], 1)
+        self.assertEqual(len(commands), 2)
+        self.assertEqual(original_monitor, (self.root / "scenes/computer/hardware/monitor.tscn").read_bytes())
+        self.assertEqual(original_keyboard, (self.root / "scenes/computer/hardware/keyboard.tscn").read_bytes())
+        self.assertFalse((Path(result["backup"]) / "scenes/computer/hardware/monitor.tscn").exists())
+        self.assertTrue((Path(result["backup"]) / "scenes/computer/hardware/mouse.tscn").is_file())
+
+    def test_partial_batch_failure_restores_only_selected_files(self):
+        old_monitor = (self.root / "scenes/computer/hardware/monitor.tscn").read_bytes()
+        old_mouse = (self.root / "scenes/computer/hardware/mouse.tscn").read_bytes()
+        with patch("batch_hardware._execute", side_effect=PublishError("Godot crashed")):
+            with self.assertRaisesRegex(PublishError, "Godot crashed"):
+                publish_batch(str(self.root), str(self.root / "godot"),
+                              str(self.spec_path), selected_roles=["mouse"], log=lambda _: None)
+        self.assertEqual(old_monitor, (self.root / "scenes/computer/hardware/monitor.tscn").read_bytes())
+        self.assertEqual(old_mouse, (self.root / "scenes/computer/hardware/mouse.tscn").read_bytes())
 
     def test_batch_failure_restores_every_file_and_cleans_temp(self):
         items = self._items()
