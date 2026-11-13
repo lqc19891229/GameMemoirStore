@@ -52,5 +52,31 @@ jobs:
               assert pathlib.Path(result["model"]).is_file()
               assert pathlib.Path(result["backup"]).is_dir()
           PY
+      - name: Exercise four-slot hardware batch import with Godot
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json, os, pathlib, shutil, sys, tempfile
+          sys.path.insert(0, "tools/FurniturePublisher")
+          from batch_hardware import publish_batch
+          repo = pathlib.Path.cwd()
+          mapping = {
+              "monitor": "monitor_crt.glb",
+              "computer": "case_beige.glb",
+              "keyboard": "keyboard_beige.glb",
+              "mouse": "mouse_beige.glb",
+          }
+          with tempfile.TemporaryDirectory() as folder:
+              incoming = pathlib.Path(folder)
+              spec = json.loads((repo / "tools/FurniturePublisher/examples/qihang_2000/model_specs.json").read_text())
+              for record in spec["models"]:
+                  shutil.copyfile(repo / "assets/models/hardware" / mapping[record["role"]], incoming / record["file"])
+              (incoming / "model_specs.json").write_text(json.dumps(spec))
+              result = publish_batch(str(repo), "godot", str(incoming / "model_specs.json"), log=print)
+              assert result["count"] == 4
+              for f in result["models"]:
+                  assert pathlib.Path(f).is_file()
+              print("HARDWARE_BATCH_GODOT: PASS")
+          PY
       - name: Verify furniture primary/secondary category linkage
         run: timeout 45s godot --headless --path . --script res://tests/life/test_furniture_category_linkage.gd -- --fresh
