@@ -25,12 +25,9 @@ FIELDS = [
 ]
 
 
-class HardwareWindow(tk.Toplevel):
+class HardwarePanel(ttk.Frame):
     def __init__(self, parent, values: dict[str, str]):
         super().__init__(parent)
-        self.title("游戏回忆录 · 电脑设备模型发布")
-        self.geometry("770x690")
-        self.minsize(660, 570)
         self.project = tk.StringVar(value=values.get("project", ""))
         self.godot = tk.StringVar(value=values.get("godot", "godot"))
         self.source = tk.StringVar(value=values.get("source", ""))
@@ -47,7 +44,7 @@ class HardwareWindow(tk.Toplevel):
     def _build(self):
         main = ttk.Frame(self, padding=16)
         main.pack(fill="both", expand=True)
-        ttk.Label(main, text="替换已有电脑设备 GLB", font=("Microsoft YaHei UI", 16, "bold")).pack(anchor="w")
+        ttk.Label(main, text="单个电脑设备 · 替换已有型号", font=("Microsoft YaHei UI", 16, "bold")).pack(anchor="w")
         ttk.Label(main, text="保留商品 ID 和库存；自动备份旧模型、场景与 .tres。请先关闭 Godot 和游戏。").pack(anchor="w", pady=(3, 12))
         fields = ttk.Frame(main)
         fields.pack(fill="x")
