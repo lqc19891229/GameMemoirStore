@@ -195,4 +195,45 @@ class RetiredHardwareActivationTests(unittest.TestCase):
 
 
 
+
+class Godot47HardwareSceneTests(unittest.TestCase):
+    def setUp(self):
+        self.header = ('[gd_scene format=3]\\n'
+                       '[node name="Monitor" unique_id=117 type="Node3D"]\\n'
+                       'visible = false\\n'
+                       '[node name="Models" parent="." type="Node3D"]\\n'
+                       '[node name="DefaultModel" unique_id=945 parent="Models" instance=ExtResource("3")]\\n'
+                       'visible = true\\n'
+                       'scale = Vector3(0.45, 0.45, 0.45)\\n'
+                       '[node name="UpgradeModel" parent="Models" instance=ExtResource("4")]\\n'
+                       'visible = false\\n'
+                       'scale = Vector3(0.45, 0.45, 0.45)\\n')
+
+    def test_unique_id_inserted_in_model_node_header(self):
+        output = _unity_scale_scene(self.header, "DefaultModel")
+        self.assertIn('unique_id=945 parent="Models"', output)
+        self.assertIn('scale = Vector3(1, 1, 1)\\n[node name="UpgradeModel"', output)
+        self.assertEqual(output.count('scale = Vector3(0.45, 0.45, 0.45)'), 1)
+        self.assertEqual(output, _unity_scale_scene(output, "DefaultModel"))
+
+    def test_attribute_reordering_and_missing_scale(self):
+        before = ('[node parent="Models" name="DefaultModel" instance=ExtResource("3") unique_id=123]\\n'
+                  'visible = true\\n'
+                  '[node name="UpgradeModel" parent="Models" instance=ExtResource("4")]\\n')
+        after = _unity_scale_scene(before, "DefaultModel")
+        self.assertIn('scale = Vector3(1, 1, 1)\\nvisible = true', after)
+        self.assertIn('[node name="UpgradeModel"', after)
+
+    def test_activate_device_with_unique_id_preserves_upgrade(self):
+        result = _activate_published_device(self.header, "monitor")
+        self.assertIn('[node name="Monitor" unique_id=117 type="Node3D"]\\nvisible = true', result)
+        self.assertIn('[node name="UpgradeModel" parent="Models" instance=ExtResource("4")]\\nvisible = false', result)
+        self.assertEqual(result, _activate_published_device(result, "monitor"))
+
+    def test_handles_windows_crlf_scene(self):
+        scene = self.header.replace('\\n', '\\r\\n')
+        output = _unity_scale_scene(scene, "DefaultModel")
+        self.assertIn('scale = Vector3(1, 1, 1)\\r\\n[node name="UpgradeModel"', output)
+
+
 if __name__ == "__main__": unittest.main()
