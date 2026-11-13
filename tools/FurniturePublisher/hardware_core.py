@@ -175,7 +175,7 @@ def _unity_scale_scene(scene: str, node: str) -> str:
     if len(hits) > 1:
         raise PublishError(f"{node} 存在多个 scale 字段，无法安全替换")
     if hits:
-        block = scale.sub("scale = Vector3(1, 1, 1)", block, count=1)
+        block = scale.sub(lambda match: "scale = Vector3(1, 1, 1)" + ("\r" if match.group(0).endswith("\r") else ""), block, count=1)
     else:
         block = newline + "scale = Vector3(1, 1, 1)" + block
     return scene[:header_end] + block + scene[end:]
@@ -199,7 +199,7 @@ def _activate_published_device(scene: str, role: str) -> str:
     if len(hits) > 1:
         raise PublishError(f"{name} 存在多个 visible 属性，无法安全修改")
     if hits:
-        block = visibility.sub("visible = true", block, count=1)
+        block = visibility.sub(lambda match: "visible = true" + ("\r" if match.group(0).endswith("\r") else ""), block, count=1)
     else:
         block = newline + "visible = true" + block
     return scene[:header_end] + block + scene[end:]
