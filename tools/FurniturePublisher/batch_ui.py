@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+import json
 import queue
 import threading
 import tkinter as tk
@@ -11,12 +12,9 @@ from batch_hardware import preview_batch, publish_batch
 from publisher_core import PublishError
 
 
-class BatchHardwareWindow(tk.Toplevel):
+class BatchHardwarePanel(ttk.Frame):
     def __init__(self, parent, values: dict[str, str]):
         super().__init__(parent)
-        self.title("游戏回忆录 · 启航 2000 批量设备导入")
-        self.geometry("800x650")
-        self.minsize(660, 500)
         self.project = tk.StringVar(value=values.get("project", ""))
         self.godot = tk.StringVar(value=values.get("godot", "godot"))
         source = Path(values.get("source", "")).expanduser()
@@ -24,6 +22,9 @@ class BatchHardwareWindow(tk.Toplevel):
         self.folder = tk.StringVar(value=str(source.parent) if candidate and candidate.is_file() else "")
         self.confirm = tk.BooleanVar(value=False)
         self.validated = False
+        self.validated_roles = []
+        self.available_roles = []
+        self.loaded_folder = ""
         self.busy = False
         self.events: queue.Queue = queue.Queue()
         self._build()
@@ -32,9 +33,9 @@ class BatchHardwareWindow(tk.Toplevel):
     def _build(self):
         main = ttk.Frame(self, padding=16)
         main.pack(fill="both", expand=True)
-        ttk.Label(main, text="自动读取 model_specs.json → 批量导入四件设备",
+        ttk.Label(main, text="自动读取 model_specs.json → 按需导入电脑设备",
                   font=("Microsoft YaHei UI", 15, "bold")).pack(anchor="w")
-        ttk.Label(main, text="选择含四个 GLB 和规格 JSON 的文件夹；备份整批旧资源，任一失败则整批恢复。",
+        ttk.Label(main, text="清单支持 1～4 件基础设备，可以选择本次需要替换的设备；失败时整批恢复。",
                   foreground="#666666").pack(anchor="w", pady=(4, 12))
         fields = ttk.Frame(main)
         fields.pack(fill="x")
@@ -50,17 +51,20 @@ class BatchHardwareWindow(tk.Toplevel):
         ttk.Label(main, text="自动查找：模型文件夹 / model_specs.json（无需逐项输入尺寸）").pack(anchor="w", pady=(10, 7))
         row = ttk.Frame(main)
         row.pack(fill="x", pady=8)
-        self.preview_button = ttk.Button(row, text="1. 检查四件设备", command=self._preview)
+        self.preview_button = ttk.Button(row, text="1. 检查所选设备", command=self._preview)
         self.preview_button.pack(side="left", padx=(0, 12))
-        self.publish_button = ttk.Button(row, text="2. 批量导入四件设备", command=self._publish, state="disabled")
+        self.publish_button = ttk.Button(row, text="2. 导入所选设备", command=self._publish, state="disabled")
         self.publish_button.pack(side="left")
         ttk.Checkbutton(row, text="确认已关闭 Godot、游戏并备份项目", variable=self.confirm,
                         command=self._controls).pack(side="left", padx=(14, 0))
         ttk.Label(main, text="预览及执行日志", font=("Microsoft YaHei UI", 10, "bold")).pack(anchor="w", pady=(12, 4))
         self.log = tk.Text(main, wrap="word", font=("Consolas", 10))
         self.log.pack(fill="both", expand=True)
-        for value in (self.project, self.godot, self.folder):
+        for value in (self.project, self.godot):
             value.trace_add("write", lambda *_: self._invalidate())
+        self.folder.trace_add("write", lambda *_: self._folder_changed())
+        if self.folder.get():
+            self._refresh_models()
 
     def _browse(self, target, kind):
         if kind == "folder":
@@ -80,6 +84,7 @@ class BatchHardwareWindow(tk.Toplevel):
 
     def _invalidate(self):
         self.validated = False
+        self.validated_roles = []
         self._controls()
 
     def _controls(self):
@@ -89,7 +94,9 @@ class BatchHardwareWindow(tk.Toplevel):
     def _preview(self):
         try:
             self._write("\n======== 批量导入预览 ========")
-            self._write(preview_batch(self.project.get().strip(), self.godot.get().strip(), self._spec()))
+            roles = self._selected_roles()
+            self._write(preview_batch(self.project.get().strip(), self.godot.get().strip(), self._spec(), selected_roles=roles))
+            self.validated_roles = roles
             self.validated = True
             self._controls()
         except (PublishError, OSError, ValueError) as exc:
@@ -101,7 +108,12 @@ class BatchHardwareWindow(tk.Toplevel):
     def _publish(self):
         if not self.validated or not self.confirm.get():
             return
-        if not messagebox.askyesno("最终确认", "确认替换四件已有基础电脑设备吗？\n将备份并覆盖模型和设备参数；任一失败整批恢复。",
+        roles = self._selected_roles()
+        if roles != self.validated_roles:
+            self._invalidate()
+            messagebox.showerror("需重新预检", "所选设备已发生变化，请重新检查", parent=self)
+            return
+        if not messagebox.askyesno("最终确认", f"确认替换所选 {len(roles)} 件电脑设备吗？\n将备份并覆盖模型和设备参数；任一失败整批恢复。",
                                    parent=self):
             return
         project, godot, spec = self.project.get().strip(), self.godot.get().strip(), self._spec()
@@ -110,7 +122,7 @@ class BatchHardwareWindow(tk.Toplevel):
 
         def worker():
             try:
-                result = publish_batch(project, godot, spec, log=lambda s: self.events.put(("log", s)))
+                result = publish_batch(project, godot, spec, log=lambda s: self.events.put(("log", s)), selected_roles=roles)
                 self.events.put(("success", result))
             except Exception as exc:
                 self.events.put(("error", str(exc)))
@@ -130,7 +142,7 @@ class BatchHardwareWindow(tk.Toplevel):
                     self._controls()
                     if kind == "success":
                         self._write("成功：已导入 " + str(payload["count"]) + " 件；备份：" + payload["backup"])
-                        messagebox.showinfo("完成", "四件基础电脑设备已批量替换。请在 Godot 检查屏幕和场景位置。", parent=self)
+                        messagebox.showinfo("完成", f"已导入 {payload['count\']} 件设备。请在 Godot 检查屏幕和场景位置。", parent=self)
                     else:
                         self._write("批量发布失败：" + payload)
                         messagebox.showerror("导入中断", payload, parent=self)
