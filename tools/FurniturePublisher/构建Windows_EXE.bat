@@ -9,7 +9,7 @@ if errorlevel 1 (
 )
 py -3 -m pip install --upgrade pyinstaller
 if errorlevel 1 goto error
-py -3 -m PyInstaller --noconfirm --onefile --windowed --name FurniturePublisher --add-data "bridge.gd;." app.py
+py -3 -m PyInstaller --noconfirm --onefile --windowed --name FurniturePublisher --add-data "bridge.gd;." --add-data "hardware_bridge.gd;." app.py
 if errorlevel 1 goto error
 echo 构建完成: dist\FurniturePublisher.exe
 pause

@@ -67,6 +67,33 @@ func _run() -> void:
 	var panel := RegistrationPanel.new()
 	root.add_child(panel)
 	await process_frame
+	_check(panel.group_choice.get_item_count() == 5, "only furniture primary categories are registered")
+	var table_index := -1
+	var seating_index := -1
+	for i in range(panel.group_choice.item_count):
+	    var group_id := str(panel.group_choice.get_item_metadata(i))
+	    if group_id == "tables": table_index = i
+	    if group_id == "seating": seating_index = i
+	_check(table_index >= 0 and seating_index >= 0, "table and seating primary categories exist")
+	if table_index >= 0 and seating_index >= 0:
+	    panel.group_choice.select(table_index)
+	    panel.group_choice.item_selected.emit(table_index)
+	    var table_types := []
+	    for i in range(panel.type_choice.item_count):
+	        table_types.append(str(panel.type_choice.get_item_metadata(i)))
+	    _check("computer_desk" in table_types and not "office_chair" in table_types, "table category only shows table secondary types")
+	    panel.group_choice.select(seating_index)
+	    panel.group_choice.item_selected.emit(seating_index)
+	    var seating_types := []
+	    for i in range(panel.type_choice.item_count):
+	        seating_types.append(str(panel.type_choice.get_item_metadata(i)))
+	    _check("office_chair" in seating_types and not "computer_desk" in seating_types, "seating category excludes table secondary types")
+	    _check(panel.type_choice.selected >= 0 and str(panel.type_choice.get_item_metadata(panel.type_choice.selected)) in seating_types, "secondary choice resets to a valid type after primary change")
+	    var mismatch := fields.duplicate()
+	    mismatch.group = "seating"
+	    mismatch.type = "computer_desk"
+	    _check("二级分类不属于选定的一级分类" in Registrar.validate_registration(SCENE, mismatch, empty_catalog), "registration rejects cross-category secondary types")
+
 	_check(panel.register_button.disabled, "registration UI defaults to disabled")
 	_check(not panel.confirmation.button_pressed, "confirmation defaults off")
 	_check(not panel.surface_mount_choice.button_pressed, "surface mounting defaults off for newly registered furniture")

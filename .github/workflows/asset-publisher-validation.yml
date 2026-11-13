@@ -1,0 +1,56 @@
+name: Asset publisher and furniture category validation
+
+on:
+  pull_request:
+    paths:
+      - "tools/FurniturePublisher/**"
+      - "addons/furniture_manager/furniture_registration_panel.gd"
+      - "addons/furniture_manager/furniture_catalog_registrar.gd"
+      - "scripts/items/item_taxonomy.gd"
+      - "tests/life/test_furniture_category_linkage.gd"
+      - ".github/workflows/asset-publisher-validation.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  publisher-and-categories:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v4
+        with:
+          python-version: "3.12"
+      - name: Validate Python publisher modules
+        run: |
+          python -m compileall -q tools/FurniturePublisher
+          python -m unittest discover -s tools/FurniturePublisher/tests -p 'test_*.py' -v
+      - uses: chickensoft-games/setup-godot@v2
+        with:
+          version: 4.6.0
+          use-dotnet: false
+      - name: Import Godot assets
+        run: godot --headless --path . --editor --import
+      - name: Exercise hardware replacement against real Godot resource
+        shell: bash
+        run: |
+          python - <<'PY'
+          import os, pathlib, shutil, sys, tempfile
+          sys.path.insert(0, "tools/FurniturePublisher")
+          from hardware_core import HardwareItem, publish_hardware
+          with tempfile.TemporaryDirectory() as tmp:
+              source = pathlib.Path(tmp) / "incoming.glb"
+              shutil.copyfile("assets/models/hardware/monitor_crt.glb", source)
+              item = HardwareItem(project=os.getcwd(), godot="godot", source=str(source),
+                                  role="monitor", item_id="starter_monitor",
+                                  width=.72, height=.62, depth=.32,
+                                  screen_width=.58, screen_height=.36,
+                                  screen_x=0, screen_y=.38, screen_z=.16)
+              result = publish_hardware(item, log=print)
+              assert pathlib.Path(result["model"]).is_file()
+              assert pathlib.Path(result["backup"]).is_dir()
+          PY
+      - name: Verify furniture primary/secondary category linkage
+        run: timeout 45s godot --headless --path . --script res://tests/life/test_furniture_category_linkage.gd -- --fresh

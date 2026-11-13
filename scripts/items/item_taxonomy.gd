@@ -20,6 +20,21 @@ const TYPES := {
 	"mouse":"鼠标", "microphone":"麦克风", "audio":"音频设备",
 	"misc":"其他"
 }
+const GROUP_TYPES := {
+	"tables": ["computer_desk", "side_table", "coffee_table", "writing_desk", "misc"],
+	"seating": ["office_chair", "lounge_chair", "bench", "sofa", "stool", "cushion", "misc"],
+	"storage": ["bookcase", "shelf", "cabinet", "misc"],
+	"lighting": ["floor_lamp", "desk_lamp", "ambient_light", "misc"],
+	"decor": ["rug", "plant", "poster", "ornament", "misc"],
+	"hardware": ["monitor", "computer", "keyboard", "mouse", "microphone", "audio", "misc"],
+}
+
+static func types_for_group(group: String) -> Array:
+	return GROUP_TYPES.get(group, []).duplicate()
+
+static func valid_group_type(group: String, kind: String) -> bool:
+	return GROUP_TYPES.has(group) and kind in GROUP_TYPES[group]
+
 const ROLE_GROUPS := {
 	"chair":"seating","bookcase":"storage","lamp":"lighting",
 	"rug":"decor","plant":"decor","sofa":"seating","stool":"seating"

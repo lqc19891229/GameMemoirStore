@@ -7,6 +7,7 @@ import tkinter as tk
 from tkinter import filedialog, messagebox, ttk
 from pathlib import Path
 from publisher_core import GROUPS, TYPES, GROUP_TYPES, Item, PublishError, preview, publish
+from hardware_ui import HardwareWindow
 
 GROUP_LABELS = {f"{v} ({k})": k for k, v in GROUPS.items()}
 
@@ -14,7 +15,7 @@ GROUP_LABELS = {f"{v} ({k})": k for k, v in GROUPS.items()}
 class PublisherApp(tk.Tk):
     def __init__(self) -> None:
         super().__init__()
-        self.title("游戏回忆录 · 家具发布器 v1.0")
+        self.title("游戏回忆录 · 资产发布器 v2.0")
         self.geometry("1000x840")
         self.minsize(790, 680)
         self.vars = {key: tk.StringVar() for key in ("project", "godot", "source", "item_id", "name", "price", "description")}
@@ -33,8 +34,9 @@ class PublisherApp(tk.Tk):
     def _build(self) -> None:
         main = ttk.Frame(self, padding=16)
         main.pack(fill="both", expand=True)
-        ttk.Label(main, text="GLB → 场景 → 商品目录", font=("Microsoft YaHei UI", 16, "bold")).pack(anchor="w")
-        ttk.Label(main, text="用于新增家具；不会覆盖已有模型、场景或商品。开始前请关闭正在运行的 Godot 编辑器与游戏。", foreground="#666666").pack(anchor="w", pady=(2, 14))
+        ttk.Label(main, text="GLB → 家具 / 电脑设备发布", font=("Microsoft YaHei UI", 16, "bold")).pack(anchor="w")
+        ttk.Label(main, text="下方保留原有新增家具功能；电脑设备可通过独立窗口替换现有 GLB 和真实尺寸。", foreground="#666666").pack(anchor="w", pady=(2, 8))
+        ttk.Button(main, text="电脑设备模型发布 / 替换现有型号…", command=self._open_hardware).pack(anchor="w", pady=(0, 12))
         form = ttk.Frame(main)
         form.pack(fill="x")
         form.columnconfigure(1, weight=1)
@@ -81,6 +83,9 @@ class PublisherApp(tk.Tk):
         for v in list(self.vars.values()) + [self.group, self.kind, self.support, self.mount]:
             v.trace_add("write", lambda *_: self._invalidate())
         self._preview_ok = False
+
+    def _open_hardware(self) -> None:
+        HardwareWindow(self, {key: self.vars[key].get() for key in ("project", "godot", "source")})
 
     def _browse(self, key: str, browse: str) -> None:
         if browse == "dir": path = filedialog.askdirectory(title="选择 GameMemoirStore 项目根目录")
